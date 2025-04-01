@@ -1850,7 +1850,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if not self.admin_username and not self.swap_os_disk:
                         self.fail("Parameter error: admin_username required when creating a virtual machine.")
 
-                    if self.os_type == 'Linux':
+                    if self.os_type == 'Linux' or self.os_type == 'linux':
                         if disable_ssh_password and not self.ssh_public_keys and not self.swap_os_disk:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
 
@@ -2045,7 +2045,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             listeners=winrm_listeners
                         )
 
-                    if self.os_type == 'Windows' and vm_resource.os_profile is not None:
+                    if (self.os_type == 'Windows' or self.os_type == 'windows') and vm_resource.os_profile is not None:
                         vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
                             win_rm=self.winrm,
                             provision_vm_agent=self.windows_config['provision_vm_agent'] if self.windows_config is not None else True,
@@ -2069,7 +2069,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         # Azure SDK (erroneously?) wants native string type for this
                         vm_resource.os_profile.custom_data = to_native(base64.b64encode(to_bytes(self.custom_data)))
 
-                    if self.os_type == 'Linux' and vm_resource.os_profile is not None:
+                    if (self.os_type == 'Linux' or self.os_type == 'linux') and vm_resource.os_profile is not None:
                         vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
                             disable_password_authentication=self.linux_config['disable_password_authentication'] if self.linux_config else disable_ssh_password
                         )

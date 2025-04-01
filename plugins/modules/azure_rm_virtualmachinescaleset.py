@@ -1175,7 +1175,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     self.log("Create virtual machine scale set {0}".format(self.name))
                     self.results['actions'].append('Created VMSS {0}'.format(self.name))
 
-                    if self.os_type == 'Linux':
+                    if self.os_type == 'Linux' or self.os_type == 'linux':
                         if disable_ssh_password and not self.ssh_public_keys:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
 
@@ -1288,7 +1288,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.admin_password:
                         vmss_resource.virtual_machine_profile.os_profile.admin_password = self.admin_password
 
-                    if self.os_type == 'Linux' and os_profile:
+                    if (self.os_type == 'Linux' or self.os_type == 'linux') and os_profile:
                         vmss_resource.virtual_machine_profile.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
                             disable_password_authentication=disable_ssh_password
                         )
