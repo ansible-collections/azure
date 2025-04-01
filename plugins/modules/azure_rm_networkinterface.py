@@ -766,11 +766,11 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             if self.state == 'present':
                 self.log("CHANGED: network interface {0} does not exist but requested state is 'present'".format(self.name))
                 changed = True
-            if self.virtual_network is None or self.subnet_name is None:
-                self.fail("Required configure 'virtual_network' and 'subnet_name' when creating a new NIC.")
-            else:
-                # parse the virtual network resource group and name
-                self.virtual_network = self.parse_resource_to_dict(self.virtual_network)
+                if self.virtual_network is None or self.subnet_name is None:
+                    self.fail("Required configure 'virtual_network' and 'subnet_name' when creating a new NIC.")
+                else:
+                    # parse the virtual network resource group and name
+                    self.virtual_network = self.parse_resource_to_dict(self.virtual_network)
 
         self.results['changed'] = changed
         self.results['state'] = results
