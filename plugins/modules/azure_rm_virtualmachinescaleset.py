@@ -157,6 +157,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ephemeral_os_disk:
         description:
@@ -722,7 +724,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
             image=dict(type='raw'),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
-            os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
+            os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
             data_disks=dict(
                 type='list',
@@ -1173,7 +1175,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     self.log("Create virtual machine scale set {0}".format(self.name))
                     self.results['actions'].append('Created VMSS {0}'.format(self.name))
 
-                    if self.os_type == 'Linux':
+                    if self.os_type == 'Linux' or self.os_type == 'linux':
                         if disable_ssh_password and not self.ssh_public_keys:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
 
@@ -1286,7 +1288,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.admin_password:
                         vmss_resource.virtual_machine_profile.os_profile.admin_password = self.admin_password
 
-                    if self.os_type == 'Linux' and os_profile:
+                    if (self.os_type == 'Linux' or self.os_type == 'linux') and os_profile:
                         vmss_resource.virtual_machine_profile.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
                             disable_password_authentication=disable_ssh_password
                         )

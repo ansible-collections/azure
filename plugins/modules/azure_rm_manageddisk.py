@@ -99,6 +99,8 @@ options:
         choices:
             - linux
             - windows
+            - Linux
+            - Windows
     disk_size_gb:
         description:
             - Size in GB of the managed disk to be created.
@@ -694,7 +696,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             os_type=dict(
                 type='str',
-                choices=['linux', 'windows']
+                choices=['linux', 'windows', 'Linux', 'Windows']
             ),
             disk_size_gb=dict(
                 type='int'

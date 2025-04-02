@@ -64,6 +64,8 @@ options:
         choices:
             - Linux
             - Windows
+            - linux
+            - windows
     orchestrator_version:
         description:
             - Version of orchestrator specified when creating the managed cluster.
@@ -847,7 +849,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             ),
             os_type=dict(
                 type='str',
-                choices=['Linux', 'Windows']
+                choices=['Linux', 'Windows', 'linux', 'windows']
             ),
             orchestrator_version=dict(
                 type='str',

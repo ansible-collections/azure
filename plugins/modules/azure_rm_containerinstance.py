@@ -34,6 +34,8 @@ options:
         choices:
             - linux
             - windows
+            - Linux
+            - Windows
         default: linux
     state:
         description:
@@ -598,7 +600,7 @@ class AzureRMContainerInstance(AzureRMModuleBaseExt):
             os_type=dict(
                 type='str',
                 default='linux',
-                choices=['linux', 'windows']
+                choices=['linux', 'windows', 'Linux', 'Windows']
             ),
             state=dict(
                 type='str',
