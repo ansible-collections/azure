@@ -10,11 +10,11 @@ DOCUMENTATION = r'''
     options:
         batch_fetch_interval:
             description: Interval with which to check if the batched requests are completed
-            default: 30
+            default: 3
             type: int
         batch_fetch_timeout:
             description: The timeout to use when polling for batched requests
-            default: 600
+            default: 5
             type: int
     extends_documentation_fragment:
       - azure.azcollection.azure
@@ -637,7 +637,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def get_poller_result(self, poller, timeout):
         try:
-            poller.wait(timeout=timeout)
+            while not poller.done():
+                poller.wait(timeout=timeout)
             return poller.result()
         except Exception as exc:
             raise
