@@ -18,6 +18,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ domain_name }}"
     allocation_method: Static
+    sku: Standard
     domain_name: "{{ domain_name }}"
   register: pip_output
 
