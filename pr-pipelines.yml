@@ -158,6 +158,11 @@ parameters:
       - "azure_rm_diskaccess"
       - "azure_rm_diskaccess_info"
       - "azure_rm_resourcehealthstates"
+      - "azure_rm_afdroute"
+      - "azure_rm_afdorigingroup"
+      - "azure_rm_afdorigin"
+      - "azure_rm_afdruleset"
+      - "azure_rm_afdrules"
       - "inventory_azure"
       - "setup_azure"
 

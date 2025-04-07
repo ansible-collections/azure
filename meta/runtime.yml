@@ -347,3 +347,13 @@ action_groups:
     - azure.azcollection.azure_rm_diskaccess
     - azure.azcollection.azure_rm_diskaccess_info
     - azure.azcollection.azure_rm_resourcehealthstates_info
+    - azure.azcollection.azure_rm_afdroute
+    - azure.azcollection.azure_rm_afdroute_info
+    - azure.azcollection.azure_rm_afdorigingroup
+    - azure.azcollection.azure_rm_afdorigingroup_info
+    - azure.azcollection.azure_rm_afdorigin
+    - azure.azcollection.azure_rm_afdorigin_info
+    - azure.azcollection.azure_rm_afdruleset
+    - azure.azcollection.azure_rm_afdruleset_info
+    - azure.azcollection.azure_rm_afdrules
+    - azure.azcollection.azure_rm_afdrules_info
