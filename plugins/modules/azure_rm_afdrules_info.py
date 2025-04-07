@@ -231,12 +231,6 @@ afdrules:
 # import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    from azure.mgmt.cdn import CdnManagementClient
-except ImportError:
-    # handled in azure_rm_common
-    pass
-
 
 AZURE_OBJECT_CLASS = 'AFDRules'
 
@@ -275,12 +269,6 @@ class AzureRMAFDRuleInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.rule_client = self.get_mgmt_svc_client(
-            CdnManagementClient,
-            base_url=self._cloud_environment.endpoints.resource_manager,
-            api_version='2023-05-01'
-        )
-
         if self.name:
             self.results['afdrules'] = self.get_item()
         else:
@@ -297,12 +285,10 @@ class AzureRMAFDRuleInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.rule_client.rules.get(
-                resource_group_name=self.resource_group,
-                profile_name=self.profile_name,
-                rule_set_name=self.rule_set_name,
-                rule_name=self.name
-            )
+            item = self.cdn_client.rules.get(resource_group_name=self.resource_group,
+                                             profile_name=self.profile_name,
+                                             rule_set_name=self.rule_set_name,
+                                             rule_name=self.name)
         except Exception as exc:
             self.log("Failed to find an existing resource. {0}".format(str(exc)))
 
@@ -317,11 +303,9 @@ class AzureRMAFDRuleInfo(AzureRMModuleBase):
         self.log('List all AFD Rules within an AFD profile')
 
         try:
-            response = self.rule_client.rules.list_by_rule_set(
-                resource_group_name=self.resource_group,
-                profile_name=self.profile_name,
-                rule_set_name=self.rule_set_name
-            )
+            response = self.cdn_client.rules.list_by_rule_set(resource_group_name=self.resource_group,
+                                                              profile_name=self.profile_name,
+                                                              rule_set_name=self.rule_set_name)
         except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 

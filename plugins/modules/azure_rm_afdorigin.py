@@ -169,7 +169,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.cdn.models import AFDOrigin, AFDOriginUpdateParameters, SharedPrivateLinkResourceProperties, ResourceReference
-    from azure.mgmt.cdn import CdnManagementClient
 except ImportError as ec:
     # This is handled in azure_rm_common
     pass
@@ -269,8 +268,6 @@ class AzureRMOrigin(AzureRMModuleBase):
         self.resource_group = None
         self.state = None
 
-        self.origin_client = None
-
         self.results = dict(changed=False)
 
         super(AzureRMOrigin, self).__init__(
@@ -283,8 +280,6 @@ class AzureRMOrigin(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        self.origin_client = self.get_origin_client()
 
         to_be_updated = False
 
@@ -400,12 +395,11 @@ class AzureRMOrigin(AzureRMModuleBase):
         )
 
         try:
-            poller = self.origin_client.afd_origins.begin_create(
-                resource_group_name=self.resource_group,
-                profile_name=self.profile_name,
-                origin_group_name=self.origin_group_name,
-                origin_name=self.name,
-                origin=parameters)
+            poller = self.cdn_client.afd_origins.begin_create(resource_group_name=self.resource_group,
+                                                              profile_name=self.profile_name,
+                                                              origin_group_name=self.origin_group_name,
+                                                              origin_name=self.name,
+                                                              origin=parameters)
             response = self.get_poller_result(poller)
             return origin_to_dict(response)
         except Exception as exc:
@@ -443,12 +437,11 @@ class AzureRMOrigin(AzureRMModuleBase):
         )
 
         try:
-            poller = self.origin_client.afd_origins.begin_update(
-                resource_group_name=self.resource_group,
-                profile_name=self.profile_name,
-                origin_group_name=self.origin_group_name,
-                origin_name=self.name,
-                origin_update_properties=parameters)
+            poller = self.cdn_client.afd_origins.begin_update(resource_group_name=self.resource_group,
+                                                              profile_name=self.profile_name,
+                                                              origin_group_name=self.origin_group_name,
+                                                              origin_name=self.name,
+                                                              origin_update_properties=parameters)
             response = self.get_poller_result(poller)
             return origin_to_dict(response)
         except Exception as exc:
@@ -463,11 +456,10 @@ class AzureRMOrigin(AzureRMModuleBase):
         '''
         self.log("Deleting the Origin {0}".format(self.name))
         try:
-            poller = self.origin_client.afd_origins.begin_delete(
-                resource_group_name=self.resource_group,
-                profile_name=self.profile_name,
-                origin_group_name=self.origin_group_name,
-                origin_name=self.name)
+            poller = self.cdn_client.afd_origins.begin_delete(resource_group_name=self.resource_group,
+                                                              profile_name=self.profile_name,
+                                                              origin_group_name=self.origin_group_name,
+                                                              origin_name=self.name)
             self.get_poller_result(poller)
             return True
         except Exception as exc:
@@ -484,26 +476,16 @@ class AzureRMOrigin(AzureRMModuleBase):
         self.log(
             "Checking if the Origin {0} is present".format(self.name))
         try:
-            response = self.origin_client.afd_origins.get(
-                resource_group_name=self.resource_group,
-                profile_name=self.profile_name,
-                origin_group_name=self.origin_group_name,
-                origin_name=self.name)
+            response = self.cdn_client.afd_origins.get(resource_group_name=self.resource_group,
+                                                       profile_name=self.profile_name,
+                                                       origin_group_name=self.origin_group_name,
+                                                       origin_name=self.name)
             self.log("Response : {0}".format(response))
             self.log("Origin : {0} found".format(response.name))
             return origin_to_dict(response)
         except Exception as exc:
             self.log('Did not find the Origin. {0}'.format(str(exc)))
             return False
-
-    def get_origin_client(self):
-        ''' Set a reference to the Client '''
-        if not self.origin_client:
-            self.origin_client = self.get_mgmt_svc_client(
-                CdnManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-05-01')
-        return self.origin_client
 
 
 def main():

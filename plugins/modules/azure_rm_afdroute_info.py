@@ -169,12 +169,6 @@ afdroutes:
 import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    from azure.mgmt.cdn import CdnManagementClient
-except ImportError:
-    # handled in azure_rm_common
-    pass
-
 
 AZURE_OBJECT_CLASS = 'AFDRoute'
 
@@ -222,12 +216,6 @@ class AzureRMAFDRouteInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.route_client = self.get_mgmt_svc_client(
-            CdnManagementClient,
-            base_url=self._cloud_environment.endpoints.resource_manager,
-            api_version='2023-05-01'
-        )
-
         if self.name:
             self.results['afdroutes'] = self.get_item()
         else:
@@ -244,7 +232,7 @@ class AzureRMAFDRouteInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.route_client.routes.get(
+            item = self.cdn_client.routes.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.endpoint_name,
@@ -264,7 +252,7 @@ class AzureRMAFDRouteInfo(AzureRMModuleBase):
         self.log('List all AFD Routes within an AFD profile')
 
         try:
-            response = self.route_client.routes.list_by_endpoint(
+            response = self.cdn_client.routes.list_by_endpoint(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.endpoint_name

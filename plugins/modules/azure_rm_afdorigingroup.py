@@ -131,7 +131,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.cdn.models import AFDOriginGroup, LoadBalancingSettingsParameters, HealthProbeParameters
-    from azure.mgmt.cdn import CdnManagementClient
 except ImportError as ec:
     # This is handled in azure_rm_common
     pass
@@ -216,8 +215,6 @@ class AzureRMOriginGroup(AzureRMModuleBase):
         self.resource_group = None
         self.state = None
 
-        self.origingroup_client = None
-
         self.results = dict(changed=False)
 
         super(AzureRMOriginGroup, self).__init__(
@@ -230,8 +227,6 @@ class AzureRMOriginGroup(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        self.origingroup_client = self.get_origingroup_client()
 
         to_be_updated = False
 
@@ -324,11 +319,10 @@ class AzureRMOriginGroup(AzureRMModuleBase):
         )
 
         try:
-            poller = self.origingroup_client.afd_origin_groups.begin_create(
-                self.resource_group,
-                self.profile_name,
-                self.name,
-                parameters)
+            poller = self.cdn_client.afd_origin_groups.begin_create(self.resource_group,
+                                                                    self.profile_name,
+                                                                    self.name,
+                                                                    parameters)
             response = self.get_poller_result(poller)
             return origingroup_to_dict(response)
         except Exception as exc:
@@ -363,7 +357,7 @@ class AzureRMOriginGroup(AzureRMModuleBase):
         )
 
         try:
-            poller = self.origingroup_client.afd_origin_groups.begin_update(
+            poller = self.cdn_client.afd_origin_groups.begin_update(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 origin_group_name=self.name,
@@ -382,8 +376,7 @@ class AzureRMOriginGroup(AzureRMModuleBase):
         '''
         self.log("Deleting the OriginGroup {0}".format(self.name))
         try:
-            poller = self.origingroup_client.afd_origin_groups.begin_delete(
-                self.resource_group, self.profile_name, self.name)
+            poller = self.cdn_client.afd_origin_groups.begin_delete(self.resource_group, self.profile_name, self.name)
             self.get_poller_result(poller)
             return True
         except Exception as e:
@@ -400,21 +393,13 @@ class AzureRMOriginGroup(AzureRMModuleBase):
         self.log(
             "Checking if the OriginGroup {0} is present".format(self.name))
         try:
-            response = self.origingroup_client.afd_origin_groups.get(self.resource_group, self.profile_name, self.name)
+            response = self.cdn_client.afd_origin_groups.get(self.resource_group, self.profile_name, self.name)
             self.log("Response : {0}".format(response))
             self.log("OriginGroup : {0} found".format(response.name))
             return origingroup_to_dict(response)
         except Exception as err:
             self.log('Did not find the OriginGroup.' + err.args[0])
             return False
-
-    def get_origingroup_client(self):
-        if not self.origingroup_client:
-            self.origingroup_client = self.get_mgmt_svc_client(
-                CdnManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-05-01')
-        return self.origingroup_client
 
 
 def main():

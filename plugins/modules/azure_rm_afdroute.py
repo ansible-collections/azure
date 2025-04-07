@@ -200,8 +200,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.mgmt.cdn.models import Route, RouteUpdateParameters, CompressionSettings, \
         ResourceReference, AfdRouteCacheConfiguration
-    from azure.mgmt.cdn import CdnManagementClient
-
 except ImportError as ec:
     # This is handled in azure_rm_common
     pass
@@ -321,8 +319,6 @@ class AzureRMRoute(AzureRMModuleBase):
         self.rule_set_ids = []
         self.custom_domain_ids = []
 
-        self.route_client = None
-
         required_together = [['is_compression_enabled', 'content_types_to_compress', 'query_string_caching_behavior', 'query_parameters']]
 
         self.results = dict(changed=False)
@@ -339,8 +335,6 @@ class AzureRMRoute(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        self.route_client = self.get_route_client()
 
         to_be_updated = False
 
@@ -517,7 +511,7 @@ class AzureRMRoute(AzureRMModuleBase):
         )
 
         try:
-            poller = self.route_client.routes.begin_create(
+            poller = self.cdn_client.routes.begin_create(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.endpoint_name,
@@ -580,7 +574,7 @@ class AzureRMRoute(AzureRMModuleBase):
         )
 
         try:
-            poller = self.route_client.routes.begin_update(
+            poller = self.cdn_client.routes.begin_update(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.endpoint_name,
@@ -601,7 +595,7 @@ class AzureRMRoute(AzureRMModuleBase):
         '''
         self.log("Deleting the Route {0}".format(self.name))
         try:
-            poller = self.route_client.routes.begin_delete(
+            poller = self.cdn_client.routes.begin_delete(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.endpoint_name,
@@ -623,7 +617,7 @@ class AzureRMRoute(AzureRMModuleBase):
         self.log(
             "Checking if the Route {0} is present".format(self.name))
         try:
-            response = self.route_client.routes.get(
+            response = self.cdn_client.routes.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.endpoint_name,
@@ -645,7 +639,7 @@ class AzureRMRoute(AzureRMModuleBase):
         self.log(
             "Obtaining ID for Origin Group {0}".format(self.origin_group))
         try:
-            response = self.route_client.afd_origin_groups.get(
+            response = self.cdn_client.afd_origin_groups.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 origin_group_name=self.origin_group
@@ -665,7 +659,7 @@ class AzureRMRoute(AzureRMModuleBase):
         '''
         self.log("Obtaining ID for Custom Domain {0}".format(self.origin_group))
         try:
-            response = self.route_client.afd_custom_domains.get(
+            response = self.cdn_client.afd_custom_domains.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 custom_domain_name=custom_domain
@@ -690,7 +684,7 @@ class AzureRMRoute(AzureRMModuleBase):
 
         try:
             for rule_name in self.rule_sets:
-                response = self.route_client.rule_sets.get(
+                response = self.cdn_client.rule_sets.get(
                     resource_group_name=self.resource_group,
                     profile_name=self.profile_name,
                     rule_set_name=rule_name,
@@ -702,16 +696,6 @@ class AzureRMRoute(AzureRMModuleBase):
         except Exception as err:
             self.log('Error getting the Rule Set IDs.' + err.args[0])
             return False
-
-    def get_route_client(self):
-        ''' Obtain the client object to use '''
-        if not self.route_client:
-            self.route_client = self.get_mgmt_svc_client(
-                CdnManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-05-01'
-            )
-        return self.route_client
 
 
 def route_to_dict(route):

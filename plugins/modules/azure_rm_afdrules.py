@@ -342,8 +342,6 @@ try:
     from azure.mgmt.cdn.models import DeliveryRuleUrlPathCondition, UrlPathMatchConditionParameters  # UrlPath
 
     from azure.core.serialization import NULL as AzureCoreNull
-
-    from azure.mgmt.cdn import CdnManagementClient
 except ImportError as ec:
     # This is handled in azure_rm_common
     pass
@@ -521,7 +519,6 @@ class AzureRMRules(AzureRMModuleBase):
         self.resource_group = None
         self.state = None
 
-        self.rules_client = None
         self.response = None
         self.parameters = None
 
@@ -581,8 +578,6 @@ class AzureRMRules(AzureRMModuleBase):
 
         self.check_required_fields()
 
-        self.rules_client = self.get_rules_client()
-
         self.response = self.get_rule()
 
         if self.state == 'present':
@@ -628,7 +623,7 @@ class AzureRMRules(AzureRMModuleBase):
         self.log("Creating the Azure Rules instance {0}".format(self.name))
 
         try:
-            poller = self.rules_client.rules.begin_create(
+            poller = self.cdn_client.rules.begin_create(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.rule_set_name,
@@ -650,7 +645,7 @@ class AzureRMRules(AzureRMModuleBase):
         self.log("Updating the Azure Rules instance {0}".format(self.name))
 
         try:
-            poller = self.rules_client.rules.begin_update(
+            poller = self.cdn_client.rules.begin_update(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.rule_set_name,
@@ -1035,7 +1030,7 @@ class AzureRMRules(AzureRMModuleBase):
         '''
         self.log("Deleting the Rules {0}".format(self.name))
         try:
-            poller = self.rules_client.rules.begin_delete(
+            poller = self.cdn_client.rules.begin_delete(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.rule_set_name,
@@ -1056,7 +1051,7 @@ class AzureRMRules(AzureRMModuleBase):
         self.log(
             "Checking if the Rules {0} is present".format(self.name))
         try:
-            response = self.rules_client.rules.get(
+            response = self.cdn_client.rules.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.rule_set_name,
@@ -1069,15 +1064,6 @@ class AzureRMRules(AzureRMModuleBase):
             self.log('Did not find the Rule: {0}'.format(str(err)))
             return False
 
-    def get_rules_client(self):
-        ''' Get the Rules client for API access '''
-        if not self.rules_client:
-            self.rules_client = self.get_mgmt_svc_client(
-                CdnManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-05-01')
-        return self.rules_client
-
     def get_origin_group_id(self, origin_group):
         '''
         Gets the ID of the specified Origin Group.
@@ -1087,7 +1073,7 @@ class AzureRMRules(AzureRMModuleBase):
         self.log(
             "Obtaining ID for Origin Group {0}".format(origin_group))
         try:
-            response = self.rules_client.afd_origin_groups.get(
+            response = self.cdn_client.afd_origin_groups.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 origin_group_name=origin_group)

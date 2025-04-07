@@ -71,13 +71,6 @@ id:
 '''
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    # from azure.mgmt.cdn.models import RuleSet
-    from azure.mgmt.cdn import CdnManagementClient
-except ImportError as ec:
-    # This is handled in azure_rm_common
-    pass
-
 
 class AzureRMRuleSet(AzureRMModuleBase):
     """Class representing a Ruleset for Azure Frontdoor Standard or Premium"""
@@ -109,8 +102,6 @@ class AzureRMRuleSet(AzureRMModuleBase):
         self.resource_group = None
         self.state = None
 
-        self.ruleset_client = None
-
         self.results = dict(changed=False)
 
         super(AzureRMRuleSet, self).__init__(
@@ -123,8 +114,6 @@ class AzureRMRuleSet(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        self.ruleset_client = self.get_ruleset_client()
 
         response = self.get_ruleset()
 
@@ -167,7 +156,7 @@ class AzureRMRuleSet(AzureRMModuleBase):
         self.log("Creating the Azure Rule Set instance {0}".format(self.name))
 
         try:
-            response = self.ruleset_client.rule_sets.create(
+            response = self.cdn_client.rule_sets.create(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.name
@@ -187,7 +176,7 @@ class AzureRMRuleSet(AzureRMModuleBase):
         '''
         self.log("Deleting the Rule Set {0}".format(self.name))
         try:
-            poller = self.ruleset_client.rule_sets.begin_delete(
+            poller = self.cdn_client.rule_sets.begin_delete(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.name)
@@ -207,7 +196,7 @@ class AzureRMRuleSet(AzureRMModuleBase):
         self.log(
             "Checking if the Rule Set {0} is present".format(self.name))
         try:
-            response = self.ruleset_client.rule_sets.get(
+            response = self.cdn_client.rule_sets.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 rule_set_name=self.name,
@@ -218,19 +207,6 @@ class AzureRMRuleSet(AzureRMModuleBase):
         except Exception as err:
             self.log('Did not find the Rule Set.' + err.args[0])
             return False
-
-    def get_ruleset_client(self):
-        '''
-        Gets the client object to use to manage the Rule Sets
-
-        :return: management client object
-        '''
-        if not self.ruleset_client:
-            self.ruleset_client = self.get_mgmt_svc_client(
-                CdnManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-05-01')
-        return self.ruleset_client
 
 
 def ruleset_to_dict(ruleset):

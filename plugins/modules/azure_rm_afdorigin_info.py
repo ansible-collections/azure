@@ -172,12 +172,6 @@ afdorigins:
 import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    from azure.mgmt.cdn import CdnManagementClient
-except ImportError:
-    # handled in azure_rm_common
-    pass
-
 
 AZURE_OBJECT_CLASS = 'AFDOrigin'
 
@@ -225,11 +219,6 @@ class AzureRMAFDOriginInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.endpoint_client = self.get_mgmt_svc_client(
-            CdnManagementClient,
-            base_url=self._cloud_environment.endpoints.resource_manager,
-            api_version='2023-05-01')
-
         if self.name:
             self.results['afdorigins'] = self.get_item()
         else:
@@ -246,8 +235,10 @@ class AzureRMAFDOriginInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.endpoint_client.afd_origins.get(
-                resource_group_name=self.resource_group, profile_name=self.profile_name, origin_group_name=self.origin_group_name, origin_name=self.name)
+            item = self.cdn_client.afd_origins.get(resource_group_name=self.resource_group,
+                                                   profile_name=self.profile_name,
+                                                   origin_group_name=self.origin_group_name,
+                                                   origin_name=self.name)
         except Exception as exc:
             self.log("Did not find resource. {0}".format(str(exc)))
 
@@ -262,8 +253,9 @@ class AzureRMAFDOriginInfo(AzureRMModuleBase):
         self.log('List all AFD Origins within an AFD profile')
 
         try:
-            response = self.endpoint_client.afd_origins.list_by_origin_group(
-                resource_group_name=self.resource_group, profile_name=self.profile_name, origin_group_name=self.origin_group_name)
+            response = self.cdn_client.afd_origins.list_by_origin_group(resource_group_name=self.resource_group,
+                                                                        profile_name=self.profile_name,
+                                                                        origin_group_name=self.origin_group_name)
         except Exception as exc:
             self.fail('Failed to list all origins. {0}'.format(str(exc)))
 
