@@ -139,7 +139,6 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         self.name = None
         self.resource_group = None
         self.tags = None
-        self.cdn_client = None
 
         super(AzureRMCdnprofileInfo, self).__init__(
             derived_arg_spec=self.module_args,
