@@ -141,7 +141,41 @@ class AzureRMAFDRulesetInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        response = self.cdn_client.rule_sets.list_by_profile(
+        if self.name:
+            self.results['afdrulesets'] = self.get_item()
+        else:
+            self.results['afdrulesets'] = self.list_by_profile()
+
+        return self.results
+
+    def get_item(self):
+        """Get a single Azure AFD Ruleset"""
+
+        self.log('Get properties for {0}'.format(self.name))
+
+        item = None
+        result = []
+
+        try:
+            item = self.endpoint_client.rule_sets.get(
+                resource_group_name=self.resource_group,
+                profile_name=self.profile_name,
+                rule_set_name=self.name)
+        except Exception:
+            pass
+
+        if item:
+            result = [self.serialize_afdruleset(item)]
+
+        return result
+
+    def list_by_profile(self):
+        """Get all Azure AFD Rulesets within an AFD profile"""
+
+        self.log('List all AFD Rulesets within an AFD profile')
+
+        try:
+            response = self.cdn_client.rule_sets.list_by_profile(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name)
         except Exception as exc:
