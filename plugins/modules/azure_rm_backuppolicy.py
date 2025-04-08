@@ -52,6 +52,14 @@ options:
         choices:
             - AzureIaasVM
         type: str
+    policy_type:
+        description:
+            - Defines the type of backup policy
+        default: V1
+        choices:
+            - V1
+            - V2
+        type: str
     schedule_run_time:
         description:
             - The hour to run backups.
@@ -139,6 +147,20 @@ EXAMPLES = '''
       - "Friday"
     time_zone: "Pacific Standard Time"
     schedule_run_time: 8
+
+- name: Create daily enhanced policy
+  azure.azcollection.azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name_Enhanced
+    resource_group: Resource_Group_Name
+    policy_type: V2
+    state: present
+    backup_management_type: AzureIaasVM
+    schedule_run_frequency: Daily
+    instant_recovery_snapshot_retention: 7
+    daily_retention_count: 28
+    time_zone: UTC
+    schedule_run_time: 20
 '''
 
 RETURN = '''
@@ -231,6 +253,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             resource_group=dict(type='str', required=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             backup_management_type=dict(type='str', choices=['AzureIaasVM']),
+            policy_type=dict(type='str', default='V1', choices=['V1', 'V2']),
             schedule_run_time=dict(type='int'),
             instant_recovery_snapshot_retention=dict(type='int'),
             schedule_run_frequency=dict(type='str', choices=['Daily', 'Weekly']),
@@ -245,6 +268,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         self.name = None
         self.resource_group = None
         self.backup_management_type = None
+        self.policy_type = None
         self.schedule_run_time = None
         self.instant_recovery_snapshot_retention = None
         self.schedule_run_frequency = None
@@ -408,10 +432,15 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 self.fail(e)
 
             # create a schedule policy based on schedule_run_frequency
-            schedule_policy = self.recovery_services_backup_models.SimpleSchedulePolicy(schedule_run_frequency=self.schedule_run_frequency,
-                                                                                        schedule_run_days=self.schedule_days,
-                                                                                        schedule_run_times=schedule_run_times_as_datetimes,
-                                                                                        schedule_weekly_frequency=self.schedule_weekly_frequency)
+            if self.policy_type == 'V1':
+                schedule_policy = self.recovery_services_backup_models.SimpleSchedulePolicy(schedule_run_frequency=self.schedule_run_frequency,
+                                                                                            schedule_run_days=self.schedule_days,
+                                                                                            schedule_run_times=schedule_run_times_as_datetimes,
+                                                                                            schedule_weekly_frequency=self.schedule_weekly_frequency)
+            elif self.policy_type == 'V2':
+                schedule_policy = self.recovery_services_backup_models.SimpleSchedulePolicyV2(
+                    schedule_run_frequency=self.schedule_run_frequency, daily_schedule=self.recovery_services_backup_models.WeeklySchedule(
+                        schedule_run_days=self.schedule_days, schedule_run_times=schedule_run_times_as_datetimes))
 
             daily_retention_schedule = None
             weekly_retention_schedule = None
@@ -441,7 +470,8 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                                                                 schedule_policy=schedule_policy,
                                                                 retention_policy=retention_policy,
                                                                 instant_rp_retention_range_in_days=self.instant_recovery_snapshot_retention,
-                                                                time_zone=self.time_zone)
+                                                                time_zone=self.time_zone,
+                                                                policy_type=self.policy_type)
 
             if policy_definition:
                 policy_resource = self.recovery_services_backup_models.ProtectionPolicyResource(properties=policy_definition)
