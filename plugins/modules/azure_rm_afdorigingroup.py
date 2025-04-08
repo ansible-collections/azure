@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_afdorigingroup
-version_added: "3.3.0"
+version_added: "3.4.0"
 short_description: Manage an Azure Front Door OriginGroup to be used with Standard or Premium Frontdoor
 description:
     - Create, update and delete an Azure Front Door (AFD) OriginGroup to be used by a Front Door Service Profile created using azure_rm_cdnprofile.

@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_afdrules
-version_added: "3.3.0"
+version_added: "3.4.0"
 short_description: Manage an Azure Front Door Rules
 description:
     - Create, update and delete an Azure Front Door Rules to be used by a Front Door Service Profile created using azure_rm_cdnprofile.

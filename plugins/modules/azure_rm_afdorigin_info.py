@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_afdorigin_info
-version_added: "3.3.0"
+version_added: "3.4.0"
 short_description: Get Azure Front Door Origin facts to be used with Standard or Premium Frontdoor Service
 description:
     - Get facts for a specific Azure Front Door (AFD) Origin or all AFD Origins.
