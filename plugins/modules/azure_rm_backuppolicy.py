@@ -312,15 +312,15 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 elif self.schedule_weekly_frequency is not None and\
                         self.schedule_weekly_frequency != old_res['properties']['schedule_policy']['schedule_weekly_frequency']:
                     self.results['changed'] = True
-                elif self.weekly_retention_count is not None:
+                if self.weekly_retention_count is not None:
                     if self.weekly_retention_count !=\
                        old_res['properties']['retention_policy'].get('weekly_schedule', {}).get('retention_duration', {}).get('count'):
                         self.results['changed'] = True
-                elif self.daily_retention_count is not None:
+                if self.daily_retention_count is not None:
                     if self.daily_retention_count !=\
                        old_res['properties']['retention_policy'].get('daily_schedule', {}).get('retention_duration', {}).get('count'):
                         self.results['changed'] = True
-                elif self.schedule_days is not None:
+                if self.schedule_days is not None:
                     if old_res['properties']['schedule_policy'].get('schedule_run_days') is not None:
                         if set(self.schedule_days) != set(old_res['properties']['schedule_policy']['schedule_run_days']):
                             self.results['changed'] = True
