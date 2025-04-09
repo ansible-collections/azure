@@ -171,6 +171,9 @@
     that:
       - not output.changed
 
+- name: Test encrypted images
+  ansible.builtin.include_tasks: azure_test_encrypted.yml
+
 - name: Delete empty disk
   azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
