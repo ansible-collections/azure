@@ -81,7 +81,7 @@ type:
 properties:
     description:
         - Attributes of the backup policy.
-    type: complex
+    type: dict
     returned: always
     sample: {
                 "backup_management_type": "AzureIaasVM",

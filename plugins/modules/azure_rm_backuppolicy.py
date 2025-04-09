@@ -169,7 +169,7 @@ type:
 properties:
     description:
         - Attributes of the backup policy.
-    type: complex
+    type: dict
     returned: always
     sample: {
                 "backup_management_type": "AzureIaasVM",
@@ -301,17 +301,22 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 self.log("Backup policy {0} for vault {1} in resource group {2} already exists, updating".format(self.name,
                                                                                                                  self.vault_name,
                                                                                                                  self.resource_group))
-                if self.schedule_run_frequency is not None and self.schedule_run_frequency != old_res['properties']['schedule_policy']['schedule_run_frequency']:
+                if self.schedule_run_frequency is not None and\
+                   self.schedule_run_frequency != old_res['properties']['schedule_policy']['schedule_run_frequency']:
                     self.results['changed'] = True
                 elif self.time_zone is not None and self.time_zone != old_res['properties']['time_zone']:
                     self.results['changed'] = True
-                elif self.instant_recovery_snapshot_retention is not None and self.instant_recovery_snapshot_retention != old_res['properties']['instant_rp_retention_range_in_days']:
+                elif self.instant_recovery_snapshot_retention is not None and\
+                   self.instant_recovery_snapshot_retention != old_res['properties']['instant_rp_retention_range_in_days']:
                     self.results['changed'] = True
-                elif self.schedule_weekly_frequency is not None and self.schedule_weekly_frequency != old_res['properties']['schedule_policy']['schedule_weekly_frequency']:
+                elif self.schedule_weekly_frequency is not None and\
+                   self.schedule_weekly_frequency != old_res['properties']['schedule_policy']['schedule_weekly_frequency']:
                     self.results['changed'] = True
-                elif self.weekly_retention_count is not None and self.weekly_retention_count != old_res['properties']['retention_policy'].get('weekly_schedule', {}).get('retention_duration', {}).get('count'):
+                elif self.weekly_retention_count is not None and\
+                   self.weekly_retention_count != old_res['properties']['retention_policy'].get('weekly_schedule', {}).get('retention_duration', {}).get('count'):
                     self.results['changed'] = True
-                elif self.daily_retention_count is not None and self.daily_retention_count != old_res['properties']['retention_policy'].get('daily_schedule', {}).get('retention_duration', {}).get('count'):
+                elif self.daily_retention_count is not None and\
+                   self.daily_retention_count != old_res['properties']['retention_policy'].get('daily_schedule', {}).get('retention_duration', {}).get('count'):
                     self.results['changed'] = True
                 elif self.schedule_days is not None:
                     if old_res['properties']['schedule_policy'].get('schedule_run_days') is not None:
