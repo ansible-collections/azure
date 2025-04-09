@@ -60,7 +60,6 @@
     time_zone: "Pacific Standard Time"
     schedule_run_time: 14
   register: daily_policy_output_idempotent
-  
 - name: Assert that there is no change after second deletion of daily backup policy
   ansible.builtin.assert:
     that:
