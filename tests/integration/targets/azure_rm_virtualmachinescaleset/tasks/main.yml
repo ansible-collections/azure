@@ -929,6 +929,12 @@
   ansible.builtin.assert:
     that: results.changed
 
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}des
+    state: absent
+
 - name: Destroy disk encryption set
   azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}"
