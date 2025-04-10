@@ -314,17 +314,17 @@ class AzureRMImage(AzureRMModuleBase):
         if self.os_disk_encryption_set:
             os_disk_encryption_set = self.image_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set)
             return self.image_models.ImageOSDisk(os_type=self.os_type,
-                                                os_state=self.image_models.OperatingSystemStateTypes.generalized,
-                                                snapshot=snapshot_resource,
-                                                managed_disk=managed_disk,
-                                                disk_encryption_set=os_disk_encryption_set,
-                                                blob_uri=blob_uri)
+                                                 os_state=self.image_models.OperatingSystemStateTypes.generalized,
+                                                 snapshot=snapshot_resource,
+                                                 managed_disk=managed_disk,
+                                                 disk_encryption_set=os_disk_encryption_set,
+                                                 blob_uri=blob_uri)
         else:
             return self.image_models.ImageOSDisk(os_type=self.os_type,
-                                                os_state=self.image_models.OperatingSystemStateTypes.generalized,
-                                                snapshot=snapshot_resource,
-                                                managed_disk=managed_disk,
-                                                blob_uri=blob_uri)
+                                                 os_state=self.image_models.OperatingSystemStateTypes.generalized,
+                                                 snapshot=snapshot_resource,
+                                                 managed_disk=managed_disk,
+                                                 blob_uri=blob_uri)
 
     def create_data_disk(self, lun, source):
         blob_uri, disk, snapshot = self.resolve_storage_source(source)
@@ -334,15 +334,15 @@ class AzureRMImage(AzureRMModuleBase):
             if self.data_disk_encryption_set:
                 data_disk_encryption_set = self.image_models.DiskEncryptionSetParameters(id=self.data_disk_encryption_set)
                 return self.image_models.ImageDataDisk(lun=lun,
-                                                    blob_uri=blob_uri,
-                                                    snapshot=snapshot_resource,
-                                                    managed_disk=managed_disk,
-                                                    disk_encryption_set=data_disk_encryption_set)
+                                                       blob_uri=blob_uri,
+                                                       snapshot=snapshot_resource,
+                                                       managed_disk=managed_disk,
+                                                       disk_encryption_set=data_disk_encryption_set)
             else:
                 return self.image_models.ImageDataDisk(lun=lun,
-                                                    blob_uri=blob_uri,
-                                                    snapshot=snapshot_resource,
-                                                    managed_disk=managed_disk)
+                                                       blob_uri=blob_uri,
+                                                       snapshot=snapshot_resource,
+                                                       managed_disk=managed_disk)
 
     def create_data_disks(self):
         return list(filter(None, [self.create_data_disk(lun, source) for lun, source in enumerate(self.data_disk_sources)]))
