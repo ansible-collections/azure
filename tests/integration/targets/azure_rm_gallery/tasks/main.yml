@@ -78,6 +78,7 @@
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
+    sku: Standard
     name: "testPublicIP{{ rpfx }}"
 
 - name: Create virtual network inteface cards for VM A and B

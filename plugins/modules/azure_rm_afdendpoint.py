@@ -111,7 +111,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.cdn.models import AFDEndpoint, AFDEndpointUpdateParameters
-    from azure.mgmt.cdn import CdnManagementClient
 except ImportError as ec:
     # This is handled in azure_rm_common
     pass
@@ -177,8 +176,6 @@ class AzureRMEndpoint(AzureRMModuleBase):
         self.resource_group = None
         self.state = None
 
-        self.endpoint_client = None
-
         self.results = dict(changed=False)
 
         super(AzureRMEndpoint, self).__init__(
@@ -191,8 +188,6 @@ class AzureRMEndpoint(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
-
-        self.endpoint_client = self.get_endpoint_client()
 
         to_be_updated = False
 
@@ -274,7 +269,7 @@ class AzureRMEndpoint(AzureRMModuleBase):
         )
 
         try:
-            poller = self.endpoint_client.afd_endpoints.begin_create(
+            poller = self.cdn_client.afd_endpoints.begin_create(
                 endpoint_name=self.name,
                 profile_name=self.profile_name,
                 resource_group_name=self.resource_group,
@@ -298,7 +293,7 @@ class AzureRMEndpoint(AzureRMModuleBase):
             enabled_state=self.enabled_state
         )
         try:
-            poller = self.endpoint_client.afd_endpoints.begin_update(
+            poller = self.cdn_client.afd_endpoints.begin_update(
                 endpoint_name=self.name,
                 profile_name=self.profile_name,
                 resource_group_name=self.resource_group,
@@ -317,7 +312,7 @@ class AzureRMEndpoint(AzureRMModuleBase):
         '''
         self.log("Deleting the AFD Endpoint {0}".format(self.name))
         try:
-            poller = self.endpoint_client.afd_endpoints.begin_delete(
+            poller = self.cdn_client.afd_endpoints.begin_delete(
                 resource_group_name=self.resource_group, profile_name=self.profile_name, endpoint_name=self.name)
             self.get_poller_result(poller)
             return True
@@ -335,7 +330,7 @@ class AzureRMEndpoint(AzureRMModuleBase):
         self.log(
             "Checking if the AFD Endpoint {0} is present".format(self.name))
         try:
-            response = self.endpoint_client.afd_endpoints.get(
+            response = self.cdn_client.afd_endpoints.get(
                 resource_group_name=self.resource_group,
                 profile_name=self.profile_name,
                 endpoint_name=self.name)
@@ -345,14 +340,6 @@ class AzureRMEndpoint(AzureRMModuleBase):
         except Exception as err:
             self.log('Did not find the AFD Endpoint.')
             return False
-
-    def get_endpoint_client(self):
-        if not self.endpoint_client:
-            self.endpoint_client = self.get_mgmt_svc_client(
-                CdnManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-05-01')
-        return self.endpoint_client
 
 
 def main():

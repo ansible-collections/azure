@@ -21,6 +21,8 @@
   azure_rm_publicipaddress:
     name: "{{ pipaname }}"
     resource_group: '{{ resource_group }}'
+    sku: Standard
+    allocation_method: Static
 
 - name: Clear load balancer
   azure_rm_loadbalancer:
@@ -32,6 +34,7 @@
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
+    sku: Standard
     frontend_ip_configurations:
       - name: frontendip0
         public_ip_address: "{{ pipaname }}"
@@ -46,6 +49,7 @@
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
+    sku: Standard
     frontend_ip_configurations:
       - name: frontendip0
         public_ip_address: "{{ pipaname }}"
@@ -59,6 +63,7 @@
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_a }}"
+    sku: Standard
     frontend_ip_configurations:
       - name: frontendip0
         public_ip_address: "{{ pipaname }}"
@@ -237,6 +242,7 @@
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c1 }}"
+    sku: Standard
     frontend_ip_configurations:
       - name: frontendipconf0
         public_ip_address: "{{ pipaname }}"
@@ -277,6 +283,7 @@
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_c2 }}"
+    sku: Standard
     frontend_ip_configurations:
       - name: frontendipconf0
         public_ip_address: "{{ pipaname }}"

@@ -99,6 +99,8 @@ options:
         choices:
             - linux
             - windows
+            - Linux
+            - Windows
     disk_size_gb:
         description:
             - Size in GB of the managed disk to be created.
@@ -694,7 +696,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             os_type=dict(
                 type='str',
-                choices=['linux', 'windows']
+                choices=['linux', 'windows', 'Linux', 'Windows']
             ),
             disk_size_gb=dict(
                 type='int'
@@ -874,6 +876,13 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.network_access_policy = disk_instance.get('network_access_policy')
             if self.disk_access_id is None:
                 self.disk_access_id = disk_instance.get('disk_access_id')
+            if self.upload_size_bytes is None:
+                self.upload_size_bytes = disk_instance.get('upload_size_bytes')
+            if self.image_reference is None:
+                self.image_reference = disk_instance.get('image_reference')
+            if self.gallery_image_reference is None:
+                self.gallery_image_reference = disk_instance.get('gallery_image_reference')
+
         result = disk_instance
 
         # need create or update
@@ -1063,6 +1072,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
 
     def create_or_update_managed_disk(self, parameter, update_flag):
         try:
+            parameter['tags'] = self.tags
             if update_flag:
                 poller = self.disk_client.disks.begin_update(self.resource_group,
                                                              self.name,
@@ -1090,9 +1100,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             if not found_disk['storage_account_type'] == new_disk['sku'].name:
                 resp = True
         # Check how to implement tags
-        if new_disk.get('tags') is not None:
-            if not found_disk['tags'] == new_disk['tags']:
-                resp = True
+        update_tags, self.tags = self.update_tags(found_disk['tags'])
+        if update_tags:
+            resp = True
         if self.zone is not None:
             if not found_disk['zone'] == self.zone:
                 resp = True

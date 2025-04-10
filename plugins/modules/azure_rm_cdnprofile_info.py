@@ -115,13 +115,6 @@ cdnprofiles:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
-try:
-    from azure.mgmt.cdn import CdnManagementClient
-except Exception:
-    # handled in azure_rm_common
-    pass
-
 import re
 
 AZURE_OBJECT_CLASS = 'profiles'
@@ -146,7 +139,6 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         self.name = None
         self.resource_group = None
         self.tags = None
-        self.cdn_client = None
 
         super(AzureRMCdnprofileInfo, self).__init__(
             derived_arg_spec=self.module_args,
@@ -163,8 +155,6 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])
-
-        self.cdn_client = self.get_cdn_client()
 
         if self.name and not self.resource_group:
             self.fail("Parameter error: resource group required when filtering by name.")
@@ -187,8 +177,7 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.cdn_client.profiles.get(
-                self.resource_group, self.name)
+            item = self.cdn_client.profiles.get(self.resource_group, self.name)
         except Exception:
             pass
 
@@ -203,8 +192,7 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         self.log('List all Azure CDNs within a resource group')
 
         try:
-            response = self.cdn_client.profiles.list_by_resource_group(
-                self.resource_group)
+            response = self.cdn_client.profiles.list_by_resource_group(self.resource_group)
         except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
@@ -249,13 +237,6 @@ class AzureRMCdnprofileInfo(AzureRMModuleBase):
         new_result['tags'] = cdnprofile.tags
         new_result['identity'] = cdnprofile.identity.as_dict() if cdnprofile.identity else None
         return new_result
-
-    def get_cdn_client(self):
-        if not self.cdn_client:
-            self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
-                                                       base_url=self._cloud_environment.endpoints.resource_manager,
-                                                       api_version='2024-02-01')
-        return self.cdn_client
 
 
 def main():

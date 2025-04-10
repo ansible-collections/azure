@@ -49,6 +49,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         type: str
     hyper_v_generation:
         description:
@@ -143,7 +145,7 @@ class AzureRMImage(AzureRMModuleBase):
             location=dict(type='str'),
             source=dict(type='raw'),
             data_disk_sources=dict(type='list', elements='str', default=[]),
-            os_type=dict(type='str', choices=['Windows', 'Linux']),
+            os_type=dict(type='str', choices=['Windows', 'Linux', 'windows', 'linux']),
             hyper_v_generation=dict(type='str', choices=['V1', 'V2'])
         )
 

@@ -177,7 +177,6 @@ from ansible.module_utils.common.dict_transformations import _snake_to_camel
 
 try:
     from azure.mgmt.cdn.models import Endpoint, DeepCreatedOrigin, EndpointUpdateParameters, QueryStringCachingBehavior
-    from azure.mgmt.cdn import CdnManagementClient
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -345,8 +344,6 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
         self.is_https_allowed = None
         self.query_string_caching_behavior = None
 
-        self.cdn_client = None
-
         self.results = dict(changed=False)
 
         super(AzureRMCdnendpoint, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -358,8 +355,6 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             setattr(self, key, kwargs[key])
-
-        self.cdn_client = self.get_cdn_client()
 
         to_be_updated = False
 
@@ -539,8 +534,7 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
         '''
         self.log("Deleting the Azure CDN endpoint {0}".format(self.name))
         try:
-            poller = self.cdn_client.endpoints.begin_delete(
-                self.resource_group, self.profile_name, self.name)
+            poller = self.cdn_client.endpoints.begin_delete(self.resource_group, self.profile_name, self.name)
             self.get_poller_result(poller)
             return True
         except Exception as e:
@@ -654,13 +648,6 @@ class AzureRMCdnendpoint(AzureRMModuleBase):
             return True
 
         return False
-
-    def get_cdn_client(self):
-        if not self.cdn_client:
-            self.cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
-                                                       base_url=self._cloud_environment.endpoints.resource_manager,
-                                                       api_version='2017-04-02')
-        return self.cdn_client
 
 
 def main():

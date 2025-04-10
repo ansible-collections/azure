@@ -125,6 +125,7 @@
     storage_account_type: "StandardSSD_LRS"
     network_access_policy: AllowAll
     public_network_access: Enabled
+    append_tags: false
     tags:
       galaxy: "no"
       delete: never
@@ -340,6 +341,75 @@
       - output.changed
       - output.state
 
+- name: Gather Resource Group info
+  azure.azcollection.azure_rm_resourcegroup_info:
+    name: "{{ resource_group }}"
+  register: __rg_info
+
+- name: Set helper facts
+  ansible.builtin.set_fact:
+    location: "{{ __rg_info.resourcegroups.0.location }}"
+    subscription_id: "{{ azure_subscription_id }}"
+
+- name: Create managed disk fromimage
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}8"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 64
+    network_access_policy: DenyAll
+    public_network_access: Disabled
+    create_option: fromimage
+    os_type: linux
+    tags:
+      testtag1: TestValue1
+    security_profile:
+      security_type: TrustedLaunch
+    image_reference:
+      id: "/Subscriptions/{{ subscription_id }}/Providers/Microsoft.Compute/Locations/{{ location }}/Publishers/RedHat/ArtifactTypes/VMImage/Offers/RHEL/Skus/9-lvm-gen2/Versions/9.4.202407053"
+  register: output
+
+- name: Assert Tags
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.tags.testtag1 == 'TestValue1'
+
+- name: Update tags (replace) on managed disk (fromimage)
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}8"
+    append_tags: false
+    tags:
+      testtag2: TestValue2
+  register: output
+
+- name: Assert Tags
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state
+      - output.state.tags.testtag1 is not defined
+      - output.state.tags.testtag2 == 'TestValue2'
+
+- name: Update tags (merge) on managed disk (fromimage)
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}8"
+    append_tags: true
+    tags:
+      TestTag3: TestValue3
+  register: output
+
+- name: Assert Tags
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state
+      - output.state.tags.testtag1 is not defined
+      - output.state.tags.testtag2 == 'TestValue2'
+      - output.state.tags.TestTag3 == 'TestValue3'
+
 - name: Delete all managed disk
   azure_rm_manageddisk:
     resource_group: "{{ resource_group }}"
@@ -354,6 +424,7 @@
     - 5
     - 6
     - 7
+    - 8
 
 - name: Delete virtual machine
   azure_rm_virtualmachine:
