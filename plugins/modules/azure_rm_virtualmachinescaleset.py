@@ -150,6 +150,10 @@ options:
             - Specifies the size of the operating system disk in gigabytes.
             - This can be used to overwrite the size of the disk in a virtual machine image.
         type: int
+    os_disk_encryption_set:
+        description:
+            - The resource ID of the disk encryption set for the OS disk.
+        type: str
     os_type:
         description:
             - Base type of operating system.
@@ -210,6 +214,10 @@ options:
                     - ReadOnly
                     - ReadWrite
                 default: ReadOnly
+            disk_encryption_set:
+                description:
+                    - The resource ID of the disk encryption set for the data disks.
+                type: str
     virtual_network_resource_group:
         description:
             - When creating a virtual machine, if a specific virtual network from another resource group should be
@@ -726,6 +734,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                                  default='ReadOnly'),
             os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
+            os_disk_encryption_set=dict(type='str'),
             data_disks=dict(
                 type='list',
                 elements='dict',
@@ -736,7 +745,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     managed_disk_type=dict(
                         type='str',
                         choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']
-                    )
+                    ),
+                    disk_encryption_set=dict(type='str')
                 )
             ),
             subnet_name=dict(type='str', aliases=['subnet']),
@@ -801,6 +811,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.image = None
         self.os_disk_caching = None
         self.managed_disk_type = None
+        self.os_disk_encryption_set = None
         self.data_disks = None
         self.os_type = None
         self.subnet_name = None
@@ -1191,7 +1202,12 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if not image_reference:
                         self.fail("Parameter error: an image is required when creating a virtual machine.")
 
-                    managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(storage_account_type=self.managed_disk_type)
+                    if self.os_disk_encryption_set:
+                        os_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set)
+                        managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(storage_account_type=self.managed_disk_type,
+                                                                                                       disk_encryption_set=os_disk_encryption_set)
+                    else:
+                        managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(storage_account_type=self.managed_disk_type)
 
                     if self.security_group:
                         nsg = self.parse_nsg()
@@ -1303,9 +1319,16 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         data_disks = []
 
                         for data_disk in self.data_disks:
-                            data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
-                                storage_account_type=data_disk.get('managed_disk_type', None)
-                            )
+                            if data_disk.get('disk_encryption_set'):
+                                data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set'])
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None),
+                                    disk_encryption_set=data_disk_encryption_set
+                                )
+                            else:
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None)
+                                )
 
                             data_disk['caching'] = data_disk.get(
                                 'caching',
@@ -1386,14 +1409,22 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.data_disks is not None:
                         data_disks = []
                         for data_disk in self.data_disks:
+                            if data_disk.get('disk_encryption_set'):
+                                data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set'])
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None),
+                                    disk_encryption_set=data_disk_encryption_set
+                                )
+                            else:
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None)
+                                )
                             data_disks.append(self.compute_models.VirtualMachineScaleSetDataDisk(
                                 lun=data_disk['lun'],
                                 caching=data_disk['caching'],
                                 create_option=self.compute_models.DiskCreateOptionTypes.empty,
                                 disk_size_gb=data_disk['disk_size_gb'],
-                                managed_disk=self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
-                                    storage_account_type=data_disk.get('managed_disk_type', None)
-                                ),
+                                managed_disk=data_disk_managed_disk,
                             ))
                         vmss_resource.virtual_machine_profile.storage_profile.data_disks = data_disks
 
