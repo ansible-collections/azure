@@ -10,7 +10,7 @@
 
 - name: Fix resource prefix
   ansible.builtin.set_fact:
-    linux_app_plan_resource_group: "{{ resource_group_third }}"
+    linux_app_plan_resource_group: "{{ resource_group_datalake }}"
     win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}winapp"
     linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}linuxapp"
     win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
