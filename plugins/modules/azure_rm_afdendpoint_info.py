@@ -133,13 +133,6 @@ afdendpoints:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
-try:
-    from azure.mgmt.cdn import CdnManagementClient
-except ImportError:
-    # handled in azure_rm_common
-    pass
-
 import re
 
 AZURE_OBJECT_CLASS = 'AFDEndpoint'
@@ -188,11 +181,6 @@ class AzureRMAFDEndpointInfo(AzureRMModuleBase):
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 
-        self.endpoint_client = self.get_mgmt_svc_client(
-            CdnManagementClient,
-            base_url=self._cloud_environment.endpoints.resource_manager,
-            api_version='2023-05-01')
-
         if self.name:
             self.results['afdendpoints'] = self.get_item()
         else:
@@ -209,8 +197,7 @@ class AzureRMAFDEndpointInfo(AzureRMModuleBase):
         result = []
 
         try:
-            item = self.endpoint_client.afd_endpoints.get(
-                self.resource_group, self.profile_name, self.name)
+            item = self.cdn_client.afd_endpoints.get(self.resource_group, self.profile_name, self.name)
         except Exception:
             pass
 
@@ -225,8 +212,7 @@ class AzureRMAFDEndpointInfo(AzureRMModuleBase):
         self.log('List all AFD Endpoints within an AFD profile')
 
         try:
-            response = self.endpoint_client.afd_endpoints.list_by_profile(
-                self.resource_group, self.profile_name)
+            response = self.cdn_client.afd_endpoints.list_by_profile(self.resource_group, self.profile_name)
         except Exception as exc:
             self.fail('Failed to list all items - {0}'.format(str(exc)))
 
