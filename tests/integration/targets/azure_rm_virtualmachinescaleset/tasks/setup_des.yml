@@ -1,8 +1,7 @@
 - name: Set DES variables
   ansible.builtin.set_fact:
-    des_name: "{{ 'des' ~ uid_short }}"
-    uid_short: "{{ (resource_group ~ inventory_hostname) | hash('md5') | truncate(10, True, '') }}"
-    vault_name: "kv{{ uid_short }}{{ '%m%d%H%M%S' | strftime }}"
+    des_name: "{{ 'des' ~ (resource_group | hash('md5') | truncate(8, True, '')) }}"
+    vault_name: "kv{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ '%m%d%H%M%S' | strftime }}"
 
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
