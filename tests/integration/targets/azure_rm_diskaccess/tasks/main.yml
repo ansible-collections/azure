@@ -7,9 +7,6 @@
     resource_group: "{{ resource_group }}"
     name: 'test{{ rpfx }}'
     location: westus
-    extended_location:
-      name: losangeles
-      type: "EdgeZone"
     tags:
       key1: value1
   check_mode: true
@@ -19,9 +16,6 @@
     resource_group: "{{ resource_group }}"
     name: 'test{{ rpfx }}'
     location: westus
-    extended_location:
-      name: losangeles
-      type: "EdgeZone"
     tags:
       key1: value1
   register: output
@@ -36,9 +30,6 @@
     resource_group: "{{ resource_group }}"
     name: 'test{{ rpfx }}'
     location: westus
-    extended_location:
-      name: losangeles
-      type: "EdgeZone"
     tags:
       key1: value1
   register: output
@@ -53,9 +44,6 @@
     resource_group: "{{ resource_group }}"
     name: 'test{{ rpfx }}'
     location: westus
-    extended_location:
-      name: losangeles
-      type: "EdgeZone"
     tags:
       key2: value2
   register: output
