@@ -19,7 +19,7 @@
 
     - name: Power on minimal VM 2
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ vm_name_2 }}"
         started: true
 

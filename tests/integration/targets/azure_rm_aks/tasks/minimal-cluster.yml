@@ -286,6 +286,18 @@
     that:
       - output.changed
 
+- name: Delete the AKS instance
+  azure_rm_aks:
+    name: "minimal{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert the AKS instance is well deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
 - name: Create Log Analytics Workspace
   azure_rm_loganalyticsworkspace:
     name: "log{{ rpfx }}"
@@ -441,18 +453,6 @@
     name: "min{{ rpfx }}-sec"
     resource_group: "{{ resource_group }}"
     state: absent
-
-- name: Delete the AKS instance
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: output
-
-- name: Assert the AKS instance is well deleted
-  ansible.builtin.assert:
-    that:
-      - output.changed
 
 - name: Get AKS fact
   azure_rm_aks_info:

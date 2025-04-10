@@ -3,7 +3,7 @@ plugin: azure.azcollection.azure_rm
 conditional_groups:
   azure: true
 exclude_host_filters:
-  - location not in ['eastus', 'northcentralus']
+  - location not in ['eastus', 'northcentralus', 'westus2']
   - powerstate != 'running'
   - not (tags['Deployment-Method'] | default('Exclude') == 'Ansible' and tags['Automation-Method'] | default('Exclude') == 'Ansible')
   # Customer tried to use the following filter but dashes in variable names is not allowed.

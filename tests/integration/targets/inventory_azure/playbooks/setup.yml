@@ -8,31 +8,31 @@
       ansible.builtin.include_vars: vars.yml
     - name: SETUP | Create storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ storage_account }}"
         account_type: Standard_LRS
 
     - name: SETUP | Create availability set
       azure_rm_availabilityset:
         name: "{{ availability_set }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
 
     - name: SETUP | Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ network_name }}"
         address_prefixes: "{{ network }}"
 
     - name: SETUP | Create subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ subnet_name }}"
         address_prefix: "{{ subnet }}"
         virtual_network: "{{ network_name }}"
 
     - name: Create minimal VM with defaults
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ vm_name }}"
         admin_username: testuser
         ssh_password_enabled: false
@@ -52,7 +52,7 @@
 
     - name: Create minimal VM 2 with defaults
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ vm_name_2 }}"
         started: true
         admin_username: testuser

@@ -3,7 +3,7 @@ plugin: azure.azcollection.azure_rm
 conditional_groups:
   azure: true
 exclude_host_filters:
-  - location not in ['eastus', 'northcentralus']
+  - location not in ['eastus', 'northcentralus', 'westus2']
 default_host_filters: []
 # fail_on_template_errors should be enabled for debugging and possibly all times.
 fail_on_template_errors: True
