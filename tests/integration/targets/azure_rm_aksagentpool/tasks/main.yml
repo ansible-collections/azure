@@ -20,7 +20,7 @@
     name: "pipprefix{{ rpfx }}"
     location: westus2
     zones:
-      - 1
+      - 2
     public_ip_address_version: IPV4
     prefix_length: 29
     sku:
@@ -121,7 +121,6 @@
       enable_vtpm: true
       enable_secure_boot: true
     availability_zones:
-      - 1
       - 2
   register: output
 
@@ -149,7 +148,6 @@
       enable_vtpm: true
       enable_secure_boot: true
     availability_zones:
-      - 1
       - 2
   register: output
 
@@ -188,7 +186,6 @@
       enable_vtpm: false
       enable_secure_boot: false
     availability_zones:
-      - 1
       - 2
   register: output
 
@@ -207,7 +204,7 @@
 - name: Assert node agent configuration
   ansible.builtin.assert:
     that:
-      - output.aks_agent_pools[0].availability_zones == [1, 2]
+      - output.aks_agent_pools[0].availability_zones == [2]
       - output.aks_agent_pools[0].min_count == 2
       - output.aks_agent_pools[0].max_count == 20
       - output.aks_agent_pools[0].type_properties_type == "VirtualMachineScaleSets"
@@ -234,7 +231,7 @@
     max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
     availability_zones:
-      - 1
+      - 2
     kubelet_disk_type: OS
     workload_runtime: OCIContainer
     os_sku: Ubuntu
@@ -278,7 +275,7 @@
     max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
     availability_zones:
-      - 1
+      - 2
     kubelet_disk_type: OS
     workload_runtime: OCIContainer
     os_sku: Ubuntu
