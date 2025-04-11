@@ -43,6 +43,13 @@
       is_linux: false
       sku: S1
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}1"
+    state: absent
+  register: output
+
 - name: Create a windows web app with existing app service plan
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -74,6 +81,13 @@
     that:
       - stopped.webapps[0].app_state == "Stopped"
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}2"
+    state: absent
+  register: output
+
 - name: Create a windows web app with existing app service plan, try to update some root level params
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -96,6 +110,13 @@
   ansible.builtin.assert:
     that:
       - output.webapps | length == 1
+
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}3"
+    state: absent
+  register: output
 
 - name: Create a win web app with java run time specific
   azure_rm_webapp:
@@ -188,6 +209,13 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}4"
+    state: absent
+  register: output
+
 - name: Create a win web app with python run time and php run time
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -205,6 +233,13 @@
 - name: Assert the web app was created
   ansible.builtin.assert:
     that: output.changed
+
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}5"
+    state: absent
+  register: output
 
 - name: Create a docker web app with some app settings
   azure_rm_webapp:
@@ -225,6 +260,13 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}6"
+    state: absent
+  register: output
+
 - name: Create a docker web app with private acr registry
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -243,6 +285,13 @@
 - name: Assert the web app was created
   ansible.builtin.assert:
     that: output.changed
+
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}7"
+    state: absent
+  register: output
 
 - name: Create a linux web app with nodejs framework
   azure_rm_webapp:
@@ -291,6 +340,13 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}10"
+    state: absent
+  register: output
+
 - name: Create a linux web app with deployment source github
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -312,7 +368,7 @@
 - name: Delete web app
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}8"
+    name: "{{ win_app_name }}10"
     state: absent
   register: output
 
@@ -485,6 +541,13 @@
       - facts.webapps[0].ftps_state == 'FtpsOnly'
       - not facts.webapps[0].http20_enabled
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ linux_app_name }}-siteconfig"
+    state: absent
+  register: output
+
 - name: Create a web app with HTTP 2.0
   azure_rm_webapp:
     resource_group: "{{ linux_app_plan_resource_group }}"
@@ -592,6 +655,13 @@
       - facts.webapps[0].ftps_state == 'Disabled'
       - not facts.webapps[0].http20_enabled
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ linux_app_name }}-http20"
+    state: absent
+  register: output
+
 - name: Create a windows web app with site_auth_settings
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -659,6 +729,13 @@
       - output.webapps[0].site_auth_settings.token_refresh_extension_hours == 100.0
       - output.webapps[0].site_auth_settings.token_store_enabled is false
       - output.webapps[0].site_auth_settings.unauthenticated_client_action == 'RedirectToLoginPage'
+
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}-auth"
+    state: absent
+  register: output
 
 - name: Create a windows web app with UserAssigned Identity
   azure_rm_webapp:
@@ -791,6 +868,13 @@
       - output.webapps[0].identity.type == 'SystemAssigned'
       - '"user_assigned_identities" not in output.webapps[0].identity'
 
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}-identity"
+    state: absent
+  register: output
+
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
     resource_group: "{{ resource_group_datalake }}"
@@ -885,6 +969,13 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Delete web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}13"
+    state: absent
+  register: output
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
