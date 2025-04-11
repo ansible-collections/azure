@@ -166,6 +166,48 @@ type:
     type: str
     returned: always
     sample: Microsoft.RecoveryServices/vaults/backupPolicies
+properties:
+    description:
+        - Attributes of the backup policy.
+    type: dict
+    returned: always
+    sample: {
+                "backup_management_type": "AzureIaasVM",
+                "instant_rp_details": {},
+                "instant_rp_retention_range_in_days": 5,
+                "protected_items_count": 0,
+                "retention_policy": {
+                    "retention_policy_type": "LongTermRetentionPolicy",
+                    "weekly_schedule": {
+                        "days_of_the_week": [
+                            "Monday",
+                            "Wednesday",
+                            "Thursday"
+                        ],
+                        "retention_duration": {
+                            "count": 4,
+                            "duration_type": "Weeks"
+                        },
+                        "retention_times": [
+                            "2025-04-09T10:00:00.000Z"
+                        ]
+                    }
+                },
+                "schedule_policy": {
+                    "schedule_policy_type": "SimpleSchedulePolicy",
+                    "schedule_run_days": [
+                        "Monday",
+                        "Wednesday",
+                        "Thursday"
+                    ],
+                    "schedule_run_frequency": "Weekly",
+                    "schedule_run_times": [
+                        "2025-04-09T10:00:00.000Z"
+                    ],
+                    "schedule_weekly_frequency": 0
+                },
+                "time_zone": "Pacific Standard Time"
+            }
 '''
 
 from datetime import datetime
@@ -236,15 +278,12 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         existing_backup_policy = None
         response = None
 
-        existing_backup_policy = self.get_backup_policy()
-
-        if existing_backup_policy:
-            self.set_results(existing_backup_policy)
+        old_res = self.get_backup_policy()
 
         # either create or update
         if self.state == 'present':
             # check if the backup policy exists
-            if not existing_backup_policy:
+            if not old_res:
                 self.log("Backup policy {0} for vault {1} in resource group {2} does not exist.".format(self.name,
                                                                                                         self.vault_name,
                                                                                                         self.resource_group))
@@ -255,28 +294,57 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                     return self.results
 
                 response = self.create_or_update_backup_policy()
-                self.set_results(response)
+                self.results.update(self.set_results(response))
 
             # log that we're doing an update
             else:
                 self.log("Backup policy {0} for vault {1} in resource group {2} already exists, updating".format(self.name,
                                                                                                                  self.vault_name,
                                                                                                                  self.resource_group))
-
-                self.results['changed'] = True
+                if self.schedule_run_frequency is not None and\
+                   self.schedule_run_frequency != old_res['properties']['schedule_policy']['schedule_run_frequency']:
+                    self.results['changed'] = True
+                elif self.time_zone is not None and self.time_zone != old_res['properties']['time_zone']:
+                    self.results['changed'] = True
+                elif self.instant_recovery_snapshot_retention is not None and\
+                        self.instant_recovery_snapshot_retention != old_res['properties']['instant_rp_retention_range_in_days']:
+                    self.results['changed'] = True
+                elif self.schedule_weekly_frequency is not None and\
+                        self.schedule_weekly_frequency != old_res['properties']['schedule_policy']['schedule_weekly_frequency']:
+                    self.results['changed'] = True
+                if self.weekly_retention_count is not None:
+                    if self.weekly_retention_count !=\
+                       old_res['properties']['retention_policy'].get('weekly_schedule', {}).get('retention_duration', {}).get('count'):
+                        self.results['changed'] = True
+                if self.daily_retention_count is not None:
+                    if self.daily_retention_count !=\
+                       old_res['properties']['retention_policy'].get('daily_schedule', {}).get('retention_duration', {}).get('count'):
+                        self.results['changed'] = True
+                if self.schedule_days is not None:
+                    if old_res['properties']['schedule_policy'].get('schedule_run_days') is not None:
+                        if set(self.schedule_days) != set(old_res['properties']['schedule_policy']['schedule_run_days']):
+                            self.results['changed'] = True
+                    else:
+                        self.results['changed'] = True
 
                 if self.check_mode:
+                    self.results.update(old_res)
+                    self.results['changed'] = True
                     return self.results
-
-                response = self.create_or_update_backup_policy()
-                self.set_results(response)
+                else:
+                    if self.results['changed']:
+                        response = self.create_or_update_backup_policy()
+                        self.results.update(self.set_results(response))
+                    else:
+                        self.results.update(old_res)
 
         elif self.state == 'absent':
-            if existing_backup_policy:
+            if old_res:
                 self.log("Delete backup policy")
                 self.results['changed'] = True
 
                 if self.check_mode:
+                    self.results.update(old_res)
                     return self.results
 
                 self.delete_backup_policy()
@@ -432,20 +500,19 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         except ResourceNotFoundError as ex:
             self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format(self.name, self.vault_name, self.resource_group))
 
-        return policy
+        return self.set_results(policy)
 
     def set_results(self, policy):
+        result = dict()
         if policy:
-            self.results['id'] = policy.id
-            self.results['location'] = policy.location
-            self.results['name'] = policy.name
-            self.results['type'] = policy.type
-
+            result['id'] = policy.id
+            result['location'] = policy.location
+            result['name'] = policy.name
+            result['type'] = policy.type
+            result['properties'] = policy.properties.as_dict()
+            return result
         else:
-            self.results['id'] = None
-            self.results['location'] = None
-            self.results['name'] = None
-            self.results['type'] = None
+            return None
 
 
 def main():
