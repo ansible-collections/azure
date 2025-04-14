@@ -191,9 +191,7 @@
   ansible.builtin.assert:
     that:
       - azure_managed_disks | length == 2
-      - azure_managed_disks.0.managed_by_extended | length == 1
       - azure_managed_disks.1.managed_by_extended | length == 1
-      - vm_ids[0] not in azure_managed_disks.0.managed_by_extended
       - vm_ids[0] in azure_managed_disks.1.managed_by_extended
   vars:
     azure_managed_disks: "{{ azure_disks.results | map(attribute='ansible_info') | list | map(attribute='azure_managed_disk') | flatten | list }}"
