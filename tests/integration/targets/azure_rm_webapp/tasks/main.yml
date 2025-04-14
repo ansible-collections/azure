@@ -879,6 +879,7 @@
     that:
       - output.changed
 
+- name: Delete the webapp resource
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
     name: "{{ item }}"
