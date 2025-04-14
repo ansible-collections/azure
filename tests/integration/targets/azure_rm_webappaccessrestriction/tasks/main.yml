@@ -22,7 +22,7 @@
     resource_group: "{{ resource_group_datalake }}"
     name: webapp{{ rpfx }}
     plan:
-      resource_group: "{{ resource_group_third }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: webappplan{{ rpfx }}
       is_linux: false
       sku: S1
