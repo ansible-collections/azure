@@ -22,7 +22,7 @@
     resource_group: "{{ resource_group_datalake }}"
     name: webapp{{ rpfx }}
     plan:
-      resource_group: "{{ resource_group_datalake }}"
+      resource_group: "{{ resource_group_third }}"
       name: webappplan{{ rpfx }}
       is_linux: false
       sku: S1
@@ -306,3 +306,9 @@
       - output.ip_security_restrictions | length <= 1
       - output.scm_ip_security_restrictions | length <= 1
       - output.scm_ip_security_restrictions_use_main == false
+
+- name: Delete the web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: webapp{{ rpfx }}
+    state: absent
