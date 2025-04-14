@@ -886,7 +886,6 @@
     state: absent
   with_items:
     - "{{ win_app_name }}1"
-    - "{{ win_app_name }}2"
     - "{{ win_app_name }}3"
     - "{{ win_app_name }}4"
     - "{{ win_app_name }}5"
@@ -894,7 +893,6 @@
     - "{{ win_app_name }}7"
     - "{{ win_app_name }}8"
     - "{{ win_app_name }}10"
-    - "{{ win_app_name }}13"
     - "{{ linux_app_name }}-siteconfig"
     - "{{ linux_app_name }}-http20"
     - "{{ win_app_name }}-auth"
