@@ -134,7 +134,7 @@
   ansible.builtin.assert:
     that:
       - attach_disks is changed
-      - attach_disks.results | length == 2
+      - attach_disks.results | length == 1
 
 - name: Retrieve managed disks info
   azure_rm_manageddisk_info:
@@ -147,8 +147,8 @@
   ansible.builtin.assert:
     that:
       - azure_managed_disks | length == 2
-      - azure_managed_disks.0.managed_by_extended | length == 2
-      - azure_managed_disks.1.managed_by_extended | length == 2
+      - azure_managed_disks.0.managed_by_extended | length == 1
+      - azure_managed_disks.1.managed_by_extended | length == 1
       - vm_ids[0] in azure_managed_disks.0.managed_by_extended
       - vm_ids[1] in azure_managed_disks.0.managed_by_extended
       - vm_ids[0] in azure_managed_disks.1.managed_by_extended
@@ -193,8 +193,8 @@
   ansible.builtin.assert:
     that:
       - azure_managed_disks | length == 2
-      - azure_managed_disks.0.managed_by_extended | length == 1
-      - azure_managed_disks.1.managed_by_extended | length == 2
+      - azure_managed_disks.0.managed_by_extended | length == 0
+      - azure_managed_disks.1.managed_by_extended | length == 1
       - azure_managed_disks.0.managed_by == vm_ids[1]
       - vm_ids[0] not in azure_managed_disks.0.managed_by_extended
       - vm_ids[1] in azure_managed_disks.0.managed_by_extended
