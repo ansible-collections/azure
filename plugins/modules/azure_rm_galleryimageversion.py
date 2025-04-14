@@ -44,7 +44,7 @@ options:
         type: str
     storage_profile:
         description:
-            - Storage profile
+            - This is the storage profile of a Gallery Image Version.
             - Required when creating.
         type: dict
         suboptions:

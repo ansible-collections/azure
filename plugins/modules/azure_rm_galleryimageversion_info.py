@@ -97,7 +97,24 @@ versions:
                 - The current state of the gallery.
             type: str
             sample: "Succeeded"
-
+        storage_profile:
+            description:
+                - This is the storage profile of a Gallery Image Version.
+            type: dict
+            sample: {
+                    "data_disk_images": [{"host_caching": "None", "lun": 0, "size_in_gb": 128}],
+                    "os_disk_image": {"host_caching": "ReadOnly", "size_in_gb": 30, "source": {}},
+                    "source": {"id": "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Compute/images/testimagea"},
+                    "type": "Microsoft.Compute/galleries/images/versions"
+            }
+        safety_profile:
+            description:
+                - This is the safety profile of the Gallery Image Version.
+            type: dict
+            sample: {
+                    "allow_deletion_of_replicated_locations": false,
+                    "reported_for_policy_violation": false
+                }
 '''
 
 try:
