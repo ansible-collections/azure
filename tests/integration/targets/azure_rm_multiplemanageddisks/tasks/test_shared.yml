@@ -83,7 +83,7 @@
   azure_rm_virtualmachine:
     resource_group: "{{ item.resource_group }}"
     name: "{{ item.name }}"
-    vm_size: Standard_D4s_v3
+    vm_size: Standard_B1ms
     virtual_network: "vnet-{{ item.name }}"
     managed_disk_type: Standard_LRS
     admin_username: adminuser
@@ -342,3 +342,10 @@
   ansible.builtin.assert:
     that:
       - delete_idempotency is not changed
+
+- name: Delte the virtual machines
+  azure_rm_virtualmachine:
+    resource_group: "{{ item.resource_group }}"
+    name: "{{ item.name }}"
+    state: absent
+  with_items: "{{ shared_virtual_machines }}"
