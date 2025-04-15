@@ -149,7 +149,7 @@
     that:
       - output.changed
 
- - name: Wait for sql managed instance provisioning to complete
+- name: Wait for sql managed instance provisioning to complete
   azure_rm_sqlmanagedinstance_info:
     resource_group: "{{ resource_group }}"
     name: "{{ random_postfix }}"
@@ -238,7 +238,7 @@
     name: "{{ random_postfix }}"
   register: facts
   until: facts.sql_managed_instance[0]['state'] == 'Ready'
-  retries: 40
+  retries: 60
   delay: 60
 
 - name: Delete sql managed instance
