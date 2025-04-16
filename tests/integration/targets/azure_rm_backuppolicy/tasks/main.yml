@@ -47,6 +47,24 @@
       - backup_policy_exists.name == daily_policy_output.name
       - backup_policy_exists.type == daily_policy_output.type
 
+- name: Create a daily VM backup policy (idempotent)
+  azure_rm_backuppolicy:
+    vault_name: "{{ vault_name }}"
+    name: "{{ policy_name_daily }}"
+    resource_group: "{{ resource_group }}"
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Daily"
+    instant_recovery_snapshot_retention: 2
+    daily_retention_count: 12
+    time_zone: "Pacific Standard Time"
+    schedule_run_time: 14
+  register: daily_policy_output_idempotent
+- name: Assert that there is no change after second deletion of daily backup policy
+  ansible.builtin.assert:
+    that:
+      - not daily_policy_output_idempotent.changed
+
 - name: Update daily VM backup policy
   azure_rm_backuppolicy:
     vault_name: "{{ vault_name }}"
