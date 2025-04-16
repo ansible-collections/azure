@@ -155,6 +155,8 @@ options:
             - The I(community_gallery_image_id) can be fetched from shared gallery image GET call.
             - For Marketplace images, a dict with the keys I(publisher), I(offer), I(sku), and I(version).
             - Set I(version=latest) to get the most recent version of a given image.
+            - For share gallery image, a dict with the keys I(shared_gallery_image_id). Specified the shared gallery image unique id for vm deployment.
+              This can be fetched from shared gallery image GET call.
             - Required when creating.
         type: raw
     availability_set:
@@ -1476,6 +1478,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     )
                 elif self.image.get('community_gallery_image_id') is not None:
                     image_reference = self.compute_models.ImageReference(community_gallery_image_id=self.image['community_gallery_image_id'])
+                elif self.image.get('shared_gallery_image_id') is not None:
+                    image_reference = self.compute_models.ImageReference(shared_gallery_image_id=self.image['shared_gallery_image_id'])
                 elif self.image.get('name'):
                     custom_image = True
                     image_reference = self.get_custom_image_reference(
@@ -2243,6 +2247,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         if 'id' in vm_dict['storage_profile']['image_reference'].keys():
                             image_reference = self.compute_models.ImageReference(
                                 id=vm_dict['storage_profile']['image_reference']['id']
+                            )
+                        elif 'shared_gallery_image_i' in vm_dict['storage_profile'].keys():
+                            image_reference = self.compute_models.ImageReference(
+                                shared_gallery_image_id=vm_dict['storage_profile']['image_reference']['shared_gallery_image_id']
                             )
                         elif 'community_gallery_image_id' in vm_dict['storage_profile'].keys():
                             image_reference = self.compute_models.ImageReference(
