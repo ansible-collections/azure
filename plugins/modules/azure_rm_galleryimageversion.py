@@ -560,13 +560,6 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                 self.body['storage_profile']['source']['id'] = kwargs[key]['source_image'].get('id')
                             elif kwargs[key]['source_image'].get('virtual_machine_id') is not None:
                                 self.body['storage_profile']['source']['virtual_machine_id'] = kwargs[key]['source_image'].get('virtual_machine_id')
-                            elif kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('vm_name') is not None:
-                                self.body['storage_profile']['source']['virtual_machine_id'] = ('/subscriptions/' +
-                                                                                                self.subscription_id +
-                                                                                                '/resourceGroups/' +
-                                                                                                kwargs[key]['source_image'].get('resource_group') +
-                                                                                                '/providers/Microsoft.Compute/virtualMachines/' +
-                                                                                                kwargs[key]['source_image'].get('vm_name'))
                             elif kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('name') is not None:
                                 self.body['storage_profile']['source']['id'] = ('/subscriptions/' +
                                                                                 self.subscription_id +
