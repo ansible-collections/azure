@@ -895,6 +895,58 @@
     name: testVMSS{{ rpfx }}4
     state: absent
 
+- name: Set up disk encryption sets
+  ansible.builtin.include_tasks: setup_des.yml
+
+- name: Create VMSS with disk encryption
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}des
+    vm_size: Standard_D3_v2
+    virtual_network_name: VMSStestVnet
+    subnet_name: VMSStestSubnet
+    admin_username: testuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    image:
+      name: testimagea
+      resource_group: "{{ resource_group }}"
+    os_disk_encryption_set: "{{ des_results.state.id }}"
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        caching: ReadWrite
+        managed_disk_type: Standard_LRS
+        disk_encryption_set: "{{ des_results.state.id }}"
+    upgrade_policy: Manual
+    single_placement_group: true
+    orchestration_mode: Uniform
+  register: results
+
+- name: Assert that VMSS can be created
+  ansible.builtin.assert:
+    that: results.changed
+
+- name: Delete VMSS
+  azure_rm_virtualmachinescaleset:
+    resource_group: "{{ resource_group }}"
+    name: testVMSS{{ rpfx }}des
+    state: absent
+
+- name: Destroy disk encryption set
+  azure_rm_diskencryptionset:
+    resource_group: "{{ resource_group }}"
+    name: "{{ des_name }}"
+    state: absent
+
+- name: Destroy key vault
+  azure_rm_keyvault:
+    vault_name: "{{ vault_name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent
+
 - name: Delete network security group
   azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
