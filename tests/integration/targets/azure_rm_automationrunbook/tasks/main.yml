@@ -1,16 +1,16 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
+    rpfx: "{{ resource_group_third | hash('md5') | truncate(10, True, '') }}"
   run_once: true
 
 - name: Create automation account
   azure_rm_automationaccount:
     name: "account-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
 
 - name: Create automation runbook (check mode)
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
     runbook_type: "Script"
@@ -19,7 +19,7 @@
 
 - name: Create automation runbook with default parameters
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
     runbook_type: "Script"
@@ -33,7 +33,7 @@
 
 - name: Create automation runbook with default parameters (idempotent)
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
     runbook_type: "Script"
@@ -47,7 +47,7 @@
 
 - name: Create automation runbook with more paramters
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
     runbook_type: "Script"
@@ -66,7 +66,7 @@
 
 - name: Update automation runbook with more paramters
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
     runbook_type: "Script"
@@ -85,7 +85,7 @@
 
 - name: Publish automation runbook
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
     publish: true
@@ -98,7 +98,7 @@
 
 - name: Get automation runbook
   azure_rm_automationrunbook_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
   register: output
@@ -115,7 +115,7 @@
 
 - name: Get all automation runbook
   azure_rm_automationrunbook_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
   register: output
 
@@ -126,14 +126,14 @@
 
 - name: Delete automation runbook
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}"
     state: absent
 
 - name: Delete automation runbook
   azure_rm_automationrunbook:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     automation_account_name: "account-{{ rpfx }}"
     name: "runbook-{{ rpfx }}-secondary"
     state: absent
