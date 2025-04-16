@@ -387,6 +387,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
             ),
             storage_profile=dict(
                 type='dict',
+                mutually_exclusive=[('source_image', 'os_disk', 'data_disks')],
                 options=dict(
                     source_image=dict(
                         type='raw',
