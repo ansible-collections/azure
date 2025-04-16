@@ -97,12 +97,31 @@ versions:
                 - The current state of the gallery.
             type: str
             sample: "Succeeded"
-
+        storage_profile:
+            description:
+                - This is the storage profile of a Gallery Image Version.
+            type: dict
+            sample: {
+                    "data_disk_images": [{"host_caching": "None", "lun": 0, "size_in_gb": 128}],
+                    "os_disk_image": {"host_caching": "ReadOnly", "size_in_gb": 30, "source": {}},
+                    "source": {"id": "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Compute/images/testimagea"},
+                    "type": "Microsoft.Compute/galleries/images/versions"
+            }
+        safety_profile:
+            description:
+                - This is the safety profile of the Gallery Image Version.
+            type: dict
+            sample: {
+                    "allow_deletion_of_replicated_locations": false,
+                    "reported_for_policy_violation": false
+                }
 '''
 
-import json
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    from azure.core.exceptions import ResourceNotFoundError
+except ImportError:
+    pass
 
 
 class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
@@ -122,7 +141,7 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
             ),
             name=dict(
                 type='str'
-            )
+            ),
         )
 
         self.resource_group = None
@@ -131,17 +150,6 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
         self.name = None
 
         self.results = dict(changed=False)
-        self.mgmt_client = None
-        self.state = None
-        self.url = None
-        self.status_code = [200]
-
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = '2019-03-01'
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
-
-        self.mgmt_client = None
         super(AzureRMGalleryImageVersionsInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
@@ -149,125 +157,37 @@ class AzureRMGalleryImageVersionsInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
-
-        if (self.resource_group is not None and
-                self.gallery_name is not None and
-                self.gallery_image_name is not None and
-                self.name is not None):
+        if self.name is not None:
             self.results['versions'] = self.get()
-        elif (self.resource_group is not None and
-              self.gallery_name is not None and
-              self.gallery_image_name is not None):
+        else:
             self.results['versions'] = self.listbygalleryimage()
         return self.results
 
     def get(self):
+        """ Get a single gallery image version"""
         response = None
-        results = {}
-        # prepare url
-        self.url = ('/subscriptions' +
-                    '/{{ subscription_id }}' +
-                    '/resourceGroups' +
-                    '/{{ resource_group }}' +
-                    '/providers' +
-                    '/Microsoft.Compute' +
-                    '/galleries' +
-                    '/{{ gallery_name }}' +
-                    '/images' +
-                    '/{{ image_name }}' +
-                    '/versions' +
-                    '/{{ version_name }}')
-        self.url = self.url.replace('{{ subscription_id }}', self.subscription_id)
-        self.url = self.url.replace('{{ resource_group }}', self.resource_group)
-        self.url = self.url.replace('{{ gallery_name }}', self.gallery_name)
-        self.url = self.url.replace('{{ image_name }}', self.gallery_image_name)
-        self.url = self.url.replace('{{ version_name }}', self.name)
 
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            results = json.loads(response.body())
-            # self.log('Response : {0}'.format(response))
-        except Exception as e:
-            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+            response = self.image_version_client.gallery_image_versions.get(self.resource_group, self.gallery_name, self.gallery_image_name, self.name)
+        except ResourceNotFoundError:
+            self.log('Could not get the gallery image verison')
 
-        return self.format_item(results)
+        return self.format_item(response)
 
     def listbygalleryimage(self):
         response = None
-        results = dict(
-            response=[]
-        )
-        # prepare url
-        self.url = ('/subscriptions' +
-                    '/{{ subscription_id }}' +
-                    '/resourceGroups' +
-                    '/{{ resource_group }}' +
-                    '/providers' +
-                    '/Microsoft.Compute' +
-                    '/galleries' +
-                    '/{{ gallery_name }}' +
-                    '/images' +
-                    '/{{ image_name }}' +
-                    '/versions')
-        self.url = self.url.replace('{{ subscription_id }}', self.subscription_id)
-        self.url = self.url.replace('{{ resource_group }}', self.resource_group)
-        self.url = self.url.replace('{{ gallery_name }}', self.gallery_name)
-        self.url = self.url.replace('{{ image_name }}', self.gallery_image_name)
-
         try:
-            skiptoken = None
+            response = self.image_version_client.gallery_image_versions.list_by_gallery_image(self.resource_group, self.gallery_name, self.gallery_image_name)
+        except Exception:
+            self.log('Could not list the gallery image versions')
 
-            while True:
-                if skiptoken:
-                    self.query_parameters['skiptoken'] = skiptoken
-
-                response = self.mgmt_client.query(self.url,
-                                                  'GET',
-                                                  self.query_parameters,
-                                                  self.header_parameters,
-                                                  None,
-                                                  [200, 404],
-                                                  0,
-                                                  0)
-                try:
-                    response = json.loads(response.body())
-                    if isinstance(response, dict):
-                        if 'value' in response:
-                            results['response'] = results['response'] + response['value']
-                            skiptoken = response.get('nextLink')
-                        else:
-                            results['response'] = results['response'] + [response]
-                except Exception as e:
-                    self.fail('Failed to parse response: ' + str(e))
-                if not skiptoken:
-                    break
-            # self.log('Response : {0}'.format(response))
-        except Exception as e:
-            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
-
-        return [self.format_item(x) for x in results['response']] if results['response'] else []
+        return [self.format_item(x) for x in response] if response else []
 
     def format_item(self, item):
-        if not item:
+        if item is None:
             return None
-        d = {
-            'id': item['id'],
-            'name': item['name'],
-            'location': item['location'],
-            'tags': item.get('tags'),
-            'publishing_profile': item['properties']['publishingProfile'],
-            'provisioning_state': item['properties']['provisioningState']
-        }
-        return d
+        else:
+            return item.as_dict()
 
 
 def main():

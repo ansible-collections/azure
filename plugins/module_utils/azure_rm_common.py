@@ -433,6 +433,7 @@ class AzureRMModuleBase(object):
         self._resource_client = None
         self._compute_client = None
         self._disk_client = None
+        self._image_version_client = None
         self._multi_disk_client = None
         self._diskencryptionset_client = None
         self._image_client = None
@@ -1152,6 +1153,20 @@ class AzureRMModuleBase(object):
     def disk_models(self):
         self.log("Getting disk models")
         return ComputeManagementClient.models("2023-04-02")
+
+    @property
+    def image_version_client(self):
+        self.log('Getting gallery image version client')
+        if not self._image_version_client:
+            self._image_version_client = self.get_mgmt_svc_client(ComputeManagementClient,
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                  api_version='2023-07-03')
+        return self._image_version_client
+
+    @property
+    def image_version_models(self):
+        self.log("Getting image version models")
+        return ComputeManagementClient.models("2023-07-03")
 
     @property
     def multi_disk_client(self):
