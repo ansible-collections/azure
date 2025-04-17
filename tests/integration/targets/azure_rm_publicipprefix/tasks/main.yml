@@ -4,7 +4,7 @@
 
 - name: Create public ip prefix (Check mode)
   azure_rm_publicipprefix:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "pipprefix{{ rpfx }}"
     zones:
       - 1
@@ -19,7 +19,7 @@
 
 - name: Create public ip prefix
   azure_rm_publicipprefix:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "pipprefix{{ rpfx }}"
     zones:
       - 1
@@ -39,7 +39,7 @@
 
 - name: Create public ip prefix (Idempotent test)
   azure_rm_publicipprefix:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "pipprefix{{ rpfx }}"
     zones:
       - 1
@@ -59,7 +59,7 @@
 
 - name: Update public ip prefix (Update tags)
   azure_rm_publicipprefix:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "pipprefix{{ rpfx }}"
     zones:
       - 1
@@ -79,7 +79,7 @@
 
 - name: Gather facts for a public ip prefix
   azure_rm_publicipprefix_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "pipprefix{{ rpfx }}"
   register: output
 
@@ -91,7 +91,7 @@
 
 - name: Delete the public IP prefix
   azure_rm_publicipprefix:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "pipprefix{{ rpfx }}"
     state: absent
   register: output

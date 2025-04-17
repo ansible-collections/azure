@@ -1,13 +1,13 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    name_rpfx: "account{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    rpfx: "{{ resource_group_third | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    name_rpfx: "account{{ resource_group_third | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
 - name: Create automation account
   azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
   check_mode: true
   register: output
 
@@ -19,7 +19,7 @@
 - name: Create automation account
   azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
   register: output
 
 - name: Assert the account created
@@ -31,7 +31,7 @@
 - name: Create automation account
   azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
   register: output
 
 - name: Assert the account already created
@@ -42,7 +42,7 @@
 - name: Get automation account
   azure_rm_automationaccount_info:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     list_statistics: true
     list_usages: true
     list_keys: true
@@ -60,7 +60,7 @@
 - name: Delete account
   azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     state: absent
   check_mode: true
   register: output
@@ -73,7 +73,7 @@
 - name: Delete account
   azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     state: absent
   register: output
 
@@ -85,7 +85,7 @@
 - name: Delete account
   azure_rm_automationaccount:
     name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     state: absent
   register: output
 

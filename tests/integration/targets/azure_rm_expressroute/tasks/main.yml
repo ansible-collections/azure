@@ -14,11 +14,11 @@
     authorizations:
       - name: authorization_test
     service_provider_properties:
-      service_provider_name: Telstra Test
-      peering_location: Denver Test
+      service_provider_name: Coresite
+      peering_location: Denver
       bandwidth_in_mbps: 1000
     sku:
-      tier: premium
+      tier: standard
       family: metereddata
   register: results
   check_mode: true
@@ -40,11 +40,11 @@
     authorizations:
       - name: authorization_test
     service_provider_properties:
-      service_provider_name: Telstra Test
-      peering_location: Denver Test
+      service_provider_name: Coresite
+      peering_location: Denver
       bandwidth_in_mbps: 1000
     sku:
-      tier: premium
+      tier: standard
       family: metereddata
   register: results
 
@@ -65,11 +65,11 @@
     authorizations:
       - name: authorization_test
     service_provider_properties:
-      service_provider_name: Telstra Test
-      peering_location: Denver Test
+      service_provider_name: Coresite
+      peering_location: Denver
       bandwidth_in_mbps: 1000
     sku:
-      tier: premium
+      tier: standard
       family: metereddata
   register: results
 

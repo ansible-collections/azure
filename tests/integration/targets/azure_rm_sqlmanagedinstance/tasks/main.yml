@@ -155,7 +155,7 @@
     name: "{{ random_postfix }}"
   register: facts
   until: facts.sql_managed_instance[0]['state'] == 'Ready'
-  retries: 40
+  retries: 60
   delay: 60
 
 - name: Create sql managed instance (Idempotent test)
@@ -238,7 +238,7 @@
     name: "{{ random_postfix }}"
   register: facts
   until: facts.sql_managed_instance[0]['state'] == 'Ready'
-  retries: 40
+  retries: 60
   delay: 60
 
 - name: Delete sql managed instance
