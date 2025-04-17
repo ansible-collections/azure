@@ -1270,8 +1270,7 @@ class AzureRMModuleBase(object):
         self.log('Getting MySQL Flexible client')
         if not self._mysql_flexible_client:
             self._mysql_flexible_client = self.get_mgmt_svc_client(MySQLFlexibleManagementClient,
-                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2024-10-01-preview')
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mysql_flexible_client
 
     @property
