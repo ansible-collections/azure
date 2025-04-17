@@ -80,6 +80,7 @@ options:
             - '14'
             - '15'
             - '16'
+            - '17'
     fully_qualified_domain_name:
         description:
             - The fully qualified domain name of a server.
@@ -132,6 +133,7 @@ options:
                 choices:
                     - Disabled
                     - ZoneRedundant
+                    - SameZone
             standby_availability_zone:
                 description:
                     - Availability zone information of the standby.
@@ -217,6 +219,7 @@ options:
                 choices:
                     - UserAssigned
                     - None
+                    - SystemAssigned
                 default: None
                 type: str
             user_assigned_identities:
@@ -551,7 +554,7 @@ maintenance_window_spec = dict(
 
 
 high_availability_spec = dict(
-    mode=dict(type='str', choices=["Disabled", "ZoneRedundant"]),
+    mode=dict(type='str', choices=["Disabled", "ZoneRedundant", "SameZone"]),
     standby_availability_zone=dict(type='str')
 )
 
@@ -581,7 +584,7 @@ user_assigned_identities_spec = dict(
 
 
 managed_identity_spec = dict(
-    type=dict(type='str', choices=['UserAssigned', 'None'], default='None'),
+    type=dict(type='str', choices=['UserAssigned', 'None', 'SystemAssigned'], default='None'),
     user_assigned_identities=dict(type='dict', options=user_assigned_identities_spec, default={}),
 )
 
@@ -615,7 +618,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             ),
             version=dict(
                 type='str',
-                choices=['11', '12', '13', '14', '15', '16']
+                choices=['11', '12', '13', '14', '15', '16', '17']
             ),
             fully_qualified_domain_name=dict(
                 type='str',
