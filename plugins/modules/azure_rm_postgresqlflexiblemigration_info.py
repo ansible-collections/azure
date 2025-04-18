@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,10 +11,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblemigration_info
-version_added: "2.2.0"
-short_description: Get Azure PostgreSQL Flexible Database facts
+version_added: "3.4.0"
+short_description: Get or list Azure PostgreSQL Flexible Migration facts
 description:
-    - Get facts of PostgreSQL Flexible Database.
+    - Get or list facts of PostgreSQL Flexible Migration.
 
 options:
     resource_group:
@@ -22,14 +22,14 @@ options:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         type: str
         required: True
-    server_name:
+    target_db_server_name:
         description:
-            - The name of the post gresql server.
+            - The name of the target postgresql flexible server.
         type: str
         required: True
-    name:
+    migration_name:
         description:
-            - The name of the post gresql database.
+            - The name of the post gresql flexible migration.
         type: str
 
 extends_documentation_fragment:
@@ -42,97 +42,55 @@ author:
 '''
 
 EXAMPLES = '''
-- name: List instance of PostgreSQL Flexible Database by server name
+- name: List instance of PostgreSQL Flexible Migration by server name
   azure_rm_postgresqlflexiblemigration_info:
     resource_group: myResourceGroup
-    server_name: server_name
+    target_db_server_name: server_name
 
-- name: Get instances of PostgreSQL Flexible Database
+- name: Get instances of PostgreSQL Flexible Migration
   azure_rm_postgresqlflexiblemigration_info:
     resource_group: myResourceGroup
-    server_name: server_name
-    name: database_name
+    target_db_server_name: server_name
+    migration_name: migration_name
 '''
 
 RETURN = '''
-database:
+migrations:
     description:
-        - A list of dictionaries containing facts for PostgreSQL Flexible Database.
+        - A list of dictionaries containing facts for PostgreSQL Flexible Migration.
     returned: always
     type: complex
     contains:
         id:
             description:
-                - Resource ID of the postgresql flexible database.
+                - Resource ID of the postgresql flexible migration.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/migrations/freddatabase"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postflex/migrations/fredmigration"
+        resource_group_name:
             description:
-                - Resource name.
+                - The resource group name of the target database server.
             returned: always
             type: str
-            sample: freddatabase
-        charset:
+            sample: testRG
+        target_db_server_name:
             description:
-                - The charset of the database.
+                - The name of the target database server.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: postflex
+        migration_name:
             description:
-                - The collation of the database.
+                - The name of the migration.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: migration_name
         type:
             description:
                 - The type of the resource.
             returned: always
             type: str
             sample: Microsoft.DBforPostgreSQL/flexibleServers/migrations
-        system_data:
-            description:
-                - The system metadata relating to this resource.
-            type: complex
-            returned: always
-            contains:
-                created_by:
-                    description:
-                        - The identity that created the resource.
-                    type: str
-                    returned: always
-                    sample: null
-                created_by_type:
-                    description:
-                        - The type of identity that created the resource.
-                    returned: always
-                    type: str
-                    sample: null
-                created_at:
-                    description:
-                        - The timestamp of resource creation (UTC).
-                    returned: always
-                    sample: null
-                    type: str
-                last_modified_by:
-                    description:
-                        - The identity that last modified the resource.
-                    type: str
-                    returned: always
-                    sample: null
-                last_modified_by_type:
-                    description:
-                        - The type of identity that last modified the resource.
-                    returned: always
-                    sample: null
-                    type: str
-                last_modified_at:
-                    description:
-                        - The timestamp of resource last modification (UTC).
-                    returned: always
-                    sample: null
-                    type: str
 '''
 
 
@@ -158,33 +116,39 @@ class AzureRMPostgreSqlFlexibleMigrationInfo(AzureRMModuleBase):
             ),
             migration_name=dict(
                 type='str',
-                required=True
             ),
+            migration_subscription_id=dict(
+                type='str'
+            )
         )
         # store the results of the module operation
         self.results = dict(
             changed=False
         )
         self.resource_group = None
-        self.object_id = None
-        self.server_name = None
+        self.migration_name = None
+        self.target_db_server_name = None
+        self.migration_subscription_id = None
         super(AzureRMPostgreSqlFlexibleMigrationInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.object_id is not None:
+        if self.migration_subscription_id is None:
+            self.migration_subscription_id = self.subscription_id
+
+        if self.migration_name is not None:
             self.results['migrations'] = self.get()
         else:
-            self.results['migration'] = self.list_all()
+            self.results['migrations'] = self.list_all()
         return self.results
 
     def get(self):
         response = None
         results = []
         try:
-            response = self.postgresql_flexible_client.migrations.get(subscription_id=self.subscription_id,
+            response = self.postgresql_flexible_client.migrations.get(subscription_id=self.migration_subscription_id,
                                                                       resource_group_name=self.resource_group,
                                                                       target_db_server_name=self.target_db_server_name,
                                                                       migration_name=self.migration_name)
@@ -197,25 +161,25 @@ class AzureRMPostgreSqlFlexibleMigrationInfo(AzureRMModuleBase):
 
         return results
 
+    def list_all(self):
+        response = None
+        results = []
+        try:
+            response = self.postgresql_flexible_client.migrations.list_by_target_server(subscription_id=self.migration_subscription_id,
+                                                                                        resource_group_name=self.resource_group,
+                                                                                        target_db_server_name=self.target_db_server_name)
+            self.log("Response : {0}".format(response))
+        except Exception:
+            self.log('Could not list migration facts for PostgreSQL Flexible Server.')
+
+        if response is not None:
+            for item in response:
+                results.append(self.format_item(item))
+
+        return results
+
     def format_item(self, item):
         return item.as_dict()
-        result = dict(
-            id=item.id,
-            name=item.name,
-            system_data=dict(),
-            type=item.type,
-            charset=item.charset,
-            collation=item.collation
-        )
-        if item.system_data is not None:
-            result['system_data']['created_by'] = item.system_data.created_by
-            result['system_data']['created_by_type'] = item.system_data.created_by_type
-            result['system_data']['created_at'] = item.system_data.created_at
-            result['system_data']['last_modified_by'] = item.system_data.last_modified_by
-            result['system_data']['last_modified_by_type'] = item.system_data.last_modified_by_type
-            result['system_data']['last_modified_at'] = item.system_data.last_modified_at
-
-        return result
 
 
 def main():

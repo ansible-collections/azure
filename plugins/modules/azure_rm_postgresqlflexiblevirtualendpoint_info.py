@@ -155,7 +155,7 @@ class AzureRMPostgreSqlFlexibleVirtualEndpointInfo(AzureRMModuleBase):
         if self.virtual_endpoint_name is not None:
             self.results['virtual_endpoints'] = self.get()
         else:
-            self.results['virtual_endpoint'] = self.list_all()
+            self.results['virtual_endpoints'] = self.list_all()
         return self.results
 
     def get(self):

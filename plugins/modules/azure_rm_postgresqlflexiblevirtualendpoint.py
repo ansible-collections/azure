@@ -35,7 +35,7 @@ options:
     members:
         description:
             - List of virtual endpoints for a server.
-            - The names are the same with I(virtual_endpoint_name).
+            - The names are the same with I(server_name).
         type: list
         elments: str
     endpoint_type:
@@ -79,7 +79,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-virtualendpoint:
+virtual_endpoint:
     description:
         - A list of dictionaries containing facts for PostgreSQL Flexible virtual endpoint.
     returned: always

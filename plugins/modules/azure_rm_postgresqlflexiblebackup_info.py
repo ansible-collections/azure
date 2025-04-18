@@ -152,7 +152,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         if self.backup_name is not None:
             self.results['backups'] = self.get()
         else:
-            self.results['backup'] = self.list_all()
+            self.results['backups'] = self.list_all()
         return self.results
 
     def get(self):

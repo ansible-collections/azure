@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,10 +11,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibledmigration
-version_added: "2.2.0"
+version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible migration instance
 description:
-    - Create, update and delete instance of PostgreSQL Flexible migration.
+    - Create, update or delete instance of PostgreSQL Flexible migration.
 
 options:
     resource_group:
@@ -22,23 +22,187 @@ options:
             - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
         required: True
         type: str
-    server_name:
+    target_db_server_name:
         description:
-            - The name of the server.
+            - The name of the target database server.
         required: True
         type: str
-    name:
+    migratioin_name:
         description:
             - The name of the migration.
         required: True
         type: str
-    charset:
+    location:
         description:
-            - The charset of the migration.
+            - The geo-location where the resource lives.
         type: str
-    collation:
+    migration_instance_resource_id:
         description:
-            - The collation of the migration.
+            - ResourceId of the private endpoint migration instance.
+        type: str
+    migration_mode:
+        description:
+            - There are two types of migration modes C(Online) and C(Offline).
+        type: str
+        choices:
+            - Offline
+            - Online
+    migration_option:
+        description:
+            - This indicates the supported Migration option for the migration.
+        type: str
+        choices:
+            - Validate
+            - Migrate
+            - ValidateAndMigrate
+    source_type:
+        description:
+            - Migration source server type.
+        type: str
+        choices:
+            - OnPremises
+            - AWS
+            - GCP
+            - AzureVM
+            - PostgreSQLSingleServer
+            - AWS_RDS
+            - AWS_AURORA
+            - AWS_EC2
+            - GCP_CloudSQL
+            - GCP_AlloyDB
+            - GCP_Compute
+            - EDB
+            - EDB_Oracle_Server
+            - EDB_PostgreSQL
+            - PostgreSQLFlexibleServer
+            - PostgreSQLCosmosDB
+            - Huawei_RDS
+            - Huawei_Compute
+            - Heroku_PostgreSQL
+            - Crunchy_PostgreSQL
+            - ApsaraDB_RDS
+            - Digital_Ocean_Droplets
+            - Digital_Ocean_PostgreSQL
+            - Supabase_PostgreSQL
+    ssl_mode:
+        description:
+            - SSL modes for migration. Default SSL mode for PostgreSQLSingleServer is C(VerifyFull) and C(Prefer) for other source types.
+        type: str
+        choices:
+            - VerifyFull
+            - VerifyCA
+            - Prefer
+            - Require
+    source_db_server_resource_id:
+        description:
+            - ResourceId of the source database server in case the sourceType is PostgreSQLSingleServer.
+            - For other source types this should be 'ipaddress:port@username' or 'hostname:port@username'.
+        type: str
+    secret_parameters:
+        description:
+            - Migration secret parameters.
+        type: dict
+        options:
+            source_server_username:
+                description:
+                    - Gets or sets the username for the source server.
+                    - This user need not be an admin.
+                type: str
+            target_server_username:
+                description:
+                    - Gets or sets the username for the target server.
+                    - This user need  not be an admin.
+                type: str
+            admin_credentials:
+                description:
+                    - Admin credentials for source and target servers.
+                required: True
+                type: dict
+                options:
+                    source_server_password:
+                        description:
+                            - Password for source server.
+                        type: str
+                        required: True
+                    target_server_password:
+                        description:
+                            - Password for target server.
+                        type: str
+                        required: True
+    target_db_server_fully_qualified_domain_name:
+        description:
+            - Target server fully qualified domain name (FQDN) or IP address.
+            - It is a optional value, if customer provide it, migration service will always use it for connection.
+        type: str
+    dbs_to_migrate:
+        description:
+            - Number of databases to migrate.
+        type: list
+        elements: str
+    setup_logical_replication_on_source_db_if_needed:
+        description:
+            - Indicates whether to setup LogicalReplicationOnSourceDb, if needed.
+        type: str
+        choices:
+            - True
+            - False
+    overwrite_dbs_in_target:
+        description:
+            - Indicates whether the databases on the target server can be overwritten, if already present.
+            - If set to C(False), the migration workflow will wait for a confirmation, if it detects that the database already exists.
+        type: str
+        choices:
+            - True
+            - False
+    migration_window_start_time_in_utc:
+        description:
+            - Start time in UTC for migration window.
+        type: str
+    migration_window_end_time_in_utc:
+        description:
+            - End time in UTC for migration window.
+        type: str
+    migrate_roles:
+        description:
+            - To migrate roles and permissions we need to send this flag as C(True).
+        type: str
+        choices:
+            - True
+            - False
+    start_data_migration:
+        description:
+            - Indicates whether the data migration should start right away.
+        type: str
+        choices:
+            - True
+            - False
+    trigger_cutover:
+        description:
+            - To trigger cutover for entire migration we need to send this flag as C(True).
+        type: str
+        choices:
+            - True
+            - False
+    dbs_to_trigger_cutover_on:
+        description:
+            - When you want to trigger cutover for specific databases send triggerCutover flag as True and database names in this array.
+        type: list
+        elements: str
+     cancel:
+        description:
+            - To trigger cancel for entire migration we need to send this flag as C(True).
+        type: str
+        choices:
+            - True
+            - False
+     dbs_to_cancel_migration_on:
+        description:
+            - When you want to trigger cancel for specific databases send cancel flag as True and database names in this array.
+        type: list
+        elements: str
+     migration_subscription_id:
+        description:
+            - The subscription_id of the migration location.
         type: str
     state:
         description:
@@ -60,25 +224,17 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Create (or update) PostgreSQL Flexible migration
-  azure_rm_postgresqlflexibledmigration:
-    resource_group: myResourceGroup
-    server_name: testserver
-    name: db1
-    charset: UTF8
-    collation: en_US.utf8
-
 - name: Delete PostgreSQL Flexible migration
   azure_rm_postgresqlflexibledmigration:
     resource_group: myResourceGroup
-    server_name: testserver
-    name: db1
+    target_db_server_name: testserver
+    migration_name: migration_name
 '''
 
 RETURN = '''
 migration:
     description:
-        - A list of dictionaries containing facts for PostgreSQL Flexible migration.
+        - A dictionary facts for PostgreSQL Flexible Migration.
     returned: always
     type: complex
     contains:
@@ -87,25 +243,25 @@ migration:
                 - Resource ID of the postgresql flexible migration.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/migrations/fredmigration"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postflex/migrations/fredmigration"
+        resource_group_name:
             description:
-                - Resource name.
+                - The resource group name of the target database server.
             returned: always
             type: str
-            sample: fredmigration
-        charset:
+            sample: testRG
+        target_db_server_name:
             description:
-                - The charset of the migration.
+                - The name of the target database server.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: postflex
+        migration_name:
             description:
-                - The collation of the migration.
+                - The name of the migration.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: migration_name
         type:
             description:
                 - The type of the resource.
@@ -255,7 +411,7 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         """Main module execution method"""
 
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             else:
@@ -266,6 +422,13 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
         changed = False
 
         old_response = self.get_postgresqlflexiblemigration()
+
+        if self.migration_subscription_id is None:
+            self.migration_subscription_id = self.subscription_id
+                resource_group = self.get_resource_group(self.resource_group)
+        if self.parameters.get('location') is None:
+            # Set default location
+            self.parameters['location'] = resource_group.location
 
         if not old_response:
             self.log("PostgreSQL Flexible migration instance doesn't exist")
@@ -299,13 +462,13 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible migration instance state dictionary
         '''
-        self.log("Creating the PostgreSQL Flexible migration instance {0}".format(self.name))
+        self.log("Creating the PostgreSQL Flexible migration instance {0}".format(self.migration_name))
 
         try:
-            response = self.postgresql_flexible_client.migrations.create(subscription_id=self.subscription_id,
+            response = self.postgresql_flexible_client.migrations.create(subscription_id=self.migration_subscription_id,
                                                                          resource_group_name=self.resource_group,
                                                                          target_db_server_name=self.target_db_server_name,
-                                                                         migration_name=self.migration_name, )
+                                                                         migration_name=self.migration_name,
                                                                          parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
@@ -321,13 +484,13 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible migration instance state dictionary
         '''
-        self.log("Updating the PostgreSQL Flexible migration instance {0}".format(self.name))
+        self.log("Updating the PostgreSQL Flexible migration instance {0}".format(self.migration_name))
 
         try:
-            response = self.postgresql_flexible_client.migrations.update(subscription_id=self.subscription_id,
+            response = self.postgresql_flexible_client.migrations.update(subscription_id=self.migration_subscription_id,
                                                                          resource_group_name=self.resource_group,
                                                                          target_db_server_name=self.target_db_server_name,
-                                                                         migration_name=self.migration_name, )
+                                                                         migration_name=self.migration_name,
                                                                          parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
@@ -343,12 +506,12 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
 
         :return: True
         '''
-        self.log("Deleting the PostgreSQL Flexible migration instance {0}".format(self.name))
+        self.log("Deleting the PostgreSQL Flexible migration instance {0}".format(self.migration_name))
         try:
-            self.postgresql_flexible_client.migrations.begin_delete(subscription_id=self.subscription_id,,
+            self.postgresql_flexible_client.migrations.begin_delete(subscription_id=self.migration_subscription_id,,
                                                                     resource_group_name=self.resource_group,
                                                                     target_db_server_name=self.target_db_server_name,
-                                                                    migration_name=self.migration_name, )
+                                                                    migration_name=self.migration_name)
         except Exception as ec:
             self.log('Error attempting to delete the PostgreSQL Flexible migration instance.')
             self.fail("Error deleting the PostgreSQL Flexible migration instance: {0}".format(str(ec)))
@@ -359,10 +522,10 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible migration instance state dictionary
         '''
-        self.log("Checking if the PostgreSQL Flexible migration instance {0} is present".format(self.name))
+        self.log("Checking if the PostgreSQL Flexible migration instance {0} is present".format(self.migration_name))
         found = False
         try:
-            response = self.postgresql_flexible_client.migrations.get(subscription_id=self.subscription_id,
+            response = self.postgresql_flexible_client.migrations.get(subscription_id=self.migration_subscription_id,
                                                                       resource_group_name=self.resource_group,
                                                                       target_db_server_name=self.target_db_server_name,
                                                                       migration_name=self.migration_name)
@@ -379,14 +542,6 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
 
     def format_item(self, item):
         return item.as_dict()
-        result = dict(
-            id=item.id,
-            name=item.name,
-            type=item.type,
-            charset=item.charset,
-            collation=item.collation
-        )
-        return result
 
 
 def main():

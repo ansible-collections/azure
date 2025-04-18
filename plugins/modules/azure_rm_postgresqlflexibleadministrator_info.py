@@ -153,7 +153,7 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         if self.object_id is not None:
             self.results['administrators'] = self.get()
         else:
-            self.results['administrator'] = self.list_all()
+            self.results['administrators'] = self.list_all()
         return self.results
 
     def get(self):
