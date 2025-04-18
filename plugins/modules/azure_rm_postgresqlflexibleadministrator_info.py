@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,15 +11,16 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibleadministrator_info
-version_added: "2.2.0"
-short_description: Get Azure PostgreSQL Flexible Database facts
+version_added: "3.4.0"
+short_description: Get Azure PostgreSQL Flexible Administrator facts
 description:
-    - Get facts of PostgreSQL Flexible Database.
+    - Get facts of PostgreSQL Flexible Administrator.
 
 options:
     resource_group:
         description:
-            - The name of the resource group that contains the resource. You can obtain this value from the Azure Resource Manager API or the portal.
+            - The name of the resource group that contains the resource.
+            - You can obtain this value from the Azure Resource Manager API or the portal.
         type: str
         required: True
     server_name:
@@ -27,9 +28,9 @@ options:
             - The name of the post gresql server.
         type: str
         required: True
-    name:
+    object_id:
         description:
-            - The name of the post gresql database.
+            - Guid of the objectId for the administrator.
         type: str
 
 extends_documentation_fragment:
@@ -42,97 +43,73 @@ author:
 '''
 
 EXAMPLES = '''
-- name: List instance of PostgreSQL Flexible Database by server name
+- name: List instance of PostgreSQL Flexible Administrator by server name
   azure_rm_postgresqlflexibleadministrator_info:
     resource_group: myResourceGroup
     server_name: server_name
 
-- name: Get instances of PostgreSQL Flexible Database
+- name: Get instances of PostgreSQL Flexible Administrator
   azure_rm_postgresqlflexibleadministrator_info:
     resource_group: myResourceGroup
     server_name: server_name
-    name: database_name
+    object_id: a2cf7b83-174b-4371-acce-f2381f373641
 '''
 
 RETURN = '''
-database:
+admistrator:
     description:
-        - A list of dictionaries containing facts for PostgreSQL Flexible Database.
+        - A list of dictionaries containing facts for PostgreSQL Flexible Administrator.
     returned: always
     type: complex
     contains:
         id:
             description:
-                - Resource ID of the postgresql flexible database.
+                - Resource ID of the postgresql flexible admistrator.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/administrators/freddatabase"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postgresql03/administrators/xxx-xxx"
+        principal_name:
             description:
-                - Resource name.
+                - Active Directory administrator principal name.
             returned: always
             type: str
-            sample: freddatabase
-        charset:
+            sample: fred-sun
+        principal_type:
             description:
-                - The charset of the database.
+                - The principal type used to represent the type of Active Directory Administrator.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: User
+        object_id:
             description:
-                - The collation of the database.
+                - The Object ID of Azure Directory Administrator.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         type:
             description:
                 - The type of the resource.
             returned: always
             type: str
             sample: Microsoft.DBforPostgreSQL/flexibleServers/administrators
-        system_data:
+        tenant_id:
             description:
-                - The system metadata relating to this resource.
-            type: complex
+                - The tenant ID of Active Directory Administrator.
             returned: always
-            contains:
-                created_by:
-                    description:
-                        - The identity that created the resource.
-                    type: str
-                    returned: always
-                    sample: null
-                created_by_type:
-                    description:
-                        - The type of identity that created the resource.
-                    returned: always
-                    type: str
-                    sample: null
-                created_at:
-                    description:
-                        - The timestamp of resource creation (UTC).
-                    returned: always
-                    sample: null
-                    type: str
-                last_modified_by:
-                    description:
-                        - The identity that last modified the resource.
-                    type: str
-                    returned: always
-                    sample: null
-                last_modified_by_type:
-                    description:
-                        - The type of identity that last modified the resource.
-                    returned: always
-                    sample: null
-                    type: str
-                last_modified_at:
-                    description:
-                        - The timestamp of resource last modification (UTC).
-                    returned: always
-                    sample: null
-                    type: str
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx
+        resource_group:
+            description:
+                - The resource group name.
+            returned: always
+            type: str
+            sample: testRG
+        server_name:
+            description:
+                - The type of the resource.
+            returned: always
+            type: str
+            sample: postgresql03
 '''
 
 
@@ -212,24 +189,16 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         return results
 
     def format_item(self, item):
-        return item.as_dict()
-        result = dict(
+        return dict(
+            resource_group=self.resource_group,
+            server_name=self.server_name,
+            object_id=item.object_id,
             id=item.id,
-            name=item.name,
-            system_data=dict(),
-            type=item.type,
-            charset=item.charset,
-            collation=item.collation
+            principal_name=item.principal_name,
+            principal_type=item.principal_type,
+            tenant_id=item.tenant_id,
+            type=item.type
         )
-        if item.system_data is not None:
-            result['system_data']['created_by'] = item.system_data.created_by
-            result['system_data']['created_by_type'] = item.system_data.created_by_type
-            result['system_data']['created_at'] = item.system_data.created_at
-            result['system_data']['last_modified_by'] = item.system_data.last_modified_by
-            result['system_data']['last_modified_by_type'] = item.system_data.last_modified_by_type
-            result['system_data']['last_modified_at'] = item.system_data.last_modified_at
-
-        return result
 
 
 def main():

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,10 +11,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblebackup_info
-version_added: "2.2.0"
-short_description: Get Azure PostgreSQL Flexible Database facts
+version_added: "3.4.0"
+short_description: Get Azure PostgreSQL Flexible Backup facts
 description:
-    - Get facts of PostgreSQL Flexible Database.
+    - Get or list facts of PostgreSQL Flexible Backup.
 
 options:
     resource_group:
@@ -27,9 +27,9 @@ options:
             - The name of the post gresql server.
         type: str
         required: True
-    name:
+    backup_name:
         description:
-            - The name of the post gresql database.
+            - The name of the post gresql backup.
         type: str
 
 extends_documentation_fragment:
@@ -42,97 +42,73 @@ author:
 '''
 
 EXAMPLES = '''
-- name: List instance of PostgreSQL Flexible Database by server name
+- name: List instance of PostgreSQL Flexible Backup by server name
   azure_rm_postgresqlflexiblebackup_info:
     resource_group: myResourceGroup
     server_name: server_name
 
-- name: Get instances of PostgreSQL Flexible Database
+- name: Get instances of PostgreSQL Flexible Backup
   azure_rm_postgresqlflexiblebackup_info:
     resource_group: myResourceGroup
     server_name: server_name
-    name: database_name
+    name: backup_name
 '''
 
 RETURN = '''
-database:
+backup:
     description:
-        - A list of dictionaries containing facts for PostgreSQL Flexible Database.
+        - A list of dictionaries containing facts for PostgreSQL Flexible Backup.
     returned: always
     type: complex
     contains:
         id:
             description:
-                - Resource ID of the postgresql flexible database.
+                - Fully qualified resource ID for the resource.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/backups/freddatabase"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/posttest/backups/fredbackup"
+        backup_name:
             description:
                 - Resource name.
             returned: always
             type: str
-            sample: freddatabase
-        charset:
+            sample: fredbackup
+        server_name:
             description:
-                - The charset of the database.
+                - The post gresql flexible server name.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: posttest
+        resource_group:
             description:
-                - The collation of the database.
+                - Name of the resource group.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: testRG
         type:
             description:
                 - The type of the resource.
             returned: always
             type: str
             sample: Microsoft.DBforPostgreSQL/flexibleServers/backups
-        system_data:
+        completed_time:
             description:
-                - The system metadata relating to this resource.
-            type: complex
+                - Backup completed time (ISO8601 format).
+            type: str
             returned: always
-            contains:
-                created_by:
-                    description:
-                        - The identity that created the resource.
-                    type: str
-                    returned: always
-                    sample: null
-                created_by_type:
-                    description:
-                        - The type of identity that created the resource.
-                    returned: always
-                    type: str
-                    sample: null
-                created_at:
-                    description:
-                        - The timestamp of resource creation (UTC).
-                    returned: always
-                    sample: null
-                    type: str
-                last_modified_by:
-                    description:
-                        - The identity that last modified the resource.
-                    type: str
-                    returned: always
-                    sample: null
-                last_modified_by_type:
-                    description:
-                        - The type of identity that last modified the resource.
-                    returned: always
-                    sample: null
-                    type: str
-                last_modified_at:
-                    description:
-                        - The timestamp of resource last modification (UTC).
-                    returned: always
-                    sample: null
-                    type: str
+            sample: "2025-04-17T08:11:58.756273+00:00"
+        backup_type:
+            description:
+                - Backup type.
+            type: str
+            returned: always
+            sample: Full
+        source:
+            description:
+                - Backup source.
+            type: str
+            returned: always
+            sample: Automatic
 '''
 
 
@@ -156,7 +132,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            name=dict(
+            backup_name=dict(
                 type='str'
             ),
         )
@@ -165,7 +141,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
             changed=False
         )
         self.resource_group = None
-        self.name = None
+        self.backup_name = None
         self.server_name = None
         super(AzureRMPostgreSqlFlexibleBackupInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
@@ -173,7 +149,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.name is not None:
+        if self.backup_name is not None:
             self.results['backups'] = self.get()
         else:
             self.results['backup'] = self.list_all()
@@ -185,7 +161,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         try:
             response = self.postgresql_flexible_client.backups.get(resource_group_name=self.resource_group,
                                                                    server_name=self.server_name,
-                                                                   name=self.name)
+                                                                   backup_name=self.backup_name)
             self.log("Response : {0}".format(response))
         except ResourceNotFoundError:
             self.log('Could not get backup facts for PostgreSQL Flexible Server.')
@@ -212,24 +188,16 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         return results
 
     def format_item(self, item):
-        return item.as_dict()
-        result = dict(
+        return dict(
+            resource_group=self.resource_group,
+            server_name=self.server_name,
+            backup_type=item.backup_type,
+            completed_time=item.completed_time,
             id=item.id,
             name=item.name,
-            system_data=dict(),
-            type=item.type,
-            charset=item.charset,
-            collation=item.collation
+            source=item.source,
+            type=item.type
         )
-        if item.system_data is not None:
-            result['system_data']['created_by'] = item.system_data.created_by
-            result['system_data']['created_by_type'] = item.system_data.created_by_type
-            result['system_data']['created_at'] = item.system_data.created_at
-            result['system_data']['last_modified_by'] = item.system_data.last_modified_by
-            result['system_data']['last_modified_by_type'] = item.system_data.last_modified_by_type
-            result['system_data']['last_modified_at'] = item.system_data.last_modified_at
-
-        return result
 
 
 def main():

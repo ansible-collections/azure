@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,10 +11,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibledBackup
-version_added: "2.2.0"
+version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible Backup instance
 description:
-    - Create, update and delete instance of PostgreSQL Flexible Backup.
+    - Create or delete instance of PostgreSQL Flexible Backup.
 
 options:
     resource_group:
@@ -24,24 +24,14 @@ options:
         type: str
     server_name:
         description:
-            - The name of the server.
+            - The name of the post gresql flexible server.
         required: True
         type: str
-    name:
+    backup_name:
         description:
             - The name of the backup.
         required: True
         type: str
-    charset:
-        description:
-            - The charset of the backup.
-        type: str
-    collation:
-        description:
-            - The collation of the backup.
-        type: str
-    state:
-        description:
             - Assert the state of the PostgreSQL Flexible backup. Use C(present) to create or update a backup and C(absent) to delete it.
         default: present
         type: str
@@ -63,54 +53,71 @@ EXAMPLES = '''
   azure_rm_postgresqlflexibledBackup:
     resource_group: myResourceGroup
     server_name: testserver
-    name: db1
-    charset: UTF8
-    collation: en_US.utf8
+    backup_name: backup01
 
 - name: Delete PostgreSQL Flexible Backup
   azure_rm_postgresqlflexibledBackup:
     resource_group: myResourceGroup
     server_name: testserver
-    name: db1
+    backup_name: backup01
+    state: absent
 '''
 
 RETURN = '''
 backup:
     description:
-        - A list of dictionaries containing facts for PostgreSQL Flexible Backup.
+        - A dictionaries containing facts for PostgreSQL Flexible Backup.
     returned: always
     type: complex
     contains:
         id:
             description:
-                - Resource ID of the postgresql flexible backup.
+                - Fully qualified resource ID for the resource.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/backups/fredbackup"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/posttest/backups/fredbackup"
+        backup_name:
             description:
                 - Resource name.
             returned: always
             type: str
             sample: fredbackup
-        charset:
+        server_name:
             description:
-                - The charset of the backup.
+                - The post gresql flexible server name.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: posttest
+        resource_group:
             description:
-                - The collation of the backup.
+                - Name of the resource group.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: testRG
         type:
             description:
                 - The type of the resource.
             returned: always
             type: str
             sample: Microsoft.DBforPostgreSQL/flexibleServers/backups
+        completed_time:
+            description:
+                - Backup completed time (ISO8601 format).
+            type: str
+            returned: always
+            sample: "2025-04-17T08:11:58.756273+00:00"
+        backup_type:
+            description:
+                - Backup type.
+            type: str
+            returned: always
+            sample: Full
+        source:
+            description:
+                - Backup source.
+            type: str
+            returned: always
+            sample: Automatic
 '''
 
 
@@ -136,19 +143,9 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
                 type='str',
                 required=True
             ),
-            name=dict(
+            backup_name=dict(
                 type='str',
                 required=True
-            ),
-            principal_type=dict(
-                type='str',
-                choices=['Unknown', 'User', 'Group', 'ServicePrincipal']
-            ),
-            principal_name=dict(
-                type='str'
-            ),
-            tenant_id=dict(
-                type='str'
             ),
             state=dict(
                 type='str',
@@ -159,15 +156,14 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
 
         self.resource_group = None
         self.server_name = None
-        self.name = None
-        self.parameters = dict()
+        self.backup_name = None
 
         self.results = dict(changed=False)
         self.state = None
 
         super(AzureRMPostgreSqlFlexibleBackup, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                                 supports_check_mode=True,
-                                                                 supports_tags=False)
+                                                              supports_check_mode=True,
+                                                              supports_tags=False)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -175,8 +171,6 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
-            else:
-                self.parameters[key] = kwargs[key]
 
         old_response = None
         response = None
@@ -191,7 +185,7 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
             else:
                 changed = True
                 if not self.check_mode:
-                    response = self.create_update_postgresqlflexiblebackup(self.parameters)
+                    response = self.create_postgresqlflexiblebackup(self.parameters)
         else:
             self.log("PostgreSQL Flexible Backup instance already exists")
             if self.state == 'absent':
@@ -199,29 +193,26 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
                 if not self.check_mode:
                     response = self.delete_postgresqlflexiblebackup()
             else:
-                if not self.default_compare({}, self.parameters, old_response, '', dict(compare=[])):
+                if self.check_mode:
                     changed = True
-                    if not self.check_mode:
-                        self.fail("The Post Gresql Flexible backup not support to update")
-                else:
-                    response = old_response
+                response = old_response
 
         self.results['backup'] = response
         self.results['changed'] = changed
         return self.results
 
-    def create_update_postgresqlflexiblebackup(self, body):
+    def create_postgresqlflexiblebackup(self, body):
         '''
-        Creates or updates PostgreSQL Flexible Backup with the specified configuration.
+        Creates PostgreSQL Flexible Backup with the specified configuration.
 
         :return: deserialized PostgreSQL Flexible Backup instance state dictionary
         '''
-        self.log("Creating / Updating the PostgreSQL Flexible Backup instance {0}".format(self.name))
+        self.log("Creating the PostgreSQL Flexible Backup instance {0}".format(self.backup_name))
 
         try:
             response = self.postgresql_flexible_client.backups.begin_create(resource_group_name=self.resource_group,
                                                                             server_name=self.server_name,
-                                                                            name=self.name)
+                                                                            backup_name=self.backup_name)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -236,11 +227,11 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
 
         :return: True
         '''
-        self.log("Deleting the PostgreSQL Flexible Backup instance {0}".format(self.name))
+        self.log("Deleting the PostgreSQL Flexible Backup instance {0}".format(self.backup_name))
         try:
             self.postgresql_flexible_client.backups.begin_delete(resource_group_name=self.resource_group,
                                                                  server_name=self.server_name,
-                                                                 name=self.name)
+                                                                 backup_name=self.backup_name)
         except Exception as ec:
             self.log('Error attempting to delete the PostgreSQL Flexible Backup instance.')
             self.fail("Error deleting the PostgreSQL Flexible Backup instance: {0}".format(str(ec)))
@@ -251,12 +242,12 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible Backup instance state dictionary
         '''
-        self.log("Checking if the PostgreSQL Flexible Backup instance {0} is present".format(self.name))
+        self.log("Checking if the PostgreSQL Flexible Backup instance {0} is present".format(self.backup_name))
         found = False
         try:
             response = self.postgresql_flexible_client.backups.get(resource_group_name=self.resource_group,
                                                                    server_name=self.server_name,
-                                                                   name=self.name)
+                                                                   backup_name=self.backup_name)
             found = True
             self.log("Response : {0}".format(response))
             self.log("PostgreSQL Flexible Backup instance : {0} found".format(response.name))

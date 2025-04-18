@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,10 +11,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibledvirtualendpoint
-version_added: "2.2.0"
+version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible virtualendpoint instance
 description:
-    - Create, update and delete instance of PostgreSQL Flexible virtualendpoint.
+    - Create or delete instance of PostgreSQL Flexible virtualendpoint.
 
 options:
     resource_group:
@@ -27,19 +27,23 @@ options:
             - The name of the server.
         required: True
         type: str
-    name:
+    virtual_endpoint_name:
         description:
-            - The name of the virtualendpoint.
+            - The name of the post gresql flexible virtual endpoint.
         required: True
         type: str
-    charset:
+    members:
         description:
-            - The charset of the virtualendpoint.
-        type: str
-    collation:
+            - List of virtual endpoints for a server.
+            - The names are the same with I(virtual_endpoint_name).
+        type: list
+        elments: str
+    endpoint_type:
         description:
-            - The collation of the virtualendpoint.
+            - The endpoint type for the virtual endpoint.
         type: str
+        choices:
+            - ReadWrite
     state:
         description:
             - Assert the state of the PostgreSQL Flexible virtualendpoint. Use C(present) to create or update a virtualendpoint and C(absent) to delete it.
@@ -71,46 +75,64 @@ EXAMPLES = '''
   azure_rm_postgresqlflexibledvirtualendpoint:
     resource_group: myResourceGroup
     server_name: testserver
-    name: db1
+    virtual_endpoint_name: vendpoint01
 '''
 
 RETURN = '''
 virtualendpoint:
     description:
-        - A list of dictionaries containing facts for PostgreSQL Flexible virtualendpoint.
+        - A list of dictionaries containing facts for PostgreSQL Flexible virtual endpoint.
     returned: always
     type: complex
     contains:
         id:
             description:
-                - Resource ID of the postgresql flexible virtualendpoint.
+                - Resource ID of the postgresql flexible virtual endpoints.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/virtual_endpoints/fredvirtualendpoint"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postsql01/virtualendpoints/vendpoint"
+        virtual_endpoint_name:
             description:
                 - Resource name.
             returned: always
             type: str
-            sample: fredvirtualendpoint
-        charset:
+            sample: vendpoint
+        endpoint_type:
             description:
-                - The charset of the virtualendpoint.
+                - The endpoint type for the virtual endpoint.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: ReadWrite
+        resource_group:
             description:
-                - The collation of the virtualendpoint.
+                - The resoure group name.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: myResourceGroup
+        members:
+            description:
+                - List of members for a virtual endpoint.
+            returned: always
+            type: list
+            sample: ['postsqlrpfx01']
+        server_name:
+            description:
+                - The Post gresql flexibeserver name.
+            returned: always
+            type: str
+            sample: postsql01
+        virtual_endpoints:
+            description:
+                - List of virtual endpoints for a server.
+            returned: always
+            type: list
+            sample: ["vendpoint.writer.postgres.database.azure.com", "vendpoint.reader.postgres.database.azure.com"]
         type:
             description:
                 - The type of the resource.
             returned: always
             type: str
-            sample: Microsoft.DBforPostgreSQL/flexibleServers/virtual_endpoints
+            sample: Microsoft.DBforPostgreSQL/flexibleServers/virtualendpoints
 '''
 
 
@@ -123,7 +145,7 @@ except ImportError:
     pass
 
 
-class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
+class AzureRMPostgreSqlFlexibleVirtualEndpoint(AzureRMModuleBase):
     """Configuration class for an Azure RM PostgreSQL Flexible virtualendpoint resource"""
 
     def __init__(self):
@@ -163,9 +185,9 @@ class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
         self.results = dict(changed=False)
         self.state = None
 
-        super(AzureRMPostgreSqlFlexiblevirtualendpoint, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                                 supports_check_mode=True,
-                                                                 supports_tags=False)
+        super(AzureRMPostgreSqlFlexibleVirtualEndpoint, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                                       supports_check_mode=True,
+                                                                       supports_tags=False)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -197,12 +219,9 @@ class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
                 if not self.check_mode:
                     response = self.delete_postgresqlflexiblevirtualendpoint()
             else:
-                if not self.default_compare({}, self.parameters, old_response, '', dict(compare=[])):
+                if self.check_mode:
                     changed = True
-                    if not self.check_mode:
-                        response = self.update_postgresqlflexiblevirtualendpoint(self.parameters)
-                else:
-                    response = old_response
+                response = old_response
 
         self.results['virtualendpoint'] = response
         self.results['changed'] = changed
@@ -214,31 +233,10 @@ class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible virtualendpoint instance state dictionary
         '''
-        self.log("Creating the PostgreSQL Flexible virtualendpoint instance {0}".format(self.name))
+        self.log("Creating the PostgreSQL Flexible virtualendpoint instance {0}".format(self.virtual_endpoint_name))
 
         try:
             response = self.postgresql_flexible_client.virtual_endpoints.begin_create(resource_group_name=self.resource_group,
-                                                                                      server_name=self.server_name,
-                                                                                      virtual_endpoint_name=self.virtual_endpoint_name,
-                                                                                      parameters=body)
-            if isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
-
-        except Exception as exc:
-            self.log('Error attempting to create the PostgreSQL Flexible virtualendpoint instance.')
-            self.fail("Error creating the PostgreSQL Flexible virtualendpoint instance: {0}".format(str(exc)))
-        return self.format_item(response)
-
-    def update_postgresqlflexiblevirtualendpoint(self, body):
-        '''
-        Updates PostgreSQL Flexible virtualendpoint with the specified configuration.
-
-        :return: deserialized PostgreSQL Flexible virtualendpoint instance state dictionary
-        '''
-        self.log("Updating the PostgreSQL Flexible virtualendpoint instance {0}".format(self.name))
-
-        try:
-            response = self.postgresql_flexible_client.virtual_endpoints.begin_update(resource_group_name=self.resource_group,
                                                                                       server_name=self.server_name,
                                                                                       virtual_endpoint_name=self.virtual_endpoint_name,
                                                                                       parameters=body)
@@ -256,7 +254,7 @@ class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
 
         :return: True
         '''
-        self.log("Deleting the PostgreSQL Flexible virtualendpoint instance {0}".format(self.name))
+        self.log("Deleting the PostgreSQL Flexible virtualendpoint instance {0}".format(self.virtual_endpoint_name))
         try:
             self.postgresql_flexible_client.virtual_endpoints.begin_delete(resource_group_name=self.resource_group,
                                                                            server_name=self.server_name,
@@ -271,7 +269,7 @@ class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible virtualendpoint instance state dictionary
         '''
-        self.log("Checking if the PostgreSQL Flexible virtualendpoint instance {0} is present".format(self.name))
+        self.log("Checking if the PostgreSQL Flexible virtualendpoint instance {0} is present".format(self.virtual_endpoint_name))
         found = False
         try:
             response = self.postgresql_flexible_client.virtual_endpoints.get(resource_group_name=self.resource_group,
@@ -288,15 +286,16 @@ class AzureRMPostgreSqlFlexiblevirtualendpoint(AzureRMModuleBase):
         return None
 
     def format_item(self, item):
-        return item.as_dict()
-        result = dict(
+        return dict(
+            resource_group=self.resource_group,
+            server_name=self.server_name,
             id=item.id,
-            name=item.name,
+            endpoint_type=item.endpoint_type,
+            members=item.members,
+            virtual_endpoint_name=item.name,
             type=item.type,
-            charset=item.charset,
-            collation=item.collation
+            virtual_endpoints=item.virtual_endpoints
         )
-        return result
 
 
 def main():

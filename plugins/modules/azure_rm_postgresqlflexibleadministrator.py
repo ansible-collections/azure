@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -11,10 +11,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibledAdministrator
-version_added: "2.2.0"
+version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible Administrator instance
 description:
-    - Create, update and delete instance of PostgreSQL Flexible Administrator.
+    - Add or Delete instance of PostgreSQL Flexible Administrator.
 
 options:
     resource_group:
@@ -24,21 +24,25 @@ options:
         type: str
     server_name:
         description:
-            - The name of the server.
+            - The name of the post gresql flexible server.
         required: True
         type: str
-    name:
+    object_id:
         description:
-            - The name of the administrator.
+            - The Object ID of Azure Directory Administrator.
         required: True
         type: str
-    charset:
+    principal_name:
         description:
-            - The charset of the administrator.
+            - Active Directory administrator principal name.
         type: str
-    collation:
+    principal_type:
         description:
-            - The collation of the administrator.
+            - The principal type used to represent the type of Active Directory Administrator.
+        type: str
+    tenant_id:
+        description:
+            - The tenant ID of Active Directory Administrator.
         type: str
     state:
         description:
@@ -63,15 +67,17 @@ EXAMPLES = '''
   azure_rm_postgresqlflexibledAdministrator:
     resource_group: myResourceGroup
     server_name: testserver
-    name: db1
-    charset: UTF8
-    collation: en_US.utf8
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    principal_type: User
+    principal_name: fred-sun
+    tenant_id: yyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
 
 - name: Delete PostgreSQL Flexible Administrator
   azure_rm_postgresqlflexibledAdministrator:
     resource_group: myResourceGroup
     server_name: testserver
-    name: db1
+    object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    state: absent
 '''
 
 RETURN = '''
@@ -83,34 +89,52 @@ administrator:
     contains:
         id:
             description:
-                - Resource ID of the postgresql flexible administrator.
+                - Resource ID of the postgresql flexible admistrator.
             returned: always
             type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postfle9/administrators/fredadministrator"
-        name:
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postgresql03/administrators/xxx-xxx"
+        principal_name:
             description:
-                - Resource name.
+                - Active Directory administrator principal name.
             returned: always
             type: str
-            sample: fredadministrator
-        charset:
+            sample: fred-sun
+        principal_type:
             description:
-                - The charset of the administrator.
+                - The principal type used to represent the type of Active Directory Administrator.
             returned: always
             type: str
-            sample: UTF-8
-        collation:
+            sample: User
+        object_id:
             description:
-                - The collation of the administrator.
+                - The Object ID of Azure Directory Administrator.
             returned: always
             type: str
-            sample: en_US.utf8
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         type:
             description:
                 - The type of the resource.
             returned: always
             type: str
             sample: Microsoft.DBforPostgreSQL/flexibleServers/administrators
+        tenant_id:
+            description:
+                - The tenant ID of Active Directory Administrator.
+            returned: always
+            type: str
+            sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx
+        resource_group:
+            description:
+                - The resource group name.
+            returned: always
+            type: str
+            sample: testRG
+        server_name:
+            description:
+                - The type of the resource.
+            returned: always
+            type: str
+            sample: postgresql03
 '''
 
 
@@ -166,8 +190,8 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
         self.state = None
 
         super(AzureRMPostgreSqlFlexibleAdministrator, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                                 supports_check_mode=True,
-                                                                 supports_tags=False)
+                                                                     supports_check_mode=True,
+                                                                     supports_tags=False)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -187,36 +211,34 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
         if not old_response:
             self.log("PostgreSQL Flexible Administrator instance doesn't exist")
             if self.state == 'absent':
-                self.log("Old instance didn't exist")
+                self.log("The PostgreSQL Flexible Administrator with object {0} no exist".format(self.object_id))
             else:
                 changed = True
                 if not self.check_mode:
-                    response = self.create_update_postgresqlflexibleadministrator(self.parameters)
+                    response = self.add_postgresqlflexibleadministrator(self.parameters)
         else:
-            self.log("PostgreSQL Flexible Administrator instance already exists")
+            self.log("PostgreSQL Flexible Administrator instance with object {0} already exists".format(self.object_id))
             if self.state == 'absent':
                 changed = True
                 if not self.check_mode:
                     response = self.delete_postgresqlflexibleadministrator()
             else:
-                if not self.default_compare({}, self.parameters, old_response, '', dict(compare=[])):
+                if self.check_mode:
                     changed = True
-                    if not self.check_mode:
-                        self.fail("The Post Gresql Flexible administrator not support to update")
-                else:
-                    response = old_response
+                    self.fail("PostgreSQL Flexible Administrator instance with object {0} already exists".format(self.object_id))
+                response = old_response
 
         self.results['administrator'] = response
         self.results['changed'] = changed
         return self.results
 
-    def create_update_postgresqlflexibleadministrator(self, body):
+    def add_postgresqlflexibleadministrator(self, body):
         '''
-        Creates or updates PostgreSQL Flexible Administrator with the specified configuration.
+        Add PostgreSQL Flexible Administrator with the specified configuration.
 
         :return: deserialized PostgreSQL Flexible Administrator instance state dictionary
         '''
-        self.log("Creating / Updating the PostgreSQL Flexible Administrator instance {0}".format(self.name))
+        self.log("Adding the PostgreSQL Flexible Administrator instance {0}".format(self.object_id))
 
         try:
             response = self.postgresql_flexible_client.administrators.begin_create(resource_group_name=self.resource_group,
@@ -227,17 +249,17 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
-            self.log('Error attempting to create the PostgreSQL Flexible Administrator instance.')
-            self.fail("Error creating the PostgreSQL Flexible Administrator instance: {0}".format(str(exc)))
+            self.log('Error attempting to add the PostgreSQL Flexible Administrator instance.')
+            self.fail("Error add the PostgreSQL Flexible Administrator instance: {0}".format(str(exc)))
         return self.format_item(response)
 
     def delete_postgresqlflexibleadministrator(self):
         '''
-        Deletes specified PostgreSQL Flexible Administrator instance in the specified subscription and resource group.
+        Deletes specified PostgreSQL Flexible Administrator instance in the specified server name and resource group.
 
         :return: True
         '''
-        self.log("Deleting the PostgreSQL Flexible Administrator instance {0}".format(self.name))
+        self.log("Deleting the PostgreSQL Flexible Administrator instance {0}".format(self.object_id))
         try:
             self.postgresql_flexible_client.administrators.begin_delete(resource_group_name=self.resource_group,
                                                                         server_name=self.server_name,
@@ -252,7 +274,7 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
 
         :return: deserialized PostgreSQL Flexible Administrator instance state dictionary
         '''
-        self.log("Checking if the PostgreSQL Flexible Administrator instance {0} is present".format(self.name))
+        self.log("Checking if the PostgreSQL Flexible Administrator instance {0} is present".format(self.object_id))
         found = False
         try:
             response = self.postgresql_flexible_client.administrators.get(resource_group_name=self.resource_group,
@@ -269,15 +291,16 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
         return None
 
     def format_item(self, item):
-        return item.as_dict()
-        result = dict(
+        return dict(
+            resource_group=self.resource_group,
+            server_name=self.server_name,
+            object_id=item.object_id,
             id=item.id,
-            name=item.name,
-            type=item.type,
-            charset=item.charset,
-            collation=item.collation
+            principal_name=item.principal_name,
+            principal_type=item.principal_type,
+            tenant_id=item.tenant_id,
+            type=item.type
         )
-        return result
 
 
 def main():
