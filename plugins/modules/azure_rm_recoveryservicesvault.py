@@ -118,6 +118,12 @@ response:
             returned: always
             type: str
             sample: "Microsoft.RecoveryServices/vaults"
+        tags:
+            description:
+                - The resource tags.
+            returned: when-used
+            tags: dict
+            sample: {'key1': 'value'}
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
@@ -258,7 +264,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             self.identity = self.format_for_body(identity)
 
         update_tags = False
-        if old_response is not None:
+        if old_response is not False:
             update_tags, self.tags = self.update_tags(old_response.get('tags'))
         self.body = self.get_body()
 
