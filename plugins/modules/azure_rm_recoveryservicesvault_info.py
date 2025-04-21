@@ -102,7 +102,7 @@ response:
             description:
                 - The resource tags.
             returned: when-used
-            tags: dict
+            type: dict
             sample: {'key1': 'value'}
 '''
 

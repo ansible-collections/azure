@@ -122,7 +122,7 @@ response:
             description:
                 - The resource tags.
             returned: when-used
-            tags: dict
+            type: dict
             sample: {'key1': 'value'}
 '''
 
@@ -262,6 +262,9 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             update_identity, identity = self.update_managed_identity(curr_identity=old_identity,
                                                                      new_identity=self.identity)
             self.identity = self.format_for_body(identity)
+        else:
+            if old_response is not False:
+                self.identity = old_response.get('identity')
 
         update_tags = False
         if old_response is not False:
