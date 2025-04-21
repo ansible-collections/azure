@@ -163,6 +163,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         self.location = None
         self.state = None
         self.identity = None
+        self.tags = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
@@ -211,7 +212,8 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                     "name": "Standard"
                 },
                 "identity": self.identity,
-                "location": self.location
+                "location": self.location,
+                'tags': self.tags
             }
         else:
             return {}
@@ -229,7 +231,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         return identity
 
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
@@ -255,6 +257,9 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                                                                      new_identity=self.identity)
             self.identity = self.format_for_body(identity)
 
+        update_tags = False
+        if old_response is not None:
+            update_tags, self.tags = self.update_tags(old_response.get('tags'))
         self.body = self.get_body()
 
         changed = False
@@ -262,7 +267,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
             if old_response is False:
                 changed = True
                 self.create_recovery_service_vault()
-            elif update_identity is True:
+            elif update_identity is True or update_tags is True:
                 changed = True
                 self.create_recovery_service_vault()
             else:
