@@ -592,7 +592,7 @@ azure_vmss:
     type: dict
     sample: {
         "constrained_maximum_capacity": false,
-        "etag": "\"3\"",
+        "etag": "3",
         "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Compute/virtualMachineScaleSets/testVMSStestvmss",
         "location": "eastus",
         "name": "testVMSStestvmss",
