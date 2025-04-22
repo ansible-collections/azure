@@ -317,7 +317,7 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
                                                 vnet.get('subscription_id', self.subscription_id),
                                                 'Microsoft.Network',
                                                 'virtualNetworks',
-                                                vnet.get('resource_group', self.resource_group)
+                                                vnet.get('resource_group', self.resource_group))
         elif isinstance(vnet, str):
             if is_valid_resource_id(vnet):
                 remote_vnet_id = vnet
