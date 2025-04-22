@@ -53,6 +53,7 @@ options:
                     - Reference to managed image or gallery image version
                     - Could be resource ID to managed image, or dictionary containing I(resource_group) and I(name)
                     - Could be resource ID to image version, or dictionary containing I(resource_group),I(gallery_name), I(gallery_image_name) and I(version)
+                    - The resource ID I(virtual_machine_id) of the source virtual machine. Only required when capturing a virtual machine to source this Gallery Image Version.
                     - Mutual exclusive with os_disk and data_disks
                 type: raw
             os_disk:
