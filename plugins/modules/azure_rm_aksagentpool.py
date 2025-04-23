@@ -1026,6 +1026,60 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                     enable_vtpm=dict(type='bool', default=False)
                 )
             ),
+            os_disk_type=dict(
+                type='str',
+                choices=['Managed', 'Ephemeral']
+            ),
+            capacity_reservation_group_id=dict(
+                type='str',
+            ),
+            host_group_id=dict(
+                type='str',
+            ),
+            pod_subnet_id=dict(
+                type='str',
+            ),
+            network_profile=dict(
+                type='dict',
+                options=dict(
+                    node_public_ip_tags=dict(
+                        type='list',
+                        elements='dict',
+                        options=dict(
+                            ip_tag_type=dict(type='str'),
+                            tag=dict(type='str')
+                        )
+                    ),
+                    allowed_host_ports=dict(
+                        type='list',
+                        elements='dict',
+                        options=dict(
+                            port_start=dict(type='int'),
+                            port_end=dict(type='int'),
+                            protocol=dict(
+                                type='str',
+                                choices=['UDP', 'TCP']
+                            )
+                        )
+                    ),
+                    application_security_groups=dict(
+                        type='list',
+                        elements='str'
+                    )
+                )
+            ),
+            windows_profile=dict(
+                type='dict',
+                options=dict(
+                    disable_outbound_nat=dict(type='bool')
+                )
+            ),
+            creation_data=dict(
+                type='dict',
+                options=dict(
+
+                )
+            ),
             state=dict(
                 type='str',
                 choices=['present', 'absent'],
@@ -1073,6 +1127,13 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
         self.enable_fips = None
         self.gpu_instance_profile = None
         self.security_profile = None
+        self.os_disk_type = None
+        self.capacity_reservation_group_id = None
+        self.host_group_id = None
+        self.pod_subnet_id = None
+        self.network_profile = None
+        self.creation_data = None
+        self.windows_profile = None
         self.body = dict()
 
         super(AzureRMAksAgentPool, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
@@ -1200,6 +1261,13 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             enable_ultra_ssd=agent_pool.enable_ultra_ssd,
             enable_fips=agent_pool.enable_fips,
             gpu_instance_profile=agent_pool.gpu_instance_profile,
+            os_disk_type=agent_pool.os_disk_type,
+            capacity_reservation_group_id=agent_pool.capacity_reservation_group_id,
+            host_group_id=agent_pool.host_group_id,
+            pod_subnet_id=agent_pool.pod_subnet_id,
+            network_profile=dict(),
+            windows_profile=dict(),
+            creation_data=dict()
         )
 
         if agent_pool.upgrade_settings is not None:
@@ -1240,6 +1308,27 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             agent_pool_dict['security_profile']['enable_secure_boot'] = agent_pool.security_profile.enable_secure_boot
         else:
             agent_pool_dict['security_profile'] = None
+
+        if agent_pool.security_profile is not None:
+            agent_pool_dict['security_profile']['enable_vtpm'] = agent_pool.security_profile.enable_vtpm
+            agent_pool_dict['security_profile']['enable_secure_boot'] = agent_pool.security_profile.enable_secure_boot
+        else:
+            agent_pool_dict['security_profile'] = None
+
+        if agent_pool.network_profile is not None:
+            agent_pool_dict['network_profile'] = agent_pool.network_profile.as_dict()
+        else:
+            agent_pool_dict['network_profile'] = None
+
+        if agent_pool.windows_profile is not None:
+            agent_pool_dict['windows_profile']['disable_outbound_nat'] = agent_pool.windows_profile.disable_outbound_nat
+        else:
+            agent_pool_dict['windows_profile'] = None
+
+        if agent_pool.creation_data is not None:
+            agent_pool_dict['creation_data']['source_resource_id'] = agent_pool.creation_data.source_resource_id
+        else:
+            agent_pool_dict['creation_data'] = None
 
         return agent_pool_dict
 

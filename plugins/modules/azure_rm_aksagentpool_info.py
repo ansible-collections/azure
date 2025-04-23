@@ -440,6 +440,13 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             enable_ultra_ssd=agent_pool.enable_ultra_ssd,
             enable_fips=agent_pool.enable_fips,
             gpu_instance_profile=agent_pool.gpu_instance_profile,
+            os_disk_type=agent_pool.os_disk_type,
+            capacity_reservation_group_id=agent_pool.capacity_reservation_group_id,
+            host_group_id=agent_pool.host_group_id,
+            pod_subnet_id=agent_pool.pod_subnet_id,
+            network_profile=dict(),
+            windows_profile=dict(),
+            creation_data=dict()
         )
 
         if agent_pool.upgrade_settings is not None:
@@ -480,6 +487,21 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             agent_pool_dict['security_profile']['enable_secure_boot'] = agent_pool.security_profile.enable_secure_boot
         else:
             agent_pool_dict['security_profile'] = None
+
+        if agent_pool.network_profile is not None:
+            agent_pool_dict['network_profile'] = agent_pool.network_profile.as_dict()
+        else:
+            agent_pool_dict['network_profile'] = None
+
+        if agent_pool.windows_profile is not None:
+            agent_pool_dict['windows_profile']['disable_outbound_nat'] = agent_pool.windows_profile.disable_outbound_nat
+        else:
+            agent_pool_dict['windows_profile'] = None
+
+        if agent_pool.creation_data is not None:
+            agent_pool_dict['creation_data']['source_resource_id'] = agent_pool.creation_data.source_resource_id
+        else:
+            agent_pool_dict['creation_data'] = None
 
         return agent_pool_dict
 
