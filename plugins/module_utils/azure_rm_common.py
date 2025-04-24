@@ -921,7 +921,7 @@ class AzureRMModuleBase(object):
         host = cloud_mapping.get(self._cloud_environment, NationalClouds.Global)
         client = GraphClientFactory.create_with_default_middleware(host=host)
         request_adapter = GraphRequestAdapter(auth_provider, client=client)
-        return GraphServiceClient(self.azure_auth.azure_credential_track2, request_adapter)
+        return GraphServiceClient(self.azure_auth.azure_credential_track2, request_adapter=request_adapter)
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
