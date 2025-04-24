@@ -287,7 +287,9 @@ try:
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
     from azure.identity import AzureCliCredential
-    from msgraph import GraphServiceClient
+    from kiota_authentication_azure.azureidentity_authentication_provider import AzureIdentityAuthenticationProvider
+    from msgraph_core import GraphClientFactory, NationalClouds
+    from msgraph import GraphRequestAdapter, GraphServiceClient
     from azure.mgmt.batch import BatchManagementClient
     from azure.mgmt.batch import models as BatchManagementModel
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
@@ -910,7 +912,16 @@ class AzureRMModuleBase(object):
     #    return client
 
     def get_msgraph_client(self):
-        return GraphServiceClient(self.azure_auth.azure_credential_track2)
+        auth_provider = AzureIdentityAuthenticationProvider(self.azure_auth.azure_credential_track2)
+        cloud_mapping = {
+            azure_cloud.AZURE_CHINA_CLOUD: NationalClouds.China,
+            azure_cloud.AZURE_US_GOV_CLOUD: NationalClouds.US_GOV,
+            azure_cloud.AZURE_GERMAN_CLOUD: NationalClouds.Germany
+        }
+        host = cloud_mapping.get(self._cloud_environment, NationalClouds.Global)
+        client = GraphClientFactory.create_with_default_middleware(host=host)
+        request_adapter = GraphRequestAdapter(auth_provider, client=client)
+        return GraphServiceClient(self.azure_auth.azure_credential_track2, request_adapter)
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
