@@ -175,7 +175,7 @@
       - not output.changed
 
 - name: Update security group (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     open_ports:
@@ -191,8 +191,25 @@
     that:
       - output.changed
 
+- name: Update security group
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    open_ports:
+      - 33
+    virtual_network: "{{ vn.state.id }}"
+    subnet_name: "tn{{ rpfx }}"
+    security_group: "tn{{ rpfx }}sg"
+  register: output
+
+- name: Assert the security group check mode
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.network_security_group.name == "tn{{ rpfx }}sg"
+
 - name: Update public ip address (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     open_ports:
@@ -202,7 +219,7 @@
     ip_configurations:
       - name: default
         public_ip_address_name: "tn{{ rpfx }}"
-    create_with_security_group: false
+    security_group: "tn{{ rpfx }}sg"
   register: output
   check_mode: true
 
@@ -211,8 +228,29 @@
     that:
       - output.changed
 
+- name: Update public ip address
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    open_ports:
+      - 33
+    virtual_network: "{{ vn.state.id }}"
+    subnet_name: "tn{{ rpfx }}"
+    ip_configurations:
+      - name: default
+        public_ip_address_name: "tn{{ rpfx }}"
+    security_group: "tn{{ rpfx }}sg"
+  register: output
+
+- name: Assert the public ip check mode
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.network_security_group.name == "tn{{ rpfx }}sg"
+      - output.state.ip_configurations[0].public_ip_address.name == "tn{{ rpfx }}"
+
 - name: Update accelerated networking (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     open_ports:
@@ -220,7 +258,7 @@
     virtual_network: "{{ vn.state.id }}"
     subnet_name: "tn{{ rpfx }}"
     enable_accelerated_networking: true
-    create_with_security_group: false
+    security_group: "tn{{ rpfx }}sg"
   register: output
   check_mode: true
 
@@ -229,8 +267,28 @@
     that:
       - output.changed
 
+- name: Update accelerated networking
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "tn{{ rpfx }}"
+    open_ports:
+      - 33
+    virtual_network: "{{ vn.state.id }}"
+    subnet_name: "tn{{ rpfx }}"
+    enable_accelerated_networking: true
+    security_group: "tn{{ rpfx }}sg"
+  register: output
+
+- name: Assert the network check mode facts
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.state.network_security_group.name == "tn{{ rpfx }}sg"
+      - output.state.ip_configurations[0].public_ip_address.name == "tn{{ rpfx }}"
+      - output.state.enable_accelerated_networking
+
 - name: Update IP forwarding networking (check mode)
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "tn{{ rpfx }}"
     virtual_network: "{{ vn.state.id }}"
