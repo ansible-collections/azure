@@ -28,6 +28,7 @@ azure-mgmt-redis==14.4.0
 azure-mgmt-resource==23.2.0
 azure-mgmt-rdbms==10.2.0b17
 azure-mgmt-mysqlflexibleservers==1.0.0b3
+azure-mgmt-postgresqlflexibleservers==1.1.0
 azure-mgmt-search==9.2.0b2
 azure-mgmt-servicebus==8.2.1
 azure-mgmt-sql==4.0.0b19
