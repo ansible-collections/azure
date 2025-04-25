@@ -459,6 +459,87 @@ options:
                     - Whether to disable or enabled the secure boot.
                 default: false
                 type: bool
+    os_disk_type:
+        description:
+            - The default is C(Ephemeral) if the VM supports it and has a cache disk larger than the requested OSDiskSizeGB.
+            - Otherwise, defaults to C(Managed).
+            - May not be changed after creation.
+        type: str
+        choices:
+            - Ephemeral
+            - Managed
+    capacity_reservation_group_id:
+        description:
+            - The Capacity Reservation Group ID.
+        type: str
+    host_group_id:
+        description:
+            - The Host Group ID.
+            - Sample as C(/subscriptions/{subscriptionId}/resourceGroups/{RG_Name}/providers/Microsoft.Compute/hostGroups/{hostGroupName)
+        type: str
+    pod_subnet_id:
+        description:
+            - If omitted, pod IPs are statically assigned on the node subnet.
+        type: str
+    windows_profile:
+        description:
+            - The Windows agent pool's specific profile.
+        type: dict
+        options:
+            disable_outbound_nat:
+                description:
+                    - The default value is C(false).
+                    - Outbound NAT can only be disabled if the cluster outboundType is NAT Gateway.
+                    - The Windows agent pool does not have node public IP enabled.
+                type: bool
+    network_profile:
+        description:
+            - Network-related settings of an agent pool.
+        type: dict
+        options:
+            node_public_ip_tags:
+                description:
+                    - IPTags of instance-level public IPs.
+                type: list
+                elements: dict
+                options:
+                    ip_tag_type:
+                        description:
+                            - The IP tag type. Example as C(RoutingPreference).
+                        type: str
+                    tag:
+                        description:
+                            - The value of the IP tag associated with the public IP. Sample as C(Internet).
+                        type: str
+            allowed_host_ports:
+                description:
+                    - The port ranges that are allowed to access.
+                    - The specified ranges are allowed to overlap.
+                type: list
+                elements: dict
+                options:
+                    port_start:
+                        description:
+                            - The minimum port that is included in the range.
+                            - It should be ranged from C(1) to C(65535), and be less than or equal to I(port_end).
+                        type: int
+                    port_end:
+                        description:
+                            - The maximum port that is included in the range.
+                            - It should be ranged from C(1) to C(65535), and be greater than or equal to I(port_start).
+                        type: int
+                    protocol:
+                        description:
+                            - The network protocol of the port.
+                        type: str
+                        choices:
+                            - UDP
+                            - TCP
+            application_security_groups:
+                description:
+                    - The IDs of the application security groups which agent pool will associate when created.
+                type: list
+                elements: str
     state:
         description:
             - State of the automation runbook. Use C(present) to create or update a automation runbook and use C(absent) to delete.
@@ -803,9 +884,58 @@ aks_agent_pools:
             type: str
             returned: always
             sample: MIG1g
+        windows_profile:
+            description:
+                - The Windows agent pool's specific profile.
+            type: dict
+            returned: when-used
+            sample: {"disable_outbound_nat": false}
+        network_profile:
+            description:
+                - Network-related settings of an agent pool.
+            type: complex
+            returned: when-used
+            contains:
+                allowed_host_ports:
+                    description:
+                        - The port ranges that are allowed to access.
+                    type: list
+                    returned: always
+                    sample: [{"port_end": 200, "port_start": 10, "protocol": "TCP"}]
+                application_security_groups:
+                    description:
+                        - The IDs of the application security groups which agent pool will associate when created.
+                    type: list
+                    returned: always
+                    sample: ["/subscriptions/xxxxxx/resourceGroups/testRG/providers/Microsoft.Network/applicationSecurityGroups/appnsg"]
+        pod_subnet_id:
+            description:
+                - The subnet ID.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworks/My_Virtual_Network/subnets/foobar"
+        host_group_id:
+            description:
+                - The host group ID.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/hostGroups/hostgroup"
+        capacity_reservation_group_id:
+            description:
+                description:
+                    - The ID of Capacity Reservation Group.
+                returned: always
+                type: str
+                sample:  "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
+        os_disk_type:
+            description:
+                -
+            returned: always
+            sample: Managed
+            type: str
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -814,7 +944,7 @@ except ImportError:
     pass
 
 
-class AzureRMAksAgentPool(AzureRMModuleBase):
+class AzureRMAksAgentPool(AzureRMModuleBaseExt):
     def __init__(self):
         # define user inputs into argument
         self.module_arg_spec = dict(
@@ -1074,12 +1204,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                     disable_outbound_nat=dict(type='bool')
                 )
             ),
-            creation_data=dict(
-                type='dict',
-                options=dict(
-
-                )
-            ),
             state=dict(
                 type='str',
                 choices=['present', 'absent'],
@@ -1132,7 +1256,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
         self.host_group_id = None
         self.pod_subnet_id = None
         self.network_profile = None
-        self.creation_data = None
         self.windows_profile = None
         self.body = dict()
 
@@ -1161,7 +1284,10 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
                             if key == 'security_profile':
                                 if bool(self.body[key][item]) != bool(agent_pool[key].get(item)):
                                     changed = True
-                            elif self.body[key][item] != agent_pool[key].get(item):
+                            elif key == 'windows_profile':
+                                if agent_pool.get(key) is None or bool(self.body[key][item]) != bool(agent_pool[key].get(item)):
+                                    changed = True
+                            elif not self.default_compare({}, self.body[key], agent_pool[key], '', dict(compare=[])):
                                 changed = True
                     elif key == 'node_public_ip_prefix_id':
                         pass
@@ -1211,7 +1337,7 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
 
     def delete_agentpool(self):
         try:
-            response = self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.cluster_name, self.name)
+            self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.cluster_name, self.name)
         except Exception as exc:
             self.fail('Error when deleting cluster agent pool {0}: {1}'.format(self.name, exc))
 
@@ -1267,7 +1393,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             pod_subnet_id=agent_pool.pod_subnet_id,
             network_profile=dict(),
             windows_profile=dict(),
-            creation_data=dict()
         )
 
         if agent_pool.upgrade_settings is not None:
@@ -1324,11 +1449,6 @@ class AzureRMAksAgentPool(AzureRMModuleBase):
             agent_pool_dict['windows_profile']['disable_outbound_nat'] = agent_pool.windows_profile.disable_outbound_nat
         else:
             agent_pool_dict['windows_profile'] = None
-
-        if agent_pool.creation_data is not None:
-            agent_pool_dict['creation_data']['source_resource_id'] = agent_pool.creation_data.source_resource_id
-        else:
-            agent_pool_dict['creation_data'] = None
 
         return agent_pool_dict
 
