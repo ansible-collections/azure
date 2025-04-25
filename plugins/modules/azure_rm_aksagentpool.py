@@ -922,11 +922,10 @@ aks_agent_pools:
             sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/hostGroups/hostgroup"
         capacity_reservation_group_id:
             description:
-                description:
-                    - The ID of Capacity Reservation Group.
-                returned: always
-                type: str
-                sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
+                - The ID of Capacity Reservation Group.
+            returned: always
+            type: str
+            sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
         os_disk_type:
             description:
                 - The type of the OS disk.
