@@ -485,7 +485,7 @@ options:
         description:
             - The Windows agent pool's specific profile.
         type: dict
-        options:
+        suboptions:
             disable_outbound_nat:
                 description:
                     - The default value is C(false).
@@ -496,13 +496,13 @@ options:
         description:
             - Network-related settings of an agent pool.
         type: dict
-        options:
+        suboptions:
             node_public_ip_tags:
                 description:
                     - IPTags of instance-level public IPs.
                 type: list
                 elements: dict
-                options:
+                suboptions:
                     ip_tag_type:
                         description:
                             - The IP tag type. Example as C(RoutingPreference).
@@ -517,7 +517,7 @@ options:
                     - The specified ranges are allowed to overlap.
                 type: list
                 elements: dict
-                options:
+                suboptions:
                     port_start:
                         description:
                             - The minimum port that is included in the range.
@@ -926,10 +926,10 @@ aks_agent_pools:
                     - The ID of Capacity Reservation Group.
                 returned: always
                 type: str
-                sample:  "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
+                sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
         os_disk_type:
             description:
-                -
+                - The type of the OS disk.
             returned: always
             sample: Managed
             type: str

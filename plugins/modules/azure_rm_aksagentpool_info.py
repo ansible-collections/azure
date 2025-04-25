@@ -372,10 +372,10 @@ aks_agent_pools:
                     - The ID of Capacity Reservation Group.
                 returned: always
                 type: str
-                sample:  "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
+                sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
         os_disk_type:
             description:
-                -
+                - The type of the OS disk.
             returned: always
             sample: Managed
             type: str
