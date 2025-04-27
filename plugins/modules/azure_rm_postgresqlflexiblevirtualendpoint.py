@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_postgresqlflexibledvirtualendpoint
+module: azure_rm_postgresqlflexiblevirtualendpoint
 version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible virtualendpoint instance
 description:
@@ -64,7 +64,7 @@ author:
 
 EXAMPLES = '''
 - name: Create (or update) PostgreSQL Flexible virtualendpoint
-  azure_rm_postgresqlflexibledvirtualendpoint:
+  azure_rm_postgresqlflexiblevirtualendpoint:
     resource_group: myResourceGroup
     server_name: testserver
     name: db1
@@ -72,7 +72,7 @@ EXAMPLES = '''
     collation: en_US.utf8
 
 - name: Delete PostgreSQL Flexible virtualendpoint
-  azure_rm_postgresqlflexibledvirtualendpoint:
+  azure_rm_postgresqlflexiblevirtualendpoint:
     resource_group: myResourceGroup
     server_name: testserver
     virtual_endpoint_name: vendpoint01

@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_postgresqlflexibledbackup
+module: azure_rm_postgresqlflexiblebackup
 version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible Backup instance
 description:
