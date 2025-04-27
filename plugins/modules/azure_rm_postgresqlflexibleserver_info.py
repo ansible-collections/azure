@@ -434,6 +434,7 @@ class AzureRMPostgreSqlFlexibleServersInfo(AzureRMModuleBase):
             source_server_resource_id=item.source_server_resource_id,
             point_in_time_utc=item.point_in_time_utc,
             availability_zone=item.availability_zone,
+            auth_config=dict()
         )
         if item.sku is not None:
             result['sku']['name'] = item.sku.name

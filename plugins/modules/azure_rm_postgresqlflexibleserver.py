@@ -720,6 +720,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.is_stop = None
         self.is_restart = None
         self.identity = None
+        self.auth_config = None
 
         self.results = dict(changed=False)
         self.state = None
@@ -829,6 +830,11 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 self.update_parameters['tags'] = new_tags
                 if update_tags:
                     update_flag = True
+
+                if self.auth_config is not None and not self.default_compare({}, self.auth_config, old_response['auth_config'], '', dict(compare=[])):
+                    update_flag = True
+                else:
+                    self.auth_config = old_response['auth_config']
 
                 if update_flag:
                     changed = True
