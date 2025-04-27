@@ -699,7 +699,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             auth_config=dict(
                 type='dict',
                 options=dict(
-                    active_directory_auth=dict(type='str', choices=['Enabled',  'Disabled']),
+                    active_directory_auth=dict(type='str', choices=['Enabled', 'Disabled']),
                     password_auth=dict(type='str', choices=['Enabled', 'Disabled']),
                     tenant_id=dict(type='str')
                 )
@@ -747,7 +747,8 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
-                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup', 'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
+                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',\
+                   'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
                     self.update_parameters[key] = kwargs[key]
 
         old_response = None
