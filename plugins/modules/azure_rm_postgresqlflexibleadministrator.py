@@ -10,11 +10,12 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_postgresqlflexibledAdministrator
+module: azure_rm_postgresqlflexibleadministrator
 version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible Administrator instance
 description:
     - Add or Delete instance of PostgreSQL Flexible Administrator.
+    - Require the postflexible server Enable Microsoft Entra authenticate.
 
 options:
     resource_group:
@@ -40,6 +41,11 @@ options:
         description:
             - The principal type used to represent the type of Active Directory Administrator.
         type: str
+        choices:
+            - Unknown
+            - User
+            - Group
+            - ServicePrincipal
     tenant_id:
         description:
             - The tenant ID of Active Directory Administrator.
@@ -64,7 +70,7 @@ author:
 
 EXAMPLES = '''
 - name: Create (or update) PostgreSQL Flexible Administrator
-  azure_rm_postgresqlflexibledAdministrator:
+  azure_rm_postgresqlflexibleadministrator:
     resource_group: myResourceGroup
     server_name: testserver
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -73,7 +79,7 @@ EXAMPLES = '''
     tenant_id: yyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
 
 - name: Delete PostgreSQL Flexible Administrator
-  azure_rm_postgresqlflexibledAdministrator:
+  azure_rm_postgresqlflexibleadministrator:
     resource_group: myResourceGroup
     server_name: testserver
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

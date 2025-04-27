@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_postgresqlflexibledBackup
+module: azure_rm_postgresqlflexibledbackup
 version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible Backup instance
 description:
@@ -32,6 +32,8 @@ options:
             - The name of the backup.
         required: True
         type: str
+    state:
+        description:
             - Assert the state of the PostgreSQL Flexible backup. Use C(present) to create or update a backup and C(absent) to delete it.
         default: present
         type: str
@@ -50,13 +52,13 @@ author:
 
 EXAMPLES = '''
 - name: Create (or update) PostgreSQL Flexible Backup
-  azure_rm_postgresqlflexibledBackup:
+  azure_rm_postgresqlflexibledbackup:
     resource_group: myResourceGroup
     server_name: testserver
     backup_name: backup01
 
 - name: Delete PostgreSQL Flexible Backup
-  azure_rm_postgresqlflexibledBackup:
+  azure_rm_postgresqlflexibledbackup:
     resource_group: myResourceGroup
     server_name: testserver
     backup_name: backup01
@@ -259,15 +261,16 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         return None
 
     def format_item(self, item):
-        return item.as_dict()
-        result = dict(
+        return dict(
+            resource_group=self.resource_group,
+            server_name=self.server_name,
+            backup_type=item.backup_type,
+            completed_time=item.completed_time,
             id=item.id,
             name=item.name,
-            type=item.type,
-            charset=item.charset,
-            collation=item.collation
+            source=item.source,
+            type=item.type
         )
-        return result
 
 
 def main():

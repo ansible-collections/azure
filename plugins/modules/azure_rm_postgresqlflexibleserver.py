@@ -204,6 +204,30 @@ options:
             - Whether to start the Post gresql server.
         type: bool
         default: False
+    auth_config:
+        description:
+            - AuthConfig properties of a server.
+        type: dict
+        version_added: '3.4.0'
+        suboptions:
+            active_directory_auth:
+                description:
+                    - If C(Enabled), Azure Active Directory authentication is enabled.
+                type: str
+                choices:
+                    - Enabled
+                    - Disabled
+            password_auth:
+                description:
+                    - If C(Enabled), Password authentication is enabled.
+                type: str
+                choices:
+                    - Enabled
+                    - Disabled
+            tenant_id:
+                description:
+                    - Tenant id of the server.
+                type: str
     identity:
         description:
             - Identity for the Server.
@@ -523,6 +547,12 @@ servers:
             type: dict
             returned: always
             sample: { tag1: abc }
+        auth_config:
+            description:
+                - AuthConfig properties of a server.
+            type: dict
+            returned: always
+            sample: {"active_directory_auth": "Disabled", "password_auth": "Enabled", "tenant_id": null}
 '''
 
 
@@ -666,6 +696,14 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 type='str'
             ),
             identity=dict(type='dict', options=managed_identity_spec),
+            auth_config=dict(
+                type='dict',
+                options=dict(
+                    active_directory_auth=dict(type='str', chioces=['Enabled',  'Disabled']),
+                    password_auth=dict(type='str', choices=['Enabled', 'Disabled']),
+                    tenant_id=dict(type='str')
+                )
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -962,6 +1000,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             source_server_resource_id=item.source_server_resource_id,
             point_in_time_utc=item.point_in_time_utc,
             availability_zone=item.availability_zone,
+            auth_config=dict()
         )
         if item.sku is not None:
             result['sku']['name'] = item.sku.name
@@ -994,6 +1033,12 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             result['identity'] = item.identity.as_dict()
         else:
             result['identity'] = PostgreSQLFlexibleModels.UserAssignedIdentity(type='None').as_dict()
+        if item.auth_config is not None:
+            result['auth_config']['active_directory_auth'] = item.auth_config.active_directory_auth
+            result['auth_config']['password_auth'] = item.auth_config.password_auth
+            result['auth_config']['tenant_id'] = item.auth_config.tenant_id
+        else:
+            result['auth_config'] = None
 
         return result
 

@@ -37,7 +37,7 @@ options:
             - List of virtual endpoints for a server.
             - The names are the same with I(server_name).
         type: list
-        elments: str
+        elements: str
     endpoint_type:
         description:
             - The endpoint type for the virtual endpoint.
