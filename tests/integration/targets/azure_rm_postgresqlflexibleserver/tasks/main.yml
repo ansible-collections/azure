@@ -369,7 +369,7 @@
 
 - name: Create a new backup for the postgresql flexible server
   azure_rm_postgresqlflexiblebackup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     backup_name: backup{{ rpfx }}
   register: output
@@ -381,7 +381,7 @@
 
 - name: Create a new backup for the postgresql flexible server(Idempotent test)
   azure_rm_postgresqlflexiblebackup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     backup_name: backup{{ rpfx }}
   register: output
@@ -393,7 +393,7 @@
 
 - name: Get the backup for the postgresql flexible server
   azure_rm_postgresqlflexiblebackup_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     backup_name: backup{{ rpfx }}
   register:  output
@@ -405,7 +405,7 @@
 
 - name: Delete the backup for the postgresql flexible server
   azure_rm_postgresqlflexiblebackup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     backup_name: backup{{ rpfx }}
     state: absent
@@ -418,7 +418,7 @@
 
 - name: Create a new virtual endpoint for the postgresql flexible server
   azure_rm_postgresqlflexiblevirtualendpoint:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     virtual_endpoint_name: vendpoint{{ rpfx }}
     endpoint_type: ReadWrite
@@ -433,7 +433,7 @@
 
 - name: Create a new virtual endpoint for the postgresql flexible server(Idempotent test)
   azure_rm_postgresqlflexiblevirtualendpoint:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     virtual_endpoint_name: vendpoint{{ rpfx }}
     endpoint_type: ReadWrite
@@ -448,7 +448,7 @@
 
 - name: Get the virtual endpoint for the postgresql flexible server
   azure_rm_postgresqlflexiblevirtualendpoint_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     virtual_endpoint_name: vendpoint{{ rpfx }}
   register: output
@@ -460,7 +460,7 @@
 
 - name: Delete the virtual endpoint for the postgresql flexible server
   azure_rm_postgresqlflexiblevirtualendpoint:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ new_resource_group }}"
     server_name: postflexible{{ rpfx }}
     virtual_endpoint_name: vendpoint{{ rpfx }}
     state: absent

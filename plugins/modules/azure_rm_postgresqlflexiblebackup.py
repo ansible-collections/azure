@@ -185,7 +185,7 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
             else:
                 changed = True
                 if not self.check_mode:
-                    response = self.create_postgresqlflexiblebackup(self.parameters)
+                    response = self.create_postgresqlflexiblebackup()
         else:
             self.log("PostgreSQL Flexible Backup instance already exists")
             if self.state == 'absent':
@@ -201,7 +201,7 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         self.results['changed'] = changed
         return self.results
 
-    def create_postgresqlflexiblebackup(self, body):
+    def create_postgresqlflexiblebackup(self):
         '''
         Creates PostgreSQL Flexible Backup with the specified configuration.
 
