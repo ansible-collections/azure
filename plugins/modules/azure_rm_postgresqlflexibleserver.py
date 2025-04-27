@@ -748,7 +748,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
                 for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',
-                        'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
+                   'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
                     self.update_parameters[key] = kwargs[key]
 
         old_response = None
