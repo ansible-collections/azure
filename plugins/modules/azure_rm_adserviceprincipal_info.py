@@ -53,6 +53,12 @@ service_principals:
     elements: dict
     returned: always
     contains:
+        account_enabled:
+            description:
+                - Whether the service principal is enabled.
+            type: bool
+            returned: always
+            sample: true
         app_display_name:
             description:
                 - Object's display name or its prefix.
@@ -71,12 +77,23 @@ service_principals:
             type: bool
             returned: always
             sample: false
+        notes:
+            description:
+                - The notes of the Service Principal.
+            type: str
+            returned: always
         object_id:
             description:
                 - It's service principal's object ID.
             returned: always
             type: str
             sample: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        service_principal_type:
+            description:
+                - The type of the service principal. Application or ManagedIdentity.
+            type: str
+            returned: always
+            sample: application
 
 
 '''
@@ -134,7 +151,10 @@ class AzureRMADServicePrincipalInfo(AzureRMModuleBase):
             app_id=object.app_id,
             object_id=object.id,
             app_display_name=object.display_name,
-            app_role_assignment_required=object.app_role_assignment_required
+            app_role_assignment_required=object.app_role_assignment_required,
+            notes=object.notes,
+            account_enabled=object.account_enabled,
+            service_principal_type=object.service_principal_type
         )
 
     async def get_service_principal(self):
