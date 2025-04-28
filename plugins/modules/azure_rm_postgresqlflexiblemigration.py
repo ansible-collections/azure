@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_postgresqlflexibledmigration
+module: azure_rm_postgresqlflexiblemigration
 version_added: "3.4.0"
 short_description: Manage PostgreSQL Flexible migration instance
 description:
@@ -225,7 +225,7 @@ author:
 
 EXAMPLES = '''
 - name: Delete PostgreSQL Flexible migration
-  azure_rm_postgresqlflexibledmigration:
+  azure_rm_postgresqlflexiblemigration:
     resource_group: myResourceGroup
     target_db_server_name: testserver
     migration_name: migration_name
@@ -280,7 +280,7 @@ except ImportError:
     pass
 
 
-class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
+class AzureRMPostgreSqlFlexibleMigration(AzureRMModuleBase):
     """Configuration class for an Azure RM PostgreSQL Flexible migration resource"""
 
     def __init__(self):
@@ -389,6 +389,9 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
                 type='list',
                 elements='str'
             ),
+            migration_subscription_id=dict(
+                type='str'
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -400,11 +403,12 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
         self.migration_name = None
         self.target_db_server_name = None
         self.parameters = dict()
+        self.migration_subscription_id = None
 
         self.results = dict(changed=False)
         self.state = None
 
-        super(AzureRMPostgreSqlFlexiblemigration, self).__init__(derived_arg_spec=self.module_arg_spec,
+        super(AzureRMPostgreSqlFlexibleMigration, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                  supports_check_mode=True,
                                                                  supports_tags=True)
 
@@ -546,7 +550,7 @@ class AzureRMPostgreSqlFlexiblemigration(AzureRMModuleBase):
 
 def main():
     """Main execution"""
-    AzureRMPostgreSqlFlexibleMgration()
+    AzureRMPostgreSqlFlexibleMigration()
 
 
 if __name__ == '__main__':
