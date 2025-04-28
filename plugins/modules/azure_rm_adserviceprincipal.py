@@ -24,7 +24,7 @@ options:
         description:
             - Whether the service principal is enabled.
         type: bool
-        default: true
+        default: True
     app_id:
         description:
             - The application ID.
@@ -34,9 +34,16 @@ options:
         description:
             - Whether the Role of the Service Principal is set.
         type: bool
+    notes:
+        description:
+            - Use this field to add information that is relevant for the management of the application
+        type: str
     service_principal_type:
         description:
             - The type of the service principal.
+        choices:
+            - application
+            - managedIdentity
         type: str
         default: application
     state:
@@ -111,7 +118,7 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            account_enabled=dict(type='bool'),
+            account_enabled=dict(type='bool', default=True),
             app_id=dict(type='str', required=True),
             notes=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
