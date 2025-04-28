@@ -287,7 +287,7 @@ try:
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
     from azure.identity import AzureCliCredential
-    from kiota_authentication_azure.azureidentity_authentication_provider import AzureIdentityAuthenticationProvider
+    from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
     from msgraph_core import GraphClientFactory, NationalClouds
     from msgraph import GraphRequestAdapter, GraphServiceClient
     from azure.mgmt.batch import BatchManagementClient
