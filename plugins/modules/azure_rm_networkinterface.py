@@ -938,7 +938,7 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             public_ip_allocation_method=to_native(item.get('public_ip_allocation_method', 'Dynamic')),
             primary=bool(item.get('primary'))
         ) for item in raw]
-        return configurations
+        return sorted(configurations, key=lambda x: x['name'])
 
 
 def main():
