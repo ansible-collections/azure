@@ -841,7 +841,10 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
         return self.results
 
     def get_or_create_public_ip_address(self, ip_config):
-        name = ip_config.get('public_ip_address_name')
+        if 'public_ip_address' in ip_config and ip_config.get('public_ip_address') is not None:
+            name = ip_config['public_ip_address'].get('name')
+        else:
+            name = ip_config.get('public_ip_address_name')
 
         if not name:
             return None
