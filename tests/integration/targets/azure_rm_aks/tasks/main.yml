@@ -251,7 +251,8 @@
           - 2
     node_resource_group: "node{{ noderpfx }}"
     addon:
-      http_application_routing: {}
+      http_application_routing:
+        enabled: false
     network_profile:
       network_plugin: kubenet
       load_balancer_sku: standard
@@ -263,7 +264,7 @@
     that:
       - output.changed
       - output.kubernetes_version == version1.azure_aks_versions[0]
-      - output.addon.httpApplicationRouting.enabled ==  True
+      - output.addon.httpApplicationRouting.enabled ==  False
       - output.agent_pool_profiles[0].count == 1
       - output.network_profile.network_plugin == 'kubenet'
 
@@ -291,7 +292,8 @@
           - 2
     node_resource_group: "node{{ noderpfx }}"
     addon:
-      http_application_routing: {}
+      http_application_routing:
+        enabled: false
     network_profile:
       network_plugin: kubenet
       load_balancer_sku: standard
