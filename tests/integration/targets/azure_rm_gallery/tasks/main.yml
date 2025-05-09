@@ -663,3 +663,9 @@
     id: "{{ az_role_assignment_create.id }}"
     state: absent
   when: az_role_assignment_create.changed
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "testPublicIP{{ rpfx }}"
+    state: absent

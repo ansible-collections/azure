@@ -178,3 +178,9 @@
     resource_group: "{{ resource_group }}"
     name: "bh{{ rpfx }}"
     state: absent
+
+- name: Delete the public ip
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "pip{{ rpfx }}"
+    state: absent

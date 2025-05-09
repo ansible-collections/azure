@@ -186,3 +186,15 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "{{ pubipname }}"
+    state: absent
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "{{ pubipname }}02"
+    state: absent

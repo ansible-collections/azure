@@ -1026,3 +1026,9 @@
     managed_identity_unique: '1'
     managed_identity_action: 'delete'
     managed_identity_location: "{{ location }}"
+
+- name: Delete the public IP address 1
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: testPublicIP1
+    state: absent
