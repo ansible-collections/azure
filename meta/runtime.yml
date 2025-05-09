@@ -227,6 +227,8 @@ action_groups:
     - azure.azcollection.azure_rm_publicipprefix_info
     - azure.azcollection.azure_rm_recoveryservicesvault
     - azure.azcollection.azure_rm_recoveryservicesvault_info
+    - azure.azcollection.azure_rm_recoveryservicesvaultconfig
+    - azure.azcollection.azure_rm_recoveryservicesvaultconfig_info
     - azure.azcollection.azure_rm_rediscache
     - azure.azcollection.azure_rm_rediscache_info
     - azure.azcollection.azure_rm_rediscachefirewallrule
