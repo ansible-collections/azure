@@ -37,6 +37,7 @@ options:
             - It can be name of remote virtual network in same resource group.
             - It can be remote virtual network resource ID.
             - It can be a dict which contains I(name) and I(resource_group) of remote virtual network.
+            - It also can be a dict which contains I(name), I(resource_group) and I(subscription_id) of remote virtual network.
             - Required when creating.
         type: raw
     allow_virtual_network_access:
@@ -313,10 +314,10 @@ class AzureRMVirtualNetworkPeering(AzureRMModuleBase):
             return vnet
         if isinstance(vnet, dict) and vnet.get('name') and vnet.get('resource_group'):
             remote_vnet_id = format_resource_id(vnet['name'],
-                                                self.subscription_id,
+                                                vnet.get('subscription_id', self.subscription_id),
                                                 'Microsoft.Network',
                                                 'virtualNetworks',
-                                                vnet['resource_group'])
+                                                vnet.get('resource_group', self.resource_group))
         elif isinstance(vnet, str):
             if is_valid_resource_id(vnet):
                 remote_vnet_id = vnet
