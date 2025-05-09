@@ -76,223 +76,132 @@ vmss:
     description:
         - List of virtual machine scale sets.
     returned: always
-    type: complex
-    contains:
-        id:
-            description:
-                - Resource ID.
-            returned: always
-            type: str
-            sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/scalesets/myscaleset
-        admin_username:
-            description:
-                - Admin username used to access the host after it is created.
-            returned: always
-            type: str
-            sample: adminuser
-        capacity:
-            description:
-                - Capacity of VMSS.
-            returned: always
-            type: int
-            sample: 2
-        data_disks:
-            description:
-                - List of attached data disks.
-            returned: always
-            type: complex
-            contains:
-                caching:
-                    description:
-                        - Type of data disk caching.
-                    returned: always
-                    type: str
-                    sample: ReadOnly
-                disk_size_gb:
-                    description:
-                        - The initial disk size in GB for blank data disks.
-                    returned: always
-                    type: int
-                    sample: 64
-                lun:
-                    description:
-                        - The logical unit number for data disk.
-                    returned: always
-                    type: int
-                    sample: 0
-                managed_disk_type:
-                    description:
-                        - Managed data disk type.
-                    returned: always
-                    type: str
-                    sample: Standard_LRS
-        identity:
-            description:
-                - Identity for the Server.
-            type: complex
-            returned: when available
-            contains:
-                type:
-                    description:
-                        - Type of the managed identity
-                    returned: always
-                    sample: UserAssigned
-                    type: str
-                user_assigned_identities:
-                    description:
-                        - User Assigned Managed Identities and its options
-                    returned: always
-                    type: complex
-                    contains:
-                        id:
-                            description:
-                                - Dict of the user assigned identities IDs associated to the Resource
-                            returned: always
-                            type: dict
-                            elements: dict
-        image:
-            description:
-                - Image specification.
-            returned: always
-            type: complex
-            contains:
-                offer:
-                    description:
-                        - The offer of the platform image or marketplace image used to create the virtual machine.
-                    returned: when created from marketplace image
-                    type: str
-                    sample: RHEL
-                publisher:
-                    description:
-                        - Publisher name.
-                    returned: when created from marketplace image
-                    type: str
-                    sample: RedHat
-                sku:
-                    description:
-                        - SKU name.
-                    returned: when created from marketplace image
-                    type: str
-                    sample: 7-RAW
-                version:
-                    description:
-                        - Image version.
-                    returned: when created from marketplace image
-                    type: str
-                    sample: 7.5.2018050901
-                id:
-                    description:
-                        - Custom image resource ID.
-                    type: str
-                    returned: when created from custom image
-                    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/images/myImage
-                community_gallery_image_id:
-                    description:
-                        - The community gallery image unique id for vm deployment.
-                    type: str
-                    returned: when created from community gallery image
-                    sample: "/CommunityGalleries/yellowbrick-fc7e81f1-87dd-4989-9ca8-03743762e873/Images/Ubuntu-5.15.0-1035-azure_22.04"
-        load_balancer:
-            description:
-                - Load balancer name.
-            returned: always
-            type: str
-            sample: testlb
-        location:
-            description:
-                - Resource location.
-            type: str
-            returned: always
-            sample: japaneast
-        managed_disk_type:
-            description:
-                - Managed data disk type.
-            type: str
-            returned: always
-            sample: Standard_LRS
-        name:
-            description:
-                - Resource name.
-            returned: always
-            type: str
-            sample: myvmss
-        os_disk_caching:
-            description:
-                - Type of OS disk caching.
-            type: str
-            returned: always
-            sample: ReadOnly
-        os_type:
-            description:
-                - Base type of operating system.
-            type: str
-            returned: always
-            sample: Linux
-        overprovision:
-            description:
-                - Specifies whether the Virtual Machine Scale Set should be overprovisioned.
-            type: bool
-            sample: true
-        resource_group:
-            description:
-                - Resource group.
-            type: str
-            returned: always
-            sample: myResourceGroup
-        ssh_password_enabled:
-            description:
-                - Is SSH password authentication enabled. Valid only for Linux.
-            type: bool
-            returned: always
-            sample: true
-        subnet_name:
-            description:
-                - Subnet name.
-            type: str
-            returned: always
-            sample: testsubnet
-        tier:
-            description:
-                - SKU Tier.
-            type: str
-            returned: always
-            sample: Basic
-        upgrade_policy:
-            description:
-                - Upgrade policy.
-            type: str
-            returned: always
-            sample: Manual
-        virtual_network_name:
-            description:
-                - Associated virtual network name.
-            type: str
-            returned: always
-            sample: testvn
-        vm_size:
-            description:
-                - Virtual machine size.
-            type: str
-            returned: always
-            sample: Standard_D4
-        tags:
-            description:
-                - Tags assigned to the resource. Dictionary of string:string pairs.
-            returned: always
-            type: dict
-            sample: { "tag1": "abc" }
-        orchestrationMode:
-            description:
-                - The orchestration mode for the virtual machine scale set.
-            type: str
-            returned: always
-            sample: Flexible
-        platformFaultDomainCount:
-            description:
-                - Fault Domain count for each placement group.
-            type: int
-            returned: always
-            sample: 1
+    type: list
+    sample: [{
+        "constrained_maximum_capacity": false,
+        "etag": "3",
+        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Compute/virtualMachineScaleSets/testVMSStestvmss",
+        "location": "eastus",
+        "name": "testVMSStestvmss",
+        "orchestration_mode": "Flexible",
+        "platform_fault_domain_count": 1,
+        "provisioning_state": "Succeeded",
+        "single_placement_group": false,
+        "sku": {
+            "capacity": 1,
+            "name": "Standard_A1_v2",
+            "tier": "Standard"
+        },
+        "tags": {
+            "key2": "value2",
+            "key3": "value3"
+        },
+        "time_created": "2025-04-22T08:03:29.427822Z",
+        "type": "Microsoft.Compute/virtualMachineScaleSets",
+        "unique_id": "da4393f5-6060-4a0e-8ae5-7616316402b8",
+        "upgrade_policy": {
+            "mode": "Manual"
+        },
+        "virtual_machine_profile": {
+            "network_profile": {
+                "network_api_version": "2020-11-01",
+                "network_interface_configurations": [
+                    {
+                        "auxiliary_mode": "None",
+                        "auxiliary_sku": "None",
+                        "delete_option": "Delete",
+                        "disable_tcp_state_tracking": false,
+                        "dns_settings": {
+                            "dns_servers": []
+                        },
+                        "enable_ip_forwarding": false,
+                        "ip_configurations": [
+                            {
+                                "application_gateway_backend_address_pools": [],
+                                "application_security_groups": [
+                                    {
+                                        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/applicationSecurityGroups/apptestvmss02"
+                                    },
+                                    {
+                                        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/applicationSecurityGroups/apptestvmss"
+                                    }
+                                ],
+                                "load_balancer_backend_address_pools": [],
+                                "name": "default",
+                                "primary": true,
+                                "private_ip_address_version": "IPv4",
+                                "public_ip_address_configuration": {
+                                    "idle_timeout_in_minutes": 4,
+                                    "ip_tags": [],
+                                    "name": "instancepublicip",
+                                    "public_ip_address_version": "IPv4"
+                                },
+                                "subnet": {
+                                    "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/virtualNetworks/VMSStestVnet/subnets/VMSStestSubnet"
+                                }
+                            }
+                        ],
+                        "name": "testVMSStestvmss",
+                        "primary": true
+                    }
+                ]
+            },
+            "os_profile": {
+                "admin_username": "testuser",
+                "allow_extension_operations": true,
+                "computer_name_prefix": "testVMSStestvmss",
+                "linux_configuration": {
+                    "disable_password_authentication": true,
+                    "patch_settings": {
+                        "assessment_mode": "ImageDefault",
+                        "patch_mode": "ImageDefault"
+                    },
+                    "provision_vm_agent": true,
+                    "ssh": {
+                        "public_keys": [
+                            {
+                                "key_data": "ssh-rsa xxxxxxxxxx xx.yy@qq.com",
+                                "path": "/home/testuser/.ssh/authorized_keys"
+                            }
+                        ]
+                    }
+                },
+                "require_guest_provision_signal": true,
+                "secrets": []
+            },
+            "storage_profile": {
+                "data_disks": [
+                    {
+                        "caching": "ReadWrite",
+                        "create_option": "Empty",
+                        "delete_option": "Delete",
+                        "disk_size_gb": 64,
+                        "lun": 0,
+                        "managed_disk": {
+                            "storage_account_type": "Standard_LRS"
+                        }
+                    }
+                ],
+                "image_reference": {
+                    "offer": "0001-com-ubuntu-server-focal",
+                    "publisher": "Canonical",
+                    "sku": "20_04-lts",
+                    "version": "20.04.202504030"
+                },
+                "os_disk": {
+                    "caching": "ReadWrite",
+                    "create_option": "FromImage",
+                    "delete_option": "Delete",
+                    "disk_size_gb": 30,
+                    "managed_disk": {
+                        "storage_account_type": "Standard_LRS"
+                    },
+                    "os_type": "Linux"
+                }
+            },
+            "time_created": "2025-04-22T08:53:17.201851Z"
+        }
+    }]
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

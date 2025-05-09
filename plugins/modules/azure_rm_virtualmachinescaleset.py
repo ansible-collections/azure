@@ -377,6 +377,19 @@ options:
                         description:
                             - Specifies whether vTPM should be enabled on the virtual machine scalset.
                         type: bool
+    application_security_groups:
+        description:
+            - Specifies an array of references to application security group. Resource ID of the application security group.
+        type: list
+        elements: str
+    private_ip_address_version:
+        description:
+            - Available from Api-Version 2017-03-30 onwards, it represents whether the specific ipconfiguration is C(IPv4) or C(IPv6).
+            - Default is taken as IPv4.
+        type: str
+        choices:
+            - IPv4
+            - IPv6
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -578,110 +591,129 @@ azure_vmss:
     returned: always
     type: dict
     sample: {
-        "properties": {
-            "overprovision": true,
-            "platformFaultDomainCount": 1,
-            "orchestrationMode": "Flexible",
-             "scaleInPolicy": {
-                    "rules": [
-                        "NewestVM"
-                    ]
-            },
-            "singlePlacementGroup": true,
-            "upgradePolicy": {
-                "mode": "Manual"
-            },
-            "virtualMachineProfile": {
-                "networkProfile": {
-                    "networkInterfaceConfigurations": [
-                        {
-                            "name": "testvmss",
-                            "properties": {
-                                "dnsSettings": {
-                                    "dnsServers": []
-                                },
-                                "enableAcceleratedNetworking": false,
-                                "ipConfigurations": [
-                                    {
-                                        "name": "default",
-                                        "properties": {
-                                            "privateIPAddressVersion": "IPv4",
-                                            "subnet": {
-                                                "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/virtualNetworks/testvnet/subnets/testsubnet"
-                                            }
-                                        }
-                                    }
-                                ],
-                                "primary": true
-                            }
-                        }
-                    ]
-                },
-                "osProfile": {
-                    "adminUsername": "testuser",
-                    "computerNamePrefix": "testvmss",
-                    "linuxConfiguration": {
-                        "disablePasswordAuthentication": true,
-                        "ssh": {
-                            "publicKeys": [
-                                {
-                                    "keyData": "",
-                                    "path": "/home/testuser/.ssh/authorized_keys"
-                                }
-                            ]
-                        }
-                    },
-                    "secrets": []
-                },
-                "scheduledEventsProfile": {
-                        "terminateNotificationProfile": {
-                            "enable": true,
-                            "notBeforeTimeout": "PT10M"
-                        }
-                },
-                "storageProfile": {
-                    "dataDisks": [
-                        {
-                            "caching": "ReadWrite",
-                            "createOption": "empty",
-                            "diskSizeGB": 64,
-                            "lun": 0,
-                            "managedDisk": {
-                                "storageAccountType": "Standard_LRS"
-                            }
-                        }
-                    ],
-                    "imageReference": {
-                        "offer": "0001-com-ubuntu-server-focal",
-                        "publisher": "canonical",
-                        "sku": "20_04-lts-gen2",
-                        "version": "20.04.202111210"
-                    },
-                    "securityProfile": {
-                        "encryptionAtHost": false,
-                        "securityType": "TrustedLaunch",
-                        "uefiSettings": {
-                            "secureBootEnabled": true,
-                            "vTpmEnabled": false
-                        }
-                    },
-                    "osDisk": {
-                        "caching": "ReadWrite",
-                        "createOption": "fromImage",
-                        "managedDisk": {
-                            "storageAccountType": "Standard_LRS"
-                        }
-                    }
-                }
-            }
-        },
+        "constrained_maximum_capacity": false,
+        "etag": "3",
+        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Compute/virtualMachineScaleSets/testVMSStestvmss",
+        "location": "eastus",
+        "name": "testVMSStestvmss",
+        "orchestration_mode": "Flexible",
+        "platform_fault_domain_count": 1,
+        "provisioning_state": "Succeeded",
+        "single_placement_group": false,
         "sku": {
-            "capacity": 2,
-            "name": "Standard_DS1_v2",
+            "capacity": 1,
+            "name": "Standard_A1_v2",
             "tier": "Standard"
         },
-        "tags": null,
-        "type": "Microsoft.Compute/virtualMachineScaleSets"
+        "tags": {
+            "key2": "value2",
+            "key3": "value3"
+        },
+        "time_created": "2025-04-22T08:03:29.427822Z",
+        "type": "Microsoft.Compute/virtualMachineScaleSets",
+        "unique_id": "da4393f5-6060-4a0e-8ae5-7616316402b8",
+        "upgrade_policy": {
+            "mode": "Manual"
+        },
+        "virtual_machine_profile": {
+            "network_profile": {
+                "network_api_version": "2020-11-01",
+                "network_interface_configurations": [
+                    {
+                        "auxiliary_mode": "None",
+                        "auxiliary_sku": "None",
+                        "delete_option": "Delete",
+                        "disable_tcp_state_tracking": false,
+                        "dns_settings": {
+                            "dns_servers": []
+                        },
+                        "enable_ip_forwarding": false,
+                        "ip_configurations": [
+                            {
+                                "application_gateway_backend_address_pools": [],
+                                "application_security_groups": [
+                                    {
+                                        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/applicationSecurityGroups/apptestvmss02"
+                                    },
+                                    {
+                                        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/applicationSecurityGroups/apptestvmss"
+                                    }
+                                ],
+                                "load_balancer_backend_address_pools": [],
+                                "name": "default",
+                                "primary": true,
+                                "private_ip_address_version": "IPv4",
+                                "public_ip_address_configuration": {
+                                    "idle_timeout_in_minutes": 4,
+                                    "ip_tags": [],
+                                    "name": "instancepublicip",
+                                    "public_ip_address_version": "IPv4"
+                                },
+                                "subnet": {
+                                    "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/virtualNetworks/VMSStestVnet/subnets/VMSStestSubnet"
+                                }
+                            }
+                        ],
+                        "name": "testVMSStestvmss",
+                        "primary": true
+                    }
+                ]
+            },
+            "os_profile": {
+                "admin_username": "testuser",
+                "allow_extension_operations": true,
+                "computer_name_prefix": "testVMSStestvmss",
+                "linux_configuration": {
+                    "disable_password_authentication": true,
+                    "patch_settings": {
+                        "assessment_mode": "ImageDefault",
+                        "patch_mode": "ImageDefault"
+                    },
+                    "provision_vm_agent": true,
+                    "ssh": {
+                        "public_keys": [
+                            {
+                                "key_data": "ssh-rsa xxxxxxxxxx xx.yy@qq.com",
+                                "path": "/home/testuser/.ssh/authorized_keys"
+                            }
+                        ]
+                    }
+                },
+                "require_guest_provision_signal": true,
+                "secrets": []
+            },
+            "storage_profile": {
+                "data_disks": [
+                    {
+                        "caching": "ReadWrite",
+                        "create_option": "Empty",
+                        "delete_option": "Delete",
+                        "disk_size_gb": 64,
+                        "lun": 0,
+                        "managed_disk": {
+                            "storage_account_type": "Standard_LRS"
+                        }
+                    }
+                ],
+                "image_reference": {
+                    "offer": "0001-com-ubuntu-server-focal",
+                    "publisher": "Canonical",
+                    "sku": "20_04-lts",
+                    "version": "20.04.202504030"
+                },
+                "os_disk": {
+                    "caching": "ReadWrite",
+                    "create_option": "FromImage",
+                    "delete_option": "Delete",
+                    "disk_size_gb": 30,
+                    "managed_disk": {
+                        "storage_account_type": "Standard_LRS"
+                    },
+                    "os_type": "Linux"
+                }
+            },
+            "time_created": "2025-04-22T08:53:17.201851Z"
+        }
     }
 '''  # NOQA
 
@@ -791,6 +823,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                 type='dict',
                 options=self.managed_identity_multiple_spec
             ),
+            application_security_groups=dict(
+                type='list',
+                elements='str'
+            ),
+            private_ip_address_version=dict(
+                type='str',
+                choices=['IPv4', 'IPv6']
+            )
         )
 
         self.resource_group = None
@@ -836,6 +876,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.security_profile = None
         self._managed_identity = None
         self.identity = None
+        self.application_security_groups = None
+        self.private_ip_address_version = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -888,6 +930,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         application_gateway_backend_address_pools = None
         support_lb_change = True
         public_ip_address_configuration = None
+        application_security_groups = None
+        if self.application_security_groups is not None:
+            application_security_groups = [self.compute_models.SubResource(id=item) for item in self.application_security_groups]
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -1105,6 +1150,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         differences.append('load_balancer')
                         changed = True
 
+                if self.application_security_groups is not None:
+                    for item in nicConfigs[0]['ip_configurations'][0].get('application_security_groups', []):
+                        if item['id'] not in self.application_security_groups:
+                            self.application_security_groups.append(item['id'])
+                    if len(self.application_security_groups) != len(nicConfigs[0]['ip_configurations'][0].get('application_security_groups', [])):
+                        changed = True
+                        differences.append('application_security_groups')
+
                 if self.custom_data:
                     if self.custom_data != vmss_dict['virtual_machine_profile']['os_profile'].get('custom_data'):
                         differences.append('custom_data')
@@ -1272,7 +1325,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                                                 primary=True,
                                                 load_balancer_backend_address_pools=load_balancer_backend_address_pools,
                                                 load_balancer_inbound_nat_pools=load_balancer_inbound_nat_pools,
-                                                application_gateway_backend_address_pools=application_gateway_backend_address_pools
+                                                application_gateway_backend_address_pools=application_gateway_backend_address_pools,
+                                                application_security_groups=application_security_groups,
+                                                private_ip_address_version=self.private_ip_address_version
                                             )
                                         ],
                                         enable_accelerated_networking=self.enable_accelerated_networking,
@@ -1405,6 +1460,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                                 .ip_configurations[0].load_balancer_backend_address_pools = None
                             vmss_resource.virtual_machine_profile.network_profile.network_interface_configurations[0] \
                                 .ip_configurations[0].load_balancer_inbound_nat_pools = None
+
+                    if self.application_security_groups is not None:
+                        vmss_resource.virtual_machine_profile.network_profile.network_interface_configurations[0].ip_configurations[0] \
+                            .application_security_groups = [self.compute_models.SubResource(id=item) for item in self.application_security_groups]
 
                     if self.data_disks is not None:
                         data_disks = []
