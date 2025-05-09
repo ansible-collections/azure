@@ -650,7 +650,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -678,7 +678,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -708,7 +708,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -736,7 +736,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -902,7 +902,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}des
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
     admin_username: testuser

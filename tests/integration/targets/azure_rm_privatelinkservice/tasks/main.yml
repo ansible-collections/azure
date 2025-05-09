@@ -1,6 +1,6 @@
 - name: Set Private Link Service Names
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    rpfx: "pr{{ resource_group | hash('md5') | truncate(18, True, '') }}"
 
 - name: Delete the private link service
   azure_rm_privatelinkservice:
