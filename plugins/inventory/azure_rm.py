@@ -215,7 +215,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         # FUTURE: use API profiles with defaults
         self._compute_api_version = '2024-07-01'
-        self._network_api_version = '2024-07-01'
+        self._network_api_version = '2024-05-01'
         self._hybridcompute_api_version = '2024-05-20-preview'
         self._stackhci_api_version = '2024-01-01'
 
