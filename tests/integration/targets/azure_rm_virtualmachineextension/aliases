@@ -1,5 +1,5 @@
 cloud/azure
-shippable/azure/group5
+shippable/azure/group6
 destructive
 unsupported
 azure_rm_virtualmachineextension_facts
