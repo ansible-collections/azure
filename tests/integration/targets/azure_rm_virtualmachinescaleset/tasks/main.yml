@@ -267,10 +267,6 @@
           - "{{ managed_identity_ids[0] }}"
   register: results
 
-- name: Debug
-  ansible.builtin.debug:
-    var: results
-
 - name: Assert that VMSS was created using Spot Instance default values
   ansible.builtin.assert:
     that:

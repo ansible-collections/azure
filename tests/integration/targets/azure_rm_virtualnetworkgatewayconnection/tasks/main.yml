@@ -201,7 +201,7 @@
 
 - name: Pause for 3 mimutes to virtual network connection deleting
   ansible.builtin.command:
-    sleep 180
+    sleep: 180
 
 - name: Delete the public IP address
   azure_rm_publicipaddress:
