@@ -294,6 +294,12 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Pause for 5 mimutes to waiting
+  ansible.builtin.command: sleep 300
+  changed_when: true
+
+- name: Delete private link service
+  azure_rm_privatelinkservice:
 - name: Delete the public ip
   azure_rm_publicipaddress:
     resource_group: '{{ resource_group }}'
