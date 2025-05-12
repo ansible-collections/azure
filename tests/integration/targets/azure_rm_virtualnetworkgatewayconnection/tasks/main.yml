@@ -199,9 +199,9 @@
     name: "{{ vngname }}02"
     state: absent
 
-- name: Pause for 3 mimutes to virtual network connection deleting
-  ansible.builtin.command:
-    sleep: 180
+- name: Pause for 5 mimutes to delete the virtual network connection
+  ansible.builtin.command: sleep 300
+  changed_when: true
 
 - name: Delete the public IP address
   azure_rm_publicipaddress:

@@ -133,6 +133,10 @@
     name: "vmforimage{{ rpfx }}"
     state: absent
 
+- name: Pause for 5 mimutes to waiting
+  ansible.builtin.command: sleep 300
+  changed_when: true
+
 - name: Create VMSS with I(orchestration_mode=Flexible)
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"

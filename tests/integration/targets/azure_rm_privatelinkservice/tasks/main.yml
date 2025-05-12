@@ -298,6 +298,12 @@
   ansible.builtin.command: sleep 300
   changed_when: true
 
+- name: Delete the load balancer
+  azure_rm_loadbalancer:
+    resource_group: '{{ resource_group }}'
+    name: "lb{{ rpfx }}"
+    state: absent
+
 - name: Delete the public ip
   azure_rm_publicipaddress:
     resource_group: '{{ resource_group }}'
