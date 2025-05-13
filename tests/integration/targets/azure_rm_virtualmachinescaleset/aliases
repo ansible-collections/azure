@@ -1,5 +1,5 @@
 cloud/azure
-shippable/azure/group7
+shippable/azure/group1
 destructive
 azure_rm_virtualmachinescaleset_facts
 azure_rm_virtualmachinescalesetinstance_facts
