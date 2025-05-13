@@ -100,3 +100,9 @@
     resource_group: "{{ resource_group_secondary }}"
     name: "mySnapshot-{{ rpfx }}02"
     state: absent
+
+- name: Delete the gen1 VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "vmforimage{{ rpfx }}"
+    state: absent

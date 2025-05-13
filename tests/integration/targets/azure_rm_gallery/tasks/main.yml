@@ -669,3 +669,9 @@
     resource_group: "{{ resource_group }}"
     name: "testPublicIP{{ rpfx }}"
     state: absent
+
+- name: Delete the VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "vmforimage{{ rpfx }}"
+    state: absent
