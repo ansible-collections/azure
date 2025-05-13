@@ -43,6 +43,12 @@
       is_linux: false
       sku: S1
 
+- name: Delete the a windows web app with non-exist app service plan
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}1"
+    state: absent
+
 - name: Create a windows web app with existing app service plan
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -74,6 +80,12 @@
     that:
       - stopped.webapps[0].app_state == "Stopped"
 
+- name: Delete the web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}2"
+    state: absent
+
 - name: Create a windows web app with existing app service plan, try to update some root level params
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -96,6 +108,12 @@
   ansible.builtin.assert:
     that:
       - output.webapps | length == 1
+
+- name: Delete the windows web app with existing app service plan, try to update some root level params
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}3"
+    state: absent
 
 - name: Create a win web app with java run time specific
   azure_rm_webapp:
@@ -188,6 +206,12 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Delete the win web app with java run time specific
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}4"
+    state: absent
+
 - name: Create a win web app with python run time and php run time
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -205,6 +229,11 @@
 - name: Assert the web app was created
   ansible.builtin.assert:
     that: output.changed
+
+- name: Delete the win web app with python run time and php run time
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}5"
 
 - name: Create a docker web app with some app settings
   azure_rm_webapp:
@@ -225,6 +254,12 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Delete the docker web app with some app settings
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}6"
+    state: absent
+
 - name: Create a docker web app with private acr registry
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -243,6 +278,12 @@
 - name: Assert the web app was created
   ansible.builtin.assert:
     that: output.changed
+
+- name: Delete the docker web app with private acr registry
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}7"
+    state: absent
 
 - name: Create a linux web app with nodejs framework
   azure_rm_webapp:
@@ -291,6 +332,12 @@
   ansible.builtin.assert:
     that: output.changed
 
+- name: Delete the linux web app with nodejs framework
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}8"
+    state: absent
+
 - name: Create a linux web app with deployment source github
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -309,9 +356,11 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: Assert the web app was deleted
-  ansible.builtin.assert:
-    that: output.changed
+- name: Delete the linux web app with deployment source github
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}10"
+    state: absent
 
 - name: Assert error that java is mutually exclusive with frameworks
   azure_rm_webapp:
@@ -325,6 +374,12 @@
         version: "17"
   register: fail_win_java_version_mutual_exclusive
   failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
+
+- name: Delete the web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}11"
+    state: absent
 
 - name: Assert error when linux web app, only can specify one framework
   azure_rm_webapp:
@@ -341,6 +396,12 @@
         version: "18"
   register: fail_linux_one_framework_only
   failed_when: fail_linux_one_framework_only.msg != "Can specify one framework only for Linux web app."
+
+- name: Delete the web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}12"
+    state: absent
 
 - name: Create a linux web app with java tomcat container
   azure_rm_webapp:
@@ -478,6 +539,12 @@
       - facts.webapps[0].ftps_state == 'FtpsOnly'
       - not facts.webapps[0].http20_enabled
 
+- name: Delete the web app with various site config params
+  azure_rm_webapp:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-siteconfig"
+    state: absent
+
 - name: Create a web app with HTTP 2.0
   azure_rm_webapp:
     resource_group: "{{ linux_app_plan_resource_group }}"
@@ -585,6 +652,12 @@
       - facts.webapps[0].ftps_state == 'Disabled'
       - not facts.webapps[0].http20_enabled
 
+- name: Delete the web app with HTTP 2.0
+  azure_rm_webapp:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_app_name }}-http20"
+    state: absent
+
 - name: Create a windows web app with site_auth_settings
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
@@ -652,6 +725,12 @@
       - output.webapps[0].site_auth_settings.token_refresh_extension_hours == 100.0
       - output.webapps[0].site_auth_settings.token_store_enabled is false
       - output.webapps[0].site_auth_settings.unauthenticated_client_action == 'RedirectToLoginPage'
+
+- name: Delete the windows web app with site_auth_settings
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}-auth"
+    state: absent
 
 - name: Create a windows web app with UserAssigned Identity
   azure_rm_webapp:
@@ -784,6 +863,12 @@
       - output.webapps[0].identity.type == 'SystemAssigned'
       - '"user_assigned_identities" not in output.webapps[0].identity'
 
+- name: Delete the windows web app with UserAssigned Identity
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ win_app_name }}-identity"
+    state: absent
+
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
     resource_group: "{{ resource_group_datalake }}"
@@ -879,24 +964,18 @@
     that:
       - output.changed
 
+- name: Delete the webapp slot
+  azure_rm_webappslot:
+    resource_group: "{{ resource_group_datalake }}"
+    webapp_name: "{{ win_app_name }}13"
+    name: "{{ slot1_name }}"
+    state: absent
+
 - name: Delete the webapp resource
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"
-    name: "{{ item }}"
+    name: "{{ win_app_name }}3"
     state: absent
-  with_items:
-    - "{{ win_app_name }}1"
-    - "{{ win_app_name }}3"
-    - "{{ win_app_name }}4"
-    - "{{ win_app_name }}5"
-    - "{{ win_app_name }}6"
-    - "{{ win_app_name }}7"
-    - "{{ win_app_name }}8"
-    - "{{ win_app_name }}10"
-    - "{{ linux_app_name }}-siteconfig"
-    - "{{ linux_app_name }}-http20"
-    - "{{ win_app_name }}-auth"
-    - "{{ win_app_name }}-identity"
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
