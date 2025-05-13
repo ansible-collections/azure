@@ -1027,6 +1027,12 @@
     managed_identity_action: 'delete'
     managed_identity_location: "{{ location }}"
 
+- name: Delete load balancer
+  azure_rm_loadbalancer:
+    resource_group: "{{ resource_group }}"
+    name: testLB1
+    state: absent
+
 - name: Delete the public IP address 1
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
