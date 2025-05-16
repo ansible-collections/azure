@@ -22,11 +22,11 @@ description:
 options:
     name:
         description:
-            - Name of resource group.
+            - Name of the private endpoint.
         type: str
     resource_group:
         description:
-            - Limit results by resource group.
+            - Name of resource group, limit results by resource group.
         type: str
     tags:
         description:
