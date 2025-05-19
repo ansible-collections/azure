@@ -10,10 +10,10 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultcertificate
-version_added: "3.1.0"
-short_description: Get Azure Key Vault certificate facts
+version_added: "3.4.0"
+short_description: Managed keyvault certificate
 description:
-    - Get or list facts of Azure Key Vault certificate(deleted).
+    - Managed keyvault certificate.
 
 options:
     vault_uri:
@@ -23,22 +23,163 @@ options:
         type: str
     name:
         description:
-            - Certificate name. If not set, will list all certificates in vault_uri.
+            - Certificate name.
         type: str
-    version:
+        required: True
+    policy:
         description:
-            - The version of the certificate.
-        type: str
-    show_deleted_certificate:
+            - The management policy for the certificate.
+        type: dict
+        suboptions:
+            subject:
+                description:
+                    - The subject name of the certificate. Should be a valid X509 distinguished name.
+                    - Either subject or one of the subject alternative name parameters are required for creating a certificate.
+                    - This will be ignored when importing a certificate; the subject will be parsed from the imported certificate.
+                type: str
+            issuer_name:
+                description:
+                    - Name of the referenced issuer object or reserved names. For example C(self) and C(unknown).
+                type: str
+                choices:
+                    - self
+                    - unknown
+            exportable:
+                description:
+                    - Indicates if the private key can be exported. For valid values, see KeyType.
+                type: bool
+            key_type:
+                description:
+                    - The type of key pair to be used for the certificate.
+                type: str
+            key_size:
+                description:
+                    - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+                type: int
+            reuse_key:
+                description:
+                    - Indicates if the same key pair will be used on certificate renewal.
+                type: bool
+            key_curve_name:
+                description:
+                    - Elliptic curve name. For valid values, see KeyCurveName.
+                type: str
+                choices:
+                    - P-256
+                    - P-384
+                    - P-521
+                    - P-256K
+            enhanced_key_usage:
+                description:
+                    - The extended ways the key of the certificate can be used.
+                type: str
+            content_type:
+                description:
+                    - he media type (MIME type) of the secret backing the certificate.
+                type: str
+                default: application/x-pkcs12
+                choices:
+                    - application/x-pkcs12
+                    - application/x-pem-file
+            key_usage:
+                description:
+                    - The extended ways the key of the certificate can be used.
+                type: str
+                chioces:
+                    - digitalSignature
+                    - nonRepudiation
+                    - keyEncipherment
+                    - dataEncipherment
+                    - keyAgreement
+                    - keyCertSign
+                    - cRLSign
+                    - encipherOnly
+                    - decipherOnly
+            validity_in_months:
+                description:
+                    - The duration that the certificate is valid in months.
+                type: str
+            lifetime_actions:
+                description:
+                    - Actions that will be performed by Key Vault over the lifetime of a certificate.
+                type: list
+                elements: dict
+                options:
+                    action:
+                        description:
+                            - The type of the action.
+                        type: str
+                        choices:
+                            - EmailContacts
+                            - AutoRenew
+                    lifetime_percentage:
+                        description:
+                            - Percentage of lifetime at which to trigger. Value should be between 1 and 99.
+                        type: int
+                    days_before_expiry:
+                        description:
+                            - Days before expiry to attempt renewal.
+                            - Value should be between 1 and `validity_in_months` multiplied by 27.
+                            - If validity_in_months is 36, then value should be between 1 and 972 (36 * 27).
+                        type: int
+            certificate_type:
+                description:
+                    - Type of certificate to be requested from the issuer provider.
+                type: str
+            san_emails:
+                description:
+                    - Subject alternative emails of the X509 object.
+                    - Either subject or one of the subject alternative name parameters are required for creating a certificate.
+                type: str
+            certificate_transparency:
+                description:
+                    - Indicates if the certificates generated under this policy should be published to certificate transparency logs.
+                type: str
+            san_dns_names:
+                description:
+                    - Subject alternative DNS names of the X509 object.
+                    - Either subject or one of the subject alternative name parameters are required for creating a certificate.
+                type: str
+            san_user_principal_names:
+                description:
+                    - Subject alternative user principal names of the X509 object.
+                    - Either subject or one of the subject alternative name parameters are required for creating a certificate.
+                type: str
+
+    enabled:
         description:
-            - Set to I(show_delete_certificate=true) to show deleted certificates. Set to I(show_deleted_certificate=false) to show not deleted certificates.
+            - Whether the certificate is enabled for use.
         type: bool
-        default: false
-    tags:
+    password:
         description:
-            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
-        type: list
-        elements: str
+            - If the private key in the passed in certificate is encrypted, it is the password used for encryption.
+        type: str
+    cert_data:
+        description:
+            - Aan existing valid certificate, containing a private key, into Azure Key Vault.
+        type: str
+    x509_certificates:
+        description:
+            - The certificate or the certificate chain to merge.
+        type: str
+    backup:
+        description:
+            - The backup blob associated with a certificate bundle.
+        type: str
+    state:
+        description:
+            - State of the keyvault certificate.
+        type: str
+        required: True
+        choices:
+            - generate
+            - import
+            - delete
+            - purge
+            - backup
+            - restore
+            - recover
+            - merge
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -51,27 +192,42 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Get certificate facts
+- name: Import a keyvault certificate
   azure_rm_keyvaultcertificate:
-    vault_uri: "https://myVault.vault.azure.net"
-    name: myCertificate
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    enabled: true
+    password: Password@****
+    cert_data: "{{ lookup('file', 'cert.pem') }}"
+    state: import
+    tags:
+      key1: value1
 
-- name: Get specific versions of certificate
+- name: Generate a keyvault certificate
   azure_rm_keyvaultcertificate:
-    vault_uri: "https://myVault.vault.azure.net"
-    name: mySecret
-    version: 2809225bcb674ff380f330471b3c3eb0
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    policy:
+      subject: 'CN=Anhui02'
+      issuer_name: self
+      exportable: True
+      key_type: RSA
+      key_size: 2048
+      san_emails:
+        - 7170222076@qq.com
+      content_type: 'application/x-pkcs12'
+      validity_in_months: 36
+      lifetime_actions:
+        - action: EmailContacts
+          days_before_expiry: 10
+    enabled: true
+    state: generate
 
-- name: Get deleted certificate
+- name: Generate a keyvault certificate
   azure_rm_keyvaultcertificate:
-    vault_uri: "https://myVault.vault.azure.net"
-    name: mySecret
-    show_deleted_certificate: true
-
-- name: List deleted certificate
-  azure_rm_keyvaultcertificate:
-    vault_uri: "https://myVault.vault.azure.net"
-    show_deleted_certificate: true
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    state: absent
 '''
 
 RETURN = '''
@@ -347,6 +503,10 @@ try:
     from azure.keyvault.certificates import CertificateClient, CertificatePolicy, LifetimeAction
     from azure.core.exceptions import ResourceNotFoundError
     import base64
+    from azure.core.polling import LROPoller
+
+    import logging
+    logging.basicConfig(filename='log.log',  level=logging.INFO)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -354,8 +514,6 @@ except ImportError:
 
 def certificatebundle_to_dict(certificate):
     response = dict(policy=dict(), properties=dict(), cer=None)
-    if certificate.cer is not None:
-        response['cer'] = str(certificate.cer)
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
@@ -574,6 +732,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
         self.backup = None
         self.x509_certificates = None
         self.state = None
+        self.tags = None
 
         self.results = dict(changed=False)
         self._client = None
@@ -587,11 +746,11 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         """Main module execution method"""
 
-        for certificate in list(self.module_arg_spec.keys()) + ['tags']:
-            if hasattr(self, certificate):
-                setattr(self, certificate, kwargs[certificate])
+        for key in list(self.module_arg_spec.keys()) + ['tags']:
+            if hasattr(self, key):
+                setattr(self, key, kwargs[key])
             else:
-                setattr(self, certificate, None)
+                setattr(self, key, None)
 
         self._client = self.get_keyvault_client()
         changed = False
@@ -683,20 +842,40 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
         '''
         self.log("Create the certificate {0}".format(self.name))
 
+        lifetime_actions = []
+        for item in self.policy['lifetime_actions']:
+            lifetime_actions.append(LifetimeAction(**item))
+        #self.policy['lifetime_actions'] = lifetime_actions
+
         try:
-            import logging
-            lifetime_actions = []
-            for item in self.policy['lifetime_actions']:
-                lifetime_actions.append(LifetimeAction(**item))
-            self.policy['lifetime_actions'] = lifetime_actions
-            response = self._client.begin_create_certificate(certificate_name=self.name,
-                                                             policy=CertificatePolicy(**self.policy),
+            if self.policy is None:
+                policy = CertificatePolicy.get_default()
+            else:
+                policy = CertificatePolicy(subject=self.policy.get('subject'),
+                                           issuer_name=self.policy.get('issuer_name'),
+                                           exportable=self.policy.get('exportable'),
+                                           key_type=self.policy.get('key_type'),
+                                           key_size=self.policy.get('key_size'),
+                                           san_emails=self.policy.get('san_emails'),
+                                           content_type=self.policy.get('content_type'),
+                                           validity_in_months=self.policy.get('validity_in_months'),
+                                           reuse_key=self.policy.get('reuse_key'),
+                                           key_curve_name=self.policy.get('key_curve_name'),
+                                           enhanced_key_usage=self.policy.get('enhanced_key_usage'),
+                                           key_usage=self.policy.get('key_usage'),
+                                           certificate_type=self.policy.get('certificate_type'),
+                                           certificate_transparency=self.policy.get('certificate_transparency'),
+                                           san_dns_names=self.policy.get('san_dns_names'),
+                                           lifetime_actions=lifetime_actions,
+                                           san_user_principal_names=self.policy.get('san_user_principal_names'))
+            poller = self._client.begin_create_certificate(certificate_name=self.name,
+                                                             policy=policy,
                                                              enabled=self.enabled,
                                                              tags=self.tags)
+            poller.result()
+            self.log("Generate a new certificate")
 
-            if response:
-                response = certificatebundle_to_dict(response)
-                return response
+            return certificatebundle_to_dict(self._client.get_certificate(certificate_name=self.name))
 
         except Exception as ec:
             self.fail("Did not create the key vault certificate {0}: {1}".format(self.name, str(ec)))
@@ -711,8 +890,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
 
         try:
             response = self._client.import_certificate(certificate_name=self.name,
-                                                       certificate_bytes=self.cert,
-                                                       policy=self.policy,
+                                                       certificate_bytes=self.cert.encode('utf-8'),
                                                        enabled=self.enabled,
                                                        password=self.password,
                                                        tags=self.tags)

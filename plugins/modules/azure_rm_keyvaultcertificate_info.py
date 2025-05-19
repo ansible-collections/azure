@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultcertificate_info
-version_added: "3.1.0"
+version_added: "3.4.0"
 short_description: Get Azure Key Vault certificate facts
 description:
     - Get or list facts of Azure Key Vault certificate(deleted).
