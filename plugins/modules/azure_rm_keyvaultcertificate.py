@@ -777,7 +777,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
 
         self.results = dict(changed=False)
         self._client = None
-        required_if = [(state, import, ['cert_data', 'password'])]
+        required_if = [('state', 'import', ['cert_data', 'password'])]
 
         super(AzureRMKeyVaultCertificate,
               self).__init__(derived_arg_spec=self.module_arg_spec,

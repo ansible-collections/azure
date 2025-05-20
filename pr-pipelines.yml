@@ -73,6 +73,7 @@ parameters:
       - "azure_rm_keyvault"
       - "azure_rm_keyvaultkey"
       - "azure_rm_keyvaultsecret"
+      - "azure_rm_keyvaultcertificate"
       - "azure_rm_loadbalancer"
       - "azure_rm_loganalyticsworkspace"
       - "azure_rm_localnetworkgateway"

@@ -344,3 +344,5 @@ action_groups:
     - azure.azcollection.azure_rm_batchaccountapplicationpackage_info
     - azure.azcollection.azure_rm_applicationfirewallpolicy
     - azure.azcollection.azure_rm_applicationfirewallpolicy_info
+    - azure.azcollection.azure_rm_keyvaultcertificate_info
+    - azure.azcollection.azure_rm_keyvaultcertificate_info
