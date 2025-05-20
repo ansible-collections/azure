@@ -280,7 +280,7 @@ certificates:
             returned: always
             sample: "bytearray(b'0.....................x16')"
         name:
-            descritpion:
+            description:
                 - The name of the certificate.
             type: str
             returned: always
@@ -908,9 +908,9 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
                                            lifetime_actions=lifetime_actions,
                                            san_user_principal_names=self.policy.get('san_user_principal_names'))
             response = self._client.begin_create_certificate(certificate_name=self.name,
-                                                           policy=policy,
-                                                           enabled=self.enabled,
-                                                           tags=self.tags)
+                                                             policy=policy,
+                                                             enabled=self.enabled,
+                                                             tags=self.tags)
             if isinstance(response, LROPoller):
                 return certificatebundle_to_dict(self.get_poller_result(response))
 

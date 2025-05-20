@@ -3,7 +3,7 @@
     rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     tenant_id: "{{ azure_tenant }}"
     cert_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
-    cert_file: "cert_data.pem"
+    cert_file: "cert.txt"
   run_once: true
 
 - name: Lookup service principal object id

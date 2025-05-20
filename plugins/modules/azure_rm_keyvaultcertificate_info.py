@@ -87,7 +87,7 @@ certificates:
             returned: always
             sample: "bytearray(b'0......................x16')"
         name:
-            descritpion:
+            description:
                 - The name of the certificate.
             type: str
             returned: always
