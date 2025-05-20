@@ -94,7 +94,7 @@ options:
                     - The extended ways the key of the certificate can be used.
                 type: list
                 elements: str
-                chioces:
+                choices:
                     - digitalSignature
                     - nonRepudiation
                     - keyEncipherment
@@ -222,7 +222,7 @@ EXAMPLES = '''
     policy:
       subject: 'CN=Anhui02'
       issuer_name: self
-      exportable: True
+      exportable: true
       key_type: RSA
       key_size: 2048
       san_emails:
@@ -249,7 +249,7 @@ certificates:
     returned: always
     type: complex
     contains:
-        cer:
+        cert_data:
             description:
                 - CER contents of the X509 certificate.
             type: str
@@ -260,7 +260,7 @@ certificates:
                 - The time when the certificate was deleted, in UTC.
             returned: always
             type: str
-            sample: 2025-01-14T09:41:20+00:00
+            sample: 2025-01-14T09"
         recovery_id:
             description:
                 - The url of the recovery object, used to identify and recover the deleted certificate.
@@ -272,7 +272,7 @@ certificates:
                 - The time when the certificate is scheduled to be purged, in UTC.
             returned: always
             type: dict
-            sample: 2025-02-14T09:41:20+00:00
+            sample: 2025-02-14T09"
         policy:
             description:
                 - The management policy of the deleted certificate.
@@ -377,7 +377,7 @@ certificates:
                     sample: RSA
                 key_size:
                     description:
-                        - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+                        - The key size in bits.
                     type: int
                     returned: always
                     sample: 2048
@@ -476,23 +476,23 @@ certificates:
                                 - Creation datetime.
                             returned: always
                             type: str
-                            sample: "2025-01-14T09:41:20+00:00"
+                            sample: "2025-01-14T09"
                         not_before:
                             description:
                                 - Not before datetime.
                             type: str
-                            sample: "2025-02-14T09:41:20+00:00"
+                            sample: "2025-02-14T09"
                         expires:
                             description:
                                 - Expiration datetime.
                             type: str
-                            sample: "2025-03-14T09:41:20+00:00
+                            sample: "2025-03-14T09"
                         updated:
                             description:
                                 - Update datetime.
                             returned: always
                             type: str
-                            sample: "2025-01-15T09:41:20+00:00"
+                            sample: "2025-01-15T09"
                         enabled:
                             description:
                                 - Indicate whether the certificate is enabled.
@@ -525,7 +525,9 @@ except ImportError:
 
 
 def certificatebundle_to_dict(certificate):
-    response = dict(policy=dict(), properties=dict(), cer=None)
+    response = dict(policy=dict(), properties=dict(), cert_data=None)
+    if certificate.cer is not None:
+        response['cert_data'] = str(certificate.cer)
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
@@ -626,12 +628,12 @@ def policy_bundle_to_dict(policy):
 
 
 def deleted_certificatebundle_to_dict(certificate):
-    response = dict(policy=dict(), properties=dict(), cer=None)
+    response = dict(policy=dict(), properties=dict(), cert_data=None)
     response['recovery_id'] = certificate._recovery_id
     response['scheduled_purge_date'] = certificate._scheduled_purge_date
     response['deleted_on'] = certificate._deleted_on
     if certificate.cer is not None:
-        response['cer'] = str(certificate.cer)
+        response['cert_data'] = str(certificate.cer)
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
@@ -695,14 +697,14 @@ policy_spec = dict(
     key_size=dict(type='int'),
     reuse_key=dict(type='bool',),
     key_curve_name=dict(type='str', choices=['P-256', 'P-384', 'P-521', 'P-256K']),
-    enhanced_key_usage=dict(type='list', element='str'),
+    enhanced_key_usage=dict(type='list', elements='str'),
     key_usage=dict(
         type='list',
         elements='str',
         choices=['digitalSignature', 'nonRepudiation', 'keyEncipherment', 'dataEncipherment',
                  'keyAgreement', 'keyCertSign', 'cRLSign', 'encipherOnly', 'decipherOnly']
     ),
-    content_type=dict(type='str', choices=['application/x-pkcs12', 'application/x-pem-file']),
+    content_type=dict(type='str', default='application/x-pkcs12', choices=['application/x-pkcs12', 'application/x-pem-file']),
     validity_in_months=dict(type='int',),
     certificate_type=dict(type='str'),
     certificate_transparency=dict(type='bool'),
@@ -857,7 +859,6 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
         lifetime_actions = []
         for item in self.policy['lifetime_actions']:
             lifetime_actions.append(LifetimeAction(**item))
-        #self.policy['lifetime_actions'] = lifetime_actions
 
         try:
             if self.policy is None:

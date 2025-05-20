@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_keyvaultcertificate_info
-version_added: "3.4.0"
+version_added: "3.1.0"
 short_description: Get Azure Key Vault certificate facts
 description:
     - Get or list facts of Azure Key Vault certificate(deleted).
@@ -80,18 +80,18 @@ certificates:
     returned: always
     type: complex
     contains:
-        cer:
+        cert_data:
             description:
                 - CER contents of the X509 certificate.
             type: str
             returned: always
-            sample: "bytearray(b'0\\x82\\......................\\x8d1s{\\x92S\\x16')"
+            sample: "bytearray(b'0......................x16')"
         deleted_on:
             description:
                 - The time when the certificate was deleted, in UTC.
             returned: always
             type: str
-            sample: 2025-01-14T09:41:20+00:00
+            sample: 2025-01-14T09
         recovery_id:
             description:
                 - The url of the recovery object, used to identify and recover the deleted certificate.
@@ -103,7 +103,7 @@ certificates:
                 - The time when the certificate is scheduled to be purged, in UTC.
             returned: always
             type: dict
-            sample: 2025-02-14T09:41:20+00:00
+            sample: 2025-02-14T09
         policy:
             description:
                 - The management policy of the deleted certificate.
@@ -162,7 +162,7 @@ certificates:
                     description:
                         - Name of the referenced issuer object or reserved names.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: Self
                 subject:
                     description:
@@ -171,28 +171,28 @@ certificates:
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                         - This will be ignored when importing a certificate; the subject will be parsed from the imported certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: CN=anhui.com
                 san_emails:
                     description:
                         - Subject alternative emails of the X509 object.
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: None
                 san_dns_names:
                     description:
                         - Subject alternative DNS names of the X509 object.
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: None
                 san_user_principal_names:
                     description:
                         - Subject alternative user principal names of the X509 object.
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: None
                 exportable:
                     description:
@@ -204,13 +204,13 @@ certificates:
                     description:
                         - The type of key pair to be used for the certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: RSA
                 key_size:
                     description:
-                        - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+                        - The key size in bits.
                     type: int
-                    returned: always 
+                    returned: always
                     sample: 2048
                 reuse_key:
                     description:
@@ -240,13 +240,13 @@ certificates:
                     description:
                         - If not specified, the media type (MIME type) of the secret backing the certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: application/x-pkcs12
                 validity_in_months:
                     description:
                         - The duration that the certificate is valid in months.
                     type: int
-                    returned: always 
+                    returned: always
                     sample: 12
                 lifetime_actions:
                     description:
@@ -307,23 +307,23 @@ certificates:
                                 - Creation datetime.
                             returned: always
                             type: str
-                            sample: "2025-01-14T09:41:20+00:00"
+                            sample: "2025-01-14T09"
                         not_before:
                             description:
                                 - Not before datetime.
                             type: str
-                            sample: "2025-02-14T09:41:20+00:00"
+                            sample: "2025-02-14T09"
                         expires:
                             description:
                                 - Expiration datetime.
                             type: str
-                            sample: "2025-03-14T09:41:20+00:00
+                            sample: "2025-03-14T09"
                         updated:
                             description:
                                 - Update datetime.
                             returned: always
                             type: str
-                            sample: "2025-01-15T09:41:20+00:00"
+                            sample: "2025-01-15T09"
                         enabled:
                             description:
                                 - Indicate whether the certificate is enabled.
@@ -352,9 +352,9 @@ except ImportError:
 
 
 def certificatebundle_to_dict(certificate):
-    response = dict(policy=dict(), properties=dict(), cer=None)
+    response = dict(policy=dict(), properties=dict(), cert_data=None)
     if certificate.cer is not None:
-        response['cer'] = str(certificate.cer)
+        response['cert_data'] = str(certificate.cer)
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
@@ -477,8 +477,7 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(version=dict(type='str'),
                                     name=dict(type='str'),
                                     vault_uri=dict(type='str', required=True),
-                                    show_deleted_certificate=dict(type='bool',
-                                                             default=False),
+                                    show_deleted_certificate=dict(type='bool', default=False),
                                     tags=dict(type='list', elements='str'))
 
         self.vault_uri = None
@@ -612,8 +611,7 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
                     if self.has_tags(item['properties'].get('tags'), self.tags):
                         results.append(item)
         except Exception as e:
-            self.fail("Did not find certificate in current key vault {0}.".format(
-                    str(e)))
+            self.fail("Did not find certificate in current key vault {0}.".format(str(e)))
         return results
 
 
