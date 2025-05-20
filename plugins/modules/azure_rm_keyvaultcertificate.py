@@ -29,6 +29,7 @@ options:
     policy:
         description:
             - The management policy for the certificate.
+            - When generating a new certificate, if no policy is set, the default policy will be used.
         type: dict
         suboptions:
             subject:
@@ -169,15 +170,6 @@ options:
         description:
             - Aan existing valid certificate, containing a private key, into Azure Key Vault.
         type: str
-    x509_certificates:
-        description:
-            - The certificate or the certificate chain to merge.
-        type: list
-        elements: str
-    backup:
-        description:
-            - The backup blob associated with a certificate bundle.
-        type: str
     state:
         description:
             - State of the keyvault certificate.
@@ -188,10 +180,9 @@ options:
             - import
             - delete
             - purge
-            - backup
-            - restore
             - recover
             - merge
+            - update
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -235,7 +226,40 @@ EXAMPLES = '''
     enabled: true
     state: generate
 
-- name: Generate a keyvault certificate
+
+- name: Update the keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    policy:
+      subject: 'CN=Anhui'
+      issuer_name: self
+      exportable: true
+      key_type: RSA
+      key_size: 2048
+      san_emails:
+        - 7170222076@qq.com
+      content_type: 'application/x-pkcs12'
+      validity_in_months: 36
+      lifetime_actions:
+        - action: EmailContacts
+          days_before_expiry: 10
+    enabled: true
+    state: update
+
+- name: Purge the keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    state: purge
+
+- name: Recover the keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    state: recover
+
+- name: Delete the keyvault certificate
   azure_rm_keyvaultcertificate:
     vault_uri: https://vault{{ rpfx }}.vault.azure.net
     name: fredcerticate
@@ -255,6 +279,12 @@ certificates:
             type: str
             returned: always
             sample: "bytearray(b'0.....................x16')"
+        name:
+            descritpion:
+                - The name of the certificate.
+            type: str
+            returned: always
+            sample: testcert
         deleted_on:
             description:
                 - The time when the certificate was deleted, in UTC.
@@ -509,16 +539,12 @@ certificates:
                             sample: Recoverable+Purgeable
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
     from azure.keyvault.certificates import CertificateClient, CertificatePolicy, LifetimeAction
-    from azure.core.exceptions import ResourceNotFoundError
     import base64
     from azure.core.polling import LROPoller
-
-    import logging
-    logging.basicConfig(filename='log.log', level=logging.INFO)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -528,11 +554,13 @@ def certificatebundle_to_dict(certificate):
     response = dict(policy=dict(), properties=dict(), cert_data=None)
     if certificate.cer is not None:
         response['cert_data'] = str(certificate.cer)
+    response['name'] = certificate.name
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
         response['policy']['exportable'] = certificate.policy._exportable
         response['policy']['key_type'] = certificate.policy._key_type
+        response['policy']['key_size'] = certificate.policy._key_size
         response['policy']['reuse_key'] = certificate.policy._reuse_key
         response['policy']['key_curve_name'] = certificate.policy._key_curve_name
         response['policy']['enhanced_key_usage'] = certificate.policy._enhanced_key_usage
@@ -584,51 +612,54 @@ def certificatebundle_to_dict(certificate):
 
 
 def policy_bundle_to_dict(policy):
-    policy = dict()
+    result = dict()
     if policy is not None:
-        policy['issuer_name'] = policy._issuer_name
-        policy['subject'] = policy._subject
-        policy['exportable'] = policy._exportable
-        policy['key_type'] = policy._key_type
-        policy['key_size'] = policy._key_size
-        policy['reuse_key'] = policy._reuse_key
-        policy['key_curve_name'] = policy._key_curve_name
-        policy['enhanced_key_usage'] = policy._enhanced_key_usage
-        policy['key_usage'] = policy._key_usage
-        policy['content_type'] = policy._content_type
-        policy['validity_in_months'] = policy._validity_in_months
-        policy['certificate_type'] = policy._certificate_type
-        policy['certificate_transparency'] = policy._certificate_transparency
-        policy['san_emails'] = policy._san_emails
-        policy['san_dns_names'] = policy._san_dns_names
-        policy['san_user_principal_names'] = policy._san_user_principal_names
-        policy['attributes'] = dict()
+        result['issuer_name'] = policy._issuer_name
+        result['subject'] = policy._subject
+        result['exportable'] = policy._exportable
+        result['key_type'] = policy._key_type
+        result['key_size'] = policy._key_size
+        result['reuse_key'] = policy._reuse_key
+        result['key_curve_name'] = policy._key_curve_name
+        result['enhanced_key_usage'] = policy._enhanced_key_usage
+        result['key_usage'] = policy._key_usage
+        result['content_type'] = policy._content_type
+        result['validity_in_months'] = policy._validity_in_months
+        result['certificate_type'] = policy._certificate_type
+        result['certificate_transparency'] = policy._certificate_transparency
+        result['san_emails'] = policy._san_emails
+        result['san_dns_names'] = policy._san_dns_names
+        result['san_user_principal_names'] = policy._san_user_principal_names
+        result['attributes'] = dict()
         if policy._attributes is not None:
-            policy['attributes']['enabled'] = policy._attributes.enabled
-            policy['attributes']['not_before'] = policy._attributes.not_before
-            policy['attributes']['expires'] = policy._attributes.expires
-            policy['attributes']['created'] = policy._attributes.created
-            policy['attributes']['updated'] = policy._attributes.updated
-            policy['attributes']['recoverable_days'] = policy._attributes.recoverable_days
-            policy['attributes']['recovery_level'] = policy._attributes.recovery_level
+            result['attributes']['enabled'] = policy._attributes.enabled
+            result['attributes']['not_before'] = policy._attributes.not_before
+            result['attributes']['expires'] = policy._attributes.expires
+            result['attributes']['created'] = policy._attributes.created
+            result['attributes']['updated'] = policy._attributes.updated
+            result['attributes']['recoverable_days'] = policy._attributes.recoverable_days
+            result['attributes']['recovery_level'] = policy._attributes.recovery_level
         else:
-            policy['attributes'] = None
+            result['attributes'] = None
         if policy._lifetime_actions is not None:
-            policy['lifetime_actions'] = []
+            result['lifetime_actions'] = []
             for item in policy._lifetime_actions:
-                policy['lifetime_actions'].append(dict(action=item.action,
+                result['lifetime_actions'].append(dict(action=item.action,
                                                        lifetime_percentage=item.lifetime_percentage,
                                                        days_before_expiry=item.days_before_expiry))
         else:
-            policy['lifetime_actions'] = None
+            result['lifetime_actions'] = None
     else:
-        policy = None
+        result = None
 
-    return policy
+    return result
 
 
 def deleted_certificatebundle_to_dict(certificate):
     response = dict(policy=dict(), properties=dict(), cert_data=None)
+    if certificate.cer is not None:
+        response['cert_data'] = str(certificate.cer)
+    response['name'] = certificate.name
     response['recovery_id'] = certificate._recovery_id
     response['scheduled_purge_date'] = certificate._scheduled_purge_date
     response['deleted_on'] = certificate._deleted_on
@@ -723,7 +754,7 @@ policy_spec = dict(
 )
 
 
-class AzureRMKeyVaultCertificate(AzureRMModuleBase):
+class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(name=dict(type='str', required=True),
                                     vault_uri=dict(type='str', required=True),
@@ -731,30 +762,28 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
                                     enabled=dict(type='bool'),
                                     password=dict(type='str', no_log=True),
                                     cert_data=dict(type='str'),
-                                    x509_certificates=dict(type='list', elements='str'),
-                                    backup=dict(type='str'),
                                     state=dict(
                                         type='str',
                                         required=True,
-                                        choices=['generate', 'import', 'delete', 'purge', 'backup', 'restore', 'recover', 'merge']))
+                                        choices=['generate', 'import', 'delete', 'purge', 'update', 'recover', 'merge']))
         self.vault_uri = None
         self.name = None
         self.policy = None
         self.enabled = None
         self.cert_data = None
         self.password = None
-        self.backup = None
-        self.x509_certificates = None
         self.state = None
         self.tags = None
 
         self.results = dict(changed=False)
         self._client = None
+        required_if = [(state, import, ['cert_data', 'password'])]
 
         super(AzureRMKeyVaultCertificate,
               self).__init__(derived_arg_spec=self.module_arg_spec,
                              supports_check_mode=True,
                              supports_tags=True,
+                             required_if=required_if,
                              facts_module=False)
 
     def exec_module(self, **kwargs):
@@ -768,31 +797,21 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
 
         self._client = self.get_keyvault_client()
         changed = False
-        reponse = None
+        response = None
 
         del_response = self.get_deleted_certificate()
         response = self.get_certificate()
 
         if self.state == 'delete':
-            if del_response is not None:
+            if response is not None:
                 changed = True
                 if not self.check_mode:
-                    response = self.del_certificate()
+                    response = self.delete_certificate()
         elif self.state == 'purge':
             if del_response is not None:
                 changed = True
                 if not self.check_mode:
                     response = self.purge_certificate()
-        elif self.state == 'backup':
-            if response is not None:
-                changed = True
-                if not self.check_mode:
-                    response = self.backup_certificate()
-        elif self.state == 'restore':
-            if response is not None:
-                changed = True
-                if not self.check_mode:
-                    response = self.restore_certificate()
         elif self.state == 'merge':
             if response is not None:
                 changed = True
@@ -805,14 +824,21 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
                 changed = True
                 if not self.check_mode:
                     response = self.recover_certificate()
+            else:
+                self.log("The certificate {0} exist or purged".format(self.name))
         else:
             if response is not None:
-                if self.policy is not None and response['policy'] != self.policy:
+                a = {}
+                b = dict(compare=[])
+
+                # if not self.default_compare({}, self.policy, response['policy'], '', dict(compare=[])):
+                if not self.default_compare(a, self.policy, response['policy'], '', b):
                     changed = True
                     if not self.check_mode:
                         response['policy'] = self.update_certificate_policy()
+
                 update_tags, self.tags = self.update_tags(response['properties']['tags'])
-                if update_tags or (self.enabled is not None and bool(self.enabled) != bool(response['properties']['enabled'])):
+                if update_tags or (self.enabled is not None and bool(self.enabled) != bool(response['properties']['attributes']['enabled'])):
                     changed = True
                     if not self.check_mode:
                         response = self.update_certificate_properties()
@@ -881,14 +907,12 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
                                            san_dns_names=self.policy.get('san_dns_names'),
                                            lifetime_actions=lifetime_actions,
                                            san_user_principal_names=self.policy.get('san_user_principal_names'))
-            poller = self._client.begin_create_certificate(certificate_name=self.name,
+            response = self._client.begin_create_certificate(certificate_name=self.name,
                                                            policy=policy,
                                                            enabled=self.enabled,
                                                            tags=self.tags)
-            poller.result()
-            self.log("Generate a new certificate")
-
-            return certificatebundle_to_dict(self._client.get_certificate(certificate_name=self.name))
+            if isinstance(response, LROPoller):
+                return certificatebundle_to_dict(self.get_poller_result(response))
 
         except Exception as ec:
             self.fail("Did not create the key vault certificate {0}: {1}".format(self.name, str(ec)))
@@ -925,9 +949,9 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
 
         try:
             response = self._client.begin_delete_certificate(certificate_name=self.name)
-            if response is not None:
-                return deleted_certificatebundle_to_dict(response)
-
+            if isinstance(response, LROPoller):
+                return deleted_certificatebundle_to_dict(self.get_poller_result(response))
+            self.log("Delete the certificate")
         except Exception as ec:
             self.fail("Did not delete the key vault certificate {0}: {1}".format(self.name, str(ec)))
 
@@ -954,57 +978,11 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
 
         try:
             response = self._client.begin_recover_deleted_certificate(certificate_name=self.name)
-            if response is not None:
-                return certificatebundle_to_dict(response)
+            if isinstance(response, LROPoller):
+                return certificatebundle_to_dict(self.get_poller_result(response))
 
         except Exception as ec:
             self.fail("Did not recover the key vault certificate {0}: {1}".format(self.name, str(ec)))
-
-    def backup_certificate(self):
-        '''
-        Backup the certificate in key vault.
-        '''
-        self.log("Backup the certificate {0}".format(self.name))
-
-        try:
-            return self._client.backup_certificate(certificate_name=self.name)
-
-        except Exception as ec:
-            self.fail("Did not backup the key vault certificate {0}: {1}".format(self.name, str(ec)))
-
-    def restore_certificate(self):
-        '''
-        Restore the certificate in key vault.
-
-        :return: deserialized certificate state dictionary
-        '''
-        self.log("Restore the certificate {0}".format(self.name))
-
-        try:
-            response = self._client.restore_certificate_backup(backup=self.backup)
-            if response is not None:
-                return certificatebundle_to_dict(response)
-
-        except Exception as ec:
-            self.fail("Did not restore the key vault certificate {0}: {1}".format(self.name, str(ec)))
-
-    def merge_certificate(self):
-        '''
-        Merge the certificate in key vault.
-
-        :return: deserialized certificate state dictionary
-        '''
-        self.log("Merge the certificate {0}".format(self.name))
-
-        try:
-            response = self._client.merge_certificate(certificate_name=self.name,
-                                                      enabled=self.enabled,
-                                                      tags=self.tags,
-                                                      x509_certificates=self.x509_certificates)
-            if response is not None:
-                return certificatebundle_to_dict(response)
-        except Exception as ec:
-            self.fail("Did not merge the key vault certificate {0}: {1}".format(self.name, str(ec)))
 
     def update_certificate_properties(self):
         '''
@@ -1032,9 +1010,30 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
         '''
         self.log("Update the certificate policy {0}".format(self.name))
 
+        lifetime_actions = []
+        for item in self.policy['lifetime_actions']:
+            lifetime_actions.append(LifetimeAction(**item))
+
+        policy = CertificatePolicy(subject=self.policy.get('subject'),
+                                   issuer_name=self.policy.get('issuer_name'),
+                                   exportable=self.policy.get('exportable'),
+                                   key_type=self.policy.get('key_type'),
+                                   key_size=self.policy.get('key_size'),
+                                   san_emails=self.policy.get('san_emails'),
+                                   content_type=self.policy.get('content_type'),
+                                   validity_in_months=self.policy.get('validity_in_months'),
+                                   reuse_key=self.policy.get('reuse_key'),
+                                   key_curve_name=self.policy.get('key_curve_name'),
+                                   enhanced_key_usage=self.policy.get('enhanced_key_usage'),
+                                   key_usage=self.policy.get('key_usage'),
+                                   certificate_type=self.policy.get('certificate_type'),
+                                   certificate_transparency=self.policy.get('certificate_transparency'),
+                                   san_dns_names=self.policy.get('san_dns_names'),
+                                   lifetime_actions=lifetime_actions,
+                                   san_user_principal_names=self.policy.get('san_user_principal_names'))
         try:
             response = self._client.update_certificate_policy(certificate_name=self.name,
-                                                              policy=self.policy)
+                                                              policy=policy)
             if response is not None:
                 return policy_bundle_to_dict(response)
 

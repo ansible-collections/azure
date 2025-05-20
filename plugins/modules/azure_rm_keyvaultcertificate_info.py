@@ -86,6 +86,12 @@ certificates:
             type: str
             returned: always
             sample: "bytearray(b'0......................x16')"
+        name:
+            descritpion:
+                - The name of the certificate.
+            type: str
+            returned: always
+            sample: testcert
         deleted_on:
             description:
                 - The time when the certificate was deleted, in UTC.
@@ -355,12 +361,14 @@ def certificatebundle_to_dict(certificate):
     response = dict(policy=dict(), properties=dict(), cert_data=None)
     if certificate.cer is not None:
         response['cert_data'] = str(certificate.cer)
+    response['name'] = certificate.name
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
         response['policy']['exportable'] = certificate.policy._exportable
         response['policy']['key_type'] = certificate.policy._key_type
         response['policy']['reuse_key'] = certificate.policy._reuse_key
+        response['policy']['key_size'] = certificate.policy._key_size
         response['policy']['key_curve_name'] = certificate.policy._key_curve_name
         response['policy']['enhanced_key_usage'] = certificate.policy._enhanced_key_usage
         response['policy']['key_usage'] = certificate.policy._key_usage
@@ -411,12 +419,13 @@ def certificatebundle_to_dict(certificate):
 
 
 def deleted_certificatebundle_to_dict(certificate):
-    response = dict(policy=dict(), properties=dict(), cer=None)
+    response = dict(policy=dict(), properties=dict(), cert_data=None)
+    if certificate.cer is not None:
+        response['cert_data'] = str(certificate.cer)
+    response['name'] = certificate.name
     response['recovery_id'] = certificate._recovery_id
     response['scheduled_purge_date'] = certificate._scheduled_purge_date
     response['deleted_on'] = certificate._deleted_on
-    if certificate.cer is not None:
-        response['cer'] = str(certificate.cer)
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
         response['policy']['subject'] = certificate.policy._subject
@@ -558,7 +567,6 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
         results = []
         try:
             response = self._client.get_deleted_certificate(certificate_name=self.name)
-
             if response:
                 response = deleted_certificatebundle_to_dict(response)
                 if self.has_tags(response['properties'].get('tags'), self.tags):
@@ -566,8 +574,7 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
                     results.append(response)
 
         except ResourceNotFoundError as ec:
-            self.log("Did not find the key vault certificate {0}: {1}".format(
-                self.name, str(ec)))
+            self.log("Did not find the key vault certificate {0}: {1}".format(self.name, str(ec)))
         except Exception as ec2:
             self.fail("Find the key vault certificate got exception, exception as {0}".format(str(ec2)))
         return results
