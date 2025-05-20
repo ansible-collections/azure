@@ -52,9 +52,16 @@ options:
                 description:
                     - The type of key pair to be used for the certificate.
                 type: str
+                choices:
+                    - EC
+                    - EC-HSM
+                    - RSA
+                    - RSA-HSM
+                    -  oct
+                    - oct-HSM
             key_size:
                 description:
-                    - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
+                    - The key size in bits. For example C(2048), C(3072), or C(4096) for RSA.
                 type: int
             reuse_key:
                 description:
@@ -72,7 +79,8 @@ options:
             enhanced_key_usage:
                 description:
                     - The extended ways the key of the certificate can be used.
-                type: str
+                type: list
+                elements: str
             content_type:
                 description:
                     - he media type (MIME type) of the secret backing the certificate.
@@ -84,7 +92,8 @@ options:
             key_usage:
                 description:
                     - The extended ways the key of the certificate can be used.
-                type: str
+                type: list
+                elements: str
                 chioces:
                     - digitalSignature
                     - nonRepudiation
@@ -98,13 +107,13 @@ options:
             validity_in_months:
                 description:
                     - The duration that the certificate is valid in months.
-                type: str
+                type: int
             lifetime_actions:
                 description:
                     - Actions that will be performed by Key Vault over the lifetime of a certificate.
                 type: list
                 elements: dict
-                options:
+                suboptions:
                     action:
                         description:
                             - The type of the action.
@@ -130,22 +139,24 @@ options:
                 description:
                     - Subject alternative emails of the X509 object.
                     - Either subject or one of the subject alternative name parameters are required for creating a certificate.
-                type: str
+                type: list
+                elements: str
             certificate_transparency:
                 description:
                     - Indicates if the certificates generated under this policy should be published to certificate transparency logs.
-                type: str
+                type: bool
             san_dns_names:
                 description:
                     - Subject alternative DNS names of the X509 object.
                     - Either subject or one of the subject alternative name parameters are required for creating a certificate.
-                type: str
+                type: list
+                elements: str
             san_user_principal_names:
                 description:
                     - Subject alternative user principal names of the X509 object.
                     - Either subject or one of the subject alternative name parameters are required for creating a certificate.
-                type: str
-
+                type: list
+                elements: str
     enabled:
         description:
             - Whether the certificate is enabled for use.
@@ -161,7 +172,8 @@ options:
     x509_certificates:
         description:
             - The certificate or the certificate chain to merge.
-        type: str
+        type: list
+        elements: str
     backup:
         description:
             - The backup blob associated with a certificate bundle.
@@ -242,7 +254,7 @@ certificates:
                 - CER contents of the X509 certificate.
             type: str
             returned: always
-            sample: "bytearray(b'0\\x82\\......................\\x8d1s{\\x92S\\x16')"
+            sample: "bytearray(b'0.....................x16')"
         deleted_on:
             description:
                 - The time when the certificate was deleted, in UTC.
@@ -319,7 +331,7 @@ certificates:
                     description:
                         - Name of the referenced issuer object or reserved names.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: Self
                 subject:
                     description:
@@ -328,28 +340,28 @@ certificates:
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                         - This will be ignored when importing a certificate; the subject will be parsed from the imported certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: CN=anhui.com
                 san_emails:
                     description:
                         - Subject alternative emails of the X509 object.
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: None
                 san_dns_names:
                     description:
                         - Subject alternative DNS names of the X509 object.
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: None
                 san_user_principal_names:
                     description:
                         - Subject alternative user principal names of the X509 object.
                         - Either subject or one of the subject alternative name parameters are required for creating a certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: None
                 exportable:
                     description:
@@ -361,13 +373,13 @@ certificates:
                     description:
                         - The type of key pair to be used for the certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: RSA
                 key_size:
                     description:
                         - The key size in bits. For example: 2048, 3072, or 4096 for RSA.
                     type: int
-                    returned: always 
+                    returned: always
                     sample: 2048
                 reuse_key:
                     description:
@@ -397,13 +409,13 @@ certificates:
                     description:
                         - If not specified, the media type (MIME type) of the secret backing the certificate.
                     type: str
-                    returned: always 
+                    returned: always
                     sample: application/x-pkcs12
                 validity_in_months:
                     description:
                         - The duration that the certificate is valid in months.
                     type: int
-                    returned: always 
+                    returned: always
                     sample: 12
                 lifetime_actions:
                     description:
@@ -506,7 +518,7 @@ try:
     from azure.core.polling import LROPoller
 
     import logging
-    logging.basicConfig(filename='log.log',  level=logging.INFO)
+    logging.basicConfig(filename='log.log', level=logging.INFO)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -676,10 +688,10 @@ def deleted_certificatebundle_to_dict(certificate):
 
 
 policy_spec = dict(
-    issuer_name=dict(type='str'),
+    issuer_name=dict(type='str', choices=['self', 'unknown']),
     subject=dict(type='str'),
     exportable=dict(type='bool',),
-    key_type=dict(type='str', choices=['EC', 'EC_HSM', 'RSA', 'RSA-HSM', 'oct', 'oct-HSM']),
+    key_type=dict(type='str', choices=['EC', 'EC-HSM', 'RSA', 'RSA-HSM', 'oct', 'oct-HSM']),
     key_size=dict(type='int'),
     reuse_key=dict(type='bool',),
     key_curve_name=dict(type='str', choices=['P-256', 'P-384', 'P-521', 'P-256K']),
@@ -687,7 +699,8 @@ policy_spec = dict(
     key_usage=dict(
         type='list',
         elements='str',
-        choices=['digitalSignature', 'nonRepudiation', 'keyEncipherment', 'dataEncipherment', 'keyAgreement', 'keyCertSign', 'cRLSign', 'encipherOnly', 'decipherOnly']
+        choices=['digitalSignature', 'nonRepudiation', 'keyEncipherment', 'dataEncipherment',
+                 'keyAgreement', 'keyCertSign', 'cRLSign', 'encipherOnly', 'decipherOnly']
     ),
     content_type=dict(type='str', choices=['application/x-pkcs12', 'application/x-pem-file']),
     validity_in_months=dict(type='int',),
@@ -710,24 +723,23 @@ policy_spec = dict(
 
 class AzureRMKeyVaultCertificate(AzureRMModuleBase):
     def __init__(self):
-        self.module_arg_spec = dict(name=dict(type='str'),
+        self.module_arg_spec = dict(name=dict(type='str', required=True),
                                     vault_uri=dict(type='str', required=True),
                                     policy=dict(type='dict', options=policy_spec),
                                     enabled=dict(type='bool'),
                                     password=dict(type='str', no_log=True),
-                                    cert=dict(type='str'),
+                                    cert_data=dict(type='str'),
                                     x509_certificates=dict(type='list', elements='str'),
                                     backup=dict(type='str'),
                                     state=dict(
                                         type='str',
                                         required=True,
-                                        choices=['generate', 'import', 'delete', 'purge', 'backup', 'restore', 'recover', 'merge']),
-                                   )
+                                        choices=['generate', 'import', 'delete', 'purge', 'backup', 'restore', 'recover', 'merge']))
         self.vault_uri = None
         self.name = None
         self.policy = None
         self.enabled = None
-        self.cert = None
+        self.cert_data = None
         self.password = None
         self.backup = None
         self.x509_certificates = None
@@ -869,9 +881,9 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
                                            lifetime_actions=lifetime_actions,
                                            san_user_principal_names=self.policy.get('san_user_principal_names'))
             poller = self._client.begin_create_certificate(certificate_name=self.name,
-                                                             policy=policy,
-                                                             enabled=self.enabled,
-                                                             tags=self.tags)
+                                                           policy=policy,
+                                                           enabled=self.enabled,
+                                                           tags=self.tags)
             poller.result()
             self.log("Generate a new certificate")
 
@@ -890,7 +902,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
 
         try:
             response = self._client.import_certificate(certificate_name=self.name,
-                                                       certificate_bytes=self.cert.encode('utf-8'),
+                                                       certificate_bytes=self.cert_data.encode('utf-8'),
                                                        enabled=self.enabled,
                                                        password=self.password,
                                                        tags=self.tags)
@@ -988,7 +1000,6 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
                                                       enabled=self.enabled,
                                                       tags=self.tags,
                                                       x509_certificates=self.x509_certificates)
-                                                      
             if response is not None:
                 return certificatebundle_to_dict(response)
         except Exception as ec:
@@ -1007,7 +1018,6 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
                                                                   version=None,
                                                                   enabled=self.enabled,
                                                                   tags=self.tags)
-                                                      
             if response is not None:
                 return certificatebundle_to_dict(response)
         except Exception as ec:
@@ -1024,7 +1034,6 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBase):
         try:
             response = self._client.update_certificate_policy(certificate_name=self.name,
                                                               policy=self.policy)
-                                                      
             if response is not None:
                 return policy_bundle_to_dict(response)
 
