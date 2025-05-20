@@ -73,6 +73,10 @@ options:
             - empty
             - import
             - copy
+            - upload
+            - fromimage
+            - restore
+            - uploadpreparedsecure
     storage_account_id:
         description:
             - The full path to the storage account the image is to be imported from.
@@ -95,6 +99,8 @@ options:
         choices:
             - linux
             - windows
+            - Linux
+            - Windows
     disk_size_gb:
         description:
             - Size in GB of the managed disk to be created.
@@ -210,7 +216,87 @@ options:
         choices:
             - Enabled
             - Disabled
-
+    write_accelerator_enabled:
+        description:
+            - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+        type: bool
+    disk_access_id:
+        description:
+            - ARM ID of the DiskAccess resource for using private endpoints on disks.
+        type: str
+    performance_plus:
+        description:
+            - Set this flag to true to get a boost on the performance target of the disk deployed, see here on the respective performance target.
+            - This flag can only be set on disk creation time and cannot be disabled after enabled.
+        type: bool
+    upload_size_bytes:
+        description:
+            - If I(create_option=upload), this is the size of the contents of the upload including the VHD footer.
+            - This value should be between 20972032 (20 MiB + 512 bytes for the VHD footer) and 35183298347520 bytes (32 TiB + 512 bytes for the VHD footer).
+        type: int
+    gallery_image_reference:
+        description:
+            - Required if creating from a Gallery Image.
+            - The id/sharedGalleryImageId/communityGalleryImageId of the ImageDiskReference
+              will be the ARM id of the shared galley image version from which to create a disk.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - A relative uri containing either a Platform Image Repository, user image, or Azure Compute Gallery image reference.
+                type: str
+            shared_gallery_image_id:
+                description:
+                    - A relative uri containing a direct shared Azure Compute Gallery image reference.
+                type: str
+            community_gallery_image_id:
+                description:
+                    - A relative uri containing a community Azure Compute Gallery image reference.
+                type: str
+    image_reference:
+        description:
+            - Disk source information for PIR or user images or Gallery Image.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - A relative uri containing either a Platform Image Repository, user image, or Azure Compute Gallery image reference.
+                type: str
+            shared_gallery_image_id:
+                description:
+                    - A relative uri containing a direct shared Azure Compute Gallery image reference.
+                type: str
+            community_gallery_image_id:
+                description:
+                    - A relative uri containing a community Azure Compute Gallery image reference.
+                type: str
+    logical_sector_size:
+        description:
+            - Logical sector size in bytes for Ultra disks.
+            - Supported values are 512 ad 4096. 4096 is the default.
+        type: int
+    source_resource_id:
+        description:
+            - If I(create_option=copy), this is the ARM id of the source snapshot or disk.
+        type: str
+    security_profile:
+        description:
+            - Contains the security related information for the resource.
+        type: dict
+        suboptions:
+            security_type:
+                description:
+                    - Specifies the SecurityType of the VM. Applicable for OS disks only.
+                type: str
+                choices:
+                    - TrustedLaunch
+                    - ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey
+                    - ConfidentialVM_DiskEncryptedWithPlatformKey
+                    - ConfidentialVM_DiskEncryptedWithCustomerKey
+            secure_vm_disk_encryption_set_id:
+                description:
+                    - ResourceId of the disk encryption set associated to Confidential VM supported disk encrypted with customer managed key.
+                type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -236,6 +322,56 @@ EXAMPLES = '''
     storage_account_id: /subscriptions/<uuid>/resourceGroups/myResourceGroup/providers/Microsoft.Storage/storageAccounts/storageaccountname
     os_type: windows
     storage_account_type: Premium_LRS
+
+- name: Create managed disk with I(create_option=upload)
+  azure_rm_manageddisk:
+    resource_group: myResourceGroup
+    name: mymanageddisk
+    storage_account_type: "Standard_LRS"
+    upload_size_bytes: 20972032
+    network_access_policy: DenyAll
+    public_network_access: Disabled
+    create_option: upload
+
+- name: Create managed disk with I(create_option=fromimage)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 1024
+    network_access_policy: DenyAll
+    public_network_access: Disabled
+    create_option: fromimage
+    os_type: windows
+    security_profile:
+      security_type: TrustedLaunch
+    gallery_image_reference:
+      id: "/subscriptions/xxxx/resourceGroups/testRG/providers/Microsoft.Compute/galleries/Gallery01/images/windowsVMimage/versions/0.0.1"
+
+- name: Create managed disk with I(create_option=restore)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}"
+    storage_account_type: "Standard_LRS"
+    disk_size_gb: 1024
+    network_access_policy: DenyAll
+    public_network_access: Disabled
+    performance_plus: true
+    source_resource_id: "/subscriptions/xxxx/resourceGroups/testRG/providers/Microsoft.Compute/
+                         restorePointCollections/point01/restorePoints/restorepoint01/diskRestorePoints/testVM_OsDisk_1"
+    create_option: restore
+
+- name: Create managed disk with I(create_option=uploadpreparedsecure)
+  azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}"
+    name: "md{{ rpfx }}"
+    storage_account_type: "Standard_LRS"
+    upload_size_bytes: 20972032
+    network_access_policy: DenyAll
+    public_network_access: Disabled
+    create_option: uploadpreparedsecure
+    security_profile:
+      security_type: TrustedLaunch
 
 - name: Mount the managed disk to VM
   azure_rm_manageddisk:
@@ -391,6 +527,65 @@ state:
             type: str
             returned: always
             sample: Enabled
+        disk_access_id:
+            description:
+                - ARM ID of the DiskAccess resource for using private endpoints on disks.
+            type: str
+            returned: always
+            sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
+        performance_plus:
+            description:
+                - The flag of the performance target of the disk deployed.
+            type: bool
+            returned: always
+            sample: False
+        upload_size_bytes:
+            description:
+                - This is the size of the contents of the upload including the VHD footer.
+            type: int
+            returned: always
+            sample: None
+        image_reference:
+            description:
+                - Disk source information for PIR or user images or Gallery Image.
+            type: dict
+            returned: always
+            sample: None
+        gallery_image_reference:
+            description:
+                - The Gallery Image info.
+            type: dict
+            returned: always
+            sample: None
+        logical_sector_size:
+            description:
+                - Logical sector size in bytes for Ultra disks.
+            type: int
+            returned: always
+            sample: None
+        source_resource_id:
+            description:
+                - This is the ARM id of the source snapshot or disk.
+            type: str
+            returned: always
+            sample: None
+        security_profile:
+            description:
+                - The security related information for the resource.
+            type: complex
+            contains:
+                security_type:
+                    description:
+                        - Specifies the SecurityType of the VM.
+                    type: str
+                    returned: when-used
+                    sample: TrustedLaunch
+                secure_vm_disk_encryption_set_id:
+                    description:
+                        -  ResourceId of the disk encryption set associated to Confidential VM supported disk encrypted with customer managed key.
+                    type: str
+                    returned: when-used
+                    sample: None
 changed:
     description:
         - Whether or not the resource has changed.
@@ -425,7 +620,7 @@ def managed_disk_to_dict(managed_disk):
         location=managed_disk.location,
         tags=managed_disk.tags,
         create_option=create_data.create_option.lower(),
-        source_uri=create_data.source_uri or create_data.source_resource_id,
+        source_uri=create_data.source_uri,
         disk_size_gb=managed_disk.disk_size_gb,
         os_type=managed_disk.os_type.lower() if managed_disk.os_type else None,
         storage_account_type=managed_disk.sku.name if managed_disk.sku else None,
@@ -439,7 +634,27 @@ def managed_disk_to_dict(managed_disk):
         disk_m_bps_read_only=managed_disk.disk_m_bps_read_only,
         tier=managed_disk.tier,
         public_network_access=managed_disk.public_network_access,
-        network_access_policy=managed_disk.network_access_policy
+        network_access_policy=managed_disk.network_access_policy,
+        disk_access_id=managed_disk.disk_access_id,
+        source_resource_id=create_data.source_resource_id,
+        storage_account_id=create_data.storage_account_id,
+        upload_size_bytes=create_data.upload_size_bytes,
+        logical_sector_size=create_data.logical_sector_size,
+        performance_plus=create_data.performance_plus,
+        gallery_image_reference=dict(
+            id=create_data.gallery_image_reference.id,
+            shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
+            community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
+        ) if create_data.gallery_image_reference is not None else None,
+        image_reference=dict(
+            id=create_data.image_reference.id,
+            shared_gallery_image_id=create_data.image_reference.shared_gallery_image_id,
+            community_gallery_image_id=create_data.image_reference.community_gallery_image_id
+        ) if create_data.image_reference is not None else None,
+        security_profile=dict(
+            security_type=managed_disk.security_profile.security_type,
+            secure_vm_disk_encryption_set_id=managed_disk.security_profile.secure_vm_disk_encryption_set_id
+        ) if managed_disk.security_profile is not None else None
     )
 
 
@@ -470,7 +685,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             create_option=dict(
                 type='str',
-                choices=['empty', 'import', 'copy']
+                choices=['empty', 'import', 'copy', 'upload', 'fromimage', 'restore', 'uploadpreparedsecure']
             ),
             storage_account_id=dict(
                 type='str'
@@ -481,7 +696,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             ),
             os_type=dict(
                 type='str',
-                choices=['linux', 'windows']
+                choices=['linux', 'windows', 'Linux', 'Windows']
             ),
             disk_size_gb=dict(
                 type='int'
@@ -528,15 +743,60 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 type='str',
                 choices=['Enabled', 'Disabled']
             ),
+            write_accelerator_enabled=dict(
+                type='bool',
+            ),
             network_access_policy=dict(
                 type='str',
                 choices=['AllowAll', 'AllowPrivate', 'DenyAll']
+            ),
+            disk_access_id=dict(
+                type='str'
+            ),
+            performance_plus=dict(type='bool'),
+            upload_size_bytes=dict(type='int'),
+            gallery_image_reference=dict(
+                type='dict',
+                options=dict(
+                    id=dict(type='str'),
+                    shared_gallery_image_id=dict(type='str'),
+                    community_gallery_image_id=dict(type='str')
+                )
+            ),
+            image_reference=dict(
+                type='dict',
+                options=dict(
+                    id=dict(type='str'),
+                    shared_gallery_image_id=dict(type='str'),
+                    community_gallery_image_id=dict(type='str')
+                )
+            ),
+            logical_sector_size=dict(
+                type='int',
+            ),
+            source_resource_id=dict(
+                type='str'
+            ),
+            security_profile=dict(
+                type='dict',
+                options=dict(
+                    security_type=dict(
+                        type='str',
+                        choices=["TrustedLaunch", "ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey",
+                                 "ConfidentialVM_DiskEncryptedWithPlatformKey", "ConfidentialVM_DiskEncryptedWithCustomerKey"]
+                    ),
+                    secure_vm_disk_encryption_set_id=dict(type='str')
+                )
             )
         )
         required_if = [
             ('create_option', 'import', ['source_uri', 'storage_account_id']),
-            ('create_option', 'copy', ['source_uri']),
-            ('create_option', 'empty', ['disk_size_gb'])
+            ('create_option', 'copy', ['source_resource_id']),
+            ('create_option', 'empty', ['disk_size_gb']),
+            ('create_option', 'upload', ['upload_size_bytes']),
+            ('create_option', 'restore', ['source_resource_id']),
+            ('create_option', 'uploadpreparedsecure', ['upload_size_bytes', 'security_profile']),
+            ('network_access_policy', 'AllowPrivate', ['disk_access_id'])
         ]
         self.results = dict(
             changed=False,
@@ -565,8 +825,17 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         self.tier = None
         self.public_network_access = None
         self.network_access_policy = None
+        self.write_accelerator_enabled = None
+        self.disk_access_id = None
+        self.performance_plus = None
+        self.upload_size_bytes = None
+        self.source_resource_id = None
+        self.image_reference = None
+        self.gallery_image_reference = None
+        self.logical_sector_size = None
+        self.security_profile = None
 
-        mutually_exclusive = [['managed_by_extended', 'managed_by']]
+        mutually_exclusive = [['managed_by_extended', 'managed_by'], ['image_reference', 'gallery_image_reference']]
 
         super(AzureRMManagedDisk, self).__init__(
             derived_arg_spec=self.module_arg_spec,
@@ -605,6 +874,15 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.public_network_access = disk_instance.get('public_network_access')
             if self.network_access_policy is None:
                 self.network_access_policy = disk_instance.get('network_access_policy')
+            if self.disk_access_id is None:
+                self.disk_access_id = disk_instance.get('disk_access_id')
+            if self.upload_size_bytes is None:
+                self.upload_size_bytes = disk_instance.get('upload_size_bytes')
+            if self.image_reference is None:
+                self.image_reference = disk_instance.get('image_reference')
+            if self.gallery_image_reference is None:
+                self.gallery_image_reference = disk_instance.get('gallery_image_reference')
+
         result = disk_instance
 
         # need create or update
@@ -688,6 +966,7 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         data_disk = self.compute_models.DataDisk(lun=lun,
                                                  create_option=self.compute_models.DiskCreateOptionTypes.attach,
                                                  managed_disk=params,
+                                                 write_accelerator_enabled=self.write_accelerator_enabled,
                                                  caching=caching_options)
         vm.storage_profile.data_disks.append(data_disk)
         return self._update_vm(resource_group, vm_name, vm)
@@ -728,14 +1007,44 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             storage_account_type = self.disk_models.DiskSku(name=self.storage_account_type)
             disk_params['sku'] = storage_account_type
         disk_params['disk_size_gb'] = self.disk_size_gb
-        creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
+
         if self.create_option == 'import':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.import_enum
             creation_data['source_uri'] = self.source_uri
             creation_data['storage_account_id'] = self.storage_account_id
         elif self.create_option == 'copy':
             creation_data['create_option'] = self.disk_models.DiskCreateOption.copy
-            creation_data['source_resource_id'] = self.source_uri
+            creation_data['source_resource_id'] = self.source_resource_id
+        elif self.create_option == 'upload':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.upload
+            creation_data['upload_size_bytes'] = self.upload_size_bytes
+        elif self.create_option == 'fromimage':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.from_image
+            if self.image_reference is not None:
+                image = self.disk_models.ImageDiskReference(id=self.image_reference.get('id'),
+                                                            shared_gallery_image_id=self.image_reference.get('shared_gallery_image_id'),
+                                                            community_gallery_image_id=self.image_reference.get('community_gallery_image_id'))
+                creation_data['image_reference'] = image
+            elif self.gallery_image_reference is not None:
+                image = self.disk_models.ImageDiskReference(id=self.gallery_image_reference.get('id'),
+                                                            shared_gallery_image_id=self.gallery_image_reference.get('shared_gallery_image_id'),
+                                                            community_gallery_image_id=self.gallery_image_reference.get('community_gallery_image_id'))
+                creation_data['gallery_image_reference'] = image
+            else:
+                self.fail("When create_option=fromimage is configured, image_reference or gallery_image_reference must be configured")
+        elif self.create_option == 'restore':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.Restore
+        elif self.create_option == 'uploadpreparedsecure':
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.upload_prepared_secure
+            creation_data['upload_size_bytes'] = self.upload_size_bytes
+        else:
+            creation_data['create_option'] = self.disk_models.DiskCreateOption.empty
+        creation_data['logical_sector_size'] = self.logical_sector_size
+        creation_data['performance_plus'] = self.performance_plus
+        if self.security_profile is not None:
+            disk_id = self.security_profile.get('secure_vm_disk_encryption_set_id')
+            disk_params['security_profile'] = self.disk_models.DiskSecurityProfile(security_type=self.security_profile.get('security_type'),
+                                                                                   secure_vm_disk_encryption_set_id=disk_id)
         if self.os_type:
             disk_params['os_type'] = self.disk_models.OperatingSystemTypes(self.os_type.capitalize())
         else:
@@ -756,11 +1065,14 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             disk_params['network_access_policy'] = self.network_access_policy
         if self.public_network_access is not None:
             disk_params['public_network_access'] = self.public_network_access
+        if self.disk_access_id is not None:
+            disk_params['disk_access_id'] = self.disk_access_id
         disk_params['creation_data'] = creation_data
         return disk_params
 
     def create_or_update_managed_disk(self, parameter, update_flag):
         try:
+            parameter['tags'] = self.tags
             if update_flag:
                 poller = self.disk_client.disks.begin_update(self.resource_group,
                                                              self.name,
@@ -788,9 +1100,9 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             if not found_disk['storage_account_type'] == new_disk['sku'].name:
                 resp = True
         # Check how to implement tags
-        if new_disk.get('tags') is not None:
-            if not found_disk['tags'] == new_disk['tags']:
-                resp = True
+        update_tags, self.tags = self.update_tags(found_disk['tags'])
+        if update_tags:
+            resp = True
         if self.zone is not None:
             if not found_disk['zone'] == self.zone:
                 resp = True
@@ -812,6 +1124,12 @@ class AzureRMManagedDisk(AzureRMModuleBase):
             resp = True
         if self.public_network_access is not None and found_disk['public_network_access'] != self.public_network_access:
             resp = True
+        if self.disk_access_id is not None:
+            if found_disk['disk_access_id'] is not None:
+                if found_disk['disk_access_id'].lower() != self.disk_access_id.lower():
+                    resp = True
+            else:
+                resp = True
         return resp
 
     def delete_managed_disk(self):
@@ -836,10 +1154,10 @@ class AzureRMManagedDisk(AzureRMModuleBase):
         if vm_name:
             vm = self._get_vm(self.resource_group, vm_name)
             correspondence = next((d for d in vm.storage_profile.data_disks if d.name.lower() == disk.get('name').lower()), None)
-            caching_options = self.disk_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
+            caching_options = self.compute_models.CachingTypes[self.attach_caching] if self.attach_caching and self.attach_caching != '' else None
             if correspondence and correspondence.caching != caching_options:
                 resp = True
-                if correspondence.caching == 'none' and (self.attach_caching == '' or self.attach_caching is None):
+                if correspondence.caching == 'None' and (self.attach_caching == '' or self.attach_caching is None):
                     resp = False
         return resp
 

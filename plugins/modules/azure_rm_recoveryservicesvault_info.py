@@ -98,6 +98,12 @@ response:
             returned: always
             type: str
             sample: "Microsoft.RecoveryServices/vaults"
+        tags:
+            description:
+                - The resource tags.
+            returned: when-used
+            type: dict
+            sample: {'key1': 'value'}
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient

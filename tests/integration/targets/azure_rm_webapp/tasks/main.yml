@@ -5,7 +5,7 @@
 
 - name: Gather Resource Group info
   azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group_datalake }}"
   register: __rg_info
 
 - name: Fix resource prefix
@@ -35,24 +35,24 @@
 
 - name: Create a windows web app with non-exist app service plan
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}1"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}"
       is_linux: false
       sku: S1
 
 - name: Create a windows web app with existing app service plan
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}2"
     plan: "{{ win_plan_name }}"
   register: output
 
 - name: Stop the web app
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}2"
     plan: "{{ win_plan_name }}"
     app_state: stopped
@@ -65,7 +65,7 @@
 
 - name: Get the web app
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}2"
   register: stopped
 
@@ -76,7 +76,7 @@
 
 - name: Create a windows web app with existing app service plan, try to update some root level params
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}3"
     plan: "{{ win_plan_name }}"
     https_only: true
@@ -86,7 +86,7 @@
 
 - name: Get web app with resource group and tag
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}3"
     tags:
       - testwebapptag
@@ -99,7 +99,7 @@
 
 - name: Create a win web app with java run time specific
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}4"
     plan: "{{ win_plan_name }}"
     frameworks:
@@ -118,7 +118,7 @@
 
 - name: Get web app with name
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}4"
   register: output
 
@@ -131,7 +131,7 @@
 
 - name: Update app settings and framework
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}4"
     plan: "{{ win_plan_name }}"
     frameworks:
@@ -151,7 +151,7 @@
 
 - name: Get web app with name
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}4"
   register: output
 
@@ -164,7 +164,7 @@
 
 - name: Get web app with return publishing profile
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}4"
     return_publish_profile: true
   register: output
@@ -178,7 +178,7 @@
 
 - name: Purge all existing app settings
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}4"
     plan: "{{ win_plan_name }}"
     purge_app_settings: true
@@ -190,7 +190,7 @@
 
 - name: Create a win web app with python run time and php run time
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}5"
     plan: "{{ win_plan_name }}"
     frameworks:
@@ -208,7 +208,7 @@
 
 - name: Create a docker web app with some app settings
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}6"
     location: "{{ location }}"
     plan:
@@ -227,7 +227,7 @@
 
 - name: Create a docker web app with private acr registry
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}7"
     location: "{{ location }}"
     plan:
@@ -246,7 +246,7 @@
 
 - name: Create a linux web app with nodejs framework
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}8"
     location: "{{ location }}"
     plan:
@@ -259,7 +259,7 @@
 
 - name: Should be idempotent with linux web app created
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}8"
     location: "{{ location }}"
     plan:
@@ -276,7 +276,7 @@
 
 - name: Update nodejs framework
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}8"
     location: "{{ location }}"
     plan:
@@ -293,7 +293,7 @@
 
 - name: Create a linux web app with deployment source github
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}10"
     location: "{{ location }}"
     plan:
@@ -309,20 +309,13 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: Delete web app
-  azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
-    name: "{{ win_app_name }}8"
-    state: absent
-  register: output
-
 - name: Assert the web app was deleted
   ansible.builtin.assert:
     that: output.changed
 
 - name: Assert error that java is mutually exclusive with frameworks
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}11"
     plan: "{{ win_plan_name }}"
     frameworks:
@@ -335,7 +328,7 @@
 
 - name: Assert error when linux web app, only can specify one framework
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ linux_plan_name }}12"
     location: "{{ location }}"
     plan:
@@ -351,7 +344,7 @@
 
 - name: Create a linux web app with java tomcat container
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}13"
     location: "{{ location }}"
     plan:
@@ -371,7 +364,7 @@
 
 - name: Get facts with publish profile
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}13"
   no_log: true
   register: facts
@@ -594,10 +587,10 @@
 
 - name: Create a windows web app with site_auth_settings
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-auth"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-auth"
       is_linux: false
       sku: S1
@@ -620,10 +613,10 @@
 
 - name: Update the web app with site_auth_settings
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-auth"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-auth"
       is_linux: false
       sku: S1
@@ -646,7 +639,7 @@
 
 - name: Get the web app facts
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-auth"
   register: output
 
@@ -662,10 +655,10 @@
 
 - name: Create a windows web app with UserAssigned Identity
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
       sku: S1
@@ -683,7 +676,7 @@
 
 - name: Get the web app facts
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
   register: output
 
@@ -695,10 +688,10 @@
 
 - name: Update web app with SystemAssigned and UserAssigned Identity
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
       sku: S1
@@ -716,7 +709,7 @@
 
 - name: Get the web app facts
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
   register: output
 
@@ -729,10 +722,10 @@
 
 - name: Update web app with SystemAssigned and UserAssigned Identity - idempotent
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
       sku: S1
@@ -750,7 +743,7 @@
 
 - name: Get the web app facts
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
   register: output
 
@@ -763,10 +756,10 @@
 
 - name: Update web app with SystemAssigned
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
       sku: S1
@@ -781,7 +774,7 @@
 
 - name: Get the web app facts
   azure_rm_webapp_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "{{ win_app_name }}-identity"
   register: output
 
@@ -793,7 +786,7 @@
 
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     webapp_name: "{{ win_app_name }}13"
     name: "{{ slot1_name }}"
     location: "{{ location }}"
@@ -810,7 +803,7 @@
 
 - name: Create a webapp slot
   azure_rm_webappslot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     webapp_name: "{{ win_app_name }}13"
     name: "{{ slot1_name }}"
     location: "{{ location }}"
@@ -826,7 +819,7 @@
 
 - name: Update webapp slot (idempotence)
   azure_rm_webappslot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     webapp_name: "{{ win_app_name }}13"
     location: "{{ location }}"
     name: "{{ slot1_name }}"
@@ -841,7 +834,7 @@
 
 - name: Update webapp slot
   azure_rm_webappslot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     webapp_name: "{{ win_app_name }}13"
     location: "{{ location }}"
     name: "{{ slot1_name }}"
@@ -859,7 +852,7 @@
 
 - name: Swap webapp slot
   azure_rm_webappslot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     webapp_name: "{{ win_app_name }}13"
     location: "{{ location }}"
     name: "{{ slot1_name }}"
@@ -874,7 +867,7 @@
 
 - name: Stop webapp slot
   azure_rm_webappslot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     location: "{{ location }}"
     webapp_name: "{{ win_app_name }}13"
     name: "{{ slot1_name }}"
@@ -885,6 +878,25 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Delete the webapp resource
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ win_app_name }}1"
+    - "{{ win_app_name }}3"
+    - "{{ win_app_name }}4"
+    - "{{ win_app_name }}5"
+    - "{{ win_app_name }}6"
+    - "{{ win_app_name }}7"
+    - "{{ win_app_name }}8"
+    - "{{ win_app_name }}10"
+    - "{{ linux_app_name }}-siteconfig"
+    - "{{ linux_app_name }}-http20"
+    - "{{ win_app_name }}-auth"
+    - "{{ win_app_name }}-identity"
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

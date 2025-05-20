@@ -152,6 +152,18 @@ vms:
                     returned: always
                     type: str
                     sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/Microsoft.Compute/disks/diskName
+                write_accelerator_enabled:
+                    description:
+                        - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+                    type: bool
+                    returned: always
+                    sample: False
+        user_data:
+            description:
+                - UserData for the VM, which must be base-64 encoded.
+            type: str
+            returned: always
+            sample: None
         id:
             description:
                 - Resource ID.
@@ -206,6 +218,14 @@ vms:
             returned: always
             type: str
             sample: japaneast
+        maintenance_redeploy_status:
+            description:
+                - If maintenance is scheduled for this server set to something like example, otherwise empty dict
+            returned: always
+            type: dict
+            sample: { "is_customer_initiated_maintenance_allowed": true, "last_operation_result_code": "None", "maintenance_window_end_time":
+                    "2025-06-18T23:59:00.000Z", "maintenance_window_start_time": "2025-06-12T00:00:00.000Z", "pre_maintenance_window_end_time":
+                    "2025-06-11T23:30:00.000Z", "pre_maintenance_window_start_time": "2025-01-30T00:00:00.000Z" }
         name:
             description:
                 - Resource name.
@@ -499,6 +519,11 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
 
         new_result = {}
 
+        if instance.get('maintenance_redeploy_status') is not None:
+            new_result['maintenance_redeploy_status'] = instance['maintenance_redeploy_status']
+        else:
+            new_result['maintenance_redeploy_status'] = dict()
+
         if instance.get('vm_agent') is not None:
             new_result['vm_agent_version'] = instance['vm_agent'].get('vm_agent_version')
         else:
@@ -526,6 +551,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['state'] = 'present'
         new_result['location'] = vm.location
         new_result['vm_size'] = result['hardware_profile']['vm_size']
+        new_result['user_data'] = result.get('user_data', None)
 
         new_result['proximityPlacementGroup'] = result.get('proximity_placement_group')
         new_result['zones'] = result.get('zones', None)
@@ -533,7 +559,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['idenity'] = result.get('identity')
         new_result['capacity_reservation'] = dict()
         if result.get('capacity_reservation') is not None:
-            new_result['capacity_reservation']['capacity_reservation_group'] = result.get('capacity_reservation').as_dict()
+            new_result['capacity_reservation']['capacity_reservation_group'] = result.get('capacity_reservation', {}).get('capacity_reservation_group')
         os_profile = result.get('os_profile')
         if os_profile is not None:
             new_result['admin_username'] = os_profile.get('admin_username')
@@ -574,6 +600,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
             new_result['storage_container_name'] = url.path.split('/')[1]
             new_result['storage_blob_name'] = url.path.split('/')[-1]
 
+        new_result['os_disk'] = result['storage_profile']['os_disk']
         new_result['os_disk_caching'] = result['storage_profile']['os_disk']['caching']
         new_result['os_type'] = result['storage_profile']['os_disk']['os_type']
         new_result['data_disks'] = []
@@ -585,7 +612,8 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                 'disk_size_gb': disks[disk_index].get('disk_size_gb'),
                 'managed_disk_type': disks[disk_index].get('managed_disk', {}).get('storage_account_type'),
                 'managed_disk_id': disks[disk_index].get('managed_disk', {}).get('id'),
-                'caching': disks[disk_index].get('caching')
+                'caching': disks[disk_index].get('caching'),
+                'write_accelerator_enabled': disks[disk_index].get('write_accelerator_enabled', False)
             })
 
         new_result['network_interface_names'] = []

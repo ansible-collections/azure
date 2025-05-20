@@ -190,6 +190,66 @@ azure_managed_disk:
             type: str
             returned: always
             sample: Enabled
+        disk_access_id:
+            description:
+                - ARM ID of the DiskAccess resource for using private endpoints on disks.
+            type: str
+            returned: always
+            sample: '/subscriptions/*********/resourceGroups/myRG/providers/Microsoft.Compute/diskAccesses/diskacc'
+        performance_plus:
+            description:
+                - The flag of the performance target of the disk deployed.
+            type: bool
+            returned: always
+            sample: False
+        upload_size_bytes:
+            description:
+                - This is the size of the contents of the upload including the VHD footer.
+            type: int
+            returned: always
+            sample: None
+        gallery_image_reference:
+            description:
+                - The Gallery Image info.
+            type: dict
+            returned: always
+            sample: None
+        image_reference:
+            description:
+                - Disk source information for PIR or user images or Gallery Image.
+            type: dict
+            returned: always
+            sample: None
+        logical_sector_size:
+            description:
+                - Logical sector size in bytes for Ultra disks.
+            type: int
+            returned: always
+            sample: None
+        source_resource_id:
+            description:
+                - This is the ARM id of the source snapshot or disk.
+            type: str
+            returned: always
+            sample: None
+        security_profile:
+            description:
+                - The security related information for the resource.
+            type: complex
+            contains:
+                security_type:
+                    description:
+                        - Specifies the SecurityType of the VM.
+                    type: str
+                    returned: when-used
+                    sample: TrustedLaunch
+                secure_vm_disk_encryption_set_id:
+                    description:
+                        -  ResourceId of the disk encryption set associated to Confidential VM supported disk encrypted with customer managed key.
+                    type: str
+                    returned: when-used
+                    sample: None
+
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -316,7 +376,27 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             disk_m_bps_read_only=managed_disk.disk_m_bps_read_only,
             tier=managed_disk.tier,
             network_access_policy=managed_disk.network_access_policy,
-            public_network_access=managed_disk.public_network_access
+            public_network_access=managed_disk.public_network_access,
+            disk_access_id=managed_disk.disk_access_id,
+            source_resource_id=create_data.source_resource_id,
+            storage_account_id=create_data.storage_account_id,
+            upload_size_bytes=create_data.upload_size_bytes,
+            logical_sector_size=create_data.logical_sector_size,
+            performance_plus=create_data.performance_plus,
+            gallery_image_reference=dict(
+                id=create_data.gallery_image_reference.id,
+                shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,
+                community_gallery_image_id=create_data.gallery_image_reference.community_gallery_image_id
+            ) if create_data.gallery_image_reference is not None else None,
+            image_reference=dict(
+                id=create_data.image_reference.id,
+                shared_gallery_image_id=create_data.image_reference.shared_gallery_image_id,
+                community_gallery_image_id=create_data.image_reference.community_gallery_image_id
+            ) if create_data.image_reference is not None else None,
+            security_profile=dict(
+                security_type=managed_disk.security_profile.security_type,
+                secure_vm_disk_encryption_set_id=managed_disk.security_profile.secure_vm_disk_encryption_set_id
+            ) if managed_disk.security_profile is not None else None
         )
 
 

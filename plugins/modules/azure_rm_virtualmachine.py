@@ -155,6 +155,8 @@ options:
             - The I(community_gallery_image_id) can be fetched from shared gallery image GET call.
             - For Marketplace images, a dict with the keys I(publisher), I(offer), I(sku), and I(version).
             - Set I(version=latest) to get the most recent version of a given image.
+            - For share gallery image, a dict with the keys I(shared_gallery_image_id). Specified the shared gallery image unique id for vm deployment.
+              This can be fetched from shared gallery image GET call.
             - Required when creating.
         type: raw
     availability_set:
@@ -260,6 +262,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ephemeral_os_disk:
         description:
@@ -279,6 +283,10 @@ options:
                     - This value is used to identify data disks within the VM and therefore must be unique for each data disk attached to a VM.
                 required: true
                 type: int
+            name:
+                description:
+                    - The disk name.
+                type: str
             disk_size_gb:
                 description:
                     - The initial disk size in GB for blank data disks.
@@ -631,6 +639,11 @@ options:
                     - The flag that enables or disables a capability to have one or more managed data disks with UltraSSD_LRS storage account type on the VM.
                     - Managed disks with storage account type UltraSSD_LRS can be added to a virtual machine set only if this property is enabled.
                 type: bool
+    user_data:
+        description:
+            - UserData for the VM, which must be base-64 encoded.
+            - Customer should notpass any secrets in here. Minimum api-version '2021-03-01'.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -714,6 +727,7 @@ EXAMPLES = '''
       - lun: 0
         managed_disk_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/myDisk"
       - lun: 1
+        name: newdisk
         disk_size_gb: 128
         managed_disk_type: Premium_LRS
 
@@ -964,6 +978,7 @@ azure_vm:
                     "id": "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.Compute/proximityPlacementGroups/testid13"
             },
             "CapacityReservation": {},
+            "UserData": Null,
             "hardwareProfile": {
                 "vmSize": "Standard_D1"
             },
@@ -1202,7 +1217,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_disk_name=dict(type='str'),
             proximity_placement_group=dict(type='dict', options=proximity_placement_group_spec),
             capacity_reservation_group=dict(type='dict', options=capacity_reservation_group_spec),
-            os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
+            os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows'], default='Linux'),
             public_ip_allocation_method=dict(type='str', choices=['Dynamic', 'Static', 'Disabled'], default='Static',
                                              aliases=['public_ip_allocation']),
             open_ports=dict(type='list', elements='str'),
@@ -1230,6 +1245,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 elements='dict',
                 options=dict(
                     lun=dict(type='int', required=True),
+                    name=dict(type='str'),
                     disk_size_gb=dict(type='int'),
                     disk_encryption_set=dict(type='str'),
                     managed_disk_id=dict(type='str'),
@@ -1275,7 +1291,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 options=dict(
                     ultra_ssd_enabled=dict(type='bool')
                 )
-            )
+            ),
+            user_data=dict(type='str'),
         )
 
         self.resource_group = None
@@ -1332,6 +1349,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.security_profile = None
         self.additional_capabilities = None
         self.swap_os_disk = None
+        self.user_data = None
 
         self.results = dict(
             changed=False,
@@ -1460,6 +1478,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     )
                 elif self.image.get('community_gallery_image_id') is not None:
                     image_reference = self.compute_models.ImageReference(community_gallery_image_id=self.image['community_gallery_image_id'])
+                elif self.image.get('shared_gallery_image_id') is not None:
+                    image_reference = self.compute_models.ImageReference(shared_gallery_image_id=self.image['shared_gallery_image_id'])
                 elif self.image.get('name'):
                     custom_image = True
                     image_reference = self.get_custom_image_reference(
@@ -1831,15 +1851,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.results['actions'].append('Created VM {0}'.format(self.name))
 
                     # Validate parameters
-                    if not self.admin_username:
+                    if not self.admin_username and not self.swap_os_disk:
                         self.fail("Parameter error: admin_username required when creating a virtual machine.")
 
-                    if self.os_type == 'Linux':
-                        if disable_ssh_password and not self.ssh_public_keys:
+                    if self.os_type == 'Linux' or self.os_type == 'linux':
+                        if disable_ssh_password and not self.ssh_public_keys and not self.swap_os_disk:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
-
-                    if not image_reference:
-                        self.fail("Parameter error: an image is required when creating a virtual machine.")
 
                     availability_set_resource = None
                     if self.availability_set:
@@ -1931,24 +1948,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     vm_resource = self.compute_models.VirtualMachine(
                         location=self.location,
                         tags=self.tags,
-                        os_profile=self.compute_models.OSProfile(
-                            admin_username=self.admin_username,
-                            computer_name=self.short_hostname,
-                        ),
                         hardware_profile=self.compute_models.HardwareProfile(
                             vm_size=self.vm_size
-                        ),
-                        storage_profile=self.compute_models.StorageProfile(
-                            os_disk=self.compute_models.OSDisk(
-                                name=self.os_disk_name if self.os_disk_name else self.storage_blob_name,
-                                vhd=vhd,
-                                managed_disk=managed_disk,
-                                create_option=self.compute_models.DiskCreateOptionTypes.from_image,
-                                caching=self.os_disk_caching,
-                                disk_size_gb=self.os_disk_size_gb,
-                                diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None
-                            ),
-                            image_reference=image_reference,
                         ),
                         network_profile=self.compute_models.NetworkProfile(
                             network_interfaces=nics
@@ -1958,7 +1959,40 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         capacity_reservation=self.compute_models.CapacityReservationProfile(capacity_reservation_group=capacity_reservation_group_resource),
                         plan=plan,
                         zones=self.zones,
+                        user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
+
+                    if self.swap_os_disk is not None:
+                        storage_profile = self.compute_models.StorageProfile(
+                            os_disk=self.compute_models.OSDisk(
+                                name=swap_os_disk.get('name'),
+                                managed_disk=swap_os_disk.get('managed_disk'),
+                                os_type=self.os_type,
+                                create_option='attach',
+                            ),
+                            image_reference=image_reference
+                        )
+                        os_profile = None
+                    else:
+                        storage_profile = self.compute_models.StorageProfile(
+                            os_disk=self.compute_models.OSDisk(
+                                name=self.os_disk_name if self.os_disk_name else self.storage_blob_name,
+                                vhd=vhd,
+                                managed_disk=managed_disk,
+                                create_option=self.compute_models.DiskCreateOptionTypes.from_image,
+                                caching=self.os_disk_caching,
+                                disk_size_gb=self.os_disk_size_gb,
+                                diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None
+                            ),
+                            image_reference=image_reference
+                        )
+                        os_profile = self.compute_models.OSProfile(
+                            admin_username=self.admin_username,
+                            computer_name=self.short_hostname,
+                        )
+
+                    vm_resource.storage_profile = storage_profile
+                    vm_resource.os_profile = os_profile
 
                     if self.priority == 'Spot':
                         vm_resource.priority = self.priority
@@ -1988,7 +2022,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 type=self.vm_identity.get('type')
                             )
 
-                    if self.winrm:
+                    if self.winrm and vm_resource.os_profile is not None:
                         winrm_listeners = list()
                         for winrm_listener in self.winrm:
                             winrm_listeners.append(self.compute_models.WinRMListener(
@@ -2015,7 +2049,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             listeners=winrm_listeners
                         )
 
-                    if self.os_type == 'Windows':
+                    if (self.os_type == 'Windows' or self.os_type == 'windows') and vm_resource.os_profile is not None:
                         vm_resource.os_profile.windows_configuration = self.compute_models.WindowsConfiguration(
                             win_rm=self.winrm,
                             provision_vm_agent=self.windows_config['provision_vm_agent'] if self.windows_config is not None else True,
@@ -2032,18 +2066,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 enabled=self.boot_diagnostics['enabled'],
                                 storage_uri=storage_uri))
 
-                    if self.admin_password:
+                    if self.admin_password and vm_resource.os_profile is not None:
                         vm_resource.os_profile.admin_password = self.admin_password
 
-                    if self.custom_data:
+                    if self.custom_data and vm_resource.os_profile is not None:
                         # Azure SDK (erroneously?) wants native string type for this
                         vm_resource.os_profile.custom_data = to_native(base64.b64encode(to_bytes(self.custom_data)))
 
-                    if self.os_type == 'Linux':
+                    if (self.os_type == 'Linux' or self.os_type == 'linux') and vm_resource.os_profile is not None:
                         vm_resource.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
                             disable_password_authentication=self.linux_config['disable_password_authentication'] if self.linux_config else disable_ssh_password
                         )
-                    if self.ssh_public_keys:
+                    if self.ssh_public_keys and vm_resource.os_profile is not None:
                         ssh_config = self.compute_models.SshConfiguration()
                         ssh_config.public_keys = \
                             [self.compute_models.SshPublicKey(path=key['path'], key_data=key['key_data']) for key in self.ssh_public_keys]
@@ -2105,7 +2139,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                             data_disks.append(self.compute_models.DataDisk(
                                 lun=data_disk['lun'],
-                                name=disk_name,
+                                name=data_disk.get('name') if data_disk.get('name') is not None else disk_name,
                                 vhd=data_disk_vhd,
                                 caching=data_disk['caching'],
                                 create_option=create_option,
@@ -2214,6 +2248,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             image_reference = self.compute_models.ImageReference(
                                 id=vm_dict['storage_profile']['image_reference']['id']
                             )
+                        elif 'shared_gallery_image_i' in vm_dict['storage_profile'].keys():
+                            image_reference = self.compute_models.ImageReference(
+                                shared_gallery_image_id=vm_dict['storage_profile']['image_reference']['shared_gallery_image_id']
+                            )
                         elif 'community_gallery_image_id' in vm_dict['storage_profile'].keys():
                             image_reference = self.compute_models.ImageReference(
                                 community_gallery_image_id=vm_dict['storage_profile']['image_reference']['community_gallery_image_id']
@@ -2251,7 +2289,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         capacity_reservation=self.compute_models.CapacityReservationProfile(capacity_reservation_group=capacity_reservation_group_resource),
                         network_profile=self.compute_models.NetworkProfile(
                             network_interfaces=nics
-                        )
+                        ),
+                        user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
 
                     if swap_os_disk_flag:
@@ -2283,6 +2322,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         vm_resource.license_type = self.license_type
 
                     if self.vm_identity is not None:
+                        current_user_assigned_identities_dict = {}
                         # If 'append' is set to True save current user assigned managed identities to use later
                         if (self.vm_identity.get('user_assigned_identities', {}) is not None
                                 and self.vm_identity.get('user_assigned_identities', {}).get('append', False) is True):

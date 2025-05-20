@@ -7,9 +7,6 @@
     - name: Set facts
       ansible.builtin.include_vars: vars.yml
 
-    - name: Refresh inventory
-      ansible.builtin.meta: refresh_inventory
-
     - name: Test vm_name_2 in Inventory
       ansible.builtin.assert:
         that:

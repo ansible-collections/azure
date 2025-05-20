@@ -1,0 +1,157 @@
+- name: Prepare random name for Profile & EndPoint & Origin Group & Origin
+  ansible.builtin.set_fact:
+    profile: "prof-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    endpoint: "endpoint-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    origin_group: "origin-group-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    ruleset: "ruleset{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    origin: "origin-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    route: "route-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    rule1: "rule1{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    rule2: "rule2{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+
+- name: Create Standard Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    location: "Global"
+    resource_group: "{{ resource_group }}"
+    sku: "standard_azurefrontdoor"
+    state: "present"
+
+- name: Create Ruleset
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+
+- name: Create Rule 1
+  azure_rm_afdrules:
+    name: "{{ rule1 }}"
+    rule_set_name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    match_processing_behavior: Continue
+    order: 1
+    actions:
+      - name: ModifyResponseHeader
+        header_action: Append
+        header_name: Content-Security-Policy
+        value: "frame-ancestors 'testing'"
+      - name: ModifyRequestHeader
+        header_action: Overwrite
+        header_name: Content-Security-Policy
+        value: "frame-ancestors 'testing'"
+    conditions:
+      - name: UrlPath
+        match_values:
+          - ".auth"
+        negate_condition: false
+        operator: "BeginsWith"
+        transforms:
+          - Lowercase
+    state: "present"
+  register: output
+
+- name: Assert the resource was created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Update Rule 1 (idempotent test)
+  azure_rm_afdrules:
+    name: "{{ rule1 }}"
+    rule_set_name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    match_processing_behavior: Continue
+    order: 1
+    actions:
+      - name: ModifyResponseHeader
+        header_action: Append
+        header_name: Content-Security-Policy
+        value: "frame-ancestors 'testing'"
+      - name: ModifyRequestHeader
+        header_action: Overwrite
+        header_name: Content-Security-Policy
+        value: "frame-ancestors 'testing'"
+    conditions:
+      - name: UrlPath
+        match_values:
+          - ".auth"
+        negate_condition: false
+        operator: "BeginsWith"
+        transforms:
+          - Lowercase
+    state: "present"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.id
+
+- name: Load Rule info
+  azure_rm_afdrules_info:
+    name: "{{ rule1 }}"
+    rule_set_name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert the resource has the proper values set
+  ansible.builtin.assert:
+    that:
+      - output.afdrules | length == 1
+      - output.afdrules[0].actions | length == 2
+      - output.afdrules[0].conditions | length == 1
+      - output.afdrules[0].id
+      - output.afdrules[0].match_processing_behavior == "Continue"
+      - output.afdrules[0].order == 1
+      - output.afdrules[0].rule_set_name == "{{ ruleset }}"
+      - not output.changed
+
+- name: Delete Rule
+  azure_rm_afdrules:
+    name: "{{ rule1 }}"
+    rule_set_name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Delete Rule (idempotent test)
+  azure_rm_afdrules:
+    name: "{{ rule1 }}"
+    rule_set_name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Create Ruleset
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: Delete Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    location: "Global"
+    resource_group: "{{ resource_group }}"
+    sku: "standard_azurefrontdoor"
+    state: "absent"

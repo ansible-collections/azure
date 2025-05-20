@@ -22,6 +22,7 @@
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
+    sku: Standard
     name: "{{ public_ip_name }}"
 
 - name: Create security group
@@ -169,6 +170,9 @@
   ansible.builtin.assert:
     that:
       - not output.changed
+
+- name: Test encrypted images
+  ansible.builtin.include_tasks: azure_test_encrypted.yml
 
 - name: Delete empty disk
   azure_rm_manageddisk:

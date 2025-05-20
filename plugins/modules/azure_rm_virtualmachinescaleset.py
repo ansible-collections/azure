@@ -150,6 +150,10 @@ options:
             - Specifies the size of the operating system disk in gigabytes.
             - This can be used to overwrite the size of the disk in a virtual machine image.
         type: int
+    os_disk_encryption_set:
+        description:
+            - The resource ID of the disk encryption set for the OS disk.
+        type: str
     os_type:
         description:
             - Base type of operating system.
@@ -157,6 +161,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ephemeral_os_disk:
         description:
@@ -208,6 +214,10 @@ options:
                     - ReadOnly
                     - ReadWrite
                 default: ReadOnly
+            disk_encryption_set:
+                description:
+                    - The resource ID of the disk encryption set for the data disks.
+                type: str
     virtual_network_resource_group:
         description:
             - When creating a virtual machine, if a specific virtual network from another resource group should be
@@ -367,6 +377,19 @@ options:
                         description:
                             - Specifies whether vTPM should be enabled on the virtual machine scalset.
                         type: bool
+    application_security_groups:
+        description:
+            - Specifies an array of references to application security group. Resource ID of the application security group.
+        type: list
+        elements: str
+    private_ip_address_version:
+        description:
+            - Available from Api-Version 2017-03-30 onwards, it represents whether the specific ipconfiguration is C(IPv4) or C(IPv6).
+            - Default is taken as IPv4.
+        type: str
+        choices:
+            - IPv4
+            - IPv6
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -568,110 +591,129 @@ azure_vmss:
     returned: always
     type: dict
     sample: {
-        "properties": {
-            "overprovision": true,
-            "platformFaultDomainCount": 1,
-            "orchestrationMode": "Flexible",
-             "scaleInPolicy": {
-                    "rules": [
-                        "NewestVM"
-                    ]
-            },
-            "singlePlacementGroup": true,
-            "upgradePolicy": {
-                "mode": "Manual"
-            },
-            "virtualMachineProfile": {
-                "networkProfile": {
-                    "networkInterfaceConfigurations": [
-                        {
-                            "name": "testvmss",
-                            "properties": {
-                                "dnsSettings": {
-                                    "dnsServers": []
-                                },
-                                "enableAcceleratedNetworking": false,
-                                "ipConfigurations": [
-                                    {
-                                        "name": "default",
-                                        "properties": {
-                                            "privateIPAddressVersion": "IPv4",
-                                            "subnet": {
-                                                "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/virtualNetworks/testvnet/subnets/testsubnet"
-                                            }
-                                        }
-                                    }
-                                ],
-                                "primary": true
-                            }
-                        }
-                    ]
-                },
-                "osProfile": {
-                    "adminUsername": "testuser",
-                    "computerNamePrefix": "testvmss",
-                    "linuxConfiguration": {
-                        "disablePasswordAuthentication": true,
-                        "ssh": {
-                            "publicKeys": [
-                                {
-                                    "keyData": "",
-                                    "path": "/home/testuser/.ssh/authorized_keys"
-                                }
-                            ]
-                        }
-                    },
-                    "secrets": []
-                },
-                "scheduledEventsProfile": {
-                        "terminateNotificationProfile": {
-                            "enable": true,
-                            "notBeforeTimeout": "PT10M"
-                        }
-                },
-                "storageProfile": {
-                    "dataDisks": [
-                        {
-                            "caching": "ReadWrite",
-                            "createOption": "empty",
-                            "diskSizeGB": 64,
-                            "lun": 0,
-                            "managedDisk": {
-                                "storageAccountType": "Standard_LRS"
-                            }
-                        }
-                    ],
-                    "imageReference": {
-                        "offer": "0001-com-ubuntu-server-focal",
-                        "publisher": "canonical",
-                        "sku": "20_04-lts-gen2",
-                        "version": "20.04.202111210"
-                    },
-                    "securityProfile": {
-                        "encryptionAtHost": false,
-                        "securityType": "TrustedLaunch",
-                        "uefiSettings": {
-                            "secureBootEnabled": true,
-                            "vTpmEnabled": false
-                        }
-                    },
-                    "osDisk": {
-                        "caching": "ReadWrite",
-                        "createOption": "fromImage",
-                        "managedDisk": {
-                            "storageAccountType": "Standard_LRS"
-                        }
-                    }
-                }
-            }
-        },
+        "constrained_maximum_capacity": false,
+        "etag": "3",
+        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Compute/virtualMachineScaleSets/testVMSStestvmss",
+        "location": "eastus",
+        "name": "testVMSStestvmss",
+        "orchestration_mode": "Flexible",
+        "platform_fault_domain_count": 1,
+        "provisioning_state": "Succeeded",
+        "single_placement_group": false,
         "sku": {
-            "capacity": 2,
-            "name": "Standard_DS1_v2",
+            "capacity": 1,
+            "name": "Standard_A1_v2",
             "tier": "Standard"
         },
-        "tags": null,
-        "type": "Microsoft.Compute/virtualMachineScaleSets"
+        "tags": {
+            "key2": "value2",
+            "key3": "value3"
+        },
+        "time_created": "2025-04-22T08:03:29.427822Z",
+        "type": "Microsoft.Compute/virtualMachineScaleSets",
+        "unique_id": "da4393f5-6060-4a0e-8ae5-7616316402b8",
+        "upgrade_policy": {
+            "mode": "Manual"
+        },
+        "virtual_machine_profile": {
+            "network_profile": {
+                "network_api_version": "2020-11-01",
+                "network_interface_configurations": [
+                    {
+                        "auxiliary_mode": "None",
+                        "auxiliary_sku": "None",
+                        "delete_option": "Delete",
+                        "disable_tcp_state_tracking": false,
+                        "dns_settings": {
+                            "dns_servers": []
+                        },
+                        "enable_ip_forwarding": false,
+                        "ip_configurations": [
+                            {
+                                "application_gateway_backend_address_pools": [],
+                                "application_security_groups": [
+                                    {
+                                        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/applicationSecurityGroups/apptestvmss02"
+                                    },
+                                    {
+                                        "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/applicationSecurityGroups/apptestvmss"
+                                    }
+                                ],
+                                "load_balancer_backend_address_pools": [],
+                                "name": "default",
+                                "primary": true,
+                                "private_ip_address_version": "IPv4",
+                                "public_ip_address_configuration": {
+                                    "idle_timeout_in_minutes": 4,
+                                    "ip_tags": [],
+                                    "name": "instancepublicip",
+                                    "public_ip_address_version": "IPv4"
+                                },
+                                "subnet": {
+                                    "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Network/virtualNetworks/VMSStestVnet/subnets/VMSStestSubnet"
+                                }
+                            }
+                        ],
+                        "name": "testVMSStestvmss",
+                        "primary": true
+                    }
+                ]
+            },
+            "os_profile": {
+                "admin_username": "testuser",
+                "allow_extension_operations": true,
+                "computer_name_prefix": "testVMSStestvmss",
+                "linux_configuration": {
+                    "disable_password_authentication": true,
+                    "patch_settings": {
+                        "assessment_mode": "ImageDefault",
+                        "patch_mode": "ImageDefault"
+                    },
+                    "provision_vm_agent": true,
+                    "ssh": {
+                        "public_keys": [
+                            {
+                                "key_data": "ssh-rsa xxxxxxxxxx xx.yy@qq.com",
+                                "path": "/home/testuser/.ssh/authorized_keys"
+                            }
+                        ]
+                    }
+                },
+                "require_guest_provision_signal": true,
+                "secrets": []
+            },
+            "storage_profile": {
+                "data_disks": [
+                    {
+                        "caching": "ReadWrite",
+                        "create_option": "Empty",
+                        "delete_option": "Delete",
+                        "disk_size_gb": 64,
+                        "lun": 0,
+                        "managed_disk": {
+                            "storage_account_type": "Standard_LRS"
+                        }
+                    }
+                ],
+                "image_reference": {
+                    "offer": "0001-com-ubuntu-server-focal",
+                    "publisher": "Canonical",
+                    "sku": "20_04-lts",
+                    "version": "20.04.202504030"
+                },
+                "os_disk": {
+                    "caching": "ReadWrite",
+                    "create_option": "FromImage",
+                    "delete_option": "Delete",
+                    "disk_size_gb": 30,
+                    "managed_disk": {
+                        "storage_account_type": "Standard_LRS"
+                    },
+                    "os_type": "Linux"
+                }
+            },
+            "time_created": "2025-04-22T08:53:17.201851Z"
+        }
     }
 '''  # NOQA
 
@@ -722,8 +764,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
             image=dict(type='raw'),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['ReadOnly', 'ReadWrite'],
                                  default='ReadOnly'),
-            os_type=dict(type='str', choices=['Linux', 'Windows'], default='Linux'),
+            os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows'], default='Linux'),
             managed_disk_type=dict(type='str', choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']),
+            os_disk_encryption_set=dict(type='str'),
             data_disks=dict(
                 type='list',
                 elements='dict',
@@ -734,7 +777,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     managed_disk_type=dict(
                         type='str',
                         choices=['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS', 'Premium_ZRS', 'StandardSSD_ZRS']
-                    )
+                    ),
+                    disk_encryption_set=dict(type='str')
                 )
             ),
             subnet_name=dict(type='str', aliases=['subnet']),
@@ -779,6 +823,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                 type='dict',
                 options=self.managed_identity_multiple_spec
             ),
+            application_security_groups=dict(
+                type='list',
+                elements='str'
+            ),
+            private_ip_address_version=dict(
+                type='str',
+                choices=['IPv4', 'IPv6']
+            )
         )
 
         self.resource_group = None
@@ -799,6 +851,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.image = None
         self.os_disk_caching = None
         self.managed_disk_type = None
+        self.os_disk_encryption_set = None
         self.data_disks = None
         self.os_type = None
         self.subnet_name = None
@@ -823,6 +876,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.security_profile = None
         self._managed_identity = None
         self.identity = None
+        self.application_security_groups = None
+        self.private_ip_address_version = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
         self.results = dict(
@@ -875,6 +930,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         application_gateway_backend_address_pools = None
         support_lb_change = True
         public_ip_address_configuration = None
+        application_security_groups = None
+        if self.application_security_groups is not None:
+            application_security_groups = [self.compute_models.SubResource(id=item) for item in self.application_security_groups]
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -1092,6 +1150,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         differences.append('load_balancer')
                         changed = True
 
+                if self.application_security_groups is not None:
+                    for item in nicConfigs[0]['ip_configurations'][0].get('application_security_groups', []):
+                        if item['id'] not in self.application_security_groups:
+                            self.application_security_groups.append(item['id'])
+                    if len(self.application_security_groups) != len(nicConfigs[0]['ip_configurations'][0].get('application_security_groups', [])):
+                        changed = True
+                        differences.append('application_security_groups')
+
                 if self.custom_data:
                     if self.custom_data != vmss_dict['virtual_machine_profile']['os_profile'].get('custom_data'):
                         differences.append('custom_data')
@@ -1173,7 +1239,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     self.log("Create virtual machine scale set {0}".format(self.name))
                     self.results['actions'].append('Created VMSS {0}'.format(self.name))
 
-                    if self.os_type == 'Linux':
+                    if self.os_type == 'Linux' or self.os_type == 'linux':
                         if disable_ssh_password and not self.ssh_public_keys:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
 
@@ -1189,7 +1255,12 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if not image_reference:
                         self.fail("Parameter error: an image is required when creating a virtual machine.")
 
-                    managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(storage_account_type=self.managed_disk_type)
+                    if self.os_disk_encryption_set:
+                        os_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set)
+                        managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(storage_account_type=self.managed_disk_type,
+                                                                                                       disk_encryption_set=os_disk_encryption_set)
+                    else:
+                        managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(storage_account_type=self.managed_disk_type)
 
                     if self.security_group:
                         nsg = self.parse_nsg()
@@ -1254,7 +1325,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                                                 primary=True,
                                                 load_balancer_backend_address_pools=load_balancer_backend_address_pools,
                                                 load_balancer_inbound_nat_pools=load_balancer_inbound_nat_pools,
-                                                application_gateway_backend_address_pools=application_gateway_backend_address_pools
+                                                application_gateway_backend_address_pools=application_gateway_backend_address_pools,
+                                                application_security_groups=application_security_groups,
+                                                private_ip_address_version=self.private_ip_address_version
                                             )
                                         ],
                                         enable_accelerated_networking=self.enable_accelerated_networking,
@@ -1286,7 +1359,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.admin_password:
                         vmss_resource.virtual_machine_profile.os_profile.admin_password = self.admin_password
 
-                    if self.os_type == 'Linux' and os_profile:
+                    if (self.os_type == 'Linux' or self.os_type == 'linux') and os_profile:
                         vmss_resource.virtual_machine_profile.os_profile.linux_configuration = self.compute_models.LinuxConfiguration(
                             disable_password_authentication=disable_ssh_password
                         )
@@ -1301,9 +1374,16 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         data_disks = []
 
                         for data_disk in self.data_disks:
-                            data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
-                                storage_account_type=data_disk.get('managed_disk_type', None)
-                            )
+                            if data_disk.get('disk_encryption_set'):
+                                data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set'])
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None),
+                                    disk_encryption_set=data_disk_encryption_set
+                                )
+                            else:
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None)
+                                )
 
                             data_disk['caching'] = data_disk.get(
                                 'caching',
@@ -1381,17 +1461,29 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                             vmss_resource.virtual_machine_profile.network_profile.network_interface_configurations[0] \
                                 .ip_configurations[0].load_balancer_inbound_nat_pools = None
 
+                    if self.application_security_groups is not None:
+                        vmss_resource.virtual_machine_profile.network_profile.network_interface_configurations[0].ip_configurations[0] \
+                            .application_security_groups = [self.compute_models.SubResource(id=item) for item in self.application_security_groups]
+
                     if self.data_disks is not None:
                         data_disks = []
                         for data_disk in self.data_disks:
+                            if data_disk.get('disk_encryption_set'):
+                                data_disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(id=data_disk['disk_encryption_set'])
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None),
+                                    disk_encryption_set=data_disk_encryption_set
+                                )
+                            else:
+                                data_disk_managed_disk = self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
+                                    storage_account_type=data_disk.get('managed_disk_type', None)
+                                )
                             data_disks.append(self.compute_models.VirtualMachineScaleSetDataDisk(
                                 lun=data_disk['lun'],
                                 caching=data_disk['caching'],
                                 create_option=self.compute_models.DiskCreateOptionTypes.empty,
                                 disk_size_gb=data_disk['disk_size_gb'],
-                                managed_disk=self.compute_models.VirtualMachineScaleSetManagedDiskParameters(
-                                    storage_account_type=data_disk.get('managed_disk_type', None)
-                                ),
+                                managed_disk=data_disk_managed_disk,
                             ))
                         vmss_resource.virtual_machine_profile.storage_profile.data_disks = data_disks
 

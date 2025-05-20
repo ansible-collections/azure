@@ -1,0 +1,62 @@
+---
+azure.azcollection.*:
+  query: >-
+    (
+      {"apimanagement": "MGMT",
+       "authorization": "SECURITY",
+       "automation": "MGMT",
+       "batch": "MGMT",
+       "cache": "DATABASE",
+       "cdn": "CDN",
+       "classiccompute": "COMPUTE",
+       "compute": "COMPUTE",
+       "containerinstance": "CONTAINERS",
+       "containerregistry": "CONTAINERS",
+       "containerservice": "CONTAINERS",
+       "datafactory": "STORAGE",
+       "dbformariadb": "DATABASE",
+       "dbformysql": "DATABASE",
+       "dbforpostgresql": "DATABASE",
+       "devices": "DEVICES",
+       "documentdb": "DATABASE",
+       "eventhub": "ANALYTICS",
+       "hdinsight": "ANALYTICS",
+       "insights": "ANALYTICS",
+       "keyvault": "SECURITY",
+       "maintenance": "MGMT",
+       "managedidentity": "MGMT",
+       "managedservices": "SERVICES",
+       "management": "MGMT",
+       "network": "NETWORK",
+       "operationalinsights": "ANALYTICS",
+       "recoveryservices": "STORAGE",
+       "redhatopenshift": "CONTAINERS",
+       "resources": "UNKNOWN",
+       "servicebus": "SERVICES",
+       "sql": "DATABASE",
+       "storage": "STORAGE",
+       "web": "WEB"
+      } as $mapping |
+      (.aks_agent_pools // .ansible_facts.azure_vm // .ansible_facts.azure_vmss // .bastion_host // .connection // .database // .deployment // .elastic_pool // .firewall_policy // .firewall_rule // .instances // .ip_security_restrictions // .link_service // .long_term_retention_policy // .response // .state // .short_term_retention_policy // .) |
+      (if type=="array" then .[]
+        else if type=="object" then .
+              else empty end
+       end
+       ) as $data |
+        (
+          ($data.id | capture("/providers/[Mm]icrosoft.(?<resourcetype>[^/]+)/")? | .resourcetype)
+            | ascii_downcase
+        ) as $node_type |
+        select($data.id != null) |
+        {
+          name: $data.id,
+          canonical_facts: {
+            id: $data.id
+          },
+          facts: {
+            name: ($data.name // "UNKNOWN"),
+            node_type: $node_type,
+            device_type: ($mapping[$node_type] // "UNKNOWN")
+          }
+        }
+    )

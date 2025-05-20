@@ -78,6 +78,48 @@ type:
     type: str
     returned: always
     sample: Microsoft.RecoveryServices/vaults/backupPolicies
+properties:
+    description:
+        - Attributes of the backup policy.
+    type: dict
+    returned: always
+    sample: {
+                "backup_management_type": "AzureIaasVM",
+                "instant_rp_details": {},
+                "instant_rp_retention_range_in_days": 5,
+                "protected_items_count": 0,
+                "retention_policy": {
+                    "retention_policy_type": "LongTermRetentionPolicy",
+                    "weekly_schedule": {
+                        "days_of_the_week": [
+                            "Monday",
+                            "Wednesday",
+                            "Thursday"
+                        ],
+                        "retention_duration": {
+                            "count": 4,
+                            "duration_type": "Weeks"
+                        },
+                        "retention_times": [
+                            "2025-04-09T10:00:00.000Z"
+                        ]
+                    }
+                },
+                "schedule_policy": {
+                    "schedule_policy_type": "SimpleSchedulePolicy",
+                    "schedule_run_days": [
+                        "Monday",
+                        "Wednesday",
+                        "Thursday"
+                    ],
+                    "schedule_run_frequency": "Weekly",
+                    "schedule_run_times": [
+                        "2025-04-09T10:00:00.000Z"
+                    ],
+                    "schedule_weekly_frequency": 0
+                },
+                "time_zone": "Pacific Standard Time"
+            }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -158,6 +200,7 @@ class AzureRMBackupPolicyInfo(AzureRMModuleBase):
             self.results['location'] = policy.location
             self.results['name'] = policy.name
             self.results['type'] = policy.type
+            self.results['properties'] = policy.properties.as_dict()
 
         else:
             self.results['id'] = None

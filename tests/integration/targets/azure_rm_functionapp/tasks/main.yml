@@ -1,6 +1,6 @@
 - name: Gather Resource Group info
   azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group_third }}"
   register: __rg_info
 
 - name: Fix resource prefix
@@ -33,13 +33,13 @@
 
 - name: Create storage account for function apps
   azure_rm_storageaccount:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ storage_account_name }}"
     account_type: Standard_LRS
 
 - name: Create basic function app
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_basic }}"
     location: "{{ location }}"
     storage_account: "{{ storage_account_name }}"
@@ -53,7 +53,7 @@
 
 - name: Create basic function app (idempotent)
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_basic }}"
     location: "{{ location }}"
     storage_account: "{{ storage_account_name }}"
@@ -67,7 +67,7 @@
 
 - name: List facts for function
   azure_rm_functionapp_info:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_basic }}"
   register: results
 
@@ -80,7 +80,7 @@
 
 - name: Update basic function app identity
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_basic }}"
     location: "{{ location }}"
     storage_account: "{{ storage_account_name }}"
@@ -93,7 +93,7 @@
 
 - name: List facts for function
   azure_rm_functionapp_info:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_basic }}"
   register: results
 
@@ -108,7 +108,7 @@
 
 - name: Append basic function app identity
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_basic }}"
     location: "{{ location }}"
     storage_account: "{{ storage_account_name }}"
@@ -122,7 +122,7 @@
 
 - name: List facts for function
   azure_rm_functionapp_info:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_basic }}"
   register: results
 
@@ -138,7 +138,7 @@
 
 - name: Replace basic function app identity and type
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_basic }}"
     location: "{{ location }}"
     storage_account: "{{ storage_account_name }}"
@@ -152,7 +152,7 @@
 
 - name: List facts for function
   azure_rm_functionapp_info:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_basic }}"
   register: results
 
@@ -167,7 +167,7 @@
 
 - name: Delete basic function app
   azure_rm_functionapp:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_basic }}"
     state: absent
   register: output
@@ -178,7 +178,7 @@
 
 - name: Create a function with app settings
   azure_rm_functionapp:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_params }}"
     storage_account: "{{ storage_account_name }}"
     location: "{{ location }}"
@@ -196,7 +196,7 @@
 
 - name: Change app settings
   azure_rm_functionapp:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_params }}"
     storage_account: "{{ storage_account_name }}"
     location: "{{ location }}"
@@ -218,7 +218,7 @@
 
 - name: Append identity app settings
   azure_rm_functionapp:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_params }}"
     storage_account: "{{ storage_account_name }}"
     location: "{{ location }}"
@@ -241,7 +241,7 @@
 
 - name: Delete the function app
   azure_rm_functionapp:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_params }}"
     state: absent
   register: output
@@ -252,7 +252,7 @@
 
 - name: Create a linux app service plan
   azure_rm_appserviceplan:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ plan_name }}"
     location: "{{ location }}"
     sku: S1
@@ -261,12 +261,12 @@
 
 - name: "Create azure function app {{ function_app }}"
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_container }}"
     storage_account: "{{ storage_account_name }}"
     location: "{{ location }}"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_third }}"
       name: "{{ plan_name }}"
     container_settings:
       name: httpd
@@ -278,12 +278,12 @@
 
 - name: "Update azure function app {{ function_app }}"
   azure_rm_functionapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_third }}"
     name: "{{ funcapp_name_container }}"
     storage_account: "{{ storage_account_name }}"
     location: "{{ location }}"
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_third }}"
       name: "{{ plan_name }}"
     container_settings:
       name: httpd
@@ -302,13 +302,13 @@
 
 - name: Delete the function app
   azure_rm_functionapp:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ funcapp_name_container }}"
     state: absent
 
 - name: Delete storage account
   azure_rm_storageaccount:
-    resource_group: '{{ resource_group }}'
+    resource_group: '{{ resource_group_third }}'
     name: "{{ storage_account_name }}"
     state: absent
 

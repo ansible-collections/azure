@@ -182,7 +182,7 @@ publicipaddresses:
                 - The public IP address SKU.
             returned: always
             type: str
-            sample: Basic
+            sample: Standard
         zones:
             description:
                 - A list of availability zones denoting the IP allocated for the resource needs to come from.

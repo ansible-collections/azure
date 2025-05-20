@@ -125,6 +125,80 @@
     that:
       - output.changed
 
+- name: Create the Seconday Traffic Manager profile
+  azure_rm_trafficmanagerprofile:
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}02"
+    location: global
+    profile_status: enabled
+    routing_method: performance
+    dns_config:
+      relative_name: "{{ tmname }}02"
+      ttl: 60
+    max_return: 10
+    monitor_config:
+      protocol: HTTPS
+      port: 80
+      path: '/'
+      expected_status_code_ranges:
+        - min: 200
+          max: 212
+      custom_headers:
+        - name: key1
+          value: value1
+  register: output
+
+- name: Assert the Traffic Manager profile is well created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Update the Seconday Traffic Manager profile
+  azure_rm_trafficmanagerprofile:
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}02"
+    location: global
+    profile_status: enabled
+    routing_method: performance
+    dns_config:
+      relative_name: "{{ tmname }}02"
+      ttl: 60
+    max_return: 12
+    monitor_config:
+      protocol: HTTPS
+      port: 90
+      path: '/'
+      expected_status_code_ranges:
+        - min: 200
+          max: 212
+        - min: 220
+          max: 230
+      custom_headers:
+        - name: key1
+          value: value1
+        - name: key2
+          value: value2
+  register: output
+
+- name: Assert the Traffic Manager profile is well updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Gather Seconday Traffic Manager profile facts
+  azure_rm_trafficmanagerprofile_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ tmname }}02"
+  register: fact
+
+- name: Assert fact returns the created one
+  ansible.builtin.assert:
+    that:
+      - fact.tms[0].monitor_config.custom_headers | length == 2
+      - fact.tms[0].monitor_config.expected_status_code_ranges | length == 2
+      - fact.tms[0].monitor_config.port == 90
+      - fact.tms[0].max_return == 12
+
 - name: Create Traffic Manager endpoint(check mode)
   azure_rm_trafficmanagerendpoint:
     resource_group: "{{ resource_group }}"

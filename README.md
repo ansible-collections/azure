@@ -7,6 +7,22 @@ This collection provides a series of Ansible modules and plugins for interacting
 
 Documentation of individual modules is [available in the Ansible docs site](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html#plugins-in-azure-azcollection)
 
+## Included content
+
+See the complete list of collection content in the [Plugin Index](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html#plugins-in-azure-azcollection).
+
+## Communication
+
+* Join the Ansible forum:
+  * [Get Help](https://forum.ansible.com/c/help/6): get help or help others. Please use appropriate tags, for example `cloud`.
+  * [Social Spaces](https://forum.ansible.com/c/chat/4): gather and interact with fellow enthusiasts.
+  * [News & Announcements](https://forum.ansible.com/c/news/5): track project-wide announcements including social events.
+
+* The Ansible [Bullhorn newsletter](https://docs.ansible.com/ansible/devel/community/communication.html#the-bullhorn): used to announce releases and important changes.
+
+For more information about communication, see the [Ansible communication guide](https://docs.ansible.com/ansible/devel/community/communication.html).
+
+
 ## Installation
 
 It is recommended to run ansible in [Virtualenv](https://virtualenv.pypa.io/en/latest/)
@@ -25,6 +41,12 @@ Install dependencies required by the collection (adjust path to collection if ne
 
 ```bash
 pip3 install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
+```
+
+Or, if you can't use pip, e.g. when you are on Ubuntu/Debian:
+
+```bash
+pipx runpip ansible install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
 ```
 
 To upgrade to the latest version of Azure collection:
@@ -88,10 +110,14 @@ There are many ways in which you can participate in the project, for example:
 - Submit bugs and feature requests, and help us verify as they are checked in
 - Review source code changes
 - Review the documentation and make pull requests for anything from typos to new content
-- If you are interested in fixing issues and contributing directly to the code base, please see the [CONTRIBUTING](CONTRIBUTING.md) document
+- If you are interested in fixing issues and contributing directly to the code base, please see the [CONTRIBUTING](https://github.com/ansible-collections/azure/blob/dev/CONTRIBUTING.md) document
+
+## Release notes
+
+See the [Changelog](https://github.com/ansible-collections/azure/blob/dev/CHANGELOG.md)
 
 ## License
 
 GNU General Public License v3.0
 
-See [LICENSE](LICENSE) to see the full text.
+See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.txt) to see the full text.

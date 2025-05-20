@@ -20,6 +20,11 @@ description:
         - Manage Azure Active Directory service principal.
 
 options:
+    account_enabled:
+        description:
+            - Whether the service principal is enabled.
+        type: bool
+        default: True
     app_id:
         description:
             - The application ID.
@@ -29,6 +34,18 @@ options:
         description:
             - Whether the Role of the Service Principal is set.
         type: bool
+    notes:
+        description:
+            - Use this field to add information that is relevant for the management of the application
+        type: str
+    service_principal_type:
+        description:
+            - The type of the service principal.
+        choices:
+            - application
+            - managedIdentity
+        type: str
+        default: application
     state:
         description:
             - Assert the state of Active Dirctory service principal.
@@ -101,15 +118,21 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
+            account_enabled=dict(type='bool', default=True),
             app_id=dict(type='str', required=True),
+            notes=dict(type='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
-            app_role_assignment_required=dict(type='bool')
+            app_role_assignment_required=dict(type='bool'),
+            service_principal_type=dict(type='str', default='application', choices=['application', 'managedIdentity'])
         )
 
+        self.account_enabled = None
         self.state = None
         self.app_id = None
         self.app_role_assignment_required = None
+        self.notes = None
         self.object_id = None
+        self.service_principal_type = None
         self.results = dict(changed=False)
 
         super(AzureRMADServicePrincipal, self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -194,16 +217,21 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
 
     def to_dict(self, object):
         return dict(
+            account_enabled=object.account_enabled,
             app_id=object.app_id,
+            notes=object.notes,
             object_id=object.id,
             app_display_name=object.display_name,
-            app_role_assignment_required=object.app_role_assignment_required
+            app_role_assignment_required=object.app_role_assignment_required,
+            service_principal_type=object.service_principal_type
         )
 
     async def create_service_principal(self):
         request_body = ServicePrincipal(
             app_id=self.app_id,
-            account_enabled=True
+            account_enabled=self.account_enabled,
+            notes=self.notes,
+            service_principal_type=self.service_principal_type
         )
         return await self._client.service_principals.post(body=request_body)
 

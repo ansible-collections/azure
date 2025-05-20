@@ -540,12 +540,19 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             try:
                 client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
                 with open(self.src, "rb") as data:
-                    client.upload_blob(data=data,
-                                       blob_type=self.get_blob_type(self.blob_type),
-                                       metadata=self.tags,
-                                       content_settings=content_settings,
-                                       standard_blob_tier=self.get_blob_tier(self.standard_blob_tier),
-                                       overwrite=self.force)
+                    if self.blob_type == 'page':
+                        client.upload_blob(data=data,
+                                           blob_type=self.get_blob_type(self.blob_type),
+                                           metadata=self.tags,
+                                           content_settings=content_settings,
+                                           overwrite=self.force)
+                    else:
+                        client.upload_blob(data=data,
+                                           blob_type=self.get_blob_type(self.blob_type),
+                                           metadata=self.tags,
+                                           content_settings=content_settings,
+                                           standard_blob_tier=self.get_blob_tier(self.standard_blob_tier),
+                                           overwrite=self.force)
             except Exception as exc:
                 self.fail("Error creating blob {0} - {1}".format(self.blob, str(exc)))
 

@@ -228,6 +228,12 @@ app_diff:
             returned: always
             type: str
             sample: absent
+        notes:
+            description:
+                - Notes relevant for the management of the application.
+            type: str
+            returned: always
+            sample: "Test value"
         optional_claims:
             description:
                 - Declare the optional claims for the application.
@@ -344,6 +350,7 @@ class AzureRMADApplicationInfo(AzureRMModuleBase):
             object_id=object.id,
             app_display_name=object.display_name,
             identifier_uris=object.identifier_uris,
+            notes=object.notes,
             sign_in_audience=object.sign_in_audience,
             web_reply_urls=object.web.redirect_uris,
             spa_reply_urls=object.spa.redirect_uris,

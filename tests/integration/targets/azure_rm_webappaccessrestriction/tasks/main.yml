@@ -1,17 +1,17 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    rpfx: "{{ resource_group_datalake | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "vnet-{{ rpfx }}"
     address_prefixes: 10.42.0.0/24
 
 - name: Create subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: "subnet-{{ rpfx }}"
     address_prefix: 10.42.0.0/28
     virtual_network: "vnet-{{ rpfx }}"
@@ -19,10 +19,10 @@
 
 - name: Create a web app
   azure_rm_webapp:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     name: webapp{{ rpfx }}
     plan:
-      resource_group: "{{ resource_group }}"
+      resource_group: "{{ resource_group_datalake }}"
       name: webappplan{{ rpfx }}
       is_linux: false
       sku: S1
@@ -30,7 +30,7 @@
 - name: "Create webapp access restriction - check mode"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Allow"
@@ -57,7 +57,7 @@
 - name: "Create webapp access restriction"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Allow"
@@ -92,7 +92,7 @@
 - name: "Check webapp access restriction facts 1"
   azure_rm_webappaccessrestriction_info:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
   register: output
 - name: Assert restrictions
   ansible.builtin.assert:
@@ -111,7 +111,7 @@
 - name: "Create webapp access restriction - idempotent"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Allow"
@@ -137,7 +137,7 @@
 - name: "Delete specific webapp access restriction"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Allow"
@@ -157,7 +157,7 @@
 - name: "Update existing webapp access restriction 1"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Deny"
@@ -177,7 +177,7 @@
 - name: "Update existing webapp access restriction 1"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Deny"
@@ -197,7 +197,7 @@
 - name: "Update existing webapp access restriction 3"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Deny"
@@ -225,7 +225,7 @@
 - name: "Update existing webapp access restriction 4"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Deny"
@@ -259,7 +259,7 @@
 - name: "Update existing webapp access restriction - idempotent"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     ip_security_restrictions:
       - name: "Datacenter 1"
         action: "Deny"
@@ -283,7 +283,7 @@
 - name: "Delete webapp access restrictions"
   azure_rm_webappaccessrestriction:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
     state: "absent"
   register: output
 - name: Assert the resource is deleted
@@ -297,7 +297,7 @@
 - name: "Check webapp access restriction facts 3"
   azure_rm_webappaccessrestriction_info:
     name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_datalake }}"
   register: output
 - name: Assert no restrictions
   ansible.builtin.assert:
@@ -306,3 +306,9 @@
       - output.ip_security_restrictions | length <= 1
       - output.scm_ip_security_restrictions | length <= 1
       - output.scm_ip_security_restrictions_use_main == false
+
+- name: Delete the web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: webapp{{ rpfx }}
+    state: absent

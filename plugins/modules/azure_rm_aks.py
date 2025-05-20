@@ -154,6 +154,8 @@ options:
                 choices:
                     - Linux
                     - Windows
+                    - linux
+                    - windows
             storage_profiles:
                 description:
                     - Storage profile specifies what kind of storage used.
@@ -1012,7 +1014,7 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         security_profile=dict(
             enable_secure_boot=profile.security_profile.enable_secure_boot,
             enable_vtpm=profile.security_profile.enable_vtpm
-        )
+        ) if profile.security_profile is not None else None
     ) for profile in agentpoolprofiles] if agentpoolprofiles else None
 
 
@@ -1063,7 +1065,7 @@ agent_pool_profile_spec = dict(
                           'StorageAccount', 'ManagedDisks']),
     vnet_subnet_id=dict(type='str'),
     availability_zones=dict(type='list', elements='int', choices=[1, 2, 3]),
-    os_type=dict(type='str', choices=['Linux', 'Windows']),
+    os_type=dict(type='str', choices=['Linux', 'Windows', 'linux', 'windows']),
     orchestrator_version=dict(type='str', required=False),
     type=dict(type='str', choices=['VirtualMachineScaleSets', 'AvailabilitySet']),
     mode=dict(type='str', choices=['System', 'User']),

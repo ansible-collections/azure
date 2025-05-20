@@ -60,6 +60,8 @@ options:
         choices:
             - windows
             - linux
+            - Windows
+            - Linux
         type: str
     os_state:
         description:
@@ -270,8 +272,8 @@ class AzureRMGalleryImages(AzureRMModuleBaseExt):
             ),
             os_type=dict(
                 type='str',
-                choices=['windows',
-                         'linux']
+                choices=['windows', 'Windows',
+                         'Linux', 'linux']
             ),
             os_state=dict(
                 type='str',

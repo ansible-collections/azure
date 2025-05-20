@@ -78,6 +78,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         default: Linux
     ip_configurations:
         description:
@@ -576,15 +578,11 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             subnet_name=dict(type='str', aliases=['subnet']),
             virtual_network=dict(type='raw', aliases=['virtual_network_name']),
             ip_configurations=dict(type='list', default=[], elements='dict', options=ip_configuration_spec),
-            os_type=dict(type='str', choices=['Windows', 'Linux'], default='Linux'),
+            os_type=dict(type='str', choices=['Windows', 'Linux', 'windows', 'linux'], default='Linux'),
             open_ports=dict(type='list', elements='str'),
             enable_ip_forwarding=dict(type='bool', aliases=['ip_forwarding'], default=False),
             dns_servers=dict(type='list', elements='str'),
         )
-
-        required_if = [
-            ('state', 'present', ['subnet_name', 'virtual_network'])
-        ]
 
         self.resource_group = None
         self.name = None
@@ -608,8 +606,7 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
         )
 
         super(AzureRMNetworkInterface, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                      supports_check_mode=True,
-                                                      required_if=required_if)
+                                                      supports_check_mode=True)
 
     def exec_module(self, **kwargs):
 
@@ -626,9 +623,6 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             # Set default location
             self.location = resource_group.location
         self.location = normalize_location_name(self.location)
-
-        # parse the virtual network resource group and name
-        self.virtual_network = self.parse_resource_to_dict(self.virtual_network)
 
         # if not set the security group name, use nic name for default
         self.security_group = self.parse_resource_to_dict(self.security_group or self.name)
@@ -687,7 +681,7 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             nsg = None
             if self.state == 'present':
                 # check for update
-                update_tags, results['tags'] = self.update_tags(results['tags'])
+                update_tags, self.tags = self.update_tags(results['tags'])
                 if update_tags:
                     changed = True
 
@@ -722,6 +716,17 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
                     if nsg and results.get('network_security_group') and results['network_security_group'].get('id') != nsg.id:
                         self.log("CHANGED: network interface {0} network security group".format(self.name))
                         changed = True
+
+                if self.virtual_network is None:
+                    self.virtual_network = dict(resource_group=results['ip_configurations'][0]['subnet']['resource_group'],
+                                                subscription_id=self.parse_resource_to_dict(results['ip_configurations'][0]['subnet']['id'])['subscription_id'],
+                                                name=results['ip_configurations'][0]['subnet']['virtual_network_name'])
+                else:
+                    # parse the virtual network resource group and name
+                    self.virtual_network = self.parse_resource_to_dict(self.virtual_network)
+
+                if self.subnet_name is None:
+                    self.subnet_name = results['ip_configurations'][0]['subnet']['name']
 
                 if results['ip_configurations'][0]['subnet']['virtual_network_name'] != self.virtual_network['name']:
                     self.log("CHANGED: network interface {0} virtual network name".format(self.name))
@@ -763,6 +768,11 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             if self.state == 'present':
                 self.log("CHANGED: network interface {0} does not exist but requested state is 'present'".format(self.name))
                 changed = True
+                if self.virtual_network is None or self.subnet_name is None:
+                    self.fail("Required configure 'virtual_network' and 'subnet_name' when creating a new NIC.")
+                else:
+                    # parse the virtual network resource group and name
+                    self.virtual_network = self.parse_resource_to_dict(self.virtual_network)
 
         self.results['changed'] = changed
         self.results['state'] = results
@@ -831,7 +841,10 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
         return self.results
 
     def get_or_create_public_ip_address(self, ip_config):
-        name = ip_config.get('public_ip_address_name')
+        if 'public_ip_address' in ip_config and ip_config.get('public_ip_address') is not None:
+            name = ip_config['public_ip_address'].get('name')
+        else:
+            name = ip_config.get('public_ip_address_name')
 
         if not name:
             return None
@@ -925,7 +938,7 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             public_ip_allocation_method=to_native(item.get('public_ip_allocation_method', 'Dynamic')),
             primary=bool(item.get('primary'))
         ) for item in raw]
-        return configurations
+        return sorted(configurations, key=lambda x: x['name'])
 
 
 def main():

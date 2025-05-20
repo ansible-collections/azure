@@ -1,0 +1,117 @@
+- name: Set up disk encryption sets
+  ansible.builtin.include_tasks: setup_des.yml
+
+- name: Create an image from VM (check mode)
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
+    name: testimage001
+    os_type: Linux
+    os_disk_encryption_set: "{{ des_results.state.id }}"
+    data_disk_encryption_set: "{{ des_results.state.id }}"
+    hyper_v_generation: V1
+    data_disk_sources:
+      - "{{ empty_disk_name }}"
+  check_mode: true
+  register: output
+
+- name: Assert the image check mode
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Create an image from VM
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    source:
+      name: "{{ vm_name }}"
+      type: disks
+    name: testimage001
+    hyper_v_generation: V1
+    os_type: Linux
+    os_disk_encryption_set: "{{ des_results.state.id }}"
+    data_disk_encryption_set: "{{ des_results.state.id }}"
+  register: output
+
+- name: Assert the image created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Create an image from VM (idempotent)
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
+    name: testimage001
+    hyper_v_generation: V1
+    os_type: Linux
+    os_disk_encryption_set: "{{ des_results.state.id }}"
+    data_disk_encryption_set: "{{ des_results.state.id }}"
+  register: output
+
+- name: Assert the image created
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.id
+
+- name: Gather information about image created
+  azure_rm_image_info:
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+  register: output
+
+- name: Assert the image facts
+  ansible.builtin.assert:
+    that:
+      - output.images != []
+      - output.images[0].hyper_v_generation == 'V1'
+
+- name: Delete image (check mode)
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+    state: absent
+  register: output
+  check_mode: true
+
+- name: Assert the image check mode
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete image
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+    state: absent
+  register: output
+
+- name: Assert the imaged deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete image (idempotent)
+  azure_rm_image:
+    resource_group: "{{ resource_group }}"
+    name: testimage001
+    state: absent
+  register: output
+
+- name: Assert the image has deleted
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Destroy disk encryption set
+  azure_rm_diskencryptionset:
+    resource_group: "{{ resource_group }}"
+    name: "{{ des_name }}"
+    state: absent
+
+- name: Destroy key vault
+  azure_rm_keyvault:
+    vault_name: "{{ vault_name }}"
+    resource_group: "{{ resource_group }}"
+    state: absent

@@ -10,40 +10,40 @@
 
     - name: Delete VM
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ vm_name }}"
         remove_on_absent: all_autocreated
         state: absent
 
     - name: Delete VM 2
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ vm_name_2 }}"
         remove_on_absent: all_autocreated
         state: absent
 
     - name: Destroy subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         virtual_network: "{{ network_name }}"
         name: "{{ subnet_name }}"
         state: absent
 
     - name: Destroy virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ network_name }}"
         state: absent
 
     - name: Destroy availability set
       azure_rm_availabilityset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ availability_set }}"
         state: absent
 
     - name: Destroy storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group_third }}"
         name: "{{ storage_account }}"
         force_delete_nonempty: true
         state: absent

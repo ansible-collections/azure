@@ -40,6 +40,14 @@ options:
         type: list
         elements: str
         default: []
+    os_disk_encryption_set:
+        description:
+            - The resource ID of the disk encryption set for the OS disk.
+        type: str
+    data_disk_encryption_set:
+        description:
+            - The resource ID of the disk encryption set for the data disks.
+        type: str
     location:
         description:
             - Location of the image. Derived from I(resource_group) if not specified.
@@ -49,6 +57,8 @@ options:
         choices:
             - Windows
             - Linux
+            - windows
+            - linux
         type: str
     hyper_v_generation:
         description:
@@ -143,7 +153,9 @@ class AzureRMImage(AzureRMModuleBase):
             location=dict(type='str'),
             source=dict(type='raw'),
             data_disk_sources=dict(type='list', elements='str', default=[]),
-            os_type=dict(type='str', choices=['Windows', 'Linux']),
+            os_disk_encryption_set=dict(type='str'),
+            data_disk_encryption_set=dict(type='str'),
+            os_type=dict(type='str', choices=['Windows', 'Linux', 'windows', 'linux']),
             hyper_v_generation=dict(type='str', choices=['V1', 'V2'])
         )
 
@@ -162,6 +174,8 @@ class AzureRMImage(AzureRMModuleBase):
         self.location = None
         self.source = None
         self.data_disk_sources = None
+        self.os_disk_encryption_set = None
+        self.data_disk_encryption_set = None
         self.os_type = None
         self.hyper_v_generation = None
 
@@ -297,21 +311,38 @@ class AzureRMImage(AzureRMModuleBase):
         blob_uri, disk, snapshot = self.resolve_storage_source(self.source)
         snapshot_resource = self.image_models.SubResource(id=snapshot) if snapshot else None
         managed_disk = self.image_models.SubResource(id=disk) if disk else None
-        return self.image_models.ImageOSDisk(os_type=self.os_type,
-                                             os_state=self.image_models.OperatingSystemStateTypes.generalized,
-                                             snapshot=snapshot_resource,
-                                             managed_disk=managed_disk,
-                                             blob_uri=blob_uri)
+        if self.os_disk_encryption_set:
+            os_disk_encryption_set = self.image_models.DiskEncryptionSetParameters(id=self.os_disk_encryption_set)
+            return self.image_models.ImageOSDisk(os_type=self.os_type,
+                                                 os_state=self.image_models.OperatingSystemStateTypes.generalized,
+                                                 snapshot=snapshot_resource,
+                                                 managed_disk=managed_disk,
+                                                 disk_encryption_set=os_disk_encryption_set,
+                                                 blob_uri=blob_uri)
+        else:
+            return self.image_models.ImageOSDisk(os_type=self.os_type,
+                                                 os_state=self.image_models.OperatingSystemStateTypes.generalized,
+                                                 snapshot=snapshot_resource,
+                                                 managed_disk=managed_disk,
+                                                 blob_uri=blob_uri)
 
     def create_data_disk(self, lun, source):
         blob_uri, disk, snapshot = self.resolve_storage_source(source)
         if blob_uri or disk or snapshot:
             snapshot_resource = self.image_models.SubResource(id=snapshot) if snapshot else None
             managed_disk = self.image_models.SubResource(id=disk) if disk else None
-            return self.image_models.ImageDataDisk(lun=lun,
-                                                   blob_uri=blob_uri,
-                                                   snapshot=snapshot_resource,
-                                                   managed_disk=managed_disk)
+            if self.data_disk_encryption_set:
+                data_disk_encryption_set = self.image_models.DiskEncryptionSetParameters(id=self.data_disk_encryption_set)
+                return self.image_models.ImageDataDisk(lun=lun,
+                                                       blob_uri=blob_uri,
+                                                       snapshot=snapshot_resource,
+                                                       managed_disk=managed_disk,
+                                                       disk_encryption_set=data_disk_encryption_set)
+            else:
+                return self.image_models.ImageDataDisk(lun=lun,
+                                                       blob_uri=blob_uri,
+                                                       snapshot=snapshot_resource,
+                                                       managed_disk=managed_disk)
 
     def create_data_disks(self):
         return list(filter(None, [self.create_data_disk(lun, source) for lun, source in enumerate(self.data_disk_sources)]))

@@ -1,5 +1,81 @@
 # Change Log
 
+## v3.3.1 (2025-03-13)
+
+### Fix compile issue with python v3.6
+
+## v3.3.0 (2025-03-12)
+
+### NEW MODULES
+  - azure_rm_diskaccess: ([#1831](https://github.com/ansible-collections/azure/pull/1831))
+  - azure_rm_diskaccess_info: ([#1831](https://github.com/ansible-collections/azure/pull/1831))
+  - azure_rm_resourcehealthstates_info: ([#1838](https://github.com/ansible-collections/azure/pull/1838))
+
+### FEATURE ENHANCEMENT
+  - README.md:
+    - Add pipx alternative for deps installation ([#1797](https://github.com/ansible-collections/azure/pull/1797))
+    - Update README.md: ([#1832](https://github.com/ansible-collections/azure/pull/1832))
+  - azure_rm_storageaccount: Add support for `immutable_storage_with_versioning` ([#1802](https://github.com/ansible-collections/azure/pull/1802))
+  - azure_rm_storageaccount_info: Support return `immutable_storage_with_versioning` ([#1802](https://github.com/ansible-collections/azure/pull/1802))
+  - azure_rm_trafficmanagerprofile: Add support for `custom_header`, `expected_status_code_ranges`, `max_return` and `allowed_endpoint_record_types` ([#1800](https://github.com/ansible-collections/azure/pull/1800))
+  - azure_rm_trafficmanagerprofile_info: Support return `custom_header`, `expected_status_code_ranges`, `max_return` and `allowed_endpoint_record_types` ([#1800](https://github.com/ansible-collections/azure/pull/1800))
+  - azure_rm_virtualmachine:
+    - Allow creation from snapshot image ([#1816](https://github.com/ansible-collections/azure/pull/1816))
+    - Add support `user_data` ([#1844](https://github.com/ansible-collections/azure/pull/1844))
+  - azure_rm_virtualmachine_info:
+    - Support return `storage_profile.os_disk` ([#1816](https://github.com/ansible-collections/azure/pull/1816))
+    - Support return `write_accelerator_enabled` ([#1808](https://github.com/ansible-collections/azure/pull/1808))
+    - support return `maintenance_redeploy_status` ([#1822](https://github.com/ansible-collections/azure/pull/1822))
+  - azure_rm_manageddisk:
+    - Add support for `write_accelerator_enabled` ([#1808](https://github.com/ansible-collections/azure/pull/1808))
+    - Add `upload`, `fromimage`, `restore`, `uploadpreparedsecure`  to `create_option` and add support for `performance_plus`, `upload_size_bytes`, `gallery_image_reference`, `image_reference`, `logical_sector_size`, `source_resource_id`, `security_profile` ([#1833](https://github.com/ansible-collections/azure/pull/1833))
+  - azure_rm_manageddisk_info: Support return `performance_plus`, `upload_size_bytes`, `gallery_image_reference`, `image_reference`, `logical_sector_size`, `source_resource_id`, `security_profile` ([#1833](https://github.com/ansible-collections/azure/pull/1833))
+  - azure_rm.py: Add cache support to inventory plugin cache ([#1828](https://github.com/ansible-collections/azure/pull/1828))
+  - azure_keyvault_secret: Add support for `use_cli`, use CLI credential ([#1836](https://github.com/ansible-collections/azure/pull/1836))
+
+### BUG FIXING
+  - tests/integration/targets/azure_rm_dnsrecordset/tasks/main.yml: Update the random value ([#1803](https://github.com/ansible-collections/azure/pull/1803))
+  - azure_rm_roleassignment: Delete scope tail `/` when comparing scopes ([#1807](https://github.com/ansible-collections/azure/pull/1807))
+  - azure_rm_subnet_info: Fix incorrect API call ([#1826](https://github.com/ansible-collections/azure/pull/1826))
+  - azure_rm_virtualmachine_info: Fix the bug that `capacity_reservation_group` not being handled ([#1827](https://github.com/ansible-collections/azure/pull/1827))
+  - azure_rm_aks: Fixed the bug that `agent_pool.security_profile` returning `None` ([#1835](https://github.com/ansible-collections/azure/pull/1835))
+  - azure_rm_servicebus: Do not compare the `zone_redundant` return value during idempotency testing ([#1840](https://github.com/ansible-collections/azure/pull/1840))
+  - azure_rm_subnet: Fixed the bug caused by the user defining `subscription_id` in `route_table` ([#1837](https://github.com/ansible-collections/azure/pull/1837))
+
+
+## v3.2.0 (2025-02-06)
+
+### NEW MODULES
+  - azure_rm_applicationfirewallpolicy: ([#1783](https://github.com/ansible-collections/azure/pull/1783))
+  - azure_rm_applicationfirewallpolicy_info: ([#1783](https://github.com/ansible-collections/azure/pull/1783))
+  - azure_rm_arcssh: Builds on HCI inventory and adds ARC support as well ([#1735](https://github.com/ansible-collections/azure/pull/1735))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_dnsrecordset: Add support for `target_resource` ([#1767](https://github.com/ansible-collections/azure/pull/1767))
+  - azure_rm_dnsrecordset_info: Support return `target_resource` ([#1767](https://github.com/ansible-collections/azure/pull/1767))
+  - azure_rm_loadbalancer: Add support for `enable_tcp_reset` to `load_balancing_rules` ([#1774](https://github.com/ansible-collections/azure/pull/1774))
+  - azure_rm_privateendpoint: Add support for `application_security_groups`, `custom_dns_configs`,`custom_network_interface_name`, `ip_configurations` ([#1771](https://github.com/ansible-collections/azure/pull/1771))
+  - azure_rm_privateendpoint_info: Add support for `application_security_groups`, `custom_dns_configs`,`custom_network_interface_name`, `ip_configurations` ([#1771](https://github.com/ansible-collections/azure/pull/1771))
+  - azure_rm_manageddisk:
+    - Add support for `public_network_access` and `network_access_policy` ([#1782](https://github.com/ansible-collections/azure/pull/1782))
+    - Add support for display/modification of disk performance `tier` ([#1787](https://github.com/ansible-collections/azure/pull/1787))
+  - azure_rm_manageddisk_info:
+    - Support return `public_network_access` and `network_access_policy` ([#1782](https://github.com/ansible-collections/azure/pull/1782))
+    - Support return `tier` ([#1787](https://github.com/ansible-collections/azure/pull/1787))
+  - azure_rm_iotdevice: Add support for `device_scope` ([#1790](https://github.com/ansible-collections/azure/pull/1790))
+  - azure_rm_cdnprofile: Add more `sku` selection options ([#1789](https://github.com/ansible-collections/azure/pull/1789))
+  - azure_rm_webapp: Add support for updating `startup_file` ([#1792](https://github.com/ansible-collections/azure/pull/1792))
+  - azure_rm_appgateway: Add support for setting WAF policy ([#1725](https://github.com/ansible-collections/azure/pull/1725))
+  - azure_rm_servicebus: Add support for `minimum_tls_version`, `zone_redundant`, `disable_local_auth`, `public_network_access` and `premium_messaging_partitions` ([#1793](https://github.com/ansible-collections/azure/pull/1793))
+  - plugins/inventory/azure_rm.py: Add support for `batch_fetch_interval` and `batch_fetch_timeout` ([#1804](https://github.com/ansible-collections/azure/pull/1804))
+  - azure_rm_aduser_info: Add support for `surname` and `given_name` ([#1815](https://github.com/ansible-collections/azure/pull/1815))
+  - azure_rm_keyvaultsecret - Remove unnecessary constraints ([#1810](https://github.com/ansible-collections/azure/pull/1810))
+
+### BUG FIXING
+  - inventory azure_rm: Return the VM NIC details ([#1770](https://github.com/ansible-collections/azure/pull/1770))
+  - azure_keyvault_secret: Include Key Vault URL to error messages ([#1785](https://github.com/ansible-collections/azure/pull/1785))
+
+
 ## v3.1.0 (2024-12-02)
 
 ### NEW MODULES

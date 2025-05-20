@@ -44,7 +44,7 @@ options:
         type: str
     storage_profile:
         description:
-            - Storage profile
+            - This is the storage profile of a Gallery Image Version.
             - Required when creating.
         type: dict
         suboptions:
@@ -53,6 +53,7 @@ options:
                     - Reference to managed image or gallery image version
                     - Could be resource ID to managed image, or dictionary containing I(resource_group) and I(name)
                     - Could be resource ID to image version, or dictionary containing I(resource_group),I(gallery_name), I(gallery_image_name) and I(version)
+                    - Could be resource ID I(virtual_machine_id) of the source virtual machine.
                     - Mutual exclusive with os_disk and data_disks
                 type: raw
             os_disk:
@@ -219,6 +220,11 @@ options:
                 choices:
                     - Standard_LRS
                     - Standard_ZRS
+    timeout:
+        description:
+            - Set the timeout (minute) period for creating an Image Version.
+        type: int
+        default: 10
     state:
         description:
             - Assert the state of the GalleryImageVersion.
@@ -342,10 +348,13 @@ id:
            ry1283/images/myImage/versions/10.1.3"
 '''
 
-import time
-import json
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+try:
+    import time
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+    from azure.core.polling import LROPoller
+    from azure.core.exceptions import ResourceNotFoundError
+except ImportError:
+    pass
 
 
 class Actions:
@@ -379,6 +388,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
             ),
             storage_profile=dict(
                 type='dict',
+                mutually_exclusive=[('source_image', 'os_disk', 'data_disks')],
                 options=dict(
                     source_image=dict(
                         type='raw',
@@ -503,6 +513,10 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     )
                 )
             ),
+            timeout=dict(
+                type='int',
+                default=10
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -516,20 +530,12 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         self.name = None
         self.gallery_image_version = None
         self.tags = None
-
-        self.results = dict(changed=False)
-        self.mgmt_client = None
         self.state = None
-        self.url = None
-        self.status_code = [200, 201, 202]
-        self.to_do = Actions.NoAction
+        self.timeout = None
 
-        self.body = {}
-        self.body['properties'] = {}
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = '2022-03-03'
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
+        self.body = dict()
+        self.results = dict(changed=False)
+        self.to_do = Actions.NoAction
 
         super(AzureRMGalleryImageVersions, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                           supports_check_mode=True,
@@ -545,71 +551,73 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                 if key == 'location':
                     self.body['location'] = kwargs[key]
                 elif key == 'storage_profile':
-                    self.body['properties']['storageProfile'] = {}
+                    self.body['storage_profile'] = {}
                     if kwargs[key].get('source_image') is not None:
-                        self.body['properties']['storageProfile']['source'] = {}
+                        self.body['storage_profile']['source'] = {}
                         if isinstance(kwargs[key].get('source_image'), str):
-                            self.body['properties']['storageProfile']['source']['id'] = kwargs[key].get('source_image')
+                            self.body['storage_profile']['source']['id'] = kwargs[key].get('source_image')
                         elif isinstance(kwargs[key].get('source_image'), dict):
                             if kwargs[key]['source_image'].get('id') is not None:
-                                self.body['properties']['storageProfile']['source']['id'] = kwargs[key]['source_image'].get('id')
-                            if kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('name') is not None:
-                                self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
-                                                                                             self.subscription_id +
-                                                                                             '/resourceGroups/' +
-                                                                                             kwargs[key]['source_image'].get('resource_group') +
-                                                                                             '/providers/Microsoft.Compute/images/' +
-                                                                                             kwargs[key]['source_image'].get('name'))
+                                self.body['storage_profile']['source']['id'] = kwargs[key]['source_image'].get('id')
+                            elif kwargs[key]['source_image'].get('virtual_machine_id') is not None:
+                                self.body['storage_profile']['source']['virtual_machine_id'] = kwargs[key]['source_image'].get('virtual_machine_id')
+                            elif kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('name') is not None:
+                                self.body['storage_profile']['source']['id'] = ('/subscriptions/' +
+                                                                                self.subscription_id +
+                                                                                '/resourceGroups/' +
+                                                                                kwargs[key]['source_image'].get('resource_group') +
+                                                                                '/providers/Microsoft.Compute/images/' +
+                                                                                kwargs[key]['source_image'].get('name'))
                             elif (kwargs[key]['source_image'].get('resource_group') is not None and
                                   kwargs[key]['source_image'].get('gallery_name') is not None and
                                   kwargs[key]['source_image'].get('gallery_image_name') is not None and kwargs[key]['source_image'].get('version') is not None):
-                                self.body['properties']['storageProfile']['source']['id'] = ('/subscriptions/' +
-                                                                                             self.subscription_id +
-                                                                                             '/resourceGroups/' +
-                                                                                             kwargs[key]['source_image'].get('resource_group') +
-                                                                                             '/providers/Microsoft.Compute/galleries/' +
-                                                                                             kwargs[key]['source_image'].get('gallery_name') +
-                                                                                             '/images/' +
-                                                                                             kwargs[key]['source_image'].get('gallery_image_name') +
-                                                                                             '/versions/' +
-                                                                                             kwargs[key]['source_image'].get('version'))
+                                self.body['storage_profile']['source']['id'] = ('/subscriptions/' +
+                                                                                self.subscription_id +
+                                                                                '/resourceGroups/' +
+                                                                                kwargs[key]['source_image'].get('resource_group') +
+                                                                                '/providers/Microsoft.Compute/galleries/' +
+                                                                                kwargs[key]['source_image'].get('gallery_name') +
+                                                                                '/images/' +
+                                                                                kwargs[key]['source_image'].get('gallery_image_name') +
+                                                                                '/versions/' +
+                                                                                kwargs[key]['source_image'].get('version'))
                             else:
                                 self.fail("The source_image parameters config errors")
                         else:
                             self.fail("The source_image parameters config errors")
                     if kwargs[key].get('os_disk') is not None:
-                        self.body['properties']['storageProfile']['osDiskImage'] = {}
+                        self.body['storage_profile']['os_disk_image'] = {}
                         if kwargs[key]['os_disk'].get('host_caching') is not None:
-                            self.body['properties']['storageProfile']['osDiskImage']['hostCaching'] = kwargs[key]['os_disk'].get('host_caching')
+                            self.body['storage_profile']['os_disk_image']['hostCaching'] = kwargs[key]['os_disk'].get('host_caching')
                         if kwargs[key]['os_disk'].get('source') is not None:
-                            self.body['properties']['storageProfile']['osDiskImage']['source'] = {}
+                            self.body['storage_profile']['os_disk_image']['source'] = {}
                             if isinstance(kwargs[key]['os_disk']['source'], str):
-                                self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source']
+                                self.body['storage_profile']['os_disk_image']['source']['id'] = kwargs[key]['os_disk']['source']
                             elif isinstance(kwargs[key]['os_disk']['source'], dict):
                                 if kwargs[key]['os_disk']['source'].get('id') is not None:
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
+                                    self.body['storage_profile']['os_disk_image']['source']['id'] = kwargs[key]['os_disk']['source'].get('id')
                                 elif kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
                                         kwargs[key]['os_disk']['source'].get('name') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
-                                                                                                                self.subscription_id +
-                                                                                                                '/resourceGroups/' +
-                                                                                                                resource_group +
-                                                                                                                '/providers/Microsoft.Compute/snapshots/' +
-                                                                                                                kwargs[key]['os_disk']['source'].get('name'))
+                                    self.body['storage_profile']['os_disk_image']['source']['id'] = ('/subscriptions/' +
+                                                                                                     self.subscription_id +
+                                                                                                     '/resourceGroups/' +
+                                                                                                     resource_group +
+                                                                                                     '/providers/Microsoft.Compute/snapshots/' +
+                                                                                                     kwargs[key]['os_disk']['source'].get('name'))
                                 elif kwargs[key]['os_disk']['source'].get('uri') is not None and \
                                         kwargs[key]['os_disk']['source'].get('resource_group') is not None and \
                                         kwargs[key]['os_disk']['source'].get('storage_account') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     storage_account = kwargs[key]['os_disk']['source'].get('storage_account')
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['id'] = ('/subscriptions/' +
-                                                                                                                self.subscription_id +
-                                                                                                                '/resourceGroups/' +
-                                                                                                                resource_group +
-                                                                                                                '/providers/Microsoft.Storage' +
-                                                                                                                '/storageAccounts/' +
-                                                                                                                storage_account)
-                                    self.body['properties']['storageProfile']['osDiskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
+                                    self.body['storage_profile']['os_disk_image']['source']['id'] = ('/subscriptions/' +
+                                                                                                     self.subscription_id +
+                                                                                                     '/resourceGroups/' +
+                                                                                                     resource_group +
+                                                                                                     '/providers/Microsoft.Storage' +
+                                                                                                     '/storageAccounts/' +
+                                                                                                     storage_account)
+                                    self.body['storage_profile']['os_diskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")
 
@@ -617,7 +625,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                 self.fail("The os_disk.source parameters config errors")
 
                     if kwargs[key].get('data_disks') is not None:
-                        self.body['properties']['storageProfile']['dataDiskImages'] = []
+                        self.body['storage_profile']['data_disk_images'] = []
                         data_disk = {}
                         for item in kwargs[key].get('data_disks'):
                             if item.get('lun') is not None:
@@ -640,134 +648,117 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                         self.fail("The data_disk.source parameters config errors")
                                 else:
                                     self.fail("The data_disk.source parameters config errors")
+
                             if item.get('host_caching') is not None:
                                 data_disk['hostCaching'] = item['host_caching']
+
+                            self.body['storage_profile']['data_disk_images'].append(data_disk)
+
                 elif key == 'publishing_profile':
-                    self.body['properties']['publishingProfile'] = {}
+                    self.body['publishing_profile'] = {}
                     if kwargs['publishing_profile'].get('target_regions') is not None:
-                        self.body['properties']['publishingProfile']['targetRegions'] = []
+                        self.body['publishing_profile']['target_regions'] = []
                         for item in kwargs['publishing_profile']['target_regions']:
                             target_regions = {}
                             for value in item.keys():
                                 if value == 'name':
                                     target_regions[value] = item[value]
                                 elif value == 'regional_replica_count':
-                                    target_regions['regionalReplicaCount'] = item[value]
+                                    target_regions['regional_replica_count'] = item[value]
                                 elif value == 'storage_account_type':
-                                    target_regions['storageAccountType'] = item[value]
+                                    target_regions['storage_account_type'] = item[value]
                                 elif value == 'encryption':
                                     target_regions['encryption'] = {}
                                     if item[value].get('data_disk_images') is not None:
-                                        target_regions['encryption']['dataDiskImages'] = []
+                                        target_regions['encryption']['data_disk_images'] = []
                                         for tt in item[value]['data_disk_images']:
                                             disk_image = {}
                                             if tt.get('lun') is not None:
                                                 disk_image['lun'] = tt['lun']
                                             if tt.get('disk_encryption_set_id') is not None:
-                                                disk_image['diskEncryptionSetId'] = tt['disk_encryption_set_id']
-                                            target_regions['encryption']['dataDiskImages'].append(disk_image)
+                                                disk_image['disk_encryption_set_id'] = tt['disk_encryption_set_id']
+                                            target_regions['encryption']['data_disk_images'].append(disk_image)
 
                                     if item['encryption'].get('os_disk_image') is not None:
-                                        target_regions['encryption']['osDiskImage'] = {}
+                                        target_regions['encryption']['os_disk_image'] = {}
                                         if item['encryption']['os_disk_image'].get('disk_encryption_set_id') is not None:
                                             disk_encryption_set_id = item['encryption']['os_disk_image']['disk_encryption_set_id']
-                                            target_regions['encryption']['osDiskImage']['diskEncryptionSetId'] = disk_encryption_set_id
+                                            target_regions['encryption']['os_disk_image']['disk_encryption_set_id'] = disk_encryption_set_id
                                         if item['encryption']['os_disk_image'].get('security_profile') is not None:
-                                            target_regions['encryption']['osDiskImage']['securityProfile'] = {}
+                                            target_regions['encryption']['os_disk_image']['security_profile'] = {}
                                             if item['encryption']['os_disk_image']['security_profile'].get('secure_vm_disk_encryption_set_id') is not None:
                                                 secure_id = item['encryption']['os_disk_image']['security_profile']['secure_vm_disk_encryption_set_id']
-                                                target_regions['encryption']['osDiskImage']['securityProfile']['secureVMDiskEncryptionSetId'] = secure_id
+                                                target_regions['encryption']['os_disk_image']['security_profile']['secure_vm_dis_encryption_set_id'] = secure_id
 
                                             if item['encryption']['os_disk_image']['security_profile'].get('confidential_vm_encryption_type') is not None:
-                                                target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType'] = {}
+                                                target_regions['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type'] = {}
                                                 security = item['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type']
-                                                tt = target_regions['encryption']['osDiskImage']['securityProfile']['confidentialVMEncryptionType']
+                                                tt = target_regions['encryption']['os_disk_image']['security_profile']['confidential_vm_encryption_type']
                                                 if security.get('encrypted_vm_guest_state_only_with_pmk') is not None:
-                                                    tt['EncryptedVMGuestStateOnlyWithPmk'] = security.get('encrypted_vm_guest_state_only_with_pmk')
+                                                    tt['encrypted_vm_guestState_only_with_pmk'] = security.get('encrypted_vm_guest_state_only_with_pmk')
                                                 if security.get('encrypted_with_cmk') is not None:
-                                                    tt['EncryptedWithCmk'] = security.get('encrypted_with_cmk')
+                                                    tt['encrypted_with_cmk'] = security.get('encrypted_with_cmk')
                                                 if security.get('encrypted_with_pmk') is not None:
-                                                    tt['EncryptedWithPmk'] = security.get('encrypted_with_pmk')
-                            self.body['properties']['publishingProfile']['targetRegions'].append(target_regions)
+                                                    tt['encrypted_with_pmk'] = security.get('encrypted_with_pmk')
+                            self.body['publishing_profile']['target_regions'].append(target_regions)
                     if kwargs[key].get('managed_image') is not None:
                         if isinstance(kwargs[key]['managed_image'], str):
-                            self.body['properties']['publishingProfile']['managed_image'] = kwargs[key]['managed_image']
+                            self.body['publishing_profile']['managed_image'] = kwargs[key]['managed_image']
                         elif isinstance(kwargs[key]['managed_image'], dict):
                             if kwargs[key]['managed_image'].get('id') is not None:
-                                self.body['properties']['publishingProfile']['managed_image'] = kwargs[key]['managed_image']['id']
+                                self.body['publishing_profile']['managed_image'] = kwargs[key]['managed_image']['id']
                             elif kwargs[key]['managed_image'].get('resource_group') is not None and kwargs[key]['managed_image'].get('name') is not None:
-                                self.body['properties']['publishingProfile']['managed_image'] = ('/subscriptions/' +
-                                                                                                 self.subscription_id +
-                                                                                                 '/resourceGroups/' +
-                                                                                                 kwargs[key]['managed_image'].get('resource_group') +
-                                                                                                 '/providers/Microsoft.Compute/images/' +
-                                                                                                 kwargs[key]['managed_image'].get('name'))
+                                self.body['publishing_profile']['managed_image'] = ('/subscriptions/' +
+                                                                                    self.subscription_id +
+                                                                                    '/resourceGroups/' +
+                                                                                    kwargs[key]['managed_image'].get('resource_group') +
+                                                                                    '/providers/Microsoft.Compute/images/' +
+                                                                                    kwargs[key]['managed_image'].get('name'))
                             else:
                                 self.fail("The managed_image parameters config errors")
                         else:
                             self.fail("The managed_image parameters config errors")
                     if kwargs[key].get('snapshot') is not None:
                         if isinstance(kwargs[key].get('snapshot'), str):
-                            self.body['properties']['publishingProfile']['snapshot'] = kwargs[key].get('snapshot')
+                            self.body['publishing_profile']['snapshot'] = kwargs[key].get('snapshot')
                         elif isinstance(kwargs[key].get('snapshot'), dict):
                             if kwargs[key]['snapshot'].get('id') is not None:
-                                self.body['properties']['publishingProfile']['snapshot'] = kwargs[key]['snapshot'].get('id')
+                                self.body['publishing_profile']['snapshot'] = kwargs[key]['snapshot'].get('id')
                             elif kwargs[key]['snapshot'].get('resource_group') is not None and kwargs[key]['snapshot'].get('name') is not None:
-                                self.body['properties']['publishingProfile']['snapshot'] = ('/subscriptions/' +
-                                                                                            self.subscription_id +
-                                                                                            '/resourceGroups/' +
-                                                                                            kwargs[key]['snapshot'].get('resource_group') +
-                                                                                            '/providers/Microsoft.Compute/snapshots/' +
-                                                                                            kwargs[key]['snapshot'].get('name'))
+                                self.body['publishing_profile']['snapshot'] = ('/subscriptions/' +
+                                                                               self.subscription_id +
+                                                                               '/resourceGroups/' +
+                                                                               kwargs[key]['snapshot'].get('resource_group') +
+                                                                               '/providers/Microsoft.Compute/snapshots/' +
+                                                                               kwargs[key]['snapshot'].get('name'))
                             else:
                                 self.fail("The managed_image parameters config errors")
                         else:
                             self.fail("The managed_image parameters config errors")
                     if kwargs[key].get('replica_count') is not None:
-                        self.body['properties']['publishingProfile']['replicaCount'] = kwargs[key].get('replica_count')
+                        self.body['publishing_profile']['replica_count'] = kwargs[key].get('replica_count')
                     if kwargs[key].get('exclude_from_latest') is not None:
-                        self.body['properties']['publishingProfile']['excludeFromLatest'] = kwargs[key].get('exclude_from_latest')
+                        self.body['publishing_profile']['exclude_from_latest'] = kwargs[key].get('exclude_from_latest')
                     if kwargs[key].get('end_of_life_date') is not None:
-                        self.body['properties']['publishingProfile']['endOfLifeDate'] = kwargs[key].get('end_of_life_date')
+                        self.body['publishing_profile']['end_of_life_date'] = kwargs[key].get('end_of_life_date')
                     if kwargs[key].get('storage_account_type') is not None:
-                        self.body['properties']['publishingProfile']['storageAccountType'] = kwargs[key].get('storage_account_type')
+                        self.body['publishing_profile']['storage_account_type'] = kwargs[key].get('storage_account_type')
 
         # keep backward compatibility
-        snapshot = self.body.get('properties', {}).get('publishingProfile', {}).pop('snapshot', None)
+        snapshot = self.body.get('publishing_profile', {}).pop('snapshot', None)
         if snapshot is not None:
-            self.body['properties'].setdefault('storageProfile', {}).setdefault('osDiskImage', {}).setdefault('source', {})['id'] = snapshot
-        managed_image = self.body.get('properties', {}).get('publishingProfile', {}).pop('managed_image', None)
+            self.body.setdefault('storage_profile', {}).setdefault('os_disk_image', {}).setdefault('source', {})['id'] = snapshot
+        managed_image = self.body.get('publishing_profile', {}).pop('managed_image', None)
         if managed_image:
-            self.body['properties'].setdefault('storageProfile', {}).setdefault('source', {})['id'] = managed_image
+            self.body.setdefault('storage_profile', {}).setdefault('source', {})['id'] = managed_image
 
         old_response = None
         response = None
-
-        self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
 
         if 'location' not in self.body:
             self.body['location'] = resource_group.location
-
-        self.url = ('/subscriptions' +
-                    '/{{ subscription_id }}' +
-                    '/resourceGroups' +
-                    '/{{ resource_group }}' +
-                    '/providers' +
-                    '/Microsoft.Compute' +
-                    '/galleries' +
-                    '/{{ gallery_name }}' +
-                    '/images' +
-                    '/{{ image_name }}' +
-                    '/versions' +
-                    '/{{ version_name }}')
-        self.url = self.url.replace('{{ subscription_id }}', self.subscription_id)
-        self.url = self.url.replace('{{ resource_group }}', self.resource_group)
-        self.url = self.url.replace('{{ gallery_name }}', self.gallery_name)
-        self.url = self.url.replace('{{ image_name }}', self.gallery_image_name)
-        self.url = self.url.replace('{{ version_name }}', self.name)
 
         old_response = self.get_resource()
 
@@ -789,18 +780,17 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                     self.tags = newtags
                     self.body['tags'] = self.tags
                     self.to_do = Actions.Update
-                if self.body['properties'].get('publishingProfile') is not None:
-                    for key in self.body['properties']['publishingProfile'].keys():
-                        if key == 'targetRegions':
+                if self.body.get('publishing_profile') is not None:
+                    for key in self.body['publishing_profile'].keys():
+                        if key == 'target_regions':
                             result = dict(compare=[])
                             modifies = {'/*/name': {'updatable': True, 'comparison': 'location'}}
-                            if not self.default_compare(modifies, self.body['properties']['publishingProfile'][key],
-                               old_response['properties']['publishingProfile'][key], '', result):
+                            if not self.default_compare(modifies, self.body['publishing_profile'][key], old_response['publishing_profile'][key], '', result):
                                 self.to_do = Actions.Update
-                        elif key == 'endOfLifeDate':
-                            if self.body['properties']['publishingProfile'][key].lower() != old_response['properties']['publishingProfile'][key].lower():
+                        elif key == 'end_of_life_date':
+                            if self.body['publishing_profile'][key][:10].lower() != old_response['publishing_profile'].get(key)[:10].lower():
                                 self.to_do = Actions.Update
-                        elif self.body['properties']['publishingProfile'].get(key) != old_response['properties']['publishingProfile'].get(key):
+                        elif self.body['publishing_profile'].get(key) != old_response['publishing_profile'].get(key):
                             self.to_do = Actions.Update
 
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
@@ -835,32 +825,28 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
     def create_update_resource(self):
         # self.log('Creating / Updating the GalleryImageVersion instance {0}'.format(self.))
 
+        response = None
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'PUT',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              self.body,
-                                              self.status_code,
-                                              600,
-                                              30)
+            if self.to_do == Actions.Create:
+                response = self.image_version_client.gallery_image_versions.begin_create_or_update(self.resource_group, self.gallery_name,
+                                                                                                   self.gallery_image_name, self.name, self.body)
+            else:
+                response = self.image_version_client.gallery_image_versions.begin_update(self.resource_group,
+                                                                                         self.gallery_name, self.gallery_image_name, self.name, self.body)
+
         except Exception as exc:
             self.log('Error attempting to create the GalleryImageVersion instance.')
             self.fail('Error creating the GalleryImageVersion instance: {0}'.format(str(exc)))
 
-        if hasattr(response, 'body'):
-            response = json.loads(response.body())
-        elif hasattr(response, 'context'):
-            response = response.context['deserialized_data']
-        else:
-            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
+        if isinstance(response, LROPoller):
+            response = self.get_poller_result(response).as_dict()
 
         i = 0
-        while response['properties']['provisioningState'] == 'Creating':
+        while response['provisioning_state'] == 'Creating':
             time.sleep(60)
             response = self.get_resource()
             i = i + 1
-            if i == 10:
+            if i == self.timeout:
                 self.fail("Create or Updating encountered an exception, wait 10 minutes when the status is still 'creating'")
 
         return response
@@ -868,14 +854,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
     def delete_resource(self):
         # self.log('Deleting the GalleryImageVersion instance {0}'.format(self.))
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'DELETE',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
+            response = self.image_version_client.gallery_image_versions.begin_delete(self.resource_group, self.gallery_name, self.gallery_image_name, self.name)
         except Exception as e:
             self.log('Error attempting to delete the GalleryImageVersion instance.')
             self.fail('Error deleting the GalleryImageVersion instance: {0}'.format(str(e)))
@@ -883,26 +862,18 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
 
     def get_resource(self):
         # self.log('Checking if the GalleryImageVersion instance {0} is present'.format(self.))
-        found = False
+        response = None
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            response = json.loads(response.body())
-            found = True
-            self.log("Response : {0}".format(response))
-            # self.log("AzureFirewall instance : {0} found".format(response.name))
-        except Exception as e:
-            self.log('Did not find the AzureFirewall instance.')
-        if found is True:
-            return response
+            response = self.image_version_client.gallery_image_versions.get(self.resource_group, self.gallery_name, self.gallery_image_name, self.name)
+        except ResourceNotFoundError:
+            self.log('Could not get the gallery image verison')
+        return self.format_item(response)
 
-        return False
+    def format_item(self, item):
+        if item is None:
+            return None
+        else:
+            return item.as_dict()
 
 
 def main():

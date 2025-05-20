@@ -1,0 +1,258 @@
+- name: Prepare random name for Profile & EndPoint & Origin Group & Origin
+  ansible.builtin.set_fact:
+    profile: "prof-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    endpoint: "endpoint-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    origin_group: "origin-group-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    ruleset: "ruleset{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    origin: "origin-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    route: "route-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+
+- name: Create Standard Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    location: "Global"
+    resource_group: "{{ resource_group }}"
+    sku: "standard_azurefrontdoor"
+    state: "present"
+
+- name: Create EndPoint
+  azure_rm_afdendpoint:
+    name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    enabled_state: "Enabled"
+    state: "present"
+
+- name: Create Origin Group
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+    health_probe_settings:
+      probe_interval_in_seconds: 100
+      probe_path: "/"
+      probe_protocol: "Https"
+      probe_request_type: "HEAD"
+    load_balancing_settings:
+      additional_latency_in_milliseconds: 50
+      sample_size: 4
+      successful_samples_required: 3
+  register: output
+
+- name: Create Origin
+  azure_rm_afdorigin:
+    name: "{{ origin }}"
+    origin_group_name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+    host_name: "10.0.0.1"
+    origin_host_header: "10.0.0.1"
+    http_port: 80
+    https_port: 443
+    priority: 1
+    weight: 123
+  register: output
+
+- name: Create Ruleset
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+
+- name: Create Route
+  azure_rm_afdroute:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    enabled_state: "Enabled"
+    forwarding_protocol: "HttpsOnly"
+    https_redirect: "Disabled"
+    link_to_default_domain: "Enabled"
+    origin_group: "{{ origin_group }}"
+    patterns_to_match:
+      - "/auto/*"
+    rule_sets:
+      - "{{ ruleset }}"
+    supported_protocols:
+      - "Https"
+    state: "present"
+  register: output
+
+- name: Assert the resource was created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Update Route (idempotent test)
+  azure_rm_afdroute:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    enabled_state: "Enabled"
+    forwarding_protocol: "HttpsOnly"
+    https_redirect: "Disabled"
+    link_to_default_domain: "Enabled"
+    origin_group: "{{ origin_group }}"
+    patterns_to_match:
+      - "/auto/*"
+    rule_sets:
+      - "{{ ruleset }}"
+    supported_protocols:
+      - "Https"
+    state: "present"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.id
+
+- name: Load Route info
+  azure_rm_afdroute_info:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert the resource has the proper values set
+  ansible.builtin.assert:
+    that:
+      - output.afdroutes | length == 1
+      - output.afdroutes[0].enabled_state == 'Enabled'
+      - output.afdroutes[0].id
+      - output.afdroutes[0].rule_sets | length == 1
+      - not output.changed
+
+- name: Update Route (with different values)
+  azure_rm_afdroute:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    enabled_state: "Disabled"
+    forwarding_protocol: "HttpsOnly"
+    https_redirect: "Disabled"
+    link_to_default_domain: "Enabled"
+    origin_group: "{{ origin_group }}"
+    patterns_to_match:
+      - "/auto/*"
+      - "/test/*"
+    rule_sets:
+      - "{{ ruleset }}"
+    supported_protocols:
+      - "Https"
+      - "Http"
+    state: "present"
+  register: output
+
+- name: Assert the resource was changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Update Route (idempotent test)
+  azure_rm_afdroute:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    enabled_state: "Disabled"
+    forwarding_protocol: "HttpsOnly"
+    https_redirect: "Disabled"
+    link_to_default_domain: "Enabled"
+    origin_group: "{{ origin_group }}"
+    patterns_to_match:
+      - "/auto/*"
+      - "/test/*"
+    rule_sets:
+      - "{{ ruleset }}"
+    supported_protocols:
+      - "Https"
+      - "Http"
+    state: "present"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.id
+
+- name: Delete Route
+  azure_rm_afdroute:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    origin_group: "{{ origin_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Delete Route (idempotent test)
+  azure_rm_afdroute:
+    name: "{{ route }}"
+    endpoint_name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    origin_group: "{{ origin_group }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Delete Origin
+  azure_rm_afdorigin:
+    name: "{{ origin }}"
+    origin_group_name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: Delete Origin Group
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Create Ruleset
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+
+- name: Delete EndPoint
+  azure_rm_afdendpoint:
+    name: "{{ endpoint }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Delete Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    location: "Global"
+    resource_group: "{{ resource_group }}"
+    sku: "standard_azurefrontdoor"
+    state: "absent"

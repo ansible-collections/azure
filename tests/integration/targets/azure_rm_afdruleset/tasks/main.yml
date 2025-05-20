@@ -1,0 +1,125 @@
+- name: Prepare random name for Profile & Ruleset
+  ansible.builtin.set_fact:
+    profile: "prof-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    ruleset: "ruleset{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    ruleset2: "ruleset2{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+
+- name: Create Standard Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    location: "Global"
+    resource_group: "{{ resource_group }}"
+    sku: "standard_azurefrontdoor"
+    state: "present"
+
+- name: Create Ruleset
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+  register: output
+
+- name: Assert the resource was created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Update Ruleset (idempotent test)
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Create Ruleset 2
+  azure_rm_afdruleset:
+    name: "{{ ruleset2 }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "present"
+  register: output
+
+- name: Assert the resource was created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Load info for all Rulesets
+  azure_rm_afdruleset_info:
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert there are two resources
+  ansible.builtin.assert:
+    that:
+      - output.afdrulesets | length == 2
+      - not output.changed
+
+- name: Delete Origin Group 2
+  azure_rm_afdruleset:
+    name: "{{ ruleset2 }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Load info for all Rulesets
+  azure_rm_afdruleset_info:
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert the resource has the proper values set
+  ansible.builtin.assert:
+    that:
+      - output.afdrulesets | length == 1
+      - output.afdrulesets[0].name == "{{ ruleset }}"
+      - not output.changed
+
+- name: Delete Ruleset
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete Ruleset (idempotent test)
+  azure_rm_afdruleset:
+    name: "{{ ruleset }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Delete Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"

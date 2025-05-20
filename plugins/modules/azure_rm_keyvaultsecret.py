@@ -34,6 +34,7 @@ options:
     secret_value:
         description:
             - Secret to be secured by keyvault.
+            - This parameter must be configured at creation time.
         type: str
     secret_expiry:
         description:
@@ -141,10 +142,6 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
             content_type=dict(type='str')
         )
 
-        required_if = [
-            ('state', 'present', ['secret_value'])
-        ]
-
         self.results = dict(
             changed=False,
             state=dict()
@@ -165,7 +162,6 @@ class AzureRMKeyVaultSecret(AzureRMModuleBase):
 
         super(AzureRMKeyVaultSecret, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True,
-                                                    required_if=required_if,
                                                     supports_tags=True)
 
     def exec_module(self, **kwargs):

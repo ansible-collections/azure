@@ -51,6 +51,8 @@
     - "{{ storage_account_name_default }}03"
     - "{{ storage_account_name_default }}04"
     - "{{ storage_account_name_default }}06"
+    - "{{ storage_account_name_default }}07"
+    - "{{ storage_account_name_default }}08"
 
 - name: Create new storage account with defaults (omitted parameters)
   azure_rm_storageaccount:
@@ -181,6 +183,76 @@
       - "output.storageaccounts | length == 1"
       - output.storageaccounts[0].is_hns_enabled == true
       - output.storageaccounts[0].large_file_shares_state == 'Enabled'
+
+- name: Create new storage account with immutable_storage_with_versioning
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}08"
+    account_type: Standard_GRS
+    kind: StorageV2
+    immutable_storage_with_versioning:
+      enabled: true
+      immutability_policy:
+        immutability_period_since_creation_in_days: 10
+        state: Disabled
+        allow_protected_append_writes: false
+  register: output
+
+- name: Assert the storage account well created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create new storage account with immutable_storage_with_versioning(Idempotent test)
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}08"
+    account_type: Standard_GRS
+    kind: StorageV2
+    immutable_storage_with_versioning:
+      enabled: true
+      immutability_policy:
+        immutability_period_since_creation_in_days: 10
+        state: Disabled
+        allow_protected_append_writes: false
+  register: output
+
+- name: Assert the storage account no change
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update the storage account with immutable_storage_with_versioning
+  azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}08"
+    account_type: Standard_GRS
+    kind: StorageV2
+    immutable_storage_with_versioning:
+      enabled: true
+      immutability_policy:
+        immutability_period_since_creation_in_days: 20
+        state: Unlocked
+        allow_protected_append_writes: true
+  register: output
+
+- name: Assert the storage account well updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Gather facts of storage account
+  azure_rm_storageaccount_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name_default }}08"
+  register: output
+
+- name: Assert the storage account facts
+  ansible.builtin.assert:
+    that:
+      - output.storageaccounts[0].immutable_storage_with_versioning.enabled is true
+      - output.storageaccounts[0].immutable_storage_with_versioning.immutability_policy.allow_protected_append_writes is true
+      - output.storageaccounts[0].immutable_storage_with_versioning.immutability_policy.state == 'Unlocked'
 
 - name: Create storage account with static website enabled
   azure_rm_storageaccount:
@@ -741,6 +813,7 @@
     - "{{ storage_account_name_default }}05"
     - "{{ storage_account_name_default }}06"
     - "{{ storage_account_name_default }}07"
+    - "{{ storage_account_name_default }}08"
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

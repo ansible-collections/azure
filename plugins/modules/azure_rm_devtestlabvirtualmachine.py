@@ -43,6 +43,8 @@ options:
         choices:
             - windows
             - linux
+            - Windows
+            - Linux
     vm_size:
         description:
             - A valid Azure VM size value. For example, C(Standard_D4).
@@ -251,7 +253,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ),
             os_type=dict(
                 type='str',
-                choices=['linux', 'windows']
+                choices=['linux', 'windows', 'Linux', 'Windows']
             ),
             vm_size=dict(
                 type='str'

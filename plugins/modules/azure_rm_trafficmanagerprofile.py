@@ -81,6 +81,13 @@ options:
                 description:
                     - The profile-level monitoring status of the Traffic Manager.
                 type: str
+                choices:
+                    - CheckingEndpoint
+                    - Online
+                    - Degraded
+                    - Inactive
+                    - Stopped
+                    - Disabled
             protocol:
                 description:
                     - The protocol C(HTTP), C(HTTPS) or C(TCP) used to probe for endpoint health.
@@ -109,10 +116,56 @@ options:
                 description:
                     - The number of consecutive failed health check before declaring an endpoint in this profile Degraded after the next failed health check.
                 type: int
+            custom_headers:
+                description:
+                    - List of custom headers.
+                type: list
+                elements: dict
+                suboptions:
+                    name:
+                        description:
+                            - Header name.
+                        type: str
+                        required: true
+                    value:
+                        description:
+                            - Header value.
+                        type: str
+                        required: true
+            expected_status_code_ranges:
+                description:
+                    - List of expected status code ranges.
+                type: list
+                elements: dict
+                suboptions:
+                    max:
+                        description:
+                            - Max status code.
+                        type: int
+                        required: true
+                    min:
+                        description:
+                            - Min status code.
+                        type: int
+                        required: true
         default:
             protocol: HTTP
             port: 80
             path: /
+    max_return:
+        description:
+            -  Maximum number of endpoints to be returned for MultiValue routing type.
+        type: int
+    allowed_endpoint_record_types:
+        description:
+            - The list of allowed endpoint record types.
+        type: list
+        elements: str
+        choices:
+            - DomainName
+            - IPv4Address
+            - IPv6Address
+            - Any
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -167,12 +220,13 @@ endpoints:
              nalEndpoints/e1"
             ]
 '''
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, normalize_location_name
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import normalize_location_name
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.trafficmanager.models import (
-        Profile, DnsConfig, MonitorConfig
+        Profile, DnsConfig, MonitorConfig, MonitorConfigExpectedStatusCodeRangesItem, MonitorConfigCustomHeadersItem
     )
 except ImportError:
     # This is handled in azure_rm_common
@@ -197,7 +251,9 @@ def traffic_manager_profile_to_dict(tmp):
         routing_method=tmp.traffic_routing_method,
         dns_config=dict(),
         monitor_config=dict(),
-        endpoints=[]
+        endpoints=[],
+        max_return=tmp.max_return,
+        allowed_endpoint_record_types=tmp.allowed_endpoint_record_types
     )
     if tmp.dns_config:
         result['dns_config']['relative_name'] = tmp.dns_config.relative_name
@@ -211,6 +267,14 @@ def traffic_manager_profile_to_dict(tmp):
         result['monitor_config']['interval'] = tmp.monitor_config.interval_in_seconds
         result['monitor_config']['timeout'] = tmp.monitor_config.timeout_in_seconds
         result['monitor_config']['tolerated_failures'] = tmp.monitor_config.tolerated_number_of_failures
+        if tmp.monitor_config.expected_status_code_ranges is not None:
+            result['monitor_config']['expected_status_code_ranges'] = [dict(min=x.min, max=x.max) for x in tmp.monitor_config.expected_status_code_ranges]
+        else:
+            result['monitor_config']['expected_status_code_ranges'] = None
+        if tmp.monitor_config.custom_headers is not None:
+            result['monitor_config']['custom_headers'] = [dict(name=x.name, value=x.value) for x in tmp.monitor_config.custom_headers]
+        else:
+            result['monitor_config']['custom_headers'] = None
     if tmp.endpoints:
         for endpoint in tmp.endpoints:
             result['endpoints'].append(dict(
@@ -238,14 +302,30 @@ def create_dns_config_instance(dns_config):
 
 
 def create_monitor_config_instance(monitor_config):
+
+    custom_headers = []
+    expected_status_code_ranges = []
+    if monitor_config.get('custom_headers') is not None:
+        for item in monitor_config['custom_headers']:
+            custom_headers.append(MonitorConfigCustomHeadersItem(name=item['name'], value=item['value']))
+    else:
+        custom_headers = None
+    if monitor_config.get('expected_status_code_ranges') is not None:
+        for item in monitor_config['expected_status_code_ranges']:
+            expected_status_code_ranges.append(MonitorConfigExpectedStatusCodeRangesItem(min=item['min'], max=item['max']))
+    else:
+        expected_status_code_ranges = None
+
     return MonitorConfig(
-        profile_monitor_status=monitor_config['profile_monitor_status'],
-        protocol=monitor_config['protocol'],
-        port=monitor_config['port'],
-        path=monitor_config['path'],
-        interval_in_seconds=monitor_config['interval'],
-        timeout_in_seconds=monitor_config['timeout'],
-        tolerated_number_of_failures=monitor_config['tolerated_failures']
+        profile_monitor_status=monitor_config.get('profile_monitor_status'),
+        protocol=monitor_config.get('protocol'),
+        port=monitor_config.get('port'),
+        path=monitor_config.get('path'),
+        interval_in_seconds=monitor_config.get('interval'),
+        timeout_in_seconds=monitor_config.get('timeout'),
+        tolerated_number_of_failures=monitor_config.get('tolerated_failures'),
+        custom_headers=custom_headers,
+        expected_status_code_ranges=expected_status_code_ranges
     )
 
 
@@ -255,17 +335,33 @@ dns_config_spec = dict(
 )
 
 monitor_config_spec = dict(
-    profile_monitor_status=dict(type='str'),
+    profile_monitor_status=dict(type='str', choices=['CheckingEndpoint', 'Online', 'Degraded', 'Disabled', 'Inactive', 'Stopped']),
     protocol=dict(type='str', choices=['HTTP', 'HTTPS', 'TCP']),
     port=dict(type='int'),
     path=dict(type='str'),
     interval=dict(type='int'),
     timeout=dict(type='int'),
-    tolerated_failures=dict(type='int')
+    tolerated_failures=dict(type='int'),
+    custom_headers=dict(
+        type='list',
+        elements='dict',
+        options=dict(
+            name=dict(type='str', required=True),
+            value=dict(type='str', required=True)
+        )
+    ),
+    expected_status_code_ranges=dict(
+        type='list',
+        elements='dict',
+        options=dict(
+            min=dict(type='int', required=True),
+            max=dict(type='int', required=True)
+        )
+    )
 )
 
 
-class AzureRMTrafficManagerProfile(AzureRMModuleBase):
+class AzureRMTrafficManagerProfile(AzureRMModuleBaseExt):
 
     def __init__(self):
         self.module_arg_spec = dict(
@@ -309,6 +405,14 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
                 ),
                 options=monitor_config_spec
             ),
+            max_return=dict(
+                type='int'
+            ),
+            allowed_endpoint_record_types=dict(
+                type='list',
+                elements='str',
+                choices=['DomainName', 'IPv4Address', 'IPv6Address', 'Any']
+            ),
         )
 
         self.resource_group = None
@@ -321,6 +425,8 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
         self.dns_config = None
         self.monitor_config = None
         self.endpoints_copy = None
+        self.max_return = None
+        self.allowed_endpoint_record_types = None
 
         self.results = dict(
             changed=False
@@ -410,7 +516,7 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
 
         self.log("Deleting the Traffic Manager profile {0}".format(self.name))
         try:
-            operation_result = self.traffic_manager_management_client.profiles.delete(self.resource_group, self.name)
+            self.traffic_manager_management_client.profiles.delete(self.resource_group, self.name)
             return True
         except Exception as e:
             self.log('Error attempting to delete the Traffic Manager profile.')
@@ -432,7 +538,9 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
             traffic_routing_method=self.routing_method,
             dns_config=create_dns_config_instance(self.dns_config) if self.dns_config else None,
             monitor_config=create_monitor_config_instance(self.monitor_config) if self.monitor_config else None,
-            endpoints=self.endpoints_copy
+            endpoints=self.endpoints_copy,
+            max_return=self.max_return,
+            allowed_endpoint_record_types=self.allowed_endpoint_record_types
         )
         try:
             response = self.traffic_manager_management_client.profiles.create_or_update(self.resource_group, self.name, parameters)
@@ -459,11 +567,21 @@ class AzureRMTrafficManagerProfile(AzureRMModuleBase):
             self.log("DNS Config Diff - Origin {0} / Update {1}".format(response['dns_config'], self.dns_config))
             return True
 
-        for k, v in self.monitor_config.items():
-            if v:
-                if str(v).lower() != str(response['monitor_config'][k]).lower():
-                    self.log("Monitor Config Diff - Origin {0} / Update {1}".format(response['monitor_config'], self.monitor_config))
-                    return True
+        if self.max_return and response['max_return'] != self.max_return:
+            self.log("Profile max_return Diff - Origin {0} / Update {1}".format(response['max_return'], self.max_return))
+            return True
+        else:
+            self.max_return = response['max_return']
+
+        if not self.default_compare({}, self.allowed_endpoint_record_types, response['allowed_endpoint_record_types'], '', dict(compare=[])):
+            self.log("Profile allowed_endpoint_record_types Diff - Origin {0} / Update {1}".format(response['allowed_endpoint_record_types'],
+                                                                                                   self.allowed_endpoint_record_types))
+            return True
+
+        if not self.default_compare({}, self.monitor_config, response['monitor_config'], '', dict(compare=[])):
+            self.log("Monitor Config Diff - Origin {0} / Update {1}".format(response['monitor_config'], self.monitor_config))
+            return True
+
         return False
 
 

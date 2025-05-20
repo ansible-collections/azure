@@ -230,6 +230,49 @@ storageaccounts:
             type: bool
             returned: always
             sample: true
+        immutable_storage_with_versioning:
+            description:
+                - The property is immutable and can only be set to true at the account creation time.
+                - When set to true, it enables object level immutability for all the containers in the account by default.
+            type: complex
+            returned: when-used
+            contains:
+                enabled:
+                    description:
+                        - A boolean flag which enables account-level immutability.
+                        - All the containers under such an account have object-level immutability enabled by default.
+                    type: bool
+                    returned: when-used
+                    sample: true
+                immutability_policy:
+                    description:
+                        - Specifies the default account-level immutability policy which is inherited and
+                          applied to objects that do not possess an explicit immutability policy at the object level.
+                        - The object-level immutability policy has higher precedence than the container-level immutability policy,
+                          which has a higher precedence than the account-level immutability policy.
+                    type: dict
+                    returned: when-used
+                    contains:
+                        allow_protected_append_writes:
+                            description:
+                                - This property can only be changed for disabled and unlocked time-based retention policies.
+                                - When enabled, new blocks can be written to an append blob while maintaining immutability protection and compliance.
+                                - Only new blocks can be added and any existing blocks cannot be modified or deleted.
+                            type: bool
+                            returned: when-used
+                            sample: true
+                        state:
+                            description:
+                                - The ImmutabilityPolicy state defines the mode of the policy.
+                            type: str
+                            returned: when-used
+                            sample: Unlocked
+                        immutability_period_since_creation_in_days:
+                            description:
+                                - The immutability period for the blobs in the container since the policy creation, in days.
+                            type: int
+                            returned: when-used
+                            sample: true
         enable_nfs_v3:
             description:
                 - NFS 3.0 protocol.
@@ -715,6 +758,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=None,
                 error_document404_path=None,
             ),
+            immutable_storage_with_versioning=account_obj.immutable_storage_with_versioning.as_dict() if account_obj.immutable_storage_with_versioning else None
         )
 
         account_dict['geo_replication_stats'] = None

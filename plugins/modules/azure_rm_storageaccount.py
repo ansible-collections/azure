@@ -324,6 +324,43 @@ options:
                 description:
                     - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
                 type: bool
+    immutable_storage_with_versioning:
+        description:
+            - The property is immutable and can only be set to true at the account creation time.
+            - When set to true, it enables object level immutability for all the containers in the account by default.
+        type: dict
+        suboptions:
+            enabled:
+                description:
+                    - A boolean flag which enables account-level immutability.
+                    - All the containers under such an account have object-level immutability enabled by default.
+                type: bool
+            immutability_policy:
+                description:
+                    - Specifies the default account-level immutability policy which is inherited and
+                      applied to objects that do not possess an explicit immutability policy at the object level.
+                    - The object-level immutability policy has higher precedence than the container-level immutability policy,
+                      which has a higher precedence than the account-level immutability policy.
+                type: dict
+                suboptions:
+                    allow_protected_append_writes:
+                        description:
+                            - This property can only be changed for C(disabled) and C(unlocked) time-based retention policies.
+                            - When C(enabled), new blocks can be written to an append blob while maintaining immutability protection and compliance.
+                            - Only new blocks can be added and any existing blocks cannot be modified or deleted.
+                        type: bool
+                    state:
+                        description:
+                            - The ImmutabilityPolicy state defines the mode of the policy.
+                        type: str
+                        choices:
+                            - Unlocked
+                            - Locked
+                            - Disabled
+                    immutability_period_since_creation_in_days:
+                        description:
+                            - The immutability period for the blobs in the container since the policy creation, in days.
+                        type: int
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -518,6 +555,49 @@ state:
             type: bool
             returned: always
             sample: true
+        immutable_storage_with_versioning:
+            description:
+                - The property is immutable and can only be set to true at the account creation time.
+                - When set to true, it enables object level immutability for all the containers in the account by default.
+            type: complex
+            returned: when-used
+            contains:
+                enabled:
+                    description:
+                        - A boolean flag which enables account-level immutability.
+                        - All the containers under such an account have object-level immutability enabled by default.
+                    type: bool
+                    returned: when-used
+                    sample: true
+                immutability_policy:
+                    description:
+                        - Specifies the default account-level immutability policy which is inherited and
+                          applied to objects that do not possess an explicit immutability policy at the object level.
+                        - The object-level immutability policy has higher precedence than the container-level immutability policy,
+                          which has a higher precedence than the account-level immutability policy.
+                    type: dict
+                    returned: when-used
+                    contains:
+                        allow_protected_append_writes:
+                            description:
+                                - This property can only be changed for disabled and unlocked time-based retention policies.
+                                - When enabled, new blocks can be written to an append blob while maintaining immutability protection and compliance.
+                                - Only new blocks can be added and any existing blocks cannot be modified or deleted.
+                            type: bool
+                            returned: when-used
+                            sample: true
+                        state:
+                            description:
+                                - The ImmutabilityPolicy state defines the mode of the policy.
+                            type: str
+                            returned: when-used
+                            sample: Unlocked
+                        immutability_period_since_creation_in_days:
+                            description:
+                                - The immutability period for the blobs in the container since the policy creation, in days.
+                            type: int
+                            returned: when-used
+                            sample: true
         enable_nfs_v3:
             description:
                 - NFS 3.0 protocol.
@@ -824,6 +904,20 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 type="dict",
                 options=self.managed_identity_single_spec
             ),
+            immutable_storage_with_versioning=dict(
+                type='dict',
+                options=dict(
+                    enabled=dict(type='bool'),
+                    immutability_policy=dict(
+                        type='dict',
+                        options=dict(
+                            immutability_period_since_creation_in_days=dict(type='int'),
+                            state=dict(type='str', choices=['Unlocked', 'Locked', 'Disabled']),
+                            allow_protected_append_writes=dict(type='bool')
+                        )
+                    )
+                )
+            )
         )
 
         self.results = dict(
@@ -859,6 +953,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         self._managed_identity = None
         self.identity = None
         self.update_identity = False
+        self.immutable_storage_with_versioning = None
 
         super(AzureRMStorageAccount, self).__init__(self.module_arg_spec,
                                                     supports_check_mode=True)
@@ -990,6 +1085,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 index_document=None,
                 error_document404_path=None,
             ),
+            immutable_storage_with_versioning=account_obj.immutable_storage_with_versioning.as_dict() if account_obj.immutable_storage_with_versioning else None
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
@@ -1322,6 +1418,15 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 except Exception as exc:
                     self.fail("Failed to update tags: {0}".format(str(exc)))
 
+        if not self.default_compare({}, self.immutable_storage_with_versioning, self.account_dict['immutable_storage_with_versioning'], '', dict(compare=[])):
+            self.results['changed'] = True
+            if not self.check_mode:
+                parameters = self.storage_models.StorageAccountUpdateParameters(immutable_storage_with_versioning=self.immutable_storage_with_versioning)
+                try:
+                    self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
+                except Exception as exc:
+                    self.fail("Failed to update immutable_storage_with_versioning: {0}".format(str(exc)))
+
         if self.blob_cors and not compare_cors(self.account_dict.get('blob_cors', []), self.blob_cors):
             self.results['changed'] = True
             if not self.check_mode:
@@ -1389,6 +1494,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 allow_cross_tenant_replication=self.allow_cross_tenant_replication,
                 allow_shared_key_access=self.allow_shared_key_access,
                 identity=self.identity,
+                immutable_storage_with_versioning=self.immutable_storage_with_versioning,
                 tags=dict()
             )
             if self.tags:
@@ -1420,6 +1526,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                                                                         allow_shared_key_access=self.allow_shared_key_access,
                                                                         default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                                                                         allow_cross_tenant_replication=self.allow_cross_tenant_replication,
+                                                                        immutable_storage_with_versioning=self.immutable_storage_with_versioning,
                                                                         large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
         try:

@@ -1,0 +1,203 @@
+- name: Prepare random name for Profile & EndPoint
+  ansible.builtin.set_fact:
+    profile: "prof-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    origin_group: "origin-group-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+    origin_group2: "origin-group2-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
+
+- name: Create Standard Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    location: "Global"
+    resource_group: "{{ resource_group }}"
+    sku: "standard_azurefrontdoor"
+    state: "present"
+
+- name: Create Origin Group
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    health_probe_settings:
+      probe_interval_in_seconds: 100
+      probe_path: "/"
+      probe_protocol: "Https"
+      probe_request_type: "HEAD"
+    load_balancing_settings:
+      additional_latency_in_milliseconds: 50
+      sample_size: 4
+      successful_samples_required: 3
+    state: "present"
+  register: output
+
+- name: Assert the resource was created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Update Origin Group (idempotent test)
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    health_probe_settings:
+      probe_interval_in_seconds: 100
+      probe_path: "/"
+      probe_protocol: "Https"
+      probe_request_type: "HEAD"
+    load_balancing_settings:
+      additional_latency_in_milliseconds: 50
+      sample_size: 4
+      successful_samples_required: 3
+    state: "present"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Create Origin Group 2
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group2 }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    health_probe_settings:
+      probe_interval_in_seconds: 50
+      probe_path: "/api"
+      probe_protocol: "Https"
+      probe_request_type: "HEAD"
+    load_balancing_settings:
+      additional_latency_in_milliseconds: 80
+      sample_size: 5
+      successful_samples_required: 5
+    state: "present"
+  register: output
+
+- name: Assert the resource was created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Load info for all Origin Groups
+  azure_rm_afdorigingroup_info:
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert there are two resources
+  ansible.builtin.assert:
+    that:
+      - output.afdorigingroups | length == 2
+      - not output.changed
+
+- name: Delete Origin Group 2
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group2 }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.id
+
+- name: Load Origin Group info
+  azure_rm_afdorigingroup_info:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert the resource has the proper values set
+  ansible.builtin.assert:
+    that:
+      - output.afdorigingroups | length == 1
+      - output.afdorigingroups[0].health_probe_settings.probe_interval_in_seconds == 100
+      - output.afdorigingroups[0].health_probe_settings.probe_path == '/'
+      - output.afdorigingroups[0].health_probe_settings.probe_protocol == 'Https'
+      - output.afdorigingroups[0].health_probe_settings.probe_request_type == 'HEAD'
+      - output.afdorigingroups[0].load_balancing_settings.additional_latency_in_milliseconds == 50
+      - output.afdorigingroups[0].load_balancing_settings.sample_size == 4
+      - output.afdorigingroups[0].load_balancing_settings.successful_samples_required == 3
+      - not output.changed
+
+- name: Update Origin Group (with different values)
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    health_probe_settings:
+      probe_interval_in_seconds: 60
+      probe_path: "/test"
+      probe_protocol: "Https"
+      probe_request_type: "HEAD"
+    load_balancing_settings:
+      additional_latency_in_milliseconds: 55
+      sample_size: 5
+      successful_samples_required: 5
+    state: "present"
+  register: output
+
+- name: Assert the resource was changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Update Origin Group (idempotent test)
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    health_probe_settings:
+      probe_interval_in_seconds: 60
+      probe_path: "/test"
+      probe_protocol: "Https"
+      probe_request_type: "HEAD"
+    load_balancing_settings:
+      additional_latency_in_milliseconds: 55
+      sample_size: 5
+      successful_samples_required: 5
+    state: "present"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Delete Origin Group
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete Origin Group (idempotent test)
+  azure_rm_afdorigingroup:
+    name: "{{ origin_group }}"
+    profile_name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"
+  register: output
+
+- name: Assert the resource was not changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Delete Frontdoor Profile
+  azure_rm_cdnprofile:
+    name: "{{ profile }}"
+    resource_group: "{{ resource_group }}"
+    state: "absent"

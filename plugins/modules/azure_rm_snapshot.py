@@ -60,6 +60,8 @@ options:
         choices:
             - Linux
             - Windows
+            - linux
+            - windows
     creation_data:
         description:
             - Disk source information.
@@ -167,8 +169,8 @@ class AzureRMSnapshots(AzureRMModuleBaseExt):
             ),
             os_type=dict(
                 type='str',
-                choices=['Windows',
-                         'Linux']
+                choices=['Windows', 'linux',
+                         'Linux', 'windows']
             ),
             incremental=dict(type='bool', default=False),
             creation_data=dict(
