@@ -57,7 +57,7 @@
     policy:
       subject: 'CN=Anhui02'
       issuer_name: self
-      exportable: True
+      exportable: true
       key_type: RSA
       key_size: 2048
       san_emails:
@@ -84,7 +84,7 @@
     policy:
       subject: 'CN=Anhui02'
       issuer_name: self
-      exportable: True
+      exportable: true
       key_type: RSA
       key_size: 2048
       san_emails:
@@ -111,7 +111,7 @@
     policy:
       subject: 'CN=Anhui02'
       issuer_name: self
-      exportable: True
+      exportable: true
       key_type: RSA
       key_size: 2048
       san_emails:
@@ -179,9 +179,8 @@
   ansible.builtin.assert:
     that:
       - facts['certificates'] | length == 2
-  ignore_errors: true
 
-- name: recover the keyvault certificate
+- name: Recover the keyvault certificate
   azure_rm_keyvaultcertificate:
     vault_uri: https://vault{{ rpfx }}.vault.azure.net
     name: "cert{{ rpfx }}"
@@ -192,10 +191,10 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: purge the keyvault certificate
+- name: Purge the keyvault certificate
   azure_rm_keyvaultcertificate:
     vault_uri: https://vault{{ rpfx }}.vault.azure.net
-    name:  "cert{{ rpfx }}-secondary"
+    name: "cert{{ rpfx }}-secondary"
     state: purge
   register: output
 
@@ -213,7 +212,6 @@
   ansible.builtin.assert:
     that:
       - facts['certificates'] | length == 0
-  ignore_errors: true
 
 - name: Delete instance of Key Vault
   azure_rm_keyvault:
