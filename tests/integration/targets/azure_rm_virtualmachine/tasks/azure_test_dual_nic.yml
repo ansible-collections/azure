@@ -57,7 +57,7 @@
 - name: Ensure VM was created properly
   ansible.builtin.assert:
     that:
-      - azure_vm.availability_set.id
+      - azure_vm.availability_set.id != ''
       - azure_vm.storage_profile.os_disk.name == 'testosdiskxx'
 
 - name: Retrieve VM facts (filtering by name)
@@ -70,10 +70,10 @@
   ansible.builtin.assert:
     that:
       - vm_facts_results.vms | length == 1
-      - vm_facts_results.vms[0].name == "{{ vm_name }}"
-      - vm_facts_results.vms[0].location
+      - vm_facts_results.vms[0].name == vm_name
+      - vm_facts_results.vms[0].location != ''
       - vm_facts_results.vms[0].admin_username == 'adminuser'
-      - vm_facts_results.vms[0].resource_group == "{{ resource_group }}"
+      - vm_facts_results.vms[0].resource_group == resource_group
       - vm_facts_results.vms[0].power_state != None
 
 - name: Retrieve facts by tags

@@ -75,7 +75,7 @@
   ansible.builtin.assert:
     that:
       - azure_vm.provisioning_state == 'Succeeded'
-      - azure_vm.availability_set.id
+      - azure_vm.availability_set.id != ''
       # initial response from creation has no diagnosticsProfile
       # if you run it again however, there is one in the response
       # so we handle both cases
