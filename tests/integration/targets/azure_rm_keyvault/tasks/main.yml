@@ -142,7 +142,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == true
+      - output.changed
 
 - name: Get key vault facts
   azure_rm_keyvault_info:
@@ -320,10 +320,10 @@
   ansible.builtin.assert:
     that:
       - facts['keys'] | length == 1
-      - facts['keys'][0]['kid']
+      - facts['keys'][0]['kid'] != ''
       - facts['keys'][0]['permitted_operations'] | length > 0
-      - facts['keys'][0]['type']
-      - facts['keys'][0]['version']
+      - facts['keys'][0]['type'] != ''
+      - facts['keys'][0]['version'] != ''
 
 - name: Delete a kevyault key
   azure_rm_keyvaultkey:

@@ -411,7 +411,7 @@
       - output.rules[0].name != None
       - output.rules[0].start_ip_address != None
       - output.rules[0].end_ip_address != None
-      - "output.rules | length == 1"
+      - output.rules | length == 1
 
 - name: Gather facts MariaDB Firewall Rule
   azure_rm_mariadbfirewallrule_info:
@@ -431,7 +431,7 @@
       - output.rules[1].name != None
       - output.rules[1].start_ip_address != None
       - output.rules[1].end_ip_address != None
-      - "output.rules | length == 2"
+      - output.rules | length == 2
 
 - name: Delete instance of Firewall Rule
   azure_rm_mariadbfirewallrule:
@@ -474,7 +474,7 @@
   ansible.builtin.assert:
     that:
       - output.changed == False
-      - "output.rules | length == 0"
+      - output.rules | length == 0
 
 #
 # configuration
