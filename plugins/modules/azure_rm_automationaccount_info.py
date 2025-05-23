@@ -21,7 +21,6 @@ options:
         description:
             - The name of the resource group.
         type: str
-        required: True
     name:
         description:
             - The name of the automation account.
@@ -251,8 +250,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         # define user inputs into argument
         self.module_arg_spec = dict(
             resource_group=dict(
-                type='str',
-                required=True
+                type='str'
             ),
             name=dict(
                 type='str'
