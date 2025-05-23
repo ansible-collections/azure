@@ -330,6 +330,54 @@ aks_agent_pools:
             type: str
             returned: always
             sample: MIG1g
+        windows_profile:
+            description:
+                - The Windows agent pool's specific profile.
+            type: dict
+            returned: when-used
+            sample: {"disable_outbound_nat": false}
+        network_profile:
+            description:
+                - Network-related settings of an agent pool.
+            type: complex
+            returned: when-used
+            contains:
+                allowed_host_ports:
+                    description:
+                        - The port ranges that are allowed to access.
+                    type: list
+                    returned: always
+                    sample: [{"port_end": 200, "port_start": 10, "protocol": "TCP"}]
+                application_security_groups:
+                    description:
+                        - The IDs of the application security groups which agent pool will associate when created.
+                    type: list
+                    returned: always
+                    sample: ["/subscriptions/xxxxxx/resourceGroups/testRG/providers/Microsoft.Network/applicationSecurityGroups/appnsg"]
+        pod_subnet_id:
+            description:
+                - The subnet ID.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworks/My_Virtual_Network/subnets/foobar"
+        host_group_id:
+            description:
+                - The host group ID.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/hostGroups/hostgroup"
+        capacity_reservation_group_id:
+            description:
+                - The ID of Capacity Reservation Group.
+            returned: always
+            type: str
+            sample: "/subscriptions/xxxxx/resourceGroups/testRG/providers/Microsoft.Compute/capacityReservationGroups/crgid"
+        os_disk_type:
+            description:
+                - The type of the OS disk.
+            returned: always
+            sample: Managed
+            type: str
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -440,6 +488,12 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             enable_ultra_ssd=agent_pool.enable_ultra_ssd,
             enable_fips=agent_pool.enable_fips,
             gpu_instance_profile=agent_pool.gpu_instance_profile,
+            os_disk_type=agent_pool.os_disk_type,
+            capacity_reservation_group_id=agent_pool.capacity_reservation_group_id,
+            host_group_id=agent_pool.host_group_id,
+            pod_subnet_id=agent_pool.pod_subnet_id,
+            network_profile=dict(),
+            windows_profile=dict(),
         )
 
         if agent_pool.upgrade_settings is not None:
@@ -480,6 +534,16 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             agent_pool_dict['security_profile']['enable_secure_boot'] = agent_pool.security_profile.enable_secure_boot
         else:
             agent_pool_dict['security_profile'] = None
+
+        if agent_pool.network_profile is not None:
+            agent_pool_dict['network_profile'] = agent_pool.network_profile.as_dict()
+        else:
+            agent_pool_dict['network_profile'] = None
+
+        if agent_pool.windows_profile is not None:
+            agent_pool_dict['windows_profile']['disable_outbound_nat'] = agent_pool.windows_profile.disable_outbound_nat
+        else:
+            agent_pool_dict['windows_profile'] = None
 
         return agent_pool_dict
 
