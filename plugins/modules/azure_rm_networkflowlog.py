@@ -349,7 +349,9 @@ class AzureRMNetworkFlowLog(AzureRMModuleBaseExt):
                 self.body[key] = kwargs[key]
 
         resource_group = self.get_resource_group(self.resource_group)
-        if self.body.get('location') is None:
+        if self.location is not None:
+            self.body['location'] = self.location
+        else:
             # Set default location
             self.body['location'] = resource_group.location
         self.body['tags'] = self.tags
