@@ -1,6 +1,6 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=15) }}"
 - name: Excute test_shared.yml
   ansible.builtin.include_tasks: tasks/test_shared.yml
 # - name: Excute test_async.yml

@@ -127,3 +127,9 @@
 - name: Assert the resource is not changed
   ansible.builtin.assert:
     that: not output.changed
+
+- name: Delete the web app
+  azure_rm_webapp:
+    resource_group: "{{ resource_group_datalake }}"
+    name: webapp{{ rpfx }}
+    state: absent

@@ -186,3 +186,31 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Delete the first virtual network gateway
+  azure_rm_virtualnetworkgateway:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vngname }}"
+    state: absent
+
+- name: Delete the secondary virtual network gateway
+  azure_rm_virtualnetworkgateway:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vngname }}02"
+    state: absent
+
+- name: Pause for 5 mimutes to delete the virtual network connection
+  ansible.builtin.command: sleep 300
+  changed_when: true
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "{{ pubipname }}"
+    state: absent
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "{{ pubipname }}02"
+    state: absent

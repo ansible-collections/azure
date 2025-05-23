@@ -18,7 +18,7 @@
 
 - name: Prepare random number
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
   run_once: true
 
 - name: Create virtual network
@@ -144,6 +144,10 @@
     resource_group: "{{ resource_group }}"
     name: "vmforimage{{ rpfx }}"
     state: absent
+
+- name: Pause for 5 mimutes to waiting
+  ansible.builtin.command: sleep 300
+  changed_when: true
 
 - name: Create VMSS with I(orchestration_mode=Flexible)
   azure_rm_virtualmachinescaleset:
@@ -287,10 +291,6 @@
         id:
           - "{{ managed_identity_ids[0] }}"
   register: results
-
-- name: Debug
-  ansible.builtin.debug:
-    var: results
 
 - name: Assert that VMSS was created using Spot Instance default values
   ansible.builtin.assert:
@@ -671,7 +671,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -699,7 +699,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -729,7 +729,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -757,7 +757,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}2
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     capacity: 0
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
@@ -923,7 +923,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}des
-    vm_size: Standard_D3_v2
+    vm_size: Standard_B1ms
     virtual_network_name: VMSStestVnet
     subnet_name: VMSStestSubnet
     admin_username: testuser
@@ -1047,3 +1047,15 @@
     managed_identity_unique: '1'
     managed_identity_action: 'delete'
     managed_identity_location: "{{ location }}"
+
+- name: Delete load balancer
+  azure_rm_loadbalancer:
+    resource_group: "{{ resource_group }}"
+    name: testLB1
+    state: absent
+
+- name: Delete the public IP address 1
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: testPublicIP1
+    state: absent

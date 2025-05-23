@@ -130,3 +130,19 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Delete the virtual network gateway
+  azure_rm_virtualnetworkgateway:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vngname }}"
+    state: absent
+
+- name: Pause for 5 mimutes to delete the virtual network connection
+  ansible.builtin.command: sleep 300
+  changed_when: true
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "{{ pubipname }}"
+    state: absent

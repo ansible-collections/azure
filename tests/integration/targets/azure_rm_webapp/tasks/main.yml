@@ -309,10 +309,6 @@
   ansible.builtin.assert:
     that: output.changed
 
-- name: Assert the web app was deleted
-  ansible.builtin.assert:
-    that: output.changed
-
 - name: Assert error that java is mutually exclusive with frameworks
   azure_rm_webapp:
     resource_group: "{{ resource_group_datalake }}"

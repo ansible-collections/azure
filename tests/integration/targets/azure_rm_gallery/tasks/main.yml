@@ -272,7 +272,7 @@
 - name: Create custom image
   azure_rm_image:
     resource_group: "{{ resource_group }}"
-    name: testimagea
+    name: testcustomimage
     source: "vmforimage{{ rpfx }}"
     hyper_v_generation: V2
 
@@ -451,7 +451,7 @@
           storage_account_type: Standard_LRS
     storage_profile:
       source_image:
-        name: testimagea
+        name: testcustomimage
         resource_group: "{{ resource_group }}"
   register: output
 
@@ -490,7 +490,7 @@
           storage_account_type: Standard_LRS
     storage_profile:
       source_image:
-        name: testimagea
+        name: testcustomimage
         resource_group: "{{ resource_group }}"
   register: output
 
@@ -529,7 +529,7 @@
           storage_account_type: Standard_LRS
     storage_profile:
       source_image:
-        name: testimagea
+        name: testcustomimage
         resource_group: "{{ resource_group }}"
   register: output
 
@@ -568,7 +568,7 @@
           storage_account_type: Standard_LRS
     storage_profile:
       source_image:
-        name: testimagea
+        name: testcustomimage
         resource_group: "{{ resource_group }}"
   register: output
 
@@ -663,3 +663,15 @@
     id: "{{ az_role_assignment_create.id }}"
     state: absent
   when: az_role_assignment_create.changed
+
+- name: Delete the public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "testPublicIP{{ rpfx }}"
+    state: absent
+
+- name: Delete the VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "vmforimage{{ rpfx }}"
+    state: absent

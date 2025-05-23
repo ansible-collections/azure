@@ -1,6 +1,6 @@
 - name: Set Private Link Service Names
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+    rpfx: "pr{{ resource_group | hash('md5') | truncate(18, True, '') }}"
 
 - name: Delete the private link service
   azure_rm_privatelinkservice:
@@ -293,3 +293,19 @@
 - name: Assert the private link service deleted
   ansible.builtin.assert:
     that: output.changed
+
+- name: Pause for 5 mimutes to waiting
+  ansible.builtin.command: sleep 300
+  changed_when: true
+
+- name: Delete the load balancer
+  azure_rm_loadbalancer:
+    resource_group: '{{ resource_group }}'
+    name: "lb{{ rpfx }}"
+    state: absent
+
+- name: Delete the public ip
+  azure_rm_publicipaddress:
+    resource_group: '{{ resource_group }}'
+    name: "pip{{ rpfx }}"
+    state: absent
