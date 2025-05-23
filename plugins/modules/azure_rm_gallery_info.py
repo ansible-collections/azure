@@ -238,7 +238,7 @@ class AzureRMGalleriesInfo(AzureRMModuleBase):
             'name': item['name'],
             'location': item['location'],
             'tags': item.get('tags'),
-            'description': item['properties']['description'],
+            'description': item['properties'].get('description'),
             'provisioning_state': item['properties']['provisioningState']
         }
         return d
