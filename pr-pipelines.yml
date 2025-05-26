@@ -13,16 +13,18 @@ parameters:
   - name: ANSIBLE_VER
     displayName: 'Ansible Version'
     type: string
-    default: "2.16"
+    default: "2.17"
     values:
       - "2.9"
       - "2.10"
       - "2.11"
       - "2.12"
-      - "2.13" # Eol Nov.6 2023 https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html
+      - "2.13"
       - "2.14"
       - "2.15"
-      - "2.16"
+      - "2.16" # End Of Life May 2025 https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
+      - "2.17"
+      - "2.18"
       - "devel"
   - name: MODULE_NAME
     displayName: 'Test Module'
