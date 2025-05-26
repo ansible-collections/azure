@@ -1,4 +1,4 @@
-- name: Set a random string for the tag
+- name: Set A Random String
   set_fact:
     rpfx: "{{ resource_group_secondary | hash('md5') | truncate(8, True, '') }}"
 
@@ -25,6 +25,10 @@
     that:
       - output.changed
 
+- name: Pause for 3 mimutes
+  ansible.builtin.command: sleep 180
+  changed_when: true
+
 - name: Create a new tags with scope(Idempotent test)
   azure_rm_tags:
     scope: "{{ __rg_info.resourcegroups.0.id }}"
@@ -37,6 +41,10 @@
   ansible.builtin.assert:
     that:
       - not output.changed
+
+- name: Pause for 3 mimutes
+  ansible.builtin.command: sleep 180
+  changed_when: true
 
 - name: Update the tags with scope
   azure_rm_tags:
@@ -74,6 +82,11 @@
     that:
       - output.changed
 
+
+- name: Pause for 3 mimutes
+  ansible.builtin.command: sleep 180
+  changed_when: true
+
 - name: Create a tag with tag_name(Idemptent test)
   azure_rm_tags:
     tag_name: "key{{ rpfx }}"
@@ -94,6 +107,10 @@
   ansible.builtin.assert:
     that:
       - output.changed
+
+- name: Pause for 3 mimutes
+  ansible.builtin.command: sleep 180
+  changed_when: true
 
 - name: Create a tag with tag_value(Idemptent test)
   azure_rm_tags:
