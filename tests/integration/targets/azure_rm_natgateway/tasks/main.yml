@@ -4,7 +4,7 @@
   run_once: true
 - name: Set json query to only retrieve gateways from this test
   ansible.builtin.set_fact:
-    query: "[?ends_with(name, `{{ rpfx }}`)]"
+    query_pattern: "[?ends_with(name, `{{ rpfx }}`)]"
   run_once: true
 
 - name: Get resource group info
@@ -23,7 +23,7 @@
 - name: Assert there are no gateways
   ansible.builtin.assert:
     that:
-      - natgw_output.gateways | community.general.json_query(query) | length == 0
+      - natgw_output.gateways | community.general.json_query(query_pattern) | length == 0
 
 - name: Create instance of NAT Gateway in check_mode
   azure_rm_natgateway:
@@ -43,7 +43,7 @@
 - name: Assert there are still no gateways
   ansible.builtin.assert:
     that:
-      - natgw_output.gateways | community.general.json_query(query) | length == 0
+      - natgw_output.gateways | community.general.json_query(query_pattern) | length == 0
 
 - name: Create instance of NAT Gateway
   azure_rm_natgateway:
@@ -334,7 +334,7 @@
 - name: Assert there are no gateways left
   ansible.builtin.assert:
     that:
-      - natgw_output.gateways | community.general.json_query(query) | length == 0
+      - natgw_output.gateways | community.general.json_query(query_pattern) | length == 0
 
 - name: Delete public IPs for NAT Gateway
   azure_rm_publicipaddress:
