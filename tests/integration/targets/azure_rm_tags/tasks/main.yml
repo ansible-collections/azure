@@ -1,5 +1,5 @@
-- name: Set A Random String
-  set_fact:
+- name: Set a random string
+  ansible.builtin.set_fact:
     rpfx: "{{ resource_group_secondary | hash('md5') | truncate(8, True, '') }}"
 
 - name: Gather Resource Group info
