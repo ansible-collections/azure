@@ -16,7 +16,7 @@
   run_once: true
 - name: Set json query to only retrieve gateways from this test
   ansible.builtin.set_fact:
-    query: "[?ends_with(name, `{{ rpfx }}`)]"
+    query_pattern: "[?ends_with(name, `{{ rpfx }}`)]"
   run_once: true
 
 - name: Create managed_identity_ids list
@@ -37,7 +37,7 @@
 - name: Assert there are no gateways
   ansible.builtin.assert:
     that:
-      - appgw_output.gateways | community.general.json_query(query) | length == 0
+      - appgw_output.gateways | community.general.json_query(query_pattern) | length == 0
 
 - name: Create a virtual network
   azure_rm_virtualnetwork:
