@@ -108,7 +108,7 @@ EXAMPLES = '''
 
 - name: Delete the tags by scope
   azure_rm_tags:
-    scope:  "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
+    scope: "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
     state: absent
 
 - name: Delete the tag with tag_name
