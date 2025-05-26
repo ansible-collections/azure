@@ -12,10 +12,55 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_tags
 version_added: "4.0.0"
-short_description: Manage tags.
+short_description: Manage tags
 description:
-    - Create, update or delete the vm public key.
+    - Create, update ,delete the tags.
 options:
+    tag_name:
+        description:
+            - The name of the tag.
+        type: str
+    tag_value:
+        description:
+            - The value of the tag.
+        type: str
+    scope:
+        description:
+            - The resource scope.
+        type: str
+    properties:
+        description:
+            - The set of tags.
+        type: dict
+        suboptions:
+            tags:
+                description:
+                    - A dictionary of name and value pairs.
+                type: dict
+    tags_patch:
+        description:
+            - Wrapper resource for tags patch API request only.
+        type: dict
+        suboptions:
+            operation:
+                description:
+                    - The operation type for the patch API.
+                type: str
+                required: True
+                choices:
+                    - Delete
+                    - Replace
+                    - Merge
+            porperties:
+                description:
+                    - The set of tags.
+                type: dict
+                required: True
+                suboptions:
+                    tags:
+                        description:
+                            - A dictionary of name and value pairs.
+                        type: dict
     state:
         description:
             - State of the SSH Public Key. Use C(present) to create or update and C(absent) to delete.
@@ -36,6 +81,15 @@ author:
 '''
 
 EXAMPLES = '''
+- name: Create a tag with tag_name
+  azure_rm_tags:
+    tag_name: testkey
+
+- name: Create a tag with tag_value
+  azure_rm_tags:
+    tag_name: testkey
+    tag_value: testvalue
+
 - name: Create a new tags with scope
   azure_rm_tags:
     scope: "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
@@ -51,6 +105,22 @@ EXAMPLES = '''
          properties:
            tags:
              key5: value7
+
+- name: Delete the tags by scope
+  azure_rm_tags:
+    scope:  "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
+    state: absent
+
+- name: Delete the tag with tag_name
+  azure_rm_tags:
+    tag_name: testkey
+
+- name: Delete the tag with tag_value
+  azure_rm_tags:
+    tag_name: testkey
+    tag_value: testvalue
+
+
 
 '''
 RETURN = '''
@@ -90,8 +160,6 @@ tag_info:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from azure.core.polling import LROPoller
 import copy
-import logging
-logging.basicConfig(filename='log.log', level=logging.INFO)
 
 class AzureRMTags(AzureRMModuleBase):
 
@@ -148,7 +216,7 @@ class AzureRMTags(AzureRMModuleBase):
         if self.state == 'present':
             if self.scope is not None:
                 response = self.get_at_scope()
-                if response['properties']['tags']:
+                if response is not None:
                     if self.tags_patch is not None:
                         update_tags = self.tags_update(response['properties']['tags'], self.tags_patch['properties'].get('tags'))
                         if update_tags:
@@ -162,20 +230,39 @@ class AzureRMTags(AzureRMModuleBase):
                         changed = True
                         response = self.begin_create_or_update_at_scope(self.properties)
             else:
+                response = self.get_by_tag_name(self.tag_name)
                 if self.tag_name is not None and self.tag_value is not None:
-                    response = self.create_or_update_value()
+                    if response is not None:
+                        key_value = [item['tag_value'] for item in response['values']]
+                        if self.tag_value not in key_value:
+                            changed = True
+                            response = self.create_or_update_value()
+                    else:
+                        self.fail("The tag_name {0} not exist, Please makesure the tag_name exist".format(self.tag_name))
                 elif self.tag_name is not None:
-                    response = self.create_or_update()
+                    if response is None:
+                        changed = True
+                        response = self.create_or_update()
                 else:
                     self.fail("If I(scope!=None), The tag_name, or tag_name and tag_value must be configured")
         else:
-            changed = True
             if self.scope is not None:
-                response = self.delete_at_scope()
+                response = self.get_at_scope()
+                if response['properties']['tags']:
+                    changed = True
+                    response = self.delete_at_scope()
             elif self.tag_name is not None and self.tag_value is not None:
-                response = self.delete_value()
+                response = self.get_by_tag_name(self.tag_name)
+                if response is not None:
+                    key_value = [item['tag_value'] for item in response['values']]
+                    if self.tag_value in key_value:
+                        changed = True
+                        response = self.delete_value()
             elif self.tag_name is not None:
-                response = self.delete_tags()
+                response = self.get_by_tag_name(self.tag_name)
+                if response is not None:
+                    changed = True
+                    response = self.delete_tags()
             else:
                 self.fail("When I(state=absent), scope, tag_name, or tag_name and tag_value must be configured")
 
@@ -211,8 +298,7 @@ class AzureRMTags(AzureRMModuleBase):
             results = self.rm_client.tags.create_or_update_value(self.tag_name, self.tag_value)
         except Exception as exc:
             self.fail('Creates a predefined value for a predefined tag name got Excetion as {0}'.format(exc.message or str(exc)))
-
-        return results
+        return results.as_dict()
 
     def create_or_update(self):
         self.log('Creates a predefined tag name.')
@@ -253,18 +339,17 @@ class AzureRMTags(AzureRMModuleBase):
         except Exception as exc:
             self.fail('Error when get the tags info under specified scope got Excetion as {0}'.format(exc.message or str(exc)))
 
-    def list_all(self):
-        self.log('List resources under resource group')
-        results = []
+    def get_by_tag_name(self, tag_name):
         try:
             response = self.rm_client.tags.list()
             while True:
-                results.append(response.next().as_dict())
+                item = response.next().as_dict()
+                if item['tag_name'] == tag_name:
+                    return item
         except StopIteration:
-            pass
+            return None
         except Exception as exc:
             self.fail('Error when listing all tags under subscription got Excetion as {0}'.format(exc.message or str(exc)))
-        return results
 
     def format_tags(self, tags):
         results = dict(
