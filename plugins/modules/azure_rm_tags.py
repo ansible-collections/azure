@@ -51,7 +51,7 @@ options:
                     - Delete
                     - Replace
                     - Merge
-            porperties:
+            properties:
                 description:
                     - The set of tags.
                 type: dict
