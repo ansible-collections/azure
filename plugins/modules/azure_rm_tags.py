@@ -156,9 +156,14 @@ tag_info:
 '''
 
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from azure.core.polling import LROPoller
-import copy
+try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    import copy
+    from azure.core.polling import LROPoller
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
+
 
 class AzureRMTags(AzureRMModuleBase):
 
@@ -373,6 +378,7 @@ class AzureRMTags(AzureRMModuleBase):
                 changed = True
                 new_tags[key] = value
         return changed
+
 
 def main():
     AzureRMTags()

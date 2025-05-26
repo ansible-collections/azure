@@ -69,8 +69,8 @@
 - name: Assert the tag facts
   ansible.builtin.assert:
     that:
-      - "output.tag_info | length == 1"
-      - "output.tag_info[0].properties.tags | length == 2"
+      - output.tag_info | length == 1
+      - output.tag_info[0].properties.tags | length == 2
 
 - name: Create a tag with tag_name
   azure_rm_tags:
