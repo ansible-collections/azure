@@ -1,0 +1,141 @@
+- name: Set a random string for the tag
+  set_fact:
+    rpfx: "{{ resource_group_secondary | hash('md5') | truncate(8, True, '') }}"
+
+- name: Gather Resource Group info
+  azure_rm_resourcegroup_info:
+    name: "{{ resource_group_secondary }}"
+  register: __rg_info
+
+- name: List all the flags under the scope
+  azure_rm_tags_info:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+  register: output
+
+- name: Create a new tags with scope
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    properties:
+      tags:
+        key1: value1
+  register: output
+
+- name: Assert the tags created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a new tags with scope(Idempotent test)
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    properties:
+      tags:
+        key1: value1
+  register: output
+
+- name: Assert idempotent
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update the tags with scope
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    tags_patch:
+      operation: Merge
+      properties:
+        tags:
+          key2: value2
+  register: output
+
+- name: Assert the tags updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get the tag info at thespecified resource
+  azure_rm_tags_info:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+  register: output
+
+- name: Assert the tag facts
+  ansible.builtin.assert:
+    that:
+      - "output.tag_info | length == 1"
+      - "output.tag_info[0].properties.tags | length == 2"
+
+- name: Create a tag with tag_name
+  azure_rm_tags:
+    tag_name: "key{{ rpfx }}"
+  register: output
+
+- name: Assert the tag created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a tag with tag_name(Idemptent test)
+  azure_rm_tags:
+    tag_name: "key{{ rpfx }}"
+  register: output
+
+- name: Assert idempotent
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Create a tag with tag_value
+  azure_rm_tags:
+    tag_name: "key{{ rpfx }}"
+    tag_value: "value{{ rpfx }}"
+  register: output
+
+- name: Assert the tag value created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a tag with tag_value(Idemptent test)
+  azure_rm_tags:
+    tag_name: "key{{ rpfx }}"
+    tag_value: "value{{ rpfx }}"
+  register: output
+
+- name: Assert idempotent
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Delete the tags by scope
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    state: absent
+  register: output
+
+- name: Assert the tag deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete the tag with tag_value
+  azure_rm_tags:
+    tag_name: "key{{ rpfx }}"
+    tag_value: "value{{ rpfx }}"
+    state: absent
+  register: output
+
+- name: Assert the tag value deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Delete the tag with tag_name
+  azure_rm_tags:
+    tag_name: "key{{ rpfx }}"
+    state: absent
+  register: output
+
+- name: Assert the tag deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed

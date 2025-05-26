@@ -101,10 +101,10 @@ EXAMPLES = '''
   azure_rm_tags:
     scope: "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
     tags_patch:
-       operation: Delete
-         properties:
-           tags:
-             key5: value7
+      operation: Delete
+      properties:
+        tags:
+          key5: value7
 
 - name: Delete the tags by scope
   azure_rm_tags:
@@ -114,14 +114,13 @@ EXAMPLES = '''
 - name: Delete the tag with tag_name
   azure_rm_tags:
     tag_name: testkey
+    state: absent
 
 - name: Delete the tag with tag_value
   azure_rm_tags:
     tag_name: testkey
     tag_value: testvalue
-
-
-
+    state: absent
 '''
 RETURN = '''
 tag_info:
@@ -216,7 +215,7 @@ class AzureRMTags(AzureRMModuleBase):
         if self.state == 'present':
             if self.scope is not None:
                 response = self.get_at_scope()
-                if response is not None:
+                if response is not None and response['properties'].get('tags'):
                     if self.tags_patch is not None:
                         update_tags = self.tags_update(response['properties']['tags'], self.tags_patch['properties'].get('tags'))
                         if update_tags:
