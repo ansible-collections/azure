@@ -187,7 +187,7 @@ class AzureRMTags(AzureRMModuleBase):
                         if update_tags:
                             changed = True
                             response = self.begin_update_at_scope(self.tags, self.operation)
-                        elif self.tags_patch['operation'] == 'Delete':
+                        elif self.operation == 'Delete':
                             changed = True
                             response = self.begin_update_at_scope(self.tags, self.operation)
                 else:
