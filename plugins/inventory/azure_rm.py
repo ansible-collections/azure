@@ -163,6 +163,10 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from itertools import chain
 from os import environ
+try:
+    from ansible.template import trust_as_template
+except ImportError:
+    trust_as_template = None
 
 try:
     from azure.core._pipeline_client import PipelineClient
@@ -440,7 +444,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         for condition in filter:
             # FUTURE: should warn/fail if conditional doesn't return True or False
-            conditional = "{{% if {0} %}} True {{% else %}} False {{% endif %}}".format(condition)
+            conditional = "{{% if {0} %}}true{{% else %}}false{{% endif %}}".format(condition)
+            if trust_as_template:
+                conditional = trust_as_template(conditional)
             try:
                 if boolean(self.templar.template(conditional)):
                     return True

@@ -193,6 +193,7 @@ keyvaults:
 
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+import base64
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -219,11 +220,11 @@ def keybundle_to_dict(bundle):
         type=bundle.key_type,
         permitted_operations=bundle.key_operations,
         key=dict(
-            n=bundle.key.n if hasattr(bundle.key, 'n') else None,
-            e=bundle.key.e if hasattr(bundle.key, 'e') else None,
-            crv=bundle.key.crv if hasattr(bundle.key, 'crv') else None,
-            x=bundle.key.x if hasattr(bundle.key, 'x') else None,
-            y=bundle.key.y if hasattr(bundle.key, 'y') else None
+            n=base64.b64encode(bundle.key.n) if hasattr(bundle.key, 'n') and bundle.key.n else None,
+            e=base64.b64encode(bundle.key.e) if hasattr(bundle.key, 'e') and bundle.key.e else None,
+            crv=base64.b64encode(bundle.key.crv) if hasattr(bundle.key, 'crv') and bundle.key.crv else None,
+            x=base64.b64encode(bundle.key.x) if hasattr(bundle.key, 'x') and bundle.key.x else None,
+            y=base64.b64encode(bundle.key.y) if hasattr(bundle.key, 'y') and bundle.key.y else None
         )
     )
 

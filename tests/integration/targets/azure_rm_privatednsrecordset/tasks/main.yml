@@ -191,7 +191,7 @@
       - results.dnsrecordsets[0].fqdn != None
       - results.dnsrecordsets[0].record_type == 'SRV'
       - results.dnsrecordsets[0].time_to_live == 7200
-      - results.dnsrecordsets[0].relative_name == "_sip._tcp.{{ domain_name }}.com"
+      - results.dnsrecordsets[0].relative_name == "_sip._tcp." ~ domain_name ~ ".com"
       - results.dnsrecordsets[0].records | length > 0
 
 - name: Create TXT records in a new record set
@@ -230,7 +230,7 @@
       - results.dnsrecordsets[0].fqdn != None
       - results.dnsrecordsets[0].record_type == 'TXT'
       - results.dnsrecordsets[0].time_to_live == 3600
-      - results.dnsrecordsets[0].relative_name == "_txt.{{ domain_name }}.com"
+      - results.dnsrecordsets[0].relative_name == "_txt." ~ domain_name ~ ".com"
       - results.dnsrecordsets[0].records | length > 0
 
 - name: Update SOA record
