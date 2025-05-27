@@ -74,18 +74,15 @@ EXAMPLES = '''
 - name: Create a new tags with scope
   azure_rm_tags:
     scope: "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
-    properties:
-      tags:
-        key4: value4
+    tags:
+      key4: value4
 
 - name: Update the tags with scope
   azure_rm_tags:
     scope: "/subscriptions/xxxxxxxxxxxxxxxxxxxxxxxxxx/resourceGroups/v-xisuRG02"
-    tags_patch:
-      operation: Delete
-      properties:
-        tags:
-          key5: value7
+    operation: Delete
+    tags:
+      key5: value5
 
 - name: Delete the tags by scope
   azure_rm_tags:
@@ -194,7 +191,7 @@ class AzureRMTags(AzureRMModuleBase):
                             changed = True
                             response = self.begin_update_at_scope(self.tags, self.operation)
                 else:
-                    if self.properties is not None:
+                    if self.tags is not None:
                         changed = True
                         response = self.begin_create_or_update_at_scope(self.tags)
             else:
