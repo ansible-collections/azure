@@ -34,25 +34,21 @@
         "value": "2"
       }]
 
-- name: Filter available SKUs with desired capabilities
+- name: Init skus_result
   ansible.builtin.set_fact:
-    skus_result: |
-      {% set skus_result = [] %}
-      {% for item in available_skus_result.available_skus -%}
-      {% set ns = namespace(use_sku=True) %}
-      {% for capability in item.capabilities -%}
-      {% for desired in desired_capabilities -%}
-      {% if capability.name == desired.name and capability.value != desired.value -%}
-      {% set ns.use_sku = False %}
-      {%- endif %}
-      {%- endfor %}
-      {%- endfor %}
-      {% if ns.use_sku -%}
-      {{ skus_result.append(item.name) }}
-      {%- endif %}
-      {%- endfor %}
-      {{ skus_result }}
-  failed_when: skus_result[0] is not defined
+    skus_result: []
+
+- name: Process SKU's
+  ansible.builtin.include_tasks: sku_filter.yml
+  loop: "{{ available_skus_result.available_skus }}"
+  loop_control:
+    loop_var: sku
+    label: "{{ sku.name }}"
+
+- name: Assert skus_result
+  ansible.builtin.assert:
+    that:
+      - skus_result | length > 0
 
 - name: SETUP | Create virtual network
   azure_rm_virtualnetwork:

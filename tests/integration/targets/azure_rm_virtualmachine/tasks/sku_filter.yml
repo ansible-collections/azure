@@ -1,0 +1,14 @@
+- name: Use SKU
+  ansible.builtin.set_fact:
+    use_sku: true
+
+- name: Check Capabilities
+  ansible.builtin.set_fact:
+    use_sku: false
+  when: item.0.name == item.1.name and item.0.value != item.1.value
+  loop: "{{ sku.capabilities | product(desired_capabilities) }}"
+
+- name: Update skus_result
+  ansible.builtin.set_fact:
+    skus_result: "{{ skus_result | default([]) + [sku.name] }}"
+  when: use_sku

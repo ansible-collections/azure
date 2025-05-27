@@ -40,11 +40,11 @@
 - name: Create a key in key vault
   azure_rm_keyvaultkey:
     key_name: testkey
-    keyvault_uri: https://{{ vault_name }}.vault.azure.net
+    keyvault_uri: "https://{{ vault_name }}.vault.azure.net"
 
 - name: Get latest version of key
   azure_rm_keyvaultkey_info:
-    vault_uri: https://{{ vault_name }}.vault.azure.net
+    vault_uri: "https://{{ vault_name }}.vault.azure.net"
     name: testkey
   register: results
 
