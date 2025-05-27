@@ -28,10 +28,6 @@ options:
         description:
             - The resource scope.
         type: str
-    tags:
-        description:
-            - A dictionary of name and value pairs.
-        type: dict
     operation:
         description:
             - The operation type for the patch API.
@@ -152,7 +148,6 @@ class AzureRMTags(AzureRMModuleBase):
             tag_value=dict(type='str'),
             scope=dict(type='str'),
             operation=dict(type='str', choices=['Replace', 'Merge', 'Delete'], default='Merge'),
-            tags=dict(type='dict'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
