@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_tags
-version_added: "4.0.0"
+version_added: "3.4.0"
 short_description: Manage tags
 description:
     - Create, update ,delete the tags.
@@ -28,39 +28,20 @@ options:
         description:
             - The resource scope.
         type: str
-    properties:
+    tags:
         description:
-            - The set of tags.
+            - A dictionary of name and value pairs.
         type: dict
-        suboptions:
-            tags:
-                description:
-                    - A dictionary of name and value pairs.
-                type: dict
-    tags_patch:
+    operation:
         description:
-            - Wrapper resource for tags patch API request only.
-        type: dict
-        suboptions:
-            operation:
-                description:
-                    - The operation type for the patch API.
-                type: str
-                required: True
-                choices:
-                    - Delete
-                    - Replace
-                    - Merge
-            properties:
-                description:
-                    - The set of tags.
-                type: dict
-                required: True
-                suboptions:
-                    tags:
-                        description:
-                            - A dictionary of name and value pairs.
-                        type: dict
+            - The operation type for the patch API.
+            - The default value is I(operation=Merge) and use to add tags.
+        type: str
+        default: Merge
+        choices:
+            - Delete
+            - Replace
+            - Merge
     state:
         description:
             - State of the SSH Public Key. Use C(present) to create or update and C(absent) to delete.
@@ -173,33 +154,16 @@ class AzureRMTags(AzureRMModuleBase):
             tag_name=dict(type='str'),
             tag_value=dict(type='str'),
             scope=dict(type='str'),
-            properties=dict(
-                type='dict',
-                options=dict(
-                    tags=dict(type='dict')
-                )
-            ),
-            tags_patch=dict(
-                type='dict',
-                options=dict(
-                    operation=dict(type='str', required=True, choices=['Replace', 'Merge', 'Delete']),
-                    properties=dict(
-                        type='dict',
-                        required=True,
-                        options=dict(
-                            tags=dict(type='dict')
-                        )
-                    )
-                )
-            ),
+            operation=dict(type='str', choices=['Replace', 'Merge', 'Delete'], default='Merge'),
+            tags=dict(type='dict'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
         self.tag_name = None
         self.tag_value = None
         self.scope = None
-        self.properties = None
-        self.tags_patch = None
+        self.operation = None
+        self.tags = None
         self.state = None
 
         self.results = dict(
@@ -221,18 +185,18 @@ class AzureRMTags(AzureRMModuleBase):
             if self.scope is not None:
                 response = self.get_at_scope()
                 if response is not None and response['properties'].get('tags'):
-                    if self.tags_patch is not None:
-                        update_tags = self.tags_update(response['properties']['tags'], self.tags_patch['properties'].get('tags'))
+                    if self.tags is not None:
+                        update_tags = self.tags_update(response['properties']['tags'], self.tags)
                         if update_tags:
                             changed = True
-                            response = self.begin_update_at_scope(self.tags_patch)
+                            response = self.begin_update_at_scope(self.tags, self.operation)
                         elif self.tags_patch['operation'] == 'Delete':
                             changed = True
-                            response = self.begin_update_at_scope(self.tags_patch)
+                            response = self.begin_update_at_scope(self.tags, self.operation)
                 else:
                     if self.properties is not None:
                         changed = True
-                        response = self.begin_create_or_update_at_scope(self.properties)
+                        response = self.begin_create_or_update_at_scope(self.tags)
             else:
                 response = self.get_by_tag_name(self.tag_name)
                 if self.tag_name is not None and self.tag_value is not None:
@@ -275,20 +239,22 @@ class AzureRMTags(AzureRMModuleBase):
 
         return self.results
 
-    def begin_create_or_update_at_scope(self, properties):
+    def begin_create_or_update_at_scope(self, tags):
         self.log('Creates or updates the entire set of tags on a resource or subscription.')
         try:
-            response = self.rm_client.tags.begin_create_or_update_at_scope(self.scope, dict(properties=properties))
+            response = self.rm_client.tags.begin_create_or_update_at_scope(self.scope,
+                                                                           dict(properties=dict(tags=tags)))
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
             self.fail('Creates or updates the entire set of tags on a resource or subscription got Exception as as {0}'.format(exc.message or str(exc)))
         return self.format_tags(response)
 
-    def begin_update_at_scope(self, tags_patch):
+    def begin_update_at_scope(self, tags, operation):
         self.log('Selectively updates the set of tags on a resource or subscription.')
         try:
-            response = self.rm_client.tags.begin_update_at_scope(self.scope, tags_patch)
+            response = self.rm_client.tags.begin_update_at_scope(self.scope,
+                                                                 dict(operation=operation, properties=dict(tags=tags)))
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as exc:
