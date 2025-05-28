@@ -57,6 +57,9 @@
         started: true
         admin_username: testuser
         ssh_password_enabled: false
+        location: eastus
+        zones:
+          - 2
         open_ports:
           - 33
         ssh_public_keys:
