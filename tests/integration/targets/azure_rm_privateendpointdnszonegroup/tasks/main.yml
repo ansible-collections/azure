@@ -21,18 +21,31 @@
     private_link_service_network_policies: Disabled
   register: subnet_output
 
-- name: "Create instance of PostgreSQL Server"
-  azure_rm_postgresqlserver:
+- name: "Create instance of PostgreSQL Flexible Server"
+  azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
     name: "postgresqlsrv-{{ rpfx }}"
     sku:
-      name: "GP_Gen5_2"
-      tier: "GeneralPurpose"
-    location: "eastus"
-    storage_mb: 51200
-    enforce_ssl: true
-    admin_username: "zimxyz"
-    admin_password: "{{ password }}"
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: "{{ password }}"
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
   register: post_output
 
 - name: Create zone group for non-existant private endpoint
@@ -53,9 +66,9 @@
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
       - name: "postgres-link"
-        private_link_service_id: "{{ post_output.id }}"
+        private_link_service_id: "{{ post_output.state.id }}"
         group_ids:
-          - "postgresqlServer"
+          - "postgresqlflexibleServer"
     subnet:
       id: "{{ subnet_output.state.id }}"
 
