@@ -395,7 +395,8 @@ class AzureRMModuleBase(object):
     def __init__(self, derived_arg_spec, bypass_checks=False, no_log=False,
                  check_invalid_arguments=None, mutually_exclusive=None, required_together=None,
                  required_one_of=None, add_file_common_args=False, supports_check_mode=False,
-                 required_if=None, supports_tags=True, facts_module=False, skip_exec=False, is_ad_resource=False):
+                 required_if=None, supports_tags=True, facts_module=False, skip_exec=False,
+                 is_ad_resource=False, required_by=None):
 
         merged_arg_spec = dict()
         merged_arg_spec.update(AZURE_COMMON_ARGS)
@@ -409,6 +410,9 @@ class AzureRMModuleBase(object):
         if required_if:
             merged_required_if += required_if
 
+        if not required_by:
+            required_by = dict()
+
         self.module = AnsibleModule(argument_spec=merged_arg_spec,
                                     bypass_checks=bypass_checks,
                                     no_log=no_log,
@@ -417,7 +421,8 @@ class AzureRMModuleBase(object):
                                     required_one_of=required_one_of,
                                     add_file_common_args=add_file_common_args,
                                     supports_check_mode=supports_check_mode,
-                                    required_if=merged_required_if)
+                                    required_if=merged_required_if,
+                                    required_by=required_by)
 
         if not HAS_PACKAGING_VERSION:
             self.fail(msg=missing_required_lib('packaging'),
@@ -457,6 +462,7 @@ class AzureRMModuleBase(object):
         self._monitor_autoscale_settings_client = None
         self._monitor_log_profiles_client = None
         self._monitor_diagnostic_settings_client = None
+        self._monitor_data_collection_rules_client = None
         self._resource = None
         self._log_analytics_client = None
         self._servicebus_client = None
@@ -1380,6 +1386,15 @@ class AzureRMModuleBase(object):
                                                                                 base_url=self._cloud_environment.endpoints.resource_manager,
                                                                                 api_version="2021-05-01-preview")
         return self._monitor_diagnostic_settings_client
+
+    @property
+    def monitor_management_client_data_collection_rules(self):
+        self.log('Getting monitor client for diagnostic_settings')
+        if not self._monitor_data_collection_rules_client:
+            self._monitor_data_collection_rules_client = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                                  api_version='2022-06-01')
+        return self._monitor_data_collection_rules_client
 
     @property
     def log_analytics_client(self):
