@@ -53,8 +53,8 @@
     - Add idempotency test for azure_rm_backuppolicy ([#1889](https://github.com/ansible-collections/azure/pull/1889))
     - Add test for keeping public IPs on azure_rm_networkinterface updates ([#1917](https://github.com/ansible-collections/azure/pull/1917))
     - Update test cases to work under ansible-2.19 Group1 ([#1940](https://github.com/ansible-collections/azure/pull/1940))
-    - Update test cases to work under ansible-2.19 Group7 ([#1940](https://github.com/ansible-collections/azure/pull/1941))
-    - Update test cases to work under ansible-2.19 Group9 ([#1940](https://github.com/ansible-collections/azure/pull/1942))
+    - Update test cases to work under ansible-2.19 Group7 ([#1941](https://github.com/ansible-collections/azure/pull/1941))
+    - Update test cases to work under ansible-2.19 Group9 ([#1942](https://github.com/ansible-collections/azure/pull/1942))
   - pr-pipelines.yml: Add ansible v2.17 and v2.18 for CI ([#1944](https://github.com/ansible-collections/azure/pull/1944))
 
 ### BUG FIXING
