@@ -68,7 +68,7 @@
       - name: "postgres-link"
         private_link_service_id: "{{ post_output.state.id }}"
         group_ids:
-          - "postgresqlflexibleServer"
+          - "postgresqlServer"
     subnet:
       id: "{{ subnet_output.state.id }}"
 
