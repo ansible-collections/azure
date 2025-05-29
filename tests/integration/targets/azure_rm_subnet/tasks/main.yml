@@ -167,7 +167,7 @@
     that:
       - output.changed
       - not output.state.address_prefix
-      - output.state.address_prefixes
+      - output.state.address_prefixes | length > 0
 
 - name: Update the subnet to IPv4 and IPv6 (idempotent)
   azure_rm_subnet:
@@ -210,7 +210,7 @@
 
 - name: Assert the subnet updated
   ansible.builtin.assert:
-    that: output
+    that: output.changed
 
 - name: The subnet with network policies should be idempotent
   azure_rm_subnet:
@@ -237,7 +237,7 @@
 
 - name: Assert the subnet updated
   ansible.builtin.assert:
-    that: output
+    that: output.changed
 
 - name: The subnet with delegations should be idempotent
   azure_rm_subnet:
