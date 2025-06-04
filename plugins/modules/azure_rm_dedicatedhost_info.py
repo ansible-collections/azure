@@ -9,7 +9,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_dedicatehost_info
+module: azure_rm_dedicatedhost_info
 
 version_added: "3.5.0"
 
@@ -50,12 +50,12 @@ author:
 
 EXAMPLES = '''
 - name: List facts for one dedicate host
-  azure_rm_dedicatehost_info:
+  azure_rm_dedicatedhost_info:
     resource_group: myAzureResourceGroup
     host_group_name: myhostgroup
 
 - name: Get facts for dedicate host
-  azure_rm_dedicatehost_info:
+  azure_rm_dedicatedhost_info:
     resource_group: myAzureResourceGroup
     host_group_name: myhostgroup
     name: mydedicatehost
