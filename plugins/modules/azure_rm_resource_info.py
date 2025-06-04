@@ -454,10 +454,10 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                 query_parameters['skiptoken'] = skiptoken
             response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
-                if isinstance(response.body(), bytes):
+                if isinstance(response.body(), bytes) and bool(response.body().decode()) is False:
                     self.results['status_code'] = response.status_code
-                    self.results['content'] = response.body().decode() or 'empty'
                 else:
+                    self.results['status_code'] = response.status_code
                     response = json.loads(response.body())
                     if isinstance(response, dict):
                         if response.get('value'):
