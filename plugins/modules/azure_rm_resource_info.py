@@ -455,7 +455,8 @@ class AzureRMResourceInfo(AzureRMModuleBase):
             response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
                 if isinstance(response.body(), bytes):
-                    self.results['response'] = "The returned status_code is {0} and content is {1}".format(response.status_code, response.body().decode() or 'empty')
+                    self.results['status_code'] = response.status_code
+                    self.results['content'] = response.body().decode() or 'empty'
                 else:
                     response = json.loads(response.body())
                     if isinstance(response, dict):
