@@ -1,4 +1,4 @@
-g name: Create virtual network
+- name: Create virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-identity"
