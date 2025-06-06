@@ -3,7 +3,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-identity"
     address_prefixes: "{{ network }}"
-    location: westeurope
+    location: westus3
 
 - name: Create subnet
   azure_rm_subnet:
@@ -18,7 +18,7 @@
     name: "{{ interface_name }}-identity"
     virtual_network: "{{ network_name }}-identity"
     subnet: "{{ subnet_name }}"
-    location: westeurope
+    location: westus3
     open_ports:
       - 33
 
@@ -30,7 +30,7 @@
     resource_name: "{{ item }}"
     api_version: "2023-01-31"
     body:
-      location: westeurope
+      location: westus3
     state: present
   loop:
     - "ansible-test-vm-identity"
@@ -54,7 +54,7 @@
     admin_username: "testuser"
     ssh_password_enabled: false
     public_ip_allocation_method: Disabled
-    location: westeurope
+    location: westus3
     open_ports:
       - 33
     network_interface_names:

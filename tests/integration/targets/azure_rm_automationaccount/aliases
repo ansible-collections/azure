@@ -2,3 +2,4 @@ cloud/azure
 shippable/azure/group11
 destructive
 azure_rm_automationaccount_facts
+disabled

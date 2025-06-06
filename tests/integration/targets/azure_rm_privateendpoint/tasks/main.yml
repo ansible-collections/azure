@@ -34,46 +34,85 @@
           - westus
   register: subnet_output
 
-- name: Create instance of PostgreSQL Server --- first
-  azure_rm_postgresqlserver:
+- name: Create instance of postgresql flexible server --- first
+  azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
-    name: postgresqlsrv{{ rpfx }}
+    name: "postflexible{{ rpfx }}"
     sku:
-      name: GP_Gen5_2
-      tier: GeneralPurpose
-    location: eastus
-    storage_mb: 51200
-    enforce_ssl: true
-    admin_username: zimxyz
-    admin_password: "{{ password }}"
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: "{{ password }}"
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
   register: post_output
 
-- name: Create instance of PostgreSQL Server --- secondary
-  azure_rm_postgresqlserver:
+- name: Create instance of postgresql flexible server --- secondary
+  azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
-    name: "postgresqlsrv{{ rpfx }}02"
+    name: "postflexible{{ rpfx }}02"
     sku:
-      name: GP_Gen5_2
-      tier: GeneralPurpose
-    location: eastus
-    storage_mb: 51200
-    enforce_ssl: true
-    admin_username: zimxyz
-    admin_password: "{{ password }}"
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: "{{ password }}"
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
   register: post_output02
 
-- name: Create instance of PostgreSQL Server --- third
-  azure_rm_postgresqlserver:
+- name: Create instance of postgresql flexible server --- third
+  azure_rm_postgresqlflexibleserver:
     resource_group: "{{ resource_group }}"
-    name: "postgresqlsrv{{ rpfx }}03"
+    name: "postflexible{{ rpfx }}03"
     sku:
-      name: GP_Gen5_2
-      tier: GeneralPurpose
-    location: eastus
-    storage_mb: 51200
-    enforce_ssl: true
-    admin_username: zimxyz
-    admin_password: "{{ password }}"
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: "{{ password }}"
+    version: 12
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    network:
+      public_network_access: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 4
+      day_of_week: 3
+    availability_zone: 2
+    create_mode: Create
   register: post_output03
 
 - name: Delete private endpoint, makesure there is no private endpoint exist
@@ -88,7 +127,7 @@
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
       - name: privateEndpoints_test_name
-        private_link_service_id: "{{ post_output.id }}"
+        private_link_service_id: "{{ post_output.state.id }}"
         group_ids:
           - postgresqlServer
     subnet:
@@ -112,7 +151,7 @@
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
       - name: privateEndpoints_test_name
-        private_link_service_id: "{{ post_output.id }}"
+        private_link_service_id: "{{ post_output.state.id }}"
         group_ids:
           - postgresqlServer
     subnet:
@@ -134,7 +173,7 @@
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
       - name: privateEndpoints_test_name
-        private_link_service_id: "{{ post_output.id }}"
+        private_link_service_id: "{{ post_output.state.id }}"
         group_ids:
           - postgresqlServer
     subnet:
@@ -168,7 +207,7 @@
     resource_group: "{{ resource_group }}"
     manual_private_link_service_connections:
       - name: privateEndpoints_test_name02
-        private_link_service_id: "{{ post_output02.id }}"
+        private_link_service_id: "{{ post_output02.state.id }}"
         group_ids:
           - postgresqlServer
     subnet:
@@ -198,7 +237,7 @@
     resource_group: "{{ resource_group }}"
     private_link_service_connections:
       - name: privateEndpoints_test_name
-        private_link_service_id: "{{ post_output03.id }}"
+        private_link_service_id: "{{ post_output03.state.id }}"
         group_ids:
           - postgresqlServer
     subnet:
