@@ -276,7 +276,7 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
                     results = self.update_dedicatedhost()
             else:
                 changed = True
-                if not self.check_mode:
+                gf not self.check_mode:
                     results = self.delete_dedicatedhost()
         else:
             if self.state == 'present':
@@ -353,9 +353,9 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
     def delete_dedicatedhost(self):
         try:
             # delete the dedicated host
-            response = self.compute_client.dedicated_hosts.delete(resource_group_name=self.resource_group,
-                                                                  host_group_name=self.host_group_name,
-                                                                  host_name=self.name)
+            response = self.compute_client.dedicated_hosts.begin_delete(resource_group_name=self.resource_group,
+                                                                        host_group_name=self.host_group_name,
+                                                                        host_name=self.name)
         except Exception as exc:
             self.fail("Error deleting host {0} - {1}".format(self.name, str(exc)))
         return response
