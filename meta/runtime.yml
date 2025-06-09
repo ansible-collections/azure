@@ -372,3 +372,5 @@ action_groups:
     - azure.azcollection.azure_rm_afdrules_info
     - azure.azcollection.azure_rm_tags
     - azure.azcollection.azure_rm_tags_info
+    - azure.azcollection.azure_rm_dedicatedhost
+    - azure.azcollection.azure_rm_dedicatedhost_info

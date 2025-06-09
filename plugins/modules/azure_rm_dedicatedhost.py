@@ -156,7 +156,7 @@ state:
                 - SKU of the dedicated host for Hardware Generation and VM family.
             type: dict
             returned: always
-            sample: {'name': 'DSv3-Type1', 'tier': 'DSv3-Type1'}
+            sample: {'name': 'DSv3-Type4'}
         auto_replace_on_failure:
             description:
                 - Specifies whether the dedicated host should be replaced automatically in case of a failure.
@@ -181,12 +181,6 @@ state:
             type: str
             returned: always
             sample: 1
-        available_sizes:
-            description:
-                - Available dedicated host can be resized.
-            type: str
-            returned: always
-            sample: None
         virtual_machines:
             description:
                 - A list of references to all virtual machines in the Dedicated Host.
@@ -224,7 +218,7 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
                     name=dict(type='str')
                 )
             ),
-            platform_fault_domain=dict(type='int'),
+            platform_fault_domain=dict(type='int', choices=[0]),
             auto_replace_on_failure=dict(type='bool', default=True),
             license_type=dict(type='str', choices=['None', 'Windows_Server_Hybrid', 'Windows_Server_Perpetual']),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
@@ -257,7 +251,6 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         changed = False
-        host = None
 
         # retrieve resource group to make sure it exists
         resource_group = self.get_resource_group(self.resource_group)
@@ -266,57 +259,61 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
             self.location = resource_group.location
 
         self.location = normalize_location_name(self.location)
+        results = self.get_resource()
 
-        try:
-            self.log('Fetching dedicated host {0}'.format(self.name))
-            host = self.compute_client.dedicated_hosts.get_item(self.resource_group, self.host_group_name, self.name)
-            # serialize object into a dictionary
-            results = self.host_to_dict(host)
+        if results is not None:
             if self.state == 'present':
-                changed = False
-                update_tags, results['tags'] = self.update_tags(results['tags'])
+                update_tags, self.tags = self.update_tags(results['tags'])
                 if update_tags:
-                    changed = True
-                self.tags = results['tags']
-                if self.platform_fault_domain != results['platform_fault_domain']:
                     changed = True
                 elif self.auto_replace_on_failure is not None and bool(self.auto_replace_on_failure) != bool(results['auto_replace_on_failure']):
                     changed = True
-            elif self.state == 'absent':
+                elif self.platform_fault_domain is not None and self.platform_fault_domain != results['platform_fault_domain']:
+                    changed = True
+                elif self.sku is not None and self.sku['name'] != results['sku']['name']:
+                    changed = True
+                if not self.check_mode and changed:
+                    results = self.update_dedicatedhost()
+            else:
                 changed = True
-        except ResourceNotFoundError:
+                if not self.check_mode:
+                    results = self.delete_dedicatedhost()
+        else:
             if self.state == 'present':
                 changed = True
+                if not self.check_mode:
+                    results = self.create_dedicatedhost()
             else:
+                self.log("The dedecated host not exist")
                 changed = False
+
+        if results is not None and self.is_restart:
+            self.log("Restart the dedicated host. The operation will complete successfully once the dedicated host has restarted and is running.")
+            changed = True
+            if not self.check_mode:
+                self.restart_dedicatedhost()
+
 
         self.results['changed'] = changed
         self.results['state'] = results
-
-        if self.check_mode:
-            return self.results
-
-        if changed:
-            if self.state == 'present':
-                # create or update a dedicated host
-                if host is not None:
-                    self.results['state'] = self.create_dedicatedhost()
-                else:
-                    self.results['state'] = self.update_dedicatedhost()
-
-            elif self.state == 'absent':
-                # delete a host group
-                self.delete_dedicatedhost()
-                self.results['state'] = 'Deleted'
-
         return self.results
+
+    def get_resource(self):
+        self.log('Get host facts for {0}'.format(self.name))
+        # get specific host group
+        try:
+            response = self.compute_client.dedicated_hosts.get(self.resource_group, self.host_group_name, self.name)
+        except ResourceNotFoundError:
+            return None
+
+        return self.host_to_dict(response)
 
     def create_dedicatedhost(self):
         try:
             # create the dedicated host
             response = self.compute_client.dedicated_hosts.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                   host_group_name=self.host_group_name,
-                                                                                  name=self.name,
+                                                                                  host_name=self.name,
                                                                                   parameters=dict(location=self.location,
                                                                                                   sku=self.sku,
                                                                                                   tags=self.tags,
@@ -333,7 +330,7 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
             # update the dedicated host
             response = self.compute_client.dedicated_hosts.begin_update(resource_group_name=self.resource_group,
                                                                         host_group_name=self.host_group_name,
-                                                                        name=self.name,
+                                                                        host_name=self.name,
                                                                         parameters=dict(sku=self.sku,
                                                                                         tags=self.tags,
                                                                                         platform_fault_domain=self.platform_fault_domain,
@@ -344,12 +341,21 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Error creating or updating host {0} - {1}".format(self.name, str(exc)))
 
+    def restart_dedicatedhost(self):
+        try:
+            # restart the dedicate host
+            self.compute_client.dedicated_hosts.begin_restart(resource_group_name=self.resource_group,
+                                                              host_group_name=self.host_group_name,
+                                                              host_name=self.name)
+        except Exception as exc:
+            self.fail("Error restarting host {0} - {1}".format(self.name, str(exc)))
+
     def delete_dedicatedhost(self):
         try:
-            # delete the host group
+            # delete the dedicated host
             response = self.compute_client.dedicated_hosts.delete(resource_group_name=self.resource_group,
                                                                   host_group_name=self.host_group_name,
-                                                                  name=self.name)
+                                                                  host_name=self.name)
         except Exception as exc:
             self.fail("Error deleting host {0} - {1}".format(self.name, str(exc)))
         return response
@@ -367,7 +373,6 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
             license_type=host.license_type,
             provisioning_state=host.provisioning_state,
             platform_fault_domain=host.platform_fault_domain,
-            available_sizes=self.list_available_size(host.name),
             virtual_machines=[]
         )
         if host.virtual_machines is not None:
@@ -375,8 +380,6 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
 
         if host.sku is not None:
             result['sku']['name'] = host.sku.name
-            result['sku']['tier'] = host.sku.tier
-            result['sku']['capacity'] = host.sku.capacity
         return result
 
 

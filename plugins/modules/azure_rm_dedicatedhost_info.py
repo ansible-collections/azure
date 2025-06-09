@@ -109,7 +109,7 @@ dedicate_hosts:
                 - SKU of the dedicated host for Hardware Generation and VM family.
             type: dict
             returned: always
-            sample: {'name': 'DSv3-Type1', 'tier': 'DSv3-Type1'}
+            sample: {'name': 'DSv3-Type4'}
         auto_replace_on_failure:
             description:
                 - Specifies whether the dedicated host should be replaced automatically in case of a failure.
@@ -121,7 +121,7 @@ dedicate_hosts:
                 - Specifies the software license type that will be applied to the VMs deployed on the dedicated host.
             type: str
             returned: always
-            sample: Windows_Server_Hybrid
+            sample: None
         provisioning_state:
             description:
                 - The provisioning state, which only appears in the response.
@@ -134,12 +134,6 @@ dedicate_hosts:
             type: str
             returned: always
             sample: 1
-        available_sizes:
-            description:
-                - Available dedicated host can be resized.
-            type: str
-            returned: always
-            sample: None
         virtual_machines:
             description:
                 - A list of references to all virtual machines in the Dedicated Host.
@@ -218,7 +212,7 @@ class AzureRMDedicateHostInfo(AzureRMModuleBase):
         self.log('List all host for host group - {0}'.format(self.host_group_name))
         try:
             response = self.compute_client.dedicated_hosts.list_by_host_group(self.resource_group, self.host_group_name)
-        except Exception as exc:
+        except Exception:
             return []
 
         results = []
@@ -226,16 +220,6 @@ class AzureRMDedicateHostInfo(AzureRMModuleBase):
             if self.has_tags(item.tags, self.tags):
                 results.append(item)
         return results
-
-    def list_available_size(self, name):
-        self.log("Lists all available dedicated host sizes to which the specified dedicated host can be resized.")
-        try:
-            response = self.compute_client.dedicated_hosts.list_available_sizes(self.resource_group,
-                                                                                self.host_group_name,
-                                                                                name)
-        except Exception as ec:
-            return None
-        return response
 
     def host_to_dict(self, host):
         result = dict(
@@ -250,7 +234,6 @@ class AzureRMDedicateHostInfo(AzureRMModuleBase):
             license_type=host.license_type,
             provisioning_state=host.provisioning_state,
             platform_fault_domain=host.platform_fault_domain,
-            available_sizes=self.list_available_size(host.name),
             virtual_machines=[]
         )
         if host.virtual_machines is not None:
@@ -258,8 +241,6 @@ class AzureRMDedicateHostInfo(AzureRMModuleBase):
 
         if host.sku is not None:
             result['sku']['name'] = host.sku.name
-            result['sku']['tier'] = host.sku.tier
-            result['sku']['capacity'] = host.sku.capacity
         return result
 
 
