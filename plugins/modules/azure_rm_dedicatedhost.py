@@ -42,6 +42,8 @@ options:
         description:
             - Fault domain of the dedicated host within a dedicated host group.
         type: int
+        choices:
+            - 0
     sku:
         description:
             - SKU of the dedicated host for Hardware Generation and VM family.
@@ -292,7 +294,6 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
             changed = True
             if not self.check_mode:
                 self.restart_dedicatedhost()
-
 
         self.results['changed'] = changed
         self.results['state'] = results
