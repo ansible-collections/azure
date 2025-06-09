@@ -454,13 +454,17 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                 query_parameters['skiptoken'] = skiptoken
             response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
-                response = json.loads(response.body())
-                if isinstance(response, dict):
-                    if response.get('value'):
-                        self.results['response'] = self.results['response'] + response['value']
-                        skiptoken = response.get('nextLink')
-                    else:
-                        self.results['response'] = self.results['response'] + [response]
+                if isinstance(response.body(), bytes) and bool(response.body().decode()) is False:
+                    self.results['status_code'] = response.status_code
+                else:
+                    self.results['status_code'] = response.status_code
+                    response = json.loads(response.body())
+                    if isinstance(response, dict):
+                        if response.get('value'):
+                            self.results['response'] = self.results['response'] + response['value']
+                            skiptoken = response.get('nextLink')
+                        else:
+                            self.results['response'] = self.results['response'] + [response]
             except Exception as e:
                 self.fail('Failed to parse response: ' + str(e))
             if not skiptoken:
