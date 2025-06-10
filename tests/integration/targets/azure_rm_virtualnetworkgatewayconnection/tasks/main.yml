@@ -61,8 +61,8 @@
     name: "new{{ rpfx }}"
     virtual_network_gateway1: "{{ network_gateway1_output.id }}"
     local_network_gateway2: "{{ local_gateway_output.state.id }}"
-    authorization_key: Password@0329
-    connection_type: Vnet2Vnet
+    shared_key: Password@0329
+    connection_type: IPsec
     connection_protocol: IKEv2
     routing_weight: 0
     dpd_timeout_seconds: 45
@@ -83,8 +83,8 @@
     name: "new{{ rpfx }}"
     virtual_network_gateway1: "{{ network_gateway1_output.id }}"
     local_network_gateway2: "{{ local_gateway_output.state.id }}"
-    authorization_key: Password@0329
-    connection_type: Vnet2Vnet
+    shared_key: Password@0329
+    connection_type: IPsec
     connection_protocol: IKEv2
     routing_weight: 0
     dpd_timeout_seconds: 45
