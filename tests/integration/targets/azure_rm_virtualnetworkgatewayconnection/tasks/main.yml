@@ -26,13 +26,13 @@
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}"
-    address_prefixes: "10.0.0.0/16"
+    address_prefixes: "30.0.0.0/16"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: GatewaySubnet
-    address_prefix: "10.0.2.0/24"
+    address_prefix: "30.0.2.0/24"
     virtual_network: "{{ vnetname }}"
 
 - name: Create public IP address
