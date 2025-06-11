@@ -3,7 +3,7 @@
     vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     pubipname: "pip{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-    rpfx: "{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a new local network gateway
   azure_rm_localnetworkgateway:
