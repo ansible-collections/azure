@@ -69,3 +69,5 @@ build_ignore:
   - '.vscode'
   - 'ansible_collections'
   - 'ansible.cfg'
+  - "*cloud-config-azure.ini"
+  - "*cloud-config-azure.yml"
