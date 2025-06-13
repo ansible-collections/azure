@@ -39,6 +39,16 @@ options:
             - Is auto-registration of virtual machine records in the virtual network in the Private DNS zone enabled
         default: false
         type: bool
+    resolution_policy:
+        description:
+            - The resolution policy on the virtual network link.
+            - Only applicable for virtual network links to privatelink zones, and for A,AAAA,CNAME queries.
+            - When set to C(NxDomainRedirect), Azure DNS resolver falls back to public resolution
+              if private dns query resolution results in non-existent domain response.
+        type: str
+        choices:
+            - Default
+            - NxDomainRedirect
     virtual_network:
         description:
             - The reference of the virtual network.
@@ -141,6 +151,12 @@ state:
             returned: always
             type: bool
             sample: true
+        resolution_policy:
+            description:
+                - The resolution policy on the virtual network link.
+            type: str
+            returned: always
+            sample: Default
         provisioning_state:
             description:
                 - The provisioning state of the resource.
@@ -179,7 +195,8 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
             zone_name=dict(type='str', required=True),
             virtual_network=dict(type='str'),
             state=dict(choices=['present', 'absent'], default='present', type='str'),
-            registration_enabled=dict(type='bool', default=False)
+            registration_enabled=dict(type='bool', default=False),
+            resolution_policy=dict(type='str', choices=['Default', 'NxDomainRedirect']),
         )
 
         required_if = [
@@ -198,6 +215,7 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
         self.registration_enabled = None
         self.state = None
         self.tags = None
+        self.resolution_policy = None
         self.log_path = None
         self.log_mode = None
 
@@ -269,6 +287,7 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
                 # create or update Virtual network link
                 virtual_network_link_new = \
                     self.private_dns_models.VirtualNetworkLink(location='global',
+                                                               resolution_policy=self.resolution_policy,
                                                                registration_enabled=self.registration_enabled)
                 if self.virtual_network:
                     virtual_network_link_new.virtual_network = \

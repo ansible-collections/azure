@@ -81,7 +81,8 @@ virtualnetworklinks:
                 "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/
                        providers/Microsoft.Network/virtualNetworks/MyAzureVNet"
             },
-            "virtual_network_link_state": "Completed"
+            "virtual_network_link_state": "Completed",
+            'resolution_policy': 'null'
         }
     ]
 '''
@@ -182,7 +183,8 @@ class AzureRMVirtualNetworkLinkInfo(AzureRMModuleBase):
             registration_enabled=link.registration_enabled,
             tags=link.tags,
             virtual_network_link_state=link.virtual_network_link_state,
-            provisioning_state=link.provisioning_state
+            provisioning_state=link.provisioning_state,
+            resolution_policy=link.resolution_policy
         )
         return result
 
