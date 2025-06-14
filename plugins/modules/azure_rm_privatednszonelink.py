@@ -267,6 +267,11 @@ class AzureRMVirtualNetworkLink(AzureRMModuleBase):
                 if self.registration_enabled != results['registration_enabled']:
                     changed = True
                     results['registration_enabled'] = self.registration_enabled
+                if self.resolution_policy is not None and self.resolution_policy != results.get('resolution_policy'):
+                    changed = True
+                    results['resolution_policy'] = self.resolution_policy
+                else:
+                    self.resolution_policy = results.get('resolution_policy')
             elif self.state == 'absent':
                 changed = True
 
