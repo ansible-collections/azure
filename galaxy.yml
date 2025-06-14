@@ -64,8 +64,9 @@ homepage: https://azure.microsoft.com
 issues: https://github.com/ansible-collections/azure/issues
 
 build_ignore:
-  - 'azure-azcollection-*.tar.gz'
-  - 'venv*'
+  - '*.tar.gz'
+  - '*venv*'
   - '.vscode'
   - 'ansible_collections'
   - 'ansible.cfg'
+  - 'tests'
