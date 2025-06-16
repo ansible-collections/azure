@@ -157,6 +157,8 @@ action_groups:
     - azure.azcollection.azure_rm_mariadbfirewallrule_info
     - azure.azcollection.azure_rm_mariadbserver
     - azure.azcollection.azure_rm_mariadbserver_info
+    - azure.azcollection.azure_rm_monitoractiongroups
+    - azure.azcollection.azure_rm_monitoractiongroups_info
     - azure.azcollection.azure_rm_monitordatacollectionrules
     - azure.azcollection.azure_rm_monitordatacollectionrules_info
     - azure.azcollection.azure_rm_monitordiagnosticsetting

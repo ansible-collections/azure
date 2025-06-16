@@ -1,0 +1,362 @@
+- name: Prepare variables
+  ansible.builtin.set_fact:
+    # Random string
+    random_string: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    action_group_mail: user@example.com
+  run_once: true
+
+# ------ tests ------
+
+- name: Get information about a non-existant action group
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+  register: output
+
+- name: Assert that action group list is empty
+  ansible.builtin.assert:
+    that:
+      - output.actiongroups | length == 0
+
+- name: Create action group (check mode)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    enabled: true
+    location: Global
+    email_receivers:
+      - email_address: "{{ action_group_mail }}"
+        name: "sendmailto{{ action_group_mail | split('@') | first }}"
+        use_common_alert_schema: true
+    group_short_name: AGShortName
+  check_mode: true
+  register: output
+
+- name: Assert that action group has been created (check mode)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+- name: Create action group (no tags)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    enabled: true
+    location: Global
+    email_receivers:
+      - email_address: "{{ action_group_mail }}"
+        name: "sendmailto{{ action_group_mail | split('@') | first }}"
+        use_common_alert_schema: true
+    group_short_name: AGShortName
+  register: output
+
+- name: Assert that action group has been created (no tags)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+- name: Create action group (no tags, idempotency check)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    enabled: true
+    location: Global
+    email_receivers:
+      - email_address: "{{ action_group_mail }}"
+        name: "sendmailto{{ action_group_mail | split('@') | first }}"
+        use_common_alert_schema: true
+    group_short_name: AGShortName
+  register: output
+
+- name: Assert that action group has not changed during idempotency check (no tags)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+
+- name: Create action group (creation tags)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-creationtags-{{ random_string }}"
+    state: present
+    enabled: true
+    location: Global
+    email_receivers:
+      - email_address: "{{ action_group_mail }}"
+        name: "sendmailto{{ action_group_mail | split('@') | first }}"
+        use_common_alert_schema: true
+    group_short_name: AGShortName
+    tags:
+      CreationTag1: CreationTagValue1
+  register: output
+
+- name: Assert that action group has been created (no tags)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+      - output.actiongroup.tags.CreationTag1 == 'CreationTagValue1'
+
+- name: Create action group (creation tags, idempotency check)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-creationtags-{{ random_string }}"
+    state: present
+    enabled: true
+    location: Global
+    email_receivers:
+      - email_address: "{{ action_group_mail }}"
+        name: "sendmailto{{ action_group_mail | split('@') | first }}"
+        use_common_alert_schema: true
+    group_short_name: AGShortName
+    tags:
+      CreationTag1: CreationTagValue1
+  register: output
+
+- name: Assert that action group has not changed during idempotency check (creation tags)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+      - output.actiongroup.tags.CreationTag1 == 'CreationTagValue1'
+
+- name: Add tag to existing action group
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    tags:
+      TestTag1: TestValue1
+  register: output
+
+- name: Assert that action group has been changed (add tag)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+      - output.actiongroup.tags.TestTag1 == 'TestValue1'
+
+- name: Add tag to existing action group (idempontency)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    tags:
+      TestTag1: TestValue1
+  register: output
+
+- name: Assert that action group has been changed (add tag, idempotency)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+      - output.actiongroup.tags.TestTag1 == 'TestValue1'
+
+- name: Add tag to existing action group (append)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    append_tags: true
+    tags:
+      TestTag2: TestValue2
+  register: output
+
+- name: Assert that action group has been changed (add tag)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+      - output.actiongroup.tags.TestTag1 == 'TestValue1'
+      - output.actiongroup.tags.TestTag2 == 'TestValue2'
+
+- name: Add tag to existing action group (append, idempotency)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    append_tags: true
+    tags:
+      TestTag2: TestValue2
+  register: output
+
+- name: Assert that action group has been changed (add tag, idempotency)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+      - output.actiongroup.tags.TestTag1 == 'TestValue1'
+      - output.actiongroup.tags.TestTag2 == 'TestValue2'
+
+- name: Replace tag on existing action group
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    append_tags: false
+    tags:
+      TestTag3: TestValue3
+  register: output
+
+- name: Assert that action group tag has been changed (replace tags)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+      - output.actiongroup.tags.TestTag1 is not defined
+      - output.actiongroup.tags.TestTag2 is not defined
+      - output.actiongroup.tags.TestTag3 == 'TestValue3'
+
+- name: Replace tag on existing action group (idempontency)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    append_tags: false
+    tags:
+      TestTag3: TestValue3
+  register: output
+
+- name: Assert that action group tag has been changed (replace tag, idempotency)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+      - output.actiongroup.tags.TestTag1 is not defined
+      - output.actiongroup.tags.TestTag2 is not defined
+      - output.actiongroup.tags.TestTag3 == 'TestValue3'
+
+- name: Remove tags on existing action group
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    append_tags: false
+  register: output
+
+- name: Assert that action group has been changed (remove tags)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+      - output.actiongroup.tags is not defined
+
+- name: Remove tags on existing action group (idempotency)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: present
+    append_tags: false
+  register: output
+
+- name: Assert that action group has been changed (remove tags, idempotency)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+      - output.actiongroup.tags is not defined
+
+- name: Get information about a action group
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+  register: output
+
+- name: Assert that action group list is properly filled
+  ansible.builtin.assert:
+    that:
+      - output.actiongroups | length == 1
+
+- name: List all action groups (resource group level)
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that action group list includes created action group (resource group level)
+  ansible.builtin.assert:
+    that:
+      - ('actiongroup-' + random_string) in (output.actiongroups | map(attribute='name') | list)
+
+- name: List all action groups (subscription level)
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+  register: output
+
+- name: Assert that action group list includes created action group (subscription level)
+  ansible.builtin.assert:
+    that:
+      - ('actiongroup-' + random_string) in (output.actiongroups | map(attribute='name') | list)
+
+# ------ teardown ------
+
+- name: Delete action group (check mode)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: absent
+  check_mode: true
+  register: output
+
+- name: Assert that action group has been deleted (check mode)
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+- name: Delete action group
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: absent
+  register: output
+
+- name: Assert that action group has been deleted
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+- name: Delete action group (idempontency check)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+    state: absent
+  register: output
+
+- name: Assert that action group has been deleted (idempotency check)
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+
+- name: Delete action group (creation tags)
+  azure.azcollection.azure_rm_monitoractiongroups:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-creationtags-{{ random_string }}"
+    state: absent
+  register: output
+
+- name: Assert that action group has been deleted
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+# ------ safety checks, ensure everything is gone ------
+
+- name: Make sure delection succeeded
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+    resource_group: "{{ resource_group }}"
+    name: "actiongroup-{{ random_string }}"
+  register: output
+
+- name: Assert that action group is no longer found
+  ansible.builtin.assert:
+    that:
+      - output.actiongroups | length == 0
+
+- name: List all action groups after deletion (resource group level)
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that action group list no longer includes created action group (resource group level)
+  ansible.builtin.assert:
+    that:
+      - ('actiongroup-' + random_string) not in (output.actiongroups | map(attribute='name') | list)
+
+- name: List all action groups after deletion (subscription level)
+  azure.azcollection.azure_rm_monitoractiongroups_info:
+  register: output
+
+- name: Assert that action group list no longer includes created action group (subscription level)
+  ansible.builtin.assert:
+    that:
+      - ('actiongroup-' + random_string) not in (output.actiongroups | map(attribute='name') | list)
