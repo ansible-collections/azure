@@ -54,3 +54,4 @@ azure-mgmt-eventhub==11.1.0
 azure-mgmt-resourcehealth==1.0.0b6
 oras
 netaddr
+azure-servicebus
