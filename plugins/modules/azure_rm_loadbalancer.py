@@ -571,6 +571,18 @@ load_balancing_rule_spec = dict(
 )
 
 
+outbound_rule_spec=dict(
+    name=dict(type='str'),
+    allocated_outbound_ports=dict(type='int'),
+    frontend_ip_configurations=dict(type='list', elements='str'),
+    backend_address_pool=dict(type='str'),
+    protocol=dict(type='str', choices=['Tcp', 'Udp', 'All']),
+    enable_tcp_reset=dict(type='bool'),
+    idle_timeout_in_minutes=dict(type='int')
+
+)
+
+
 class AzureRMLoadBalancer(AzureRMModuleBase):
     """Configuration class for an Azure RM load balancer resource"""
 
@@ -625,6 +637,11 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=load_balancing_rule_spec
+            ),
+            outbound_rules=dict(
+                type='list',
+                elements='dict',
+                options=outbound_rule_spec
             )
         )
 
@@ -637,6 +654,7 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
         self.probes = None
         self.inbound_nat_rules = None
         self.inbound_nat_pools = None
+        self.outbound_rules = None
         self.load_balancing_rules = None
         self.state = None
         self.tags = None
@@ -775,6 +793,29 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 enable_floating_ip=item.get('enable_floating_ip')
             ) for item in self.inbound_nat_rules] if self.inbound_nat_rules else None
 
+            outbound_rules_param = [self.network_models.OutboundRule(
+                name=item.get('name'),
+                frontend_ip_configurations=[self.network_models.SubResource(
+                    id=frontend_ip_configuration_id(
+                        self.subscription_id,
+                        self.resource_group,
+                        self.name,
+                        value
+                    )for value in item['frontend_ip_configurations']] if item.get('frontend_ip_configurations') else None,
+                backend_address_pool=self.network_models.SubResource(
+                    id=backend_address_pool_id(
+                        self.subscription_id,
+                        self.resource_group,
+                        self.name,
+                        item.get('backend_address_pool')
+                    )
+                ),
+                allocated_outbound_ports=item.get('allocated_outbound_ports'),
+                protocol=item.get('protocol'),
+                enable_tcp_reset=item.get('enable_tcp_reset'),
+                idle_timeout_in_minutes=item.get('idle_timeout_in_minutes')
+            ) for item in self.outbound_rules] if self.outbound_rules else None
+
             # construct the new instance, if the parameter is none, keep remote one
             self.new_load_balancer = self.network_models.LoadBalancer(
                 sku=self.network_models.LoadBalancerSku(name=self.sku) if self.sku else None,
@@ -785,7 +826,8 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 probes=probes_param,
                 inbound_nat_pools=inbound_nat_pools_param,
                 load_balancing_rules=load_balancing_rules_param,
-                inbound_nat_rules=inbound_nat_rules_param
+                inbound_nat_rules=inbound_nat_rules_param,
+                outbound_rules=outbound_rules_param,
             )
 
             self.new_load_balancer = self.assign_protocol(self.new_load_balancer, load_balancer)
