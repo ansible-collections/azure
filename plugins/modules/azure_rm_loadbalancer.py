@@ -801,7 +801,8 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                         self.resource_group,
                         self.name,
                         value
-                    )for value in item['frontend_ip_configurations']] if item.get('frontend_ip_configurations') else None,
+                    )
+                )for value in item['frontend_ip_configurations']] if item.get('frontend_ip_configurations') else None,
                 backend_address_pool=self.network_models.SubResource(
                     id=backend_address_pool_id(
                         self.subscription_id,
