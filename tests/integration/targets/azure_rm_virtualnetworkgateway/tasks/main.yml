@@ -83,6 +83,19 @@
       ansible.builtin.assert:
         that: output.changed
 
+    - name: Get the virtual network gateway facts
+      azure_rm_virtualnetworkgateway_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vngname }}"
+      register: output
+
+    - name: Assert the virtual network gateway facts
+      assert:
+        that:
+          - output.virtual_network_gatways[0].provisioning_state == 'Succeeded'
+          - output.virtual_network_gatways[0].tags |length == 1
+          - output.virtual_network_gatways[0].ip_configurations |length == 1
+
     - name: Create virtual network gateway without bgp settings - idempotent
       azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}"

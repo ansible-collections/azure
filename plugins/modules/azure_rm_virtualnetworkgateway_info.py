@@ -1,4 +1,7 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -55,6 +58,111 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
+virtual_network_gatways:
+    description:
+        - List the facts of the virtual network gateways.
+    type: complex
+    returned: always
+    contains:
+        bgp_settings:
+            description:
+                - Virtual network gateway's BGP speaker settings.
+            type: dict
+            returned: always
+            sample: {'asn':65515, 'bgp_peering_address':'10.0.2.254', 'peer_weight':0}
+        enable_bgp:
+            description:
+                -  Whether BGP is enabled for this virtual network gateway or not.
+            type: bool
+            returned: always
+            sample: false
+        etag:
+            description:
+                -  A unique read-only string that changes whenever the resource is updated.
+            type: str
+            returned: always
+            sample: 28a83384-dda9-435b-ba0c-4914c4fce18a
+        id:
+            description:
+                - Resource ID.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxxx-xxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworkGateways/vng"
+        gateway_type:
+            description:
+                - The type of this virtual network gateway.
+            type: str
+            returned: always
+            sample: Vpn
+        ip_configurations:
+            description:
+                - IP configurations for virtual network gateway.
+            type: list
+            returned: always
+            sample: [
+                    {
+                        "etag": "28a83384-dda9-435b-ba0c-4914c4fce18a",
+                        "id": "/subscriptions/xxxx-xxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworkGateways/vng/ipConfigurations/default",
+                        "name": "default",
+                        "private_ip_allocation_method": "Dynamic",
+                        "provisioning_state": "Succeeded",
+                        "public_ip_address": {
+                            "id": "/subscriptions/xxxx-xxxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPAddresses/testPublicIP"
+                        },
+                        "subnet": {
+                            "id": "/subscriptions/xxxx-xxxxx/resourceGroups/testRG/providers/Microsoft.Network/virtualNetworks/vnet/subnets/GatewaySubnet"
+                        }
+                    }
+                ]
+        location:
+            description:
+                - Resource location.
+            type: str
+            returned: always
+            sample: eastus
+        name:
+            description:
+                - Resoure name.
+            type: str
+            returned: always
+            sample: vng
+        provisioning_state:
+            description:
+                - The provisioning state of the virtual network gateway resource.
+            type: str
+            returned: always
+            sample: Succeeded
+        resource_group:
+            description:
+                - Resource group name.
+            type: str
+            returned: always
+            sample: testRG
+        sku:
+            description:
+                - The reference to the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
+            type: dict
+            returned: always
+            sample: {'name':'VpnGw1', 'tier':'VpnGw1'}
+        tags:
+            description:
+                - Resource tags.
+            type: dict
+            returned: always
+            sample: {'common':'xyz'}
+        vpn_gateway_generation:
+            description:
+                - The generation for this VirtualNetworkGateway.
+                - Must be None if gatewayType is not VPN.
+            type: str
+            returned: always
+            sample: Generation1
+        vpn_type:
+            description:
+                - The type of this virtual network gateway.
+            type: str
+            returned: always
+            sample: RouteBaseg
 '''
 
 try:
@@ -142,7 +250,8 @@ class AzureRMVirtualNetworkGatewayInfo(AzureRMModuleBase):
                 bgp_peering_address=vgw.bgp_settings.bgp_peering_address,
                 peer_weight=vgw.bgp_settings.peer_weight
             ) if vgw.bgp_settings else None,
-            etag=vgw.etag
+            etag=vgw.etag,
+            ip_configurations=[item.as_dict() for item in vgw.ip_configurations] if vgw.ip_configurations else None
         )
         return results
 
