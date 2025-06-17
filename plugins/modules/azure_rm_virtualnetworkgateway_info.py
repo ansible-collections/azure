@@ -86,7 +86,7 @@ class AzureRMVirtualNetworkGatewayInfo(AzureRMModuleBase):
         )
 
         super(AzureRMVirtualNetworkGatewayInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                               required_if=required_if,
+                                                               supports_tags=False,
                                                                supports_check_mode=True)
 
     def exec_module(self, **kwargs):
@@ -104,9 +104,10 @@ class AzureRMVirtualNetworkGatewayInfo(AzureRMModuleBase):
     def get_item(self):
         try:
             response = self.network_client.virtual_network_gateways.get(self.resource_group, self.name)
-            return [self.vgw_to_dict(response) if self.has_tags(response.tags, self.tags)]
+            if self.has_tags(response.tags, self.tags):
+                return [self.vgw_to_dict(response)]
         except ResourceNotFoundError as ec:
-            self.log("The virtual network gatway {0} not exist, exception as {1}".format(self.name, ec)
+            self.log("The virtual network gatway {0} not exist, exception as {1}".format(self.name, ec))
             return []
 
     def list_item(self):
@@ -117,7 +118,7 @@ class AzureRMVirtualNetworkGatewayInfo(AzureRMModuleBase):
                 if self.has_tags(item.tags, self.tags):
                     results.append(self.vgw_to_dict(item))
         except Exception as ec:
-            self.log("List virtual network gatway catch exception as {0}".format(ec)
+            self.log("List virtual network gatway catch exception as {0}".format(ec))
         return results
 
     def vgw_to_dict(self, vgw):
