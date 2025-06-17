@@ -333,6 +333,48 @@ options:
                     - Receive bidirectional TCP Reset on TCP flow idle timeout or unexpected connection termination.
                     - This element is only used when I(protocol=Tcp).
                 type: bool
+    outbound_rules:
+        description:
+            -
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - The name of the resource that is unique within the set of outbound rules used by the load balancer.
+                    - This name can be used to access the resource.
+                type: str
+            allocated_outbound_ports:
+                description:
+                    - The number of outbound ports to be used for NAT.
+                type: int
+            frontend_ip_configurations:
+                description:
+                    - The Frontend IP addresses of the load balancer.
+                type: list
+                elements: str
+            backend_address_pool:
+                description:
+                    - A reference to a pool of DIPs.
+                    - Outbound traffic is randomly load balanced across IPs in the backend IPs.
+                type: str
+            protocol:
+                description:
+                    - The protocol for the outbound rule in load balancer.
+                type: str
+                choices:
+                    - Tcp
+                    - Udp
+                    - All
+            enable_tcp_reset:
+                description:
+                    - Receive bidirectional TCP Reset on TCP flow idle timeout or unexpected connection termination.
+                    - This element is only used when the protocol is set to C(Tcp).
+                type: bool
+            idle_timeout_in_minutes:
+                description:
+                    - The timeout for the TCP idle connection.
+                type: int
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -350,8 +392,11 @@ EXAMPLES = '''
     frontend_ip_configurations:
       - name: frontendipconf0
         public_ip_address: testpip
+      - name: frontendipconf1
+        public_ip_address: testpip1
     backend_address_pools:
       - name: backendaddrpool0
+      - name: backendaddrpool1
     probes:
       - name: prob0
         port: 80
@@ -375,6 +420,15 @@ EXAMPLES = '''
         protocol: Tcp
         frontend_port: 8080
         frontend_ip_configuration: frontendipconf0
+    outbound_rules:
+      - name: outrule1
+        allocated_outbound_ports: 800
+        frontend_ip_configurations:
+          - frontendipconf1
+        backend_address_pool: backendaddrpool1
+        protocol: Tcp
+        enable_tcp_reset: true
+        idle_timeout_in_minutes: 4
 '''
 
 RETURN = '''
