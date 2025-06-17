@@ -335,7 +335,7 @@ options:
                 type: bool
     outbound_rules:
         description:
-            -
+            - The outbound rules.
         type: list
         elements: dict
         suboptions:
@@ -625,7 +625,7 @@ load_balancing_rule_spec = dict(
 )
 
 
-outbound_rule_spec=dict(
+outbound_rule_spec = dict(
     name=dict(type='str'),
     allocated_outbound_ports=dict(type='int'),
     frontend_ip_configurations=dict(type='list', elements='str'),
