@@ -70,3 +70,5 @@ build_ignore:
   - 'ansible_collections'
   - 'ansible.cfg'
   - 'tests'
+  - "*cloud-config-azure.ini"
+  - "*cloud-config-azure.yml"
