@@ -344,6 +344,7 @@ options:
                     - The name of the resource that is unique within the set of outbound rules used by the load balancer.
                     - This name can be used to access the resource.
                 type: str
+                required: True
             allocated_outbound_ports:
                 description:
                     - The number of outbound ports to be used for NAT.
@@ -449,6 +450,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.module_utils._text import to_native
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -627,7 +629,7 @@ load_balancing_rule_spec = dict(
 
 
 outbound_rule_spec = dict(
-    name=dict(type='str'),
+    name=dict(type='str', required=True),
     allocated_outbound_ports=dict(type='int'),
     frontend_ip_configurations=dict(type='list', elements='str'),
     backend_address_pool=dict(type='str'),
@@ -739,7 +741,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
             if not load_balancer:
                 changed = True
             else:
-                response = load_balancer.as_dict()
+                response = self.format_item(load_balancer)
                 update1, self.frontend_ip_configurations = self.update_item(self.frontend_ip_configurations, response.get('frontend_ip_configurations'))
                 update2, self.backend_address_pools = self.update_item(self.backend_address_pools, response.get('backend_address_pools'))
                 update3, self.probes = self.update_item(self.probes, response.get('probes'))
@@ -925,6 +927,110 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
         else:
             new = old
         return changed, new
+
+    def format_item(self, item):
+        results = dict()
+        if item.frontend_ip_configurations is not None:
+            results['frontend_ip_configurations'] = []
+            for value in item.frontend_ip_configurations:
+                results['frontend_ip_configurations'].append(dict(name=value.name,
+                                                                  public_ip_address=None,
+                                                                  private_ip_address=value.private_ip_address,
+                                                                  private_ip_allocation_method=value.private_ip_allocation_method,
+                                                                  subnet=None,
+                                                                  zones=value.zones))
+                if value.public_ip_address is not None:
+                    results['frontend_ip_configurations']['public_ip_address'] = parse_resource_id(value.public_ip_address.id)['name']
+                if value.subnet is not None:
+                    results['frontend_ip_configurations']['subnet'] = value.subnet.id
+        else:
+            results['frontend_ip_configurations'] = None
+        if item.backend_address_pools is not None:
+            results['backend_address_pools'] = []
+            for value in item.backend_address_pools:
+                results['backend_address_pools'].append(dict(name=value.name))
+        else:
+            results['backend_address_pools'] = None
+        if item.probes is not None:
+            results['probes'] = []
+            for value in item.probes:
+                results['probes'].append(dict(name=value.name,
+                                              port=value.port,
+                                              protocol=value.protocol,
+                                              interval=value.interval,
+                                              fail_count=value.fail_count,
+                                              request_path=value.request_path))
+        else:
+            results['probes'] = None
+        if item.inbound_nat_pools is not None:
+            results['inbound_nat_pools']  = []
+            for value in item.inbound_nat_pools:
+                results['inbound_nat_pools'].append(dict(name=value.name,
+                                                         frontend_ip_configuration_name=None,
+                                                         protocol=value.protocol,
+                                                         frontend_port_range_start=value.frontend_port_range_start,
+                                                         frontend_port_range_end=value.frontend_port_range_end,
+                                                         backend_port=value.backend_port))
+                if value.frontend_ip_configuration is not None:
+                    results['inbound_nat_pools']['frontend_ip_configuration_name'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+        else:
+            results['inbound_nat_pools'] = None
+        if item.inbound_nat_rules is not None:
+            results['inbound_nat_rules'] = []
+            for value in item.inbound_nat_rules:
+                results['inbound_nat_rules'].append(dict(name=value.name,
+                                                         frontend_ip_configuration=value.frontend_ip_configuration,
+                                                         protocol=value.protocol,
+                                                         frontend_port=value.frontend_port,
+                                                         idle_timeout=value.idle_timeout,
+                                                         backend_port=value.backend_port,
+                                                         enable_floating_ip=value.enable_floating_ip,
+                                                         enable_tcp_reset=value.enable_tcp_reset))
+                if value.frontend_ip_configuration is not None:
+                    results['inbound_nat_rules']['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+        else:
+            results['inbound_nat_rules'] = None
+        if item.load_balancing_rules is not None:
+            results['load_balancing_rules'] = []
+            for value in results['load_balancing_rules']:
+                results['load_balancing_rules'].append(dict(name=value.name,
+                                                            frontend_ip_configuration=None,
+                                                            backend_address_pool=None,
+                                                            probe=None,
+                                                            protocol=value.protocol,
+                                                            load_distribution=value.load_distribution,
+                                                            frontend_port=value.frontend_port,
+                                                            backend_port=value.backend_port,
+                                                            idle_timeout=value.idle_timeout,
+                                                            enable_floating_ip=value.enable_floating_ip,
+                                                            disable_outbound_snat=value.disable_outbound_snat,
+                                                            enable_tcp_reset=value.enable_tcp_reset))
+                if value.frontend_ip_configuration is not None:
+                    results['load_balancing_rules']['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+                if value.backend_address_pool is not None:
+                    results['load_balancing_rules']['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['name']
+                if value.probe is not None:
+                    results['load_balancing_rules']['probe'] = parse_resource_id(value.probe.id)['name']
+        else:
+            results['load_balancing_rules'] = None
+        if item.outbound_rules is not None:
+            results['outbound_rules'] = []
+            for value in item.outbound_rules:
+                results['outbound_rules'].append(dict(name=value.name,
+                                                      allocated_outbound_ports=value.allocated_outbound_ports,
+                                                      frontend_ip_configurations=None,
+                                                      backend_address_pool=None,
+                                                      protocol=value.protocol,
+                                                      enable_tcp_reset=value.enable_tcp_reset,
+                                                      idle_timeout_in_minutes=value.idle_timeout_in_minutes))
+                if value.frontend_ip_configuration is not None:
+                    results['outbound_rules']['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+                if value.backend_address_pool is not None:
+                    results['outbound_rules']['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['name']
+        else:
+            results['outbound_rules'] = None
+
+        return results
 
     def get_public_ip_address_instance(self, id):
         """Get a reference to the public ip address resource"""
