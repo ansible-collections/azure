@@ -132,6 +132,7 @@ action_groups:
     - azure.azcollection.azure_rm_ipgroup_info
     - azure.azcollection.azure_rm_keyvault
     - azure.azcollection.azure_rm_keyvault_info
+    - azure.azcollection.azure_rm_keyvaultsecuritydomain
     - azure.azcollection.azure_rm_keyvaultkey
     - azure.azcollection.azure_rm_keyvaultkey_info
     - azure.azcollection.azure_rm_keyvaultsecret
