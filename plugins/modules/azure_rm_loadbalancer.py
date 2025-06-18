@@ -344,6 +344,7 @@ options:
                     - The name of the resource that is unique within the set of outbound rules used by the load balancer.
                     - This name can be used to access the resource.
                 type: str
+                required: True
             allocated_outbound_ports:
                 description:
                     - The number of outbound ports to be used for NAT.
@@ -626,7 +627,7 @@ load_balancing_rule_spec = dict(
 
 
 outbound_rule_spec = dict(
-    name=dict(type='str'),
+    name=dict(type='str', required=True),
     allocated_outbound_ports=dict(type='int'),
     frontend_ip_configurations=dict(type='list', elements='str'),
     backend_address_pool=dict(type='str'),
