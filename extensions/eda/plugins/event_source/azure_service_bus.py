@@ -32,7 +32,7 @@ options:
 """
 
 EXAMPLES = r"""
-- ansible.eda.azure_service_bus:
+- azure.azcollection.azure_service_bus:
     conn_str: "{{connection_str}}"
     queue_name: "{{queue_name}}"
 """
