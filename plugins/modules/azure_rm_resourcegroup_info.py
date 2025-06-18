@@ -166,9 +166,6 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
                                                        facts_module=True)
 
     def exec_module(self, **kwargs):
-        is_old_facts = self.module._name == 'azure_rm_resourcegroup_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_resourcegroup_facts' module has been renamed to 'azure_rm_resourcegroup_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -182,8 +179,6 @@ class AzureRMResourceGroupInfo(AzureRMModuleBase):
             for item in result:
                 item['resources'] = self.list_by_rg(item['name'])
 
-        if is_old_facts:
-            self.results['ansible_facts']['azure_resourcegroups'] = result
         self.results['resourcegroups'] = result
 
         return self.results

@@ -192,10 +192,6 @@ class AzureRMVirtualNetworkPeeringInfo(AzureRMModuleBase):
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
-        is_old_facts = self.module._name == 'azure_rm_virtualnetworkpeering_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_virtualnetworkpeering_facts' module has been renamed to 'azure_rm_virtualnetworkpeering_info'",
-                                  version=(2.9, ))
 
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])

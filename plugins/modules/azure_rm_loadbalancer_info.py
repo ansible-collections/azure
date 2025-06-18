@@ -152,10 +152,6 @@ class AzureRMLoadBalancerInfo(AzureRMModuleBase):
 
     def exec_module(self, **kwargs):
 
-        is_old_facts = self.module._name == 'azure_rm_loadbalancer_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_loadbalancer_facts' module has been renamed to 'azure_rm_loadbalancer_info'", version=(2.9, ))
-
         for key in self.module_args:
             setattr(self, key, kwargs[key])
 

@@ -265,9 +265,6 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
                                                           required_if=self.required_if)
 
     def exec_module(self, **kwargs):
-        is_old_facts = self.module._name == 'azure_rm_virtualnetwork_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_virtualnetwork_facts' module has been renamed to 'azure_rm_virtualnetwork_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -279,10 +276,6 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         else:
             results = self.list_items()
 
-        if is_old_facts:
-            self.results['ansible_facts'] = {
-                'azure_virtualnetworks': self.serialize(results)
-            }
         self.results['virtualnetworks'] = self.curated(results)
 
         return self.results
