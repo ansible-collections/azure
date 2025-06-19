@@ -209,7 +209,7 @@ jobs:
               ;;
           esac
           echo "Active group number: $group_no"
-        name: "Determine the target ansible test group number"
+        displayName: "Determine the target ansible test group number"
 
   - job: RunTests
     dependsOn: CreateResourceGroups
