@@ -51,7 +51,7 @@ else
     path_dir="${TEST_DIR}/tests/integration/targets/"
     for item in "$path_dir"*
     do
-        if [ "${item}" != "$path_dir""$4" ]
+        if [ "${item}" != "$path_dir""$4" ]; then
             echo " " >> "${item}"/aliases
             echo "disabled" >> "${item}"/aliases
         fi
