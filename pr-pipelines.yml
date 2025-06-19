@@ -165,9 +165,7 @@ parameters:
       - "setup_azure"
 
 trigger: none
-
-pr:
-  - dev
+pr: none
 
 pool:
   name: pool-ubuntu-2004
