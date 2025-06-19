@@ -27,7 +27,9 @@ parameters:
     default: 'all'
     values:
       - 'all'
+      - "setup_azure"
       - 'sanity'
+      - "inventory_azure" # Group 1
       - 'azure_rm_adapplication'
       - "azure_rm_acs"
       - "azure_rm_adgroup"
@@ -161,8 +163,6 @@ parameters:
       - "azure_rm_afdorigin"
       - "azure_rm_afdruleset"
       - "azure_rm_afdrules"
-      - "inventory_azure"
-      - "setup_azure"
 
 trigger: none
 pr: none
@@ -192,6 +192,24 @@ jobs:
               az group create -l eastus -n $(setvar.resource_group_secondary)
               az group create -l westus2 -n $(setvar.resource_group_third)
               az group create -l eastus2 -n $(setvar.resource_group_datalake)
+      - name: "Determine the target ansible test group number"
+        bash: |
+          group_no="all"
+          case "${{ parameters.MODULE_NAME }}" in
+            sanity)
+              gropu_no=sanity
+              ;;
+            inventory_azure)
+              group_no=1
+              ;;
+            azure_rm_*)
+              group_no=$(awk -F'shippable/azure/group' '/^shippable\/azure\/group/ { print $2 }' ./tests/integration/targets/${{ parameters.MODULE_NAME }}/aliases)
+              ;;
+            *)
+              # "all" and "setup_azure"
+              ;;
+          esac
+          echo "Active group number: $group_no"
 
   - job: RunTests
     dependsOn: CreateResourceGroups
