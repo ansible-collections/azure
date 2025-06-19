@@ -3,9 +3,8 @@ set -e
 
 # A number represents the group number, or "sanity"
 GROUP_NO="$1"
-PY_VER="$2"
-ANSIBLE_VER="$3"
-MODULE_NAME="$4"
+ANSIBLE_VER="$2"
+MODULE_NAME="$3"
 
 quit() {
     echo "$@" >&2
