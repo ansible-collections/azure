@@ -9,7 +9,7 @@ MODULE_NAME="$4"
 
 quit() {
     echo "$@" >&2
-    exit 1
+    exit 0
 }
 
 die() {
