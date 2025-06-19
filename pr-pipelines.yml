@@ -2,7 +2,7 @@ parameters:
   - name: PYTHON_VER
     displayName: 'Python Version'
     type: string
-    default: "3.10"
+    default: "3.13"
     values:
       - "2.7"
       - "3.6"
@@ -15,7 +15,7 @@ parameters:
   - name: ANSIBLE_VER
     displayName: 'Ansible Version'
     type: string
-    default: "2.17"
+    default: "2.18"
     values:
       - "2.15"
       - "2.16" # End Of Life May 2025 https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix

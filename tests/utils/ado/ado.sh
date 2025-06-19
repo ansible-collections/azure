@@ -1,76 +1,59 @@
 #!/usr/bin/env bash
 
-set -o pipefail -eux
+set -o pipefail -e
 
-declare -a args
-IFS='/:' read -ra args <<< "$1"
+group="$1"
 
-group="${args[0]}"
+echo '--------------------------------------------'
+echo "Install Python"
+echo '--------------------------------------------'
+sudo apt update
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install -y \
+    python"$2" \
+    python3-dateutil \
+    python3-pip
 
-command -v python
-python -V
-if [ "$2" = "2.7" ]
-then
-    echo "The specified environment is Python2.7"
-else
-    alias pip='pip3'
-    sudo apt update
-    sudo apt install software-properties-common
-    sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install python"$2" -y
-    sudo apt install python3-dateutil
-    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python"$2" 1
-    
-    if [ "$2" = "3.10" ]
-    then
-        sudo apt-get install python3.10-distutils
-    fi
-
-    if [ "$2" = "3.11" ]
-    then
-        sudo apt-get install python3.11-distutils
-    fi
-fi
-
-command -v pip
-pip --version
-pip list --disable-pip-version-check
-
-export PATH="${PWD}/bin:${PATH}"
-export PYTHONIOENCODING="UTF-8"
-export LC_ALL="en_US.utf-8"
-
-pip install virtualenv
-virtualenv --python /usr/bin/python"$2" ~/ansible-venv
-
-set +ux
+echo '--------------------------------------------'
+echo "Setup venv"
+echo '--------------------------------------------'
+python$2 -m venv ~/ansible-venv
 . ~/ansible-venv/bin/activate
-set -ux
 
-git clone https://github.com/ansible/ansible.git
-cd "ansible"
-if [ "$3" = "devel" ]
-then
-    echo "The branch is devel"
-else
-    git checkout "stable-$3"
-fi
-source hacking/env-setup
-pip install paramiko PyYAML Jinja2  httplib2 six
+echo '--------------------------------------------'
+echo "Clone and setup ansible hacking env"
+echo '--------------------------------------------'
+git clone https://github.com/ansible/ansible.git ~/ansible
+pushd ~/ansible > /dev/null
+    if [ "$3" = "devel" ]
+    then
+        echo "The branch is devel"
+    else
+        git checkout "stable-$3"
+    fi
+    source hacking/env-setup
+    pip install paramiko PyYAML Jinja2 httplib2 six
+popd > /dev/null
 
+echo '--------------------------------------------'
+echo 'Copy and install our collection to a test directory'
+echo '--------------------------------------------'
 TEST_DIR="${HOME}/.ansible/ansible_collections/azure/azcollection"
 mkdir -p "${TEST_DIR}"
 cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
 cd "${TEST_DIR}"
 mkdir -p shippable/testresults
-
 pip install  -I -r "${TEST_DIR}/requirements.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements.txt"
-
 pip install ansible-lint
 
 timeout=180
 
+# See: https://docs.ansible.com/ansible/latest/dev_guide/testing/sanity/integration-aliases.html
+echo '--------------------------------------------'
+echo "Disable non-chosen target"
+echo '--------------------------------------------'
 if [ "$4" = "all" ]
 then
     echo "All module need test"
@@ -78,40 +61,23 @@ else
     path_dir="${TEST_DIR}/tests/integration/targets/"
     for item in "$path_dir"*
     do
-        if [ "${item}" = "$path_dir""$4" ]
-        then
-            echo "PASS"
-        else
+        if [ "${item}" != "$path_dir""$4" ]
             echo " " >> "${item}"/aliases
             echo "disabled" >> "${item}"/aliases
         fi
     done
 fi
+
+echo '--------------------------------------------'
+echo "List dependencies and ansible version"
 echo '--------------------------------------------'
 pip list
 ansible --version
+
 echo '--------------------------------------------'
-
+echo 'Test'
+echo '--------------------------------------------'
 ansible-test env --dump --show --timeout "${timeout}" --color -v
-
-cat <<EOF >> "${TEST_DIR}"/tests/integration/cloud-config-azure.ini
-[default]
-AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
-AZURE_SECRET:${AZURE_SECRET}
-AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
-AZURE_SUBSCRIPTION_SEC_ID:${AZURE_SUBSCRIPTION_SEC_ID}
-AZURE_TENANT:${AZURE_TENANT}
-RESOURCE_GROUP:${RESOURCE_GROUP}
-RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
-RESOURCE_GROUP_THIRD:${RESOURCE_GROUP_THIRD}
-RESOURCE_GROUP_DATALAKE:${RESOURCE_GROUP_DATALAKE}
-AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
-AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
-AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
-EOF
-
-rm -rf "ansible"
-
 if [ "sanity" = "${group}" ]
 then
     ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color -c "tests/lint/ignore-lint.txt"
