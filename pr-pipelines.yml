@@ -4,7 +4,6 @@ parameters:
     type: string
     default: "3.13"
     values:
-      - "2.7"
       - "3.6"
       - "3.8"
       - "3.9"

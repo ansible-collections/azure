@@ -5,19 +5,9 @@ set -o pipefail -e
 group="$1"
 
 echo '--------------------------------------------'
-echo "Inspec default Python"
-echo '--------------------------------------------'
-python --version
-
-# Only for python2
-export PYTHONIOENCODING="UTF-8"
-export LC_ALL="en_US.utf-8"
-
-echo '--------------------------------------------'
 echo "Setup venv (using the target python version)"
 echo '--------------------------------------------'
-pip install virtualenv
-virtualenv --python /usr/bin/python"$2" ~/ansible-venv
+python -m venv ~/ansible-venv
 . ~/ansible-venv/bin/activate
 python --version
 
