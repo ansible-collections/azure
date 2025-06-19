@@ -9,7 +9,7 @@ MODULE_NAME="$4"
 
 # Skip if running against a certain 
 if [ "$4" != "all" ]; then
-    grep "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null && { echo "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit."; exit; }
+    grep -w "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null && { echo "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit."; exit; }
 fi
 
 echo '--------------------------------------------'
