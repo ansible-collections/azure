@@ -208,7 +208,7 @@ options:
         description:
             - AuthConfig properties of a server.
         type: dict
-        version_added: '3.4.0'
+        version_added: '3.5.0'
         suboptions:
             active_directory_auth:
                 description:
