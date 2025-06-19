@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) magodo (@magodo), 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -40,6 +40,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
+    - magodo (@magodo)
     - xuzhang3 (@xuzhang3)
     - Fred-sun (@Fred-sun)
 '''
