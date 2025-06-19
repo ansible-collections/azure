@@ -5,21 +5,21 @@ set -o pipefail -e
 group="$1"
 
 echo '--------------------------------------------'
-echo "Install Python"
+echo "Inspec default Python"
 echo '--------------------------------------------'
-sudo apt update
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install -y \
-    python"$2" \
-    python3-dateutil \
-    python3-pip
+python --version
+
+# Only for python2
+export PYTHONIOENCODING="UTF-8"
+export LC_ALL="en_US.utf-8"
 
 echo '--------------------------------------------'
-echo "Setup venv"
+echo "Setup venv (using the target python version)"
 echo '--------------------------------------------'
-python$2 -m venv ~/ansible-venv
+pip install virtualenv
+virtualenv --python /usr/bin/python"$2" ~/ansible-venv
 . ~/ansible-venv/bin/activate
+python --version
 
 echo '--------------------------------------------'
 echo "Clone and setup ansible hacking env"
