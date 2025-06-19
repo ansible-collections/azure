@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
-
-set -o pipefail -e
+set -e
 
 GROUP_NO="$1"
 PY_VER="$2"
 ANSIBLE_VER="$3"
 MODULE_NAME="$4"
 
+die() {
+    echo "$@" >&2
+    exit 1
+}
+
 # Skip if running against a certain 
 if [ "$4" != "all" ]; then
-    grep -w "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null || { echo "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit."; exit; }
+    grep -w "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null || die "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit..."
 fi
 
 echo '--------------------------------------------'
@@ -81,5 +85,23 @@ then
     ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color -c "tests/lint/ignore-lint.txt"
     ansible-test sanity --color -v --junit
 else
-    ansible-test integration --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive
+    # See: https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template
+    config_file="${TEST_DIR}"/tests/integration/cloud-config-azure.ini
+    cat <<EOF >> "$config_file"
+[default]
+AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
+AZURE_SECRET:${AZURE_SECRET}
+AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
+AZURE_SUBSCRIPTION_SEC_ID:${AZURE_SUBSCRIPTION_SEC_ID}
+AZURE_TENANT:${AZURE_TENANT}
+RESOURCE_GROUP:${RESOURCE_GROUP}
+RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
+RESOURCE_GROUP_THIRD:${RESOURCE_GROUP_THIRD}
+RESOURCE_GROUP_DATALAKE:${RESOURCE_GROUP_DATALAKE}
+AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
+AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
+AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
+EOF
+    ansible-test integration --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive || { rm "$config_file"; die "failed to run integration test"; }
+    rm "$config_file"
 fi
