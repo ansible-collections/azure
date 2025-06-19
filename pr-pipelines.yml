@@ -192,8 +192,7 @@ jobs:
               az group create -l eastus -n $(setvar.resource_group_secondary)
               az group create -l westus2 -n $(setvar.resource_group_third)
               az group create -l eastus2 -n $(setvar.resource_group_datalake)
-      - name: "Determine the target ansible test group number"
-        bash: |
+      - bash: |
           group_no="all"
           case "${{ parameters.MODULE_NAME }}" in
             sanity)
@@ -210,6 +209,7 @@ jobs:
               ;;
           esac
           echo "Active group number: $group_no"
+        name: "Determine the target ansible test group number"
 
   - job: RunTests
     dependsOn: CreateResourceGroups
