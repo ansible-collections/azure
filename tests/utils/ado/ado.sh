@@ -2,7 +2,15 @@
 
 set -o pipefail -e
 
-group="$1"
+GROUP_NO="$1"
+PY_VER="$2"
+ANSIBLE_VER="$3"
+MODULE_NAME="$4"
+
+# Skip if running against a certain 
+if [ "$4" != "all" ]; then
+    grep "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null && { echo "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit."; exit; }
+fi
 
 echo '--------------------------------------------'
 echo "Setup venv (using the target python version)"
@@ -68,10 +76,10 @@ echo '--------------------------------------------'
 echo 'Test'
 echo '--------------------------------------------'
 ansible-test env --dump --show --timeout "${timeout}" --color -v
-if [ "sanity" = "${group}" ]
+if [ "sanity" = "${GROUP_NO}" ]
 then
     ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color -c "tests/lint/ignore-lint.txt"
     ansible-test sanity --color -v --junit
 else
-    ansible-test integration --color -v --retry-on-error "shippable/azure/group${group}/" --allow-destructive
+    ansible-test integration --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive
 fi
