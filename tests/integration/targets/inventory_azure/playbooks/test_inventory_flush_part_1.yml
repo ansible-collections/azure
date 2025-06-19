@@ -13,7 +13,7 @@
           - vm_name_2 in hostvars
           - hostvars[vm_name_2].powerstate == "stopped"
 
-    - name: Show powerstate
+    - name: Show the VM powerstate for the first time
       ansible.builtin.debug:
         var: hostvars[vm_name_2].powerstate
 
@@ -29,6 +29,6 @@
           - vm_name_2 in hostvars
           - hostvars[vm_name_2].powerstate == "stopped"
 
-    - name: Show powerstate
+    - name: Show the VM powerstate for the secondary time
       ansible.builtin.debug:
         var: hostvars[vm_name_2].powerstate
