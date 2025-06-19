@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+# A number represents the group number, or "sanity"
 GROUP_NO="$1"
 PY_VER="$2"
 ANSIBLE_VER="$3"
@@ -12,7 +13,7 @@ die() {
 }
 
 # Skip if running against a certain 
-if [ "$4" != "all" ]; then
+if [ "$GROUP_NO" != "sanity" ] && [ "$MODULE_NAME" != "all" ] ; then
     grep -w "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null || die "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit..."
 fi
 
@@ -28,11 +29,11 @@ echo "Clone and setup ansible hacking env"
 echo '--------------------------------------------'
 git clone https://github.com/ansible/ansible.git ~/ansible
 pushd ~/ansible > /dev/null
-    if [ "$3" = "devel" ]
+    if [ "$ANSIBLE_VER" = "devel" ]
     then
         echo "The branch is devel"
     else
-        git checkout "stable-$3"
+        git checkout "stable-$ANSIBLE_VER"
     fi
     source hacking/env-setup
     pip install paramiko PyYAML Jinja2 httplib2 six
@@ -56,14 +57,14 @@ timeout=180
 echo '--------------------------------------------'
 echo "Disable non-chosen target"
 echo '--------------------------------------------'
-if [ "$4" = "all" ]
+if [ "$MODULE_NAME" = "all" ]
 then
     echo "All module need test"
 else
-    path_dir="${TEST_DIR}/tests/integration/targets/"
-    for item in "$path_dir"*
+    path_dir="${TEST_DIR}/tests/integration/targets"
+    for item in "$path_dir"/*
     do
-        if [ "${item}" != "$path_dir""$4" ]; then
+        if [ "${item}" != "$path_dir/$MODULE_NAME" ]; then
             echo " " >> "${item}"/aliases
             echo "disabled" >> "${item}"/aliases
         fi
