@@ -7,6 +7,11 @@ PY_VER="$2"
 ANSIBLE_VER="$3"
 MODULE_NAME="$4"
 
+quit() {
+    echo "$@" >&2
+    exit 1
+}
+
 die() {
     echo "$@" >&2
     exit 1
@@ -14,7 +19,7 @@ die() {
 
 # Skip if running against a certain 
 if [ "$GROUP_NO" != "sanity" ] && [ "$MODULE_NAME" != "all" ] ; then
-    grep -w "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null || die "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit..."
+    grep -w "shippable/azure/group${GROUP_NO}" "./tests/integration/targets/${MODULE_NAME}/aliases" > /dev/null || quit "Module: $MODULE_NAME doesn't belong to this group ($GROUP_NO). Exit..."
 fi
 
 echo '--------------------------------------------'
