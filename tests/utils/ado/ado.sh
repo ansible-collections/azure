@@ -28,6 +28,10 @@ python -m venv ~/ansible-venv
 . ~/ansible-venv/bin/activate
 python --version
 
+# Try to install setuptools, which is not available for (at least 3.12)
+# (if it failed, still continue)
+pip install setuptools || /bin/true
+
 echo '--------------------------------------------'
 echo "Clone and setup ansible hacking env"
 echo '--------------------------------------------'
