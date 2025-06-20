@@ -61,9 +61,9 @@ notes:
       requested since a list of all groups will require an additional Azure API call for each returned group.
 
 seealso:
-    - module: azure_rm_subscription_info
+    - module: azure.azcollection.azure_rm_subscription_info
       description: module to look up more in depth information on subscriptions; for example tags.
-    - module: azure_rm_roleassignment_info
+    - module: azure.azcollection.azure_rm_roleassignment_info
       description: module to look up RBAC role assignments, which can use management group id as scope.
 
 extends_documentation_fragment:
