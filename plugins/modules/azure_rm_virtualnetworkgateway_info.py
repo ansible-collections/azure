@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) magodo (@magodo), 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -196,7 +194,9 @@ class AzureRMVirtualNetworkGatewayInfo(AzureRMModuleBase):
 
         super(AzureRMVirtualNetworkGatewayInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                supports_tags=False,
+                                                               facts_module=True,
                                                                supports_check_mode=True)
+
 
     def exec_module(self, **kwargs):
 
