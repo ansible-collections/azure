@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -87,6 +85,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
+    - magodo (@magodo)
     - xuzhang3 (@xuzhang3)
     - Fred Sun (@Fred-sun)
 '''
@@ -375,10 +374,10 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
             platform_fault_domain=host.platform_fault_domain,
             virtual_machines=[]
         )
-        if host.virtual_machines is not None:
+        if host.virtual_machines:
             result['virtual_machines'] = [dict(id=item.id) for item in host.virtual_machines]
 
-        if host.sku is not None:
+        if host.sku:
             result['sku']['name'] = host.sku.name
         return result
 
