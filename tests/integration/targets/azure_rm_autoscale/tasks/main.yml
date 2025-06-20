@@ -21,7 +21,7 @@
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
     name: testVMSS{{ rpfx }}
-    vm_size: Standard_DS1_v2
+    vm_size: Standard_B1ms
     admin_username: testuser
     ssh_password_enabled: false
     ssh_public_keys:
