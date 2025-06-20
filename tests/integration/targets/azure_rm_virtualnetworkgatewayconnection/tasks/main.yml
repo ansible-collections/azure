@@ -227,9 +227,6 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vngname }}{{ item }}"
     state: absent
-  with_items:
-    - '01'
-    - '02'
   register: network_gateway_deleted
   async: 2400
   poll: 0
