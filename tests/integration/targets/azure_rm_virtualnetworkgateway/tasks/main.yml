@@ -90,7 +90,7 @@
       register: output
 
     - name: Assert the virtual network gateway facts
-      assert:
+      ansible.builtin.assert:
         that:
           - output.virtual_network_gatways[0].provisioning_state == 'Succeeded'
           - output.virtual_network_gatways[0].tags |length == 1
@@ -194,6 +194,7 @@
         tags:
           common: "mno"
       register: output
+
     - name: Assert the virtual network gateway updated
       ansible.builtin.assert:
         that: output.changed
