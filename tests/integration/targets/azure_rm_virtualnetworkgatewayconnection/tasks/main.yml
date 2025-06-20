@@ -107,7 +107,6 @@
     name: "new{{ rpfx }}01"
     virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
     virtual_network_gateway2: "{{ network_gateway2_output.virtual_network_gatways[0].id }}"
-    local_network_gateway2: "{{ local_gateway_output.state.id }}"
     authorization_key: Password@0329
     connection_type: Vnet2Vnet
     connection_protocol: IKEv2
@@ -146,7 +145,7 @@
     that:
       - output.changed
 
-- name: Create a virtual network connection(Idempotent test)
+- name: Re-create the virtual network connection(Idempotent test)
   azure_rm_virtualnetworkgatewayconnection:
     resource_group: "{{ resource_group }}"
     name: "new{{ rpfx }}02"
@@ -231,6 +230,21 @@
   with_items:
     - '01'
     - '02'
+  register: network_gateway_deleted
+  async: 2400
+  poll: 0
+  with_items:
+    - '01'
+    - '02'
+
+- name: Wait for the virtual network gatway to be deleted
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: network_gateway
+  until: network_gateway.finished
+  retries: 120
+  delay: 20
+  loop: "{{ network_gateway_deleted.results }}"
 
 - name: Pause for 5 mimutes to delete the virtual network connection
   ansible.builtin.command: sleep 300
