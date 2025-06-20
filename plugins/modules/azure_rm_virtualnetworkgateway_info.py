@@ -197,7 +197,6 @@ class AzureRMVirtualNetworkGatewayInfo(AzureRMModuleBase):
                                                                facts_module=True,
                                                                supports_check_mode=True)
 
-
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
