@@ -32,26 +32,26 @@
     sku: premium
     tags:
       key1: value1
-  register: namespace
+  register: output
 
 - name: Assert the namespace created
   ansible.builtin.assert:
     that:
-      - namespace.id
-      - namespace.changed
-      - namespace.tags
+      - output.id
+      - output.changed
+      - output.tags
 
 - name: Create a namespace (idempontent)
   azure_rm_servicebus:
     name: "ns{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     sku: premium
-  register: namespace
+  register: output
 
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not namespace.changed
+      - not output.changed
 
 - name: Update namespace - ManagedIdentity SystemAssigned
   azure_rm_servicebus:
@@ -60,13 +60,13 @@
     sku: premium
     identity:
       type: SystemAssigned
-  register: namespace
+  register: output
 
 - name: Assert SystemAssigned
   ansible.builtin.assert:
     that:
-      - namespace.changed
-      - namespace.identity.type == "SystemAssigned"
+      - output.changed
+      - output.identity.type == "SystemAssigned"
 
 - name: Gather facts
   azure_rm_servicebus_info:
@@ -89,15 +89,15 @@
       user_assigned_identities:
         id:
           - "{{ managed_identity_ids[0] }}"
-  register: namespace
+  register: output
 
 - name: Assert UserAssigned
   ansible.builtin.assert:
     that:
-      - namespace.changed
-      - namespace.identity.type == "UserAssigned"
-      - namespace.identity.user_assigned_identities | length == 1
-      - namespace.identity.user_assigned_identities[managed_identity_ids[0]] is defined
+      - output.changed
+      - output.identity.type == "UserAssigned"
+      - output.identity.user_assigned_identities | length == 1
+      - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
 - name: Update namespace - ManagedIdentity UserAssigned Append
   azure_rm_servicebus:
@@ -109,16 +109,16 @@
       user_assigned_identities:
         id:
           - "{{ managed_identity_ids[1] }}"
-  register: namespace
+  register: output
 
 - name: Assert UserAssigned
   ansible.builtin.assert:
     that:
-      - namespace.changed
-      - namespace.identity.type == "UserAssigned"
-      - namespace.identity.user_assigned_identities | length == 2
-      - namespace.identity.user_assigned_identities[managed_identity_ids[0]] is defined
-      - namespace.identity.user_assigned_identities[managed_identity_ids[1]] is defined
+      - output.changed
+      - output.identity.type == "UserAssigned"
+      - output.identity.user_assigned_identities | length == 2
+      - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
+      - output.identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
 - name: Update namespace - ManagedIdentity UserAssigned Append false
   azure_rm_servicebus:
@@ -131,15 +131,15 @@
         id:
           - "{{ managed_identity_ids[2] }}"
         append: false
-  register: namespace
+  register: output
 
 - name: Assert UserAssigned
   ansible.builtin.assert:
     that:
-      - namespace.changed
-      - namespace.identity.type == "UserAssigned"
-      - namespace.identity.user_assigned_identities | length == 1
-      - namespace.identity.user_assigned_identities[managed_identity_ids[2]] is defined
+      - output.changed
+      - output.identity.type == "UserAssigned"
+      - output.identity.user_assigned_identities | length == 1
+      - output.identity.user_assigned_identities[managed_identity_ids[2]] is defined
 
 - name: Create a secondary namespace
   azure_rm_servicebus:

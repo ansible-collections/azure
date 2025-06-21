@@ -317,7 +317,7 @@ vms:
             returned: always
             type: str
             sample: running
-        idenity:
+        identity:
             description:
                 - The identity of the virtual machine.
             type: dict
@@ -415,9 +415,6 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
                                                         facts_module=True)
 
     def exec_module(self, **kwargs):
-        is_old_facts = self.module._name == 'azure_rm_virtualmachine_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_virtualmachine_facts' module has been renamed to 'azure_rm_virtualmachine_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -556,7 +553,7 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         new_result['proximityPlacementGroup'] = result.get('proximity_placement_group')
         new_result['zones'] = result.get('zones', None)
         new_result['additional_capabilities'] = result.get('additional_capabilities')
-        new_result['idenity'] = result.get('identity')
+        new_result['identity'] = result.get('identity')
         new_result['capacity_reservation'] = dict()
         if result.get('capacity_reservation') is not None:
             new_result['capacity_reservation']['capacity_reservation_group'] = result.get('capacity_reservation', {}).get('capacity_reservation_group')

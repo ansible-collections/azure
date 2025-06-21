@@ -21,7 +21,6 @@ options:
         description:
             - The name of the resource group.
         type: str
-        required: True
     name:
         description:
             - The name of the automation account.
@@ -251,8 +250,7 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         # define user inputs into argument
         self.module_arg_spec = dict(
             resource_group=dict(
-                type='str',
-                required=True
+                type='str'
             ),
             name=dict(
                 type='str'
@@ -283,10 +281,6 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         super(AzureRMAutomationAccountInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
-
-        is_old_facts = self.module._name == 'azure_rm_automationaccount_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_automationaccount_facts' module has been renamed to 'azure_rm_automationaccount_info'", version=(2.9, ))
 
         for key in list(self.module_arg_spec):
             setattr(self, key, kwargs[key])

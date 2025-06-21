@@ -8,8 +8,12 @@ vm_name: "{{ 'vm' ~ uid_short }}"
 vm_name_2: "{{ 'vm2' ~ uid_short }}"
 network_name: "{{ 'vnet' ~ uid_short }}"
 subnet_name: "{{ 'snet' ~ uid_short }}"
+network_name_2: "{{ 'vnet2' ~ uid_short }}"
+subnet_name_2: "{{ 'snet2' ~ uid_short }}"
 security_group: "{{ 'sg' ~ uid_short }}"
 public_ip_name: "{{ 'ip' ~ uid_short }}"
 interface_name: "{{ 'int' ~ uid_short }}"
 network: 10.42.0.0/24
 subnet: 10.42.0.0/28
+network_2: 10.43.0.0/24
+subnet_2: 10.43.0.0/28

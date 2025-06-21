@@ -3,7 +3,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-disk"
     address_prefixes: "{{ network }}"
-    location: westeurope
+    location: westus3
 
 - name: Create subnet
   azure_rm_subnet:
@@ -18,7 +18,7 @@
     name: "{{ interface_name }}-disk"
     virtual_network: "{{ network_name }}-disk"
     subnet: "{{ subnet_name }}"
-    location: westeurope
+    location: westus3
     open_ports:
       - 33
 
@@ -30,7 +30,7 @@
     ssh_password_enabled: false
     managed_disk_type: StandardSSD_ZRS
     public_ip_allocation_method: Disabled
-    location: westeurope
+    location: westus3
     open_ports:
       - 33
     network_interface_names:

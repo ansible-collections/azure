@@ -132,6 +132,7 @@ action_groups:
     - azure.azcollection.azure_rm_ipgroup_info
     - azure.azcollection.azure_rm_keyvault
     - azure.azcollection.azure_rm_keyvault_info
+    - azure.azcollection.azure_rm_keyvaultsecuritydomain
     - azure.azcollection.azure_rm_keyvaultkey
     - azure.azcollection.azure_rm_keyvaultkey_info
     - azure.azcollection.azure_rm_keyvaultsecret
@@ -227,6 +228,8 @@ action_groups:
     - azure.azcollection.azure_rm_publicipprefix_info
     - azure.azcollection.azure_rm_recoveryservicesvault
     - azure.azcollection.azure_rm_recoveryservicesvault_info
+    - azure.azcollection.azure_rm_recoveryservicesvaultconfig
+    - azure.azcollection.azure_rm_recoveryservicesvaultconfig_info
     - azure.azcollection.azure_rm_rediscache
     - azure.azcollection.azure_rm_rediscache_info
     - azure.azcollection.azure_rm_rediscachefirewallrule
@@ -344,6 +347,8 @@ action_groups:
     - azure.azcollection.azure_rm_batchaccountapplicationpackage_info
     - azure.azcollection.azure_rm_applicationfirewallpolicy
     - azure.azcollection.azure_rm_applicationfirewallpolicy_info
+    - azure.azcollection.azure_rm_keyvaultcertificate
+    - azure.azcollection.azure_rm_keyvaultcertificate_info
     - azure.azcollection.azure_rm_diskaccess
     - azure.azcollection.azure_rm_diskaccess_info
     - azure.azcollection.azure_rm_resourcehealthstates_info

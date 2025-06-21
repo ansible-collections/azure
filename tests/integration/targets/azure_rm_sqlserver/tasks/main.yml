@@ -212,17 +212,17 @@
   ansible.builtin.assert:
     that:
       - output.changed == False
-      - output.servers.sqlsrv{{ random_postfix }}.id != None
-      - output.servers.sqlsrv{{ random_postfix }}.name == "sqlsrv{{ random_postfix }}"
-      - output.servers.sqlsrv{{ random_postfix }}.type != None
-      - output.servers.sqlsrv{{ random_postfix }}.location != None
-      - output.servers.sqlsrv{{ random_postfix }}.kind != None
-      - output.servers.sqlsrv{{ random_postfix }}.version != None
-      - output.servers.sqlsrv{{ random_postfix }}.state != None
-      - output.servers.sqlsrv{{ random_postfix }}.fully_qualified_domain_name != None
-      - output.servers.sqlsrv{{ random_postfix }}.tags.aaa == 'bbb'
-      - output.servers.sqlsrv{{ random_postfix }}.admin_username == 'mylogin'
-      - output.servers.sqlsrv{{ random_postfix }}.administrators == None
+      - output.servers['sqlsrv' ~ random_postfix ].id != None
+      - output.servers['sqlsrv' ~ random_postfix ].name == 'sqlsrv' ~ random_postfix
+      - output.servers['sqlsrv' ~ random_postfix ].type != None
+      - output.servers['sqlsrv' ~ random_postfix ].location != None
+      - output.servers['sqlsrv' ~ random_postfix ].kind != None
+      - output.servers['sqlsrv' ~ random_postfix ].version != None
+      - output.servers['sqlsrv' ~ random_postfix ].state != None
+      - output.servers['sqlsrv' ~ random_postfix ].fully_qualified_domain_name != None
+      - output.servers['sqlsrv' ~ random_postfix ].tags.aaa == 'bbb'
+      - output.servers['sqlsrv' ~ random_postfix ].admin_username == 'mylogin'
+      - output.servers['sqlsrv' ~ random_postfix ].administrators == None
 
 - name: Gather facts for extended SQL Server
   azure_rm_sqlserver_info:
@@ -233,20 +233,20 @@
   ansible.builtin.assert:
     that:
       - output.changed == False
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].id != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].name == 'sqlsrv-extended-{{ random_postfix }}'
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].type != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].location != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].kind != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].version != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].state != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].fully_qualified_domain_name != None
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].tags.aaa == 'bbb'
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].minimal_tls_version == '1.2'
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].public_network_access == 'Disabled'
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].restrict_outbound_network_access == 'Enabled'
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].admin_username == 'mylogin2'
-      - output.servers['sqlsrv-extended-{{ random_postfix }}'].administrators == None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].id != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].name == 'sqlsrv-extended-' ~ random_postfix
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].type != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].location != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].kind != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].version != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].state != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].fully_qualified_domain_name != None
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].tags.aaa == 'bbb'
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].minimal_tls_version == '1.2'
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].public_network_access == 'Disabled'
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].restrict_outbound_network_access == 'Enabled'
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].admin_username == 'mylogin2'
+      - output.servers['sqlsrv-extended-' ~ random_postfix ].administrators == None
 
 - name: Gather facts for SQL Server with Azure AD admin
   azure_rm_sqlserver_info:
@@ -258,22 +258,22 @@
   ansible.builtin.assert:
     that:
       - output.changed == False
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].id != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].name == 'sqlsrv-azuread-{{ random_postfix }}'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].type != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].location != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].kind != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].version != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].state != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].fully_qualified_domain_name != None
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].tags | length == 0
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].admin_username == 'sqllogin'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.administrator_type == 'ActiveDirectory'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.azure_ad_only_authentication == False
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.login == '{{ azuread_group_name }}'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.principal_type == 'Group'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.sid == '{{ azuread_group_id }}'
-      - output.servers['sqlsrv-azuread-{{ random_postfix }}'].administrators.tenant_id == '{{ tenant_id }}'
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].id != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].name == 'sqlsrv-azuread-' ~ random_postfix
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].type != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].location != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].kind != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].version != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].state != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].fully_qualified_domain_name != None
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].tags | length == 0
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].admin_username == 'sqllogin'
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].administrators.administrator_type == 'ActiveDirectory'
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].administrators.azure_ad_only_authentication == False
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].administrators.login == azuread_group_name
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].administrators.principal_type == 'Group'
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].administrators.sid == azuread_group_id
+      - output.servers['sqlsrv-azuread-' ~ random_postfix ].administrators.tenant_id == tenant_id
   when: run_azuread_tests | bool
 
 - name: Gather facts SQL Server - unexisting
@@ -295,14 +295,14 @@
   ansible.builtin.assert:
     that:
       - output.changed == False
-      - output.servers.sqlsrv{{ random_postfix }}.id != None
-      - output.servers.sqlsrv{{ random_postfix }}.name == "sqlsrv{{ random_postfix }}"
-      - output.servers.sqlsrv{{ random_postfix }}.type != None
-      - output.servers.sqlsrv{{ random_postfix }}.location != None
-      - output.servers.sqlsrv{{ random_postfix }}.kind != None
-      - output.servers.sqlsrv{{ random_postfix }}.version != None
-      - output.servers.sqlsrv{{ random_postfix }}.state != None
-      - output.servers.sqlsrv{{ random_postfix }}.fully_qualified_domain_name != None
+      - output.servers['sqlsrv' ~ random_postfix ].id != None
+      - output.servers['sqlsrv' ~ random_postfix ].name == 'sqlsrv' ~ random_postfix
+      - output.servers['sqlsrv' ~ random_postfix ].type != None
+      - output.servers['sqlsrv' ~ random_postfix ].location != None
+      - output.servers['sqlsrv' ~ random_postfix ].kind != None
+      - output.servers['sqlsrv' ~ random_postfix ].version != None
+      - output.servers['sqlsrv' ~ random_postfix ].state != None
+      - output.servers['sqlsrv' ~ random_postfix ].fully_qualified_domain_name != None
 
 # azure_rm_sqldatabase tests
 

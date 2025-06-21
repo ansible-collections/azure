@@ -183,9 +183,6 @@ class AzureRMRoleAssignmentInfo(AzureRMModuleBase):
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
-        is_old_facts = self.module._name == 'azure_rm_roleassignment_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_roleassignment_facts' module has been renamed to 'azure_rm_roleassignment_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])

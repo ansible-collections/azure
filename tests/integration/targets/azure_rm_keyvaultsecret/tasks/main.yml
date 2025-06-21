@@ -78,12 +78,12 @@
   ansible.builtin.assert:
     that:
       - facts['secrets'] | length == 1
-      - facts['secrets'][0]['sid']
-      - facts['secrets'][0]['secret']
-      - facts['secrets'][0]['tags']
-      - facts['secrets'][0]['version']
-      - facts['secrets'][0]['attributes']['expires']
-      - facts['secrets'][0]['attributes']['not_before']
+      - facts['secrets'][0]['sid'] != ''
+      - facts['secrets'][0]['secret'] != ''
+      - facts['secrets'][0]['tags'] | length > 0
+      - facts['secrets'][0]['version'] != ''
+      - facts['secrets'][0]['attributes']['expires'] != ''
+      - facts['secrets'][0]['attributes']['not_before'] != ''
       - facts['secrets'][0]['content_type'] == 'Content Type Secret'
       - facts['secrets'][0]['attributes']['expires'] == "2030-03-04T04:05:06+00:00"
       - facts['secrets'][0]['attributes']['not_before'] == "2000-01-02T01:02:03+00:00"

@@ -1,24 +1,24 @@
 - name: Prepare random number
   ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
+    rpfx: "{{ resource_group_secondary | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
   run_once: true
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "testVnet{{ rpfx }}"
     address_prefixes: "10.0.0.0/16"
 
 - name: Add subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "testSubnet{{ rpfx }}"
     address_prefix: "10.0.1.0/24"
     virtual_network: "testVnet{{ rpfx }}"
 
 - name: Create gen1 VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "vmforimage{{ rpfx }}"
     location: eastus
     admin_username: testuser
@@ -37,13 +37,13 @@
 
 - name: Get VM facts
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "vmforimage{{ rpfx }}"
   register: vm_output
 
 - name: Create a snapshot by importing an unmanaged blob from the same subscription.
   azure_rm_snapshot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "mySnapshot-{{ rpfx }}"
     location: eastus
     creation_data:
@@ -58,14 +58,14 @@
 
 - name: Create a managed disk
   azure_rm_manageddisk:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "disk-{{ rpfx }}"
     disk_size_gb: 1
   register: disk_output
 
 - name: Create a snapshot with I(incremental=True)
   azure_rm_snapshot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "mySnapshot-{{ rpfx }}02"
     location: eastus
     incremental: true
@@ -81,7 +81,7 @@
 
 - name: List the snapshot instance by resource group
   azure_rm_snapshot_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
   register: output
 
 - name: Assert there are two snapshots
@@ -91,12 +91,18 @@
 
 - name: Delete the first snapshot
   azure_rm_snapshot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "mySnapshot-{{ rpfx }}"
     state: absent
 
 - name: Delete the secondary snapshot
   azure_rm_snapshot:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group_secondary }}"
     name: "mySnapshot-{{ rpfx }}02"
+    state: absent
+
+- name: Delete the gen1 VM
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group_secondary }}"
+    name: "vmforimage{{ rpfx }}"
     state: absent

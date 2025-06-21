@@ -174,10 +174,11 @@ class AzureRMGalleries(AzureRMModuleBaseExt):
             if self.state == 'absent':
                 self.to_do = Actions.Delete
             else:
-                if self.body.get('properties') is not None and self.body['properties']['description'] != old_response['properties']['description']:
+                if self.body['properties'].get('description') is not None and\
+                   self.body['properties']['description'] != old_response['properties'].get('description'):
                     self.to_do = Actions.Update
                 else:
-                    self.body['properties']['description'] = old_response['properties']['description']
+                    self.body['properties']['description'] = old_response['properties'].get('description')
 
                 update_tags, new_tags = self.update_tags(old_response.get('tags'))
                 if update_tags:

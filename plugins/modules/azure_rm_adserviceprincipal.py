@@ -140,6 +140,8 @@ class AzureRMADServicePrincipal(AzureRMModuleBaseExt):
                                                         supports_tags=False,
                                                         is_ad_resource=True)
 
+        mutually_exclusive = {}
+
     def exec_module(self, **kwargs):
 
         for key in list(self.module_arg_spec.keys()):

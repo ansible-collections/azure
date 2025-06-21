@@ -3,7 +3,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ network_name }}-identity"
     address_prefixes: "{{ network }}"
-    location: westeurope
+    location: westus3
 
 - name: Create subnet
   azure_rm_subnet:
@@ -18,7 +18,7 @@
     name: "{{ interface_name }}-identity"
     virtual_network: "{{ network_name }}-identity"
     subnet: "{{ subnet_name }}"
-    location: westeurope
+    location: westus3
     open_ports:
       - 33
 
@@ -30,7 +30,7 @@
     resource_name: "{{ item }}"
     api_version: "2023-01-31"
     body:
-      location: westeurope
+      location: westus3
     state: present
   loop:
     - "ansible-test-vm-identity"
@@ -54,7 +54,7 @@
     admin_username: "testuser"
     ssh_password_enabled: false
     public_ip_allocation_method: Disabled
-    location: westeurope
+    location: westus3
     open_ports:
       - 33
     network_interface_names:
@@ -76,7 +76,7 @@
   ansible.builtin.assert:
     that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
-      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - user_identity_1 in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
 
 - name: Append another UserAssigned
   azure_rm_virtualmachine:
@@ -94,8 +94,8 @@
   ansible.builtin.assert:
     that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'UserAssigned'
-      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
-      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - user_identity_1 in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
+      - user_identity_2 in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
 
 - name: Add SystemAssigned
   azure_rm_virtualmachine:
@@ -111,8 +111,8 @@
   ansible.builtin.assert:
     that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
-      - "\"{{ user_identity_1 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
-      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - user_identity_1 in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
+      - user_identity_2 in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
 
 - name: Force only one UserAssigned
   azure_rm_virtualmachine:
@@ -130,8 +130,8 @@
   ansible.builtin.assert:
     that:
       - vm_output.ansible_facts.azure_vm.identity.type == 'SystemAssigned, UserAssigned'
-      - "\"{{ user_identity_1 }}\" not in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
-      - "\"{{ user_identity_2 }}\" in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities"
+      - user_identity_1 not in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
+      - user_identity_2 in vm_output.ansible_facts.azure_vm.identity.user_assigned_identities
 
 - name: Remove UserAssigned
   azure_rm_virtualmachine:

@@ -35,6 +35,19 @@
         name: "{{ network_name }}"
         state: absent
 
+    - name: Destroy subnet ---- secondary
+      azure_rm_subnet:
+        resource_group: "{{ resource_group_third }}"
+        virtual_network: "{{ network_name_2 }}"
+        name: "{{ subnet_name_2 }}"
+        state: absent
+
+    - name: Destroy virtual network --- secondary
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ network_name_2 }}"
+        state: absent
+
     - name: Destroy availability set
       azure_rm_availabilityset:
         resource_group: "{{ resource_group_third }}"

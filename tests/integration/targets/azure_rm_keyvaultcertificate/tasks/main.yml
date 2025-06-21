@@ -1,0 +1,220 @@
+- name: Prepare random number
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    tenant_id: "{{ azure_tenant }}"
+    cert_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+    cert_file: "cert.txt"
+  run_once: true
+
+- name: Lookup service principal object id
+  ansible.builtin.set_fact:
+    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                   azure_client_id=azure_client_id,
+                   azure_secret=azure_secret,
+                   azure_tenant=tenant_id) }}"
+  register: object_id_facts
+
+- name: Create instance of Key Vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "vault{{ rpfx }}"
+    enabled_for_deployment: true
+    vault_tenant: "{{ tenant_id }}"
+    sku:
+      name: standard
+      family: A
+    access_policies:
+      - tenant_id: "{{ tenant_id }}"
+        object_id: '{{ object_id }}'
+        keys:
+          - get
+          - list
+          - update
+          - create
+          - import
+          - delete
+        secrets:
+          - get
+          - list
+          - set
+          - delete
+        certificates:
+          - get
+          - list
+          - delete
+          - create
+          - import
+          - update
+          - managecontacts
+          - recover
+          - purge
+  register: output
+
+- name: Generate a keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}"
+    policy:
+      subject: 'CN=Anhui02'
+      issuer_name: self
+      exportable: true
+      key_type: RSA
+      key_size: 2048
+      san_emails:
+        - 7170222076@qq.com
+      content_type: 'application/x-pkcs12'
+      validity_in_months: 36
+      lifetime_actions:
+        - action: EmailContacts
+          days_before_expiry: 10
+    enabled: true
+    state: generate
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert the keyvault certificate created
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: For the keyvault certificate idempotent test
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}"
+    policy:
+      subject: 'CN=Anhui02'
+      issuer_name: self
+      exportable: true
+      key_type: RSA
+      key_size: 2048
+      san_emails:
+        - 7170222076@qq.com
+      content_type: 'application/x-pkcs12'
+      validity_in_months: 36
+      lifetime_actions:
+        - action: EmailContacts
+          days_before_expiry: 10
+    enabled: true
+    state: update
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert the keyvault certificate no changed
+  ansible.builtin.assert:
+    that: not output.changed
+
+- name: Update thekeyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}"
+    policy:
+      subject: 'CN=Anhui02'
+      issuer_name: self
+      exportable: true
+      key_type: RSA
+      key_size: 2048
+      san_emails:
+        - 7170222076@qq.com
+      content_type: 'application/x-pkcs12'
+      validity_in_months: 38
+      lifetime_actions:
+        - action: EmailContacts
+          days_before_expiry: 20
+    enabled: false
+    state: update
+    tags:
+      key2: value2
+  register: output
+
+- name: Assert the keyvault certificate changed
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Get the keyvault certificate facts
+  azure_rm_keyvaultcertificate_info:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}"
+  register: facts
+
+- name: Assert certificate facts
+  ansible.builtin.assert:
+    that:
+      - facts['certificates'][0]['name']
+      - facts['certificates'][0]['properties']['tags'] | length == 2
+      - facts['certificates'][0]['properties']['attributes']['enabled'] is false
+      - facts['certificates'][0]['policy']['validity_in_months'] == 38
+      - facts['certificates'][0]['policy']['lifetime_actions'][0]['days_before_expiry'] == 20
+
+- name: Import a keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}-secondary"
+    password: "{{ cert_password }}"
+    cert_data: "{{ lookup('file', cert_file) }}"
+    state: import
+  register: output
+
+- name: Assert the keyvault certificate imported
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Delete the keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "{{ item }}"
+    state: delete
+  register: output
+  with_items:
+    - "cert{{ rpfx }}"
+    - "cert{{ rpfx }}-secondary"
+
+- name: List all delete keyvault certificate
+  azure_rm_keyvaultcertificate_info:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    show_deleted_certificate: true
+  register: facts
+
+- name: Assert certificate facts
+  ansible.builtin.assert:
+    that:
+      - facts['certificates'] | length == 2
+
+- name: Recover the keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}"
+    state: recover
+  register: output
+
+- name: Assert the keyvault certificate recovered
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: Purge the keyvault certificate
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: "cert{{ rpfx }}-secondary"
+    state: purge
+  register: output
+
+- name: Assert the keyvault certificate purged
+  ansible.builtin.assert:
+    that: output.changed
+
+- name: List all delete keyvault certificate
+  azure_rm_keyvaultcertificate_info:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    show_deleted_certificate: true
+  register: facts
+
+- name: Assert certificate facts
+  ansible.builtin.assert:
+    that:
+      - facts['certificates'] | length == 0
+
+- name: Delete instance of Key Vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    vault_name: "vault{{ rpfx }}"
+    state: absent

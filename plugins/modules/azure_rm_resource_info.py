@@ -379,9 +379,6 @@ class AzureRMResourceInfo(AzureRMModuleBase):
         super(AzureRMResourceInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
 
     def exec_module(self, **kwargs):
-        is_old_facts = self.module._name == 'azure_rm_resource_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_resource_facts' module has been renamed to 'azure_rm_resource_info'", version=(2.9, ))
 
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
@@ -454,13 +451,17 @@ class AzureRMResourceInfo(AzureRMModuleBase):
                 query_parameters['skiptoken'] = skiptoken
             response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
             try:
-                response = json.loads(response.body())
-                if isinstance(response, dict):
-                    if response.get('value'):
-                        self.results['response'] = self.results['response'] + response['value']
-                        skiptoken = response.get('nextLink')
-                    else:
-                        self.results['response'] = self.results['response'] + [response]
+                if isinstance(response.body(), bytes) and bool(response.body().decode()) is False:
+                    self.results['status_code'] = response.status_code
+                else:
+                    self.results['status_code'] = response.status_code
+                    response = json.loads(response.body())
+                    if isinstance(response, dict):
+                        if response.get('value'):
+                            self.results['response'] = self.results['response'] + response['value']
+                            skiptoken = response.get('nextLink')
+                        else:
+                            self.results['response'] = self.results['response'] + [response]
             except Exception as e:
                 self.fail('Failed to parse response: ' + str(e))
             if not skiptoken:

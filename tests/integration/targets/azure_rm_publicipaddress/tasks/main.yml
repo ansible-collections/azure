@@ -1,7 +1,7 @@
 - name: Create domain name
   ansible.builtin.set_fact:
     domain_name: "ansible-{{ resource_group | hash('md5') | truncate(24, True, '') }}"
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(9, True, '') }}{{ 1000 | random }}"
 
 - name: Remove public ip
   azure_rm_publicipaddress:
@@ -125,8 +125,8 @@
 - name: Assert the public ip address facts
   ansible.builtin.assert:
     that:
-      - "pip.publicipaddresses | length == 1"
-      - pip.publicipaddresses[0].name == "pip{{ rpfx }}"
+      - pip.publicipaddresses | length == 1
+      - pip.publicipaddresses[0].name == "pip" ~ rpfx
       - pip.publicipaddresses[0].allocation_method == 'static'
       - pip.publicipaddresses[0].dns_settings.domain_name_label == domain_name
 

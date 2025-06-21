@@ -139,6 +139,155 @@
       - output.response.id != None
       - output.response.name != None
 
+- name: Get Azure Recovery Service Vault Config Details
+  azure_rm_recoveryservicesvaultconfig_info:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ name_rpfx }}"
+  register: output
+
+- name: Assert that output is defined
+  ansible.builtin.assert:
+    that:
+      - output.properties.enhanced_security_state != None
+      - output.properties.soft_delete_feature_state != None
+      - output.properties.soft_delete_retention_period_in_days != None
+
+- name: Turn off Azure Recovery Service Vault Config Soft Delete Settings
+  # Note: this may stop working in the future because of https://learn.microsoft.com/en-us/azure/backup/secure-by-default
+  azure_rm_recoveryservicesvaultconfig:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ name_rpfx }}"
+    properties:
+      enhanced_security_state: Disabled
+      soft_delete_feature_state: Disabled
+  register: output
+
+- name: Assert that object has changed
+  ansible.builtin.assert:
+    that:
+      - output.properties.enhanced_security_state == "Disabled"
+      - output.properties.soft_delete_feature_state == "Disabled"
+
+- name: Change Azure Recovery Service Vault Config Soft Delete Settings to AlwaysON and set retention higher than default
+  azure_rm_recoveryservicesvaultconfig:
+    resource_group: "{{ resource_group }}"
+    vault_name: "{{ name_rpfx }}"
+    properties:
+      enhanced_security_state: AlwaysON
+      soft_delete_feature_state: AlwaysON
+      soft_delete_retention_period_in_days: 180
+  register: output
+
+- name: Assert that object has changed
+  ansible.builtin.assert:
+    that:
+      - output.properties.enhanced_security_state == "AlwaysON"
+      - output.properties.soft_delete_feature_state == "AlwaysON"
+      - output.properties.soft_delete_retention_period_in_days == 180
+
+- name: Update tags on recovery services vault (append=false)
+  azure.azcollection.azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    location: "{{ location }}"
+    state: "present"
+    append_tags: false
+    tags:
+      TestTag1: TestValue1
+  register: output
+
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Pause 3 minutes - wait for resource update to finish
+  ansible.builtin.pause:
+    minutes: 3
+
+- name: Check tags on recovery services vault
+  azure.azcollection.azure_rm_recoveryservicesvault_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+  register: output
+
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.response.tags.TestTag1 is defined
+      - output.response.tags.TestTag1 == 'TestValue1'
+
+- name: Update tags on recovery services vault (append=true)
+  azure.azcollection.azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    location: "{{ location }}"
+    state: "present"
+    append_tags: true
+    tags:
+      TestTag2: TestValue2
+  register: output
+
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Pause 3 minutes - wait for resource update to finish
+  ansible.builtin.pause:
+    minutes: 3
+
+- name: Check tags on recovery services vault
+  azure.azcollection.azure_rm_recoveryservicesvault_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+  register: output
+
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.response.tags.TestTag1 is defined
+      - output.response.tags.TestTag1 == 'TestValue1'
+      - output.response.tags.TestTag2 is defined
+      - output.response.tags.TestTag2 == 'TestValue2'
+
+- name: Replace tags on recovery services vault (append=false)
+  azure.azcollection.azure_rm_recoveryservicesvault:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+    location: "{{ location }}"
+    state: "present"
+    append_tags: false
+    tags:
+      TestTag3: TestValue3
+  register: output
+
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Pause 3 minutes - wait for resource update to finish
+  ansible.builtin.pause:
+    minutes: 3
+
+- name: Check tags on recovery services vault
+  azure.azcollection.azure_rm_recoveryservicesvault_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ name_rpfx }}"
+  register: output
+
+- name: Assert that output has changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - not output.response.tags.TestTag1 is defined
+      - not output.response.tags.TestTag2 is defined
+      - output.response.tags.TestTag3 is defined
+      - output.response.tags.TestTag3 == 'TestValue3'
+
 - name: Delete Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
     resource_group: "{{ resource_group }}"

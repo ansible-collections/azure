@@ -49,7 +49,7 @@
     that:
       - output.securitygroups | length == 1
       - output.securitygroups[0].default_rules | length > 0
-      - output.securitygroups[0].name == '{{ secgroupname }}'
+      - output.securitygroups[0].name == secgroupname
       - output.securitygroups[0].network_interfaces | length == 0
       - output.securitygroups[0].rules | length == 2
       - output.securitygroups[0].subnets | length == 0
