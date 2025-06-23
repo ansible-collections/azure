@@ -103,9 +103,12 @@
     sku: Standard
     frontend_ip_configurations:
       - name: frontendip0
+        public_ip_address: "{{ pipaname }}"
+      - name: frontendip1
         public_ip_address: "{{ pipbname }}"
     backend_address_pools:
       - name: backendaddrp0
+      - name: backendaddrp1
     probes:
       - name: prob0
         port: 80
@@ -130,6 +133,15 @@
         load_distribution: Default
         protocol: Tcp
         enable_tcp_reset: true
+    outbound_rules:
+      - name: outrule
+        allocated_outbound_ports: 800
+        frontend_ip_configurations:
+          - frontendip1
+        backend_address_pool: backendaddrp1
+        protocol: Tcp
+        enable_tcp_reset: true
+        idle_timeout_in_minutes: 4
   register: output
 
 - name: Assert complex load balancer created
@@ -145,9 +157,12 @@
     sku: Standard
     frontend_ip_configurations:
       - name: frontendip0
+        public_ip_address: "{{ pipaname }}"
+      - name: frontendip1
         public_ip_address: "{{ pipbname }}"
     backend_address_pools:
       - name: backendaddrp0
+      - name: backendaddrp1
     probes:
       - name: prob0
         port: 80
@@ -172,6 +187,15 @@
         load_distribution: Default
         protocol: Tcp
         enable_tcp_reset: true
+    outbound_rules:
+      - name: outrule
+        allocated_outbound_ports: 800
+        frontend_ip_configurations:
+          - frontendip1
+        backend_address_pool: backendaddrp1
+        protocol: Tcp
+        enable_tcp_reset: true
+        idle_timeout_in_minutes: 4
   register: output
 
 - name: Assert that output has not changed
@@ -186,9 +210,12 @@
     sku: Standard
     frontend_ip_configurations:
       - name: frontendip0
+        public_ip_address: "{{ pipaname }}"
+      - name: frontendip1
         public_ip_address: "{{ pipbname }}"
     backend_address_pools:
       - name: backendaddrp0
+      - name: backendaddrp1
     probes:
       - name: prob0
         port: 80
@@ -213,6 +240,15 @@
         load_distribution: Default
         protocol: Tcp
         enable_tcp_reset: false
+    outbound_rules:
+      - name: outrule
+        allocated_outbound_ports: 800
+        frontend_ip_configurations:
+          - frontendip1
+        backend_address_pool: backendaddrp1
+        protocol: Tcp
+        enable_tcp_reset: true
+        idle_timeout_in_minutes: 4
   register: output
 
 - name: Assert that output has changed
@@ -231,6 +267,7 @@
     that:
       - output.loadbalancers[0].load_balancing_rules[0].enable_tcp_reset is false
       - output.loadbalancers[0].load_balancing_rules[0].frontend_port == 81
+      - output.loadbalancers[0].outbound_rules |length == 1
 
 - name: Delete load balancer
   azure_rm_loadbalancer:

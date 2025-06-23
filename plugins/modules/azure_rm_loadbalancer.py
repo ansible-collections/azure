@@ -333,6 +333,50 @@ options:
                     - Receive bidirectional TCP Reset on TCP flow idle timeout or unexpected connection termination.
                     - This element is only used when I(protocol=Tcp).
                 type: bool
+    outbound_rules:
+        description:
+            - The outbound rules.
+        type: list
+        elements: dict
+        version_added: '3.5.0'
+        suboptions:
+            name:
+                description:
+                    - The name of the resource that is unique within the set of outbound rules used by the load balancer.
+                    - This name can be used to access the resource.
+                type: str
+                required: True
+            allocated_outbound_ports:
+                description:
+                    - The number of outbound ports to be used for NAT.
+                type: int
+            frontend_ip_configurations:
+                description:
+                    - The Frontend IP addresses of the load balancer.
+                type: list
+                elements: str
+            backend_address_pool:
+                description:
+                    - A reference to a pool of DIPs.
+                    - Outbound traffic is randomly load balanced across IPs in the backend IPs.
+                type: str
+            protocol:
+                description:
+                    - The protocol for the outbound rule in load balancer.
+                type: str
+                choices:
+                    - Tcp
+                    - Udp
+                    - All
+            enable_tcp_reset:
+                description:
+                    - Receive bidirectional TCP Reset on TCP flow idle timeout or unexpected connection termination.
+                    - This element is only used when the protocol is set to C(Tcp).
+                type: bool
+            idle_timeout_in_minutes:
+                description:
+                    - The timeout for the TCP idle connection.
+                type: int
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -350,8 +394,11 @@ EXAMPLES = '''
     frontend_ip_configurations:
       - name: frontendipconf0
         public_ip_address: testpip
+      - name: frontendipconf1
+        public_ip_address: testpip1
     backend_address_pools:
       - name: backendaddrpool0
+      - name: backendaddrpool1
     probes:
       - name: prob0
         port: 80
@@ -375,6 +422,15 @@ EXAMPLES = '''
         protocol: Tcp
         frontend_port: 8080
         frontend_ip_configuration: frontendipconf0
+    outbound_rules:
+      - name: outrule1
+        allocated_outbound_ports: 800
+        frontend_ip_configurations:
+          - frontendipconf1
+        backend_address_pool: backendaddrpool1
+        protocol: Tcp
+        enable_tcp_reset: true
+        idle_timeout_in_minutes: 4
 '''
 
 RETURN = '''
@@ -571,6 +627,18 @@ load_balancing_rule_spec = dict(
 )
 
 
+outbound_rule_spec = dict(
+    name=dict(type='str', required=True),
+    allocated_outbound_ports=dict(type='int'),
+    frontend_ip_configurations=dict(type='list', elements='str'),
+    backend_address_pool=dict(type='str'),
+    protocol=dict(type='str', choices=['Tcp', 'Udp', 'All']),
+    enable_tcp_reset=dict(type='bool'),
+    idle_timeout_in_minutes=dict(type='int')
+
+)
+
+
 class AzureRMLoadBalancer(AzureRMModuleBase):
     """Configuration class for an Azure RM load balancer resource"""
 
@@ -625,6 +693,11 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 type='list',
                 elements='dict',
                 options=load_balancing_rule_spec
+            ),
+            outbound_rules=dict(
+                type='list',
+                elements='dict',
+                options=outbound_rule_spec
             )
         )
 
@@ -637,6 +710,7 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
         self.probes = None
         self.inbound_nat_rules = None
         self.inbound_nat_pools = None
+        self.outbound_rules = None
         self.load_balancing_rules = None
         self.state = None
         self.tags = None
@@ -775,6 +849,30 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 enable_floating_ip=item.get('enable_floating_ip')
             ) for item in self.inbound_nat_rules] if self.inbound_nat_rules else None
 
+            outbound_rules_param = [self.network_models.OutboundRule(
+                name=item.get('name'),
+                frontend_ip_configurations=[self.network_models.SubResource(
+                    id=frontend_ip_configuration_id(
+                        self.subscription_id,
+                        self.resource_group,
+                        self.name,
+                        value
+                    )
+                )for value in item['frontend_ip_configurations']] if item.get('frontend_ip_configurations') else None,
+                backend_address_pool=self.network_models.SubResource(
+                    id=backend_address_pool_id(
+                        self.subscription_id,
+                        self.resource_group,
+                        self.name,
+                        item.get('backend_address_pool')
+                    )
+                ),
+                allocated_outbound_ports=item.get('allocated_outbound_ports'),
+                protocol=item.get('protocol'),
+                enable_tcp_reset=item.get('enable_tcp_reset'),
+                idle_timeout_in_minutes=item.get('idle_timeout_in_minutes')
+            ) for item in self.outbound_rules] if self.outbound_rules else None
+
             # construct the new instance, if the parameter is none, keep remote one
             self.new_load_balancer = self.network_models.LoadBalancer(
                 sku=self.network_models.LoadBalancerSku(name=self.sku) if self.sku else None,
@@ -785,7 +883,8 @@ class AzureRMLoadBalancer(AzureRMModuleBase):
                 probes=probes_param,
                 inbound_nat_pools=inbound_nat_pools_param,
                 load_balancing_rules=load_balancing_rules_param,
-                inbound_nat_rules=inbound_nat_rules_param
+                inbound_nat_rules=inbound_nat_rules_param,
+                outbound_rules=outbound_rules_param,
             )
 
             self.new_load_balancer = self.assign_protocol(self.new_load_balancer, load_balancer)
