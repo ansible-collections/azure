@@ -143,15 +143,11 @@ class AzureRMTags(AzureRMModuleBase):
         if self.state == 'present':
             response = self.get_at_scope()
             if response and response['properties'].get('tags'):
-                if self.tags:
-                    update_tag, exist_tag = self.tags_update(response['properties']['tags'], self.tags)
+                merge_tag, delete_tag, replace_tag = self.tags_update(response['properties']['tags'], self.tags)
 
-                    if (self.operation == 'Merge' or self.operation == 'Replace') and update_tag:
-                        changed = True
-                        response = self.begin_update_at_scope(self.tags, self.operation)
-                    elif exist_tag and self.operation == 'Delete':
-                        changed = True
-                        response = self.begin_update_at_scope(self.tags, self.operation)
+                if (self.operation == 'Merge' and merge_tag) or (self.operation == 'Replace' and replace_tag) or (delete_tag and self.operation == 'Delete'):
+                    changed = True
+                    response = self.begin_update_at_scope(self.tags, self.operation)
             else:
                 if self.tags:
                     changed = True
@@ -221,13 +217,16 @@ class AzureRMTags(AzureRMModuleBase):
     def tags_update(self, old, new):
         old = old or dict()
         new = new or dict()
-        update_tag = not set(new.items()).issubset(set(old.items()))
-        exist_tag = False
+        merge_tag = not set(new.items()).issubset(set(old.items()))
+        replace_tag = True
+        if not merge_tag and len(old) == len(new):
+            replace_tag = False
+        delete_tag = False
         for key, value in new.items():
             if old.get(key) and old.get(key) == value:
-                exist_tag = True
+                delete_tag = True
                 break
-        return update_tag, exist_tag
+        return merge_tag, delete_tag, replace_tag
 
 
 def main():
