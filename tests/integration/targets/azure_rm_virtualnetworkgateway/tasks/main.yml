@@ -10,12 +10,12 @@
   check_mode: true
   azure_rm_virtualnetworkgateway:
     resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}"
+    name: "{{ vngname }}01"
     ip_configurations:
       - name: testipconfig
         private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}"
-    virtual_network: "{{ vnetname }}"
+        public_ip_address_name: "{{ pubipname }}01"
+    virtual_network: "{{ vnetname }}01"
     tags:
       common: "xyz"
   register: output
@@ -28,14 +28,14 @@
   check_mode: true
   azure_rm_virtualnetworkgateway:
     resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}"
+    name: "{{ vngname }}02"
     sku: VpnGw2
     vpn_gateway_generation: Generation2
     ip_configurations:
       - name: testipconfig
         private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}"
-    virtual_network: "{{ vnetname }}"
+        public_ip_address_name: "{{ pubipname }}02"
+    virtual_network: "{{ vnetname }}02"
     tags:
       common: "xyz"
 
@@ -127,8 +127,8 @@
         ip_configurations:
           - name: testipconfig
             private_ip_allocation_method: Dynamic
-            public_ip_address_name: "{{ pubipname }}"
-        virtual_network: "{{ vnetname }}"
+            public_ip_address_name: "{{ pubipname }}01"
+        virtual_network: "{{ vnetname }}01"
         sku: VpnGw1
         vpn_gateway_generation: Generation1
         tags:
@@ -142,12 +142,12 @@
     - name: Update virtual network gateway
       azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}"
-        name: "{{ vngname }}"
+        name: "{{ vngname }}01"
         ip_configurations:
           - name: testipconfig
             private_ip_allocation_method: Dynamic
-            public_ip_address_name: "{{ pubipname }}"
-        virtual_network: "{{ vnetname }}"
+            public_ip_address_name: "{{ pubipname }}01"
+        virtual_network: "{{ vnetname }}01"
         tags:
           newcommon: "mno"
       register: output
@@ -171,7 +171,7 @@
     - name: Delete virtual network gateway
       azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}"
-        name: "{{ vngname }}"
+        name: "{{ vngname }}{{ item }}"
         state: absent
       register: network_gateway_deleted
       async: 2400
