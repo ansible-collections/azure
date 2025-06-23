@@ -225,7 +225,6 @@ class AzureRMTags(AzureRMModuleBase):
         return not set(new.items()).issubset(set(old.items()))
 
 
-
 def main():
     AzureRMTags()
 
