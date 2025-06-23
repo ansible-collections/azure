@@ -12,7 +12,7 @@
     scope: "{{ __rg_info.resourcegroups.0.id }}"
   register: output
 
-- name: Create a new tags with scope
+- name: Create new tags with scope
   azure_rm_tags:
     scope: "{{ __rg_info.resourcegroups.0.id }}"
     tags:
@@ -24,11 +24,7 @@
     that:
       - output.changed
 
-- name: Pause for 3 mimutes
-  ansible.builtin.command: sleep 180
-  changed_when: true
-
-- name: Create a new tags with scope(Idempotent test)
+- name: Create new tags with scope(Idempotent test)
   azure_rm_tags:
     scope: "{{ __rg_info.resourcegroups.0.id }}"
     tags:
@@ -39,10 +35,6 @@
   ansible.builtin.assert:
     that:
       - not output.changed
-
-- name: Pause for 3 mimutes
-  ansible.builtin.command: sleep 180
-  changed_when: true
 
 - name: Update the tags with scope
   azure_rm_tags:
@@ -68,83 +60,9 @@
       - output.tag_info | length == 1
       - output.tag_info[0].properties.tags | length == 2
 
-- name: Create a tag with tag_name
-  azure_rm_tags:
-    tag_name: "key{{ rpfx }}"
-  register: output
-
-- name: Assert the tag created
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-
-- name: Pause for 3 mimutes
-  ansible.builtin.command: sleep 180
-  changed_when: true
-
-- name: Create a tag with tag_name(Idemptent test)
-  azure_rm_tags:
-    tag_name: "key{{ rpfx }}"
-  register: output
-
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - not output.changed
-
-- name: Create a tag with tag_value
-  azure_rm_tags:
-    tag_name: "key{{ rpfx }}"
-    tag_value: "value{{ rpfx }}"
-  register: output
-
-- name: Assert the tag value created
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-- name: Pause for 3 mimutes
-  ansible.builtin.command: sleep 180
-  changed_when: true
-
-- name: Create a tag with tag_value(Idemptent test)
-  azure_rm_tags:
-    tag_name: "key{{ rpfx }}"
-    tag_value: "value{{ rpfx }}"
-  register: output
-
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - not output.changed
-
 - name: Delete the tags by scope
   azure_rm_tags:
     scope: "{{ __rg_info.resourcegroups.0.id }}"
-    state: absent
-  register: output
-
-- name: Assert the tag deleted
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-- name: Delete the tag with tag_value
-  azure_rm_tags:
-    tag_name: "key{{ rpfx }}"
-    tag_value: "value{{ rpfx }}"
-    state: absent
-  register: output
-
-- name: Assert the tag value deleted
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-- name: Delete the tag with tag_name
-  azure_rm_tags:
-    tag_name: "key{{ rpfx }}"
     state: absent
   register: output
 

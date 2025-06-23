@@ -154,7 +154,7 @@ class AzureRMTagsInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.scope is not None:
+        if self.scope:
             self.results['tag_info'] = self.get_at_scope(self.scope)
         else:
             self.results['tag_details'] = self.list_all()
@@ -166,7 +166,7 @@ class AzureRMTagsInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.rm_client.tags.get_at_scope(scope)
-            if response is not None:
+            if response:
                 results.append(self.format_tags(response))
         except StopIteration:
             pass
@@ -194,7 +194,7 @@ class AzureRMTagsInfo(AzureRMModuleBase):
             type=tags.type,
             properties=dict()
         )
-        if tags.properties is not None:
+        if tags.properties:
             results['properties'] = tags.properties.as_dict()
 
         return results
