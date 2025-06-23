@@ -59,7 +59,7 @@
         node_labels: {"release":"stable"}
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     enable_rbac: true
     network_profile:
@@ -100,7 +100,7 @@
         node_labels: {"release":"stable"}
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     enable_rbac: true
     network_profile:
@@ -124,7 +124,7 @@
     that:
       - "fact.aks | length == 1"
       - fact.aks[0].id == output.id
-      - fact.aks[0].agent_pool_profiles[0].availability_zones == ["2"]
+      - fact.aks[0].agent_pool_profiles[0].availability_zones == ["3"]
       - fact.aks[0].agent_pool_profiles[0].mode == "System"
       - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
 
@@ -151,7 +151,7 @@
         node_labels: {"release":"stable", "environment":"dev"}
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     enable_rbac: true
     network_profile:
@@ -209,7 +209,7 @@
         mode: System
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     enable_rbac: true
     network_profile:
@@ -248,7 +248,7 @@
         mode: System
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     addon:
       http_application_routing:
@@ -289,7 +289,7 @@
         mode: System
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     addon:
       http_application_routing:
@@ -330,7 +330,7 @@
         min_count: 1
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     enable_rbac: true
     network_profile:
@@ -371,7 +371,7 @@
         min_count: 1
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
     node_resource_group: "node{{ noderpfx }}"
     enable_rbac: true
     network_profile:
@@ -408,7 +408,7 @@
         min_count: 1
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
       - name: default2
         count: 1
         vm_size: Standard_B2s
@@ -455,7 +455,7 @@
         min_count: 1
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
       - name: default2
         count: 1
         vm_size: Standard_B2s
@@ -497,7 +497,7 @@
         min_count: 1
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
       - name: default2
         count: 1
         vm_size: Standard_B2s
@@ -544,7 +544,7 @@
         min_count: 1
         max_pods: 42
         availability_zones:
-          - 2
+          - 3
       - name: default2
         count: 1
         vm_size: Standard_B2s
