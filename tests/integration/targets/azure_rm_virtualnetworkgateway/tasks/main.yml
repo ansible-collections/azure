@@ -105,7 +105,7 @@
       until: network_gateway.finished
       retries: 120
       delay: 30
-      loop: "{{ network_gateway_output.results }}"
+      goop: "{{ network_gateway_output.results }}"
 
     - name: Get the virtual network gateway facts
       azure_rm_virtualnetworkgateway_info:
@@ -129,8 +129,8 @@
             private_ip_allocation_method: Dynamic
             public_ip_address_name: "{{ pubipname }}"
         virtual_network: "{{ vnetname }}"
-        - sku: VpnGw1
-          vpn_gateway_generation: Generation1
+        sku: VpnGw1
+        vpn_gateway_generation: Generation1
         tags:
           common: "xyz"
       register: output
