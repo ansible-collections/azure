@@ -187,6 +187,18 @@ state:
             type: bool
             returned: always
             sample: false
+        local_network_gateway2:
+            description:
+                - The reference to local network gateway resource.
+            type: complex
+            returned: when-used
+            contains:
+                id:
+                    description:
+                        - The ID of the local network gateway resource.
+                    type: str
+                    returned: always
+                    sample: /subscriptions/xxx-xxx/resourceGroups/rg/providers/Microsoft.Network/localNetworkGateways/rpfx001
         virtual_network_gateway1:
             description:
                 - The reference to virtual network gateway resource.
@@ -316,11 +328,14 @@ class AzureRMVirutalNetworkGatewayConnectionInfo(AzureRMModuleBase):
             use_policy_based_traffic_selectors=vngwconn.use_policy_based_traffic_selectors,
             virtual_network_gateway1=None,
             virtual_network_gateway2=None,
+            local_network_gateway2=None
         )
+        if vngwconn.local_network_gateway2:
+            result['local_network_gateway2'] = dict(id=vngwconn.local_network_gateway2.id)
+        if vngwconn.virtual_network_gateway1:
+            result['virtual_network_gateway1'] = dict(id=vngwconn.virtual_network_gateway1.id)
         if vngwconn.virtual_network_gateway2:
             result['virtual_network_gateway2'] = dict(id=vngwconn.virtual_network_gateway2.id)
-        if vngwconn.virtual_network_gateway1:
-            result['virtual_network_gateway1'] = dict(id=vngwconn.virtual_network_gateway2.id)
 
         return result
 
