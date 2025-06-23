@@ -68,7 +68,7 @@
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         name: "{{ pubipname }}{{ item }}"
-        gku: Standard
+        sku: Standard
         allocation_method: Static
       with_items:
         - '01'
@@ -90,10 +90,10 @@
       loop:
         - sku: VpnGw1
           vpn_gateway_generation: Generation1
-          number: 01
+          number: '01'
         - sku: VpnGw2
           vpn_gateway_generation: Generation2
-          number: 02
+          number: '02'
       register: network_gateway_output
       async: 3600
       poll: 0
