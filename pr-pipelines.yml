@@ -160,8 +160,6 @@ parameters:
       - "azure_rm_afdruleset"
       - "azure_rm_afdrules"
       - "azure_rm_tags"
-      - "inventory_azure"
-      - "setup_azure"
 
 trigger: none
 pr: none
