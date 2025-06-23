@@ -51,8 +51,8 @@
         name: "{{ vnetname }}{{ item }}"
         address_prefixes: "10.0.0.0/16"
       with_items:
-        - 01
-        - 02
+        - '01'
+        - '02'
 
     - name: Add subnet
       azure_rm_subnet:
@@ -61,18 +61,18 @@
         address_prefix: "10.0.2.0/24"
         virtual_network: "{{ vnetname }}{{ item }}"
       with_items:
-        - 01
-        - 02
+        - '01'
+        - '02'
 
     - name: Create public IP address
       azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         name: "{{ pubipname }}{{ item }}"
-        sku: Standard
+        gku: Standard
         allocation_method: Static
       with_items:
-        - 01
-        - 02
+        - '01'
+        - '02'
 
     - name: Create virtual network gateway without bgp settings
       azure_rm_virtualnetworkgateway:
@@ -105,7 +105,7 @@
       until: network_gateway.finished
       retries: 120
       delay: 30
-      goop: "{{ network_gateway_output.results }}"
+      loop: "{{ network_gateway_output.results }}"
 
     - name: Get the virtual network gateway facts
       azure_rm_virtualnetworkgateway_info:
@@ -208,8 +208,8 @@
     virtual_network: "{{ vnetname }}{{ item }}"
     state: absent
   with_items:
-    - 01
-    - 02
+    - '01'
+    - '02'
 
 - name: Delete public IP address
   azure_rm_publicipaddress:
@@ -218,8 +218,8 @@
     name: "{{ pubipname }}{{ item }}"
     state: absent
   with_items:
-    - 01
-    - 02
+    - '01'
+    - '02'
 
 - name: Delete virtual network
   azure_rm_virtualnetwork:
@@ -227,5 +227,5 @@
     name: "{{ vnetname }}{{ item }}"
     state: absent
   with_items:
-    - 01
-    - 02
+    - '01'
+    - '02'
