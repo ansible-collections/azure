@@ -104,7 +104,6 @@ tag_info:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    import copy
     from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
