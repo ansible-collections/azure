@@ -147,10 +147,10 @@ class AzureRMTags(AzureRMModuleBase):
                 if self.tags:
                     new_tags, update_tags = self.tags_update(response['properties']['tags'], self.tags)
 
-                    if (self.operation == 'Meger' or self.operation == 'Replace') and update_tags:
+                    if (self.operation == 'Merge' or self.operation == 'Replace') and update_tags:
                         changed = True
                         response = self.begin_update_at_scope(self.tags, self.operation)
-                    elif set(self.tags.items()).issubset(set(new_tags.items())):
+                    elif set(self.tags.items()).issubset(set(new_tags.items())) and self.operation == 'Delete':
                         changed = True
                         response = self.begin_update_at_scope(self.tags, self.operation)
             else:
