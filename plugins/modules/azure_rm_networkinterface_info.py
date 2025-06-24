@@ -359,11 +359,6 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
 
     def exec_module(self, **kwargs):
 
-        is_old_facts = self.module._name == 'azure_rm_networkinterface_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_networkinterface_facts' module has been renamed to 'azure_rm_networkinterface_info'",
-                                  version=(2.9, ))
-
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
@@ -379,10 +374,6 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
         else:
             results = self.list_all()
 
-        if is_old_facts:
-            self.results['ansible_facts'] = {
-                'azure_networkinterfaces': self.serialize_nics(results)
-            }
         self.results['networkinterfaces'] = self.to_dict_list(results)
         return self.results
 
@@ -411,9 +402,6 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
             return [item for item in response if self.has_tags(item.tags, self.tags)]
         except ResourceNotFoundError as exc:
             self.fail("Error listing all - {0}".format(str(exc)))
-
-    def serialize_nics(self, raws):
-        return [self.serialize_obj(item, AZURE_OBJECT_CLASS) for item in raws] if raws else []
 
     def to_dict_list(self, raws):
         return [nic_to_dict(item) for item in raws] if raws else []

@@ -3,7 +3,7 @@
     vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}"
     pubipname: "pip{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-    rpfx: "{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
 - name: Create a new local network gateway
   azure_rm_localnetworkgateway:
@@ -22,79 +22,91 @@
       key1: value1
   register: local_gateway_output
 
-- name: Create virtual network
+- name: Create the first virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
-    name: "{{ vnetname }}"
-    address_prefixes: "10.0.0.0/16"
+    name: "{{ vnetname }}01"
+    address_prefixes: "30.0.0.0/16"
 
-- name: Add subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: GatewaySubnet
-    address_prefix: "10.0.2.0/24"
-    virtual_network: "{{ vnetname }}"
-
-- name: Create public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    allocation_method: Static
-    name: "{{ pubipname }}"
-    sku: standard
-
-- name: Create first virtual network gateway without bgp settings
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}"
-    ip_configurations:
-      - name: testipconfig
-        private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}"
-    virtual_network: "{{ vnetname }}"
-    tags:
-      common: "xyz"
-  register: network_gateway1_output
-
-- name: Create virtual network
+- name: Create the secondary virtual network
   azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}"
     name: "{{ vnetname }}02"
     address_prefixes: "20.0.0.0/16"
 
-- name: Add subnet
+- name: Add the first subnet
+  azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: GatewaySubnet
+    address_prefix: "30.0.2.0/24"
+    virtual_network: "{{ vnetname }}01"
+
+- name: Add the secondary subnet
   azure_rm_subnet:
     resource_group: "{{ resource_group }}"
     name: GatewaySubnet
     address_prefix: "20.0.2.0/24"
     virtual_network: "{{ vnetname }}02"
 
-- name: Create public IP address
+- name: Create the first public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    allocation_method: Static
+    name: "{{ pubipname }}01"
+    sku: standard
+
+- name: Create the secondary public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "{{ pubipname }}02"
     sku: standard
 
-- name: Create secondary virtual network gateway without bgp settings
+- name: Create the virtual network gateway without bgp settings
   azure_rm_virtualnetworkgateway:
     resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}02"
+    name: "{{ vngname }}{{ item }}"
     ip_configurations:
       - name: testipconfig
         private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}02"
-    virtual_network: "{{ vnetname }}02"
+        public_ip_address_name: "{{ pubipname }}{{ item }}"
+    virtual_network: "{{ vnetname }}{{ item }}"
     tags:
       common: "xyz"
+  register: network_gateway_output
+  async: 3600
+  poll: 0
+  with_items:
+    - '01'
+    - '02'
+
+- name: Wait for the virtual network gatway to be created
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: network_gateway
+  until: network_gateway.finished
+  retries: 120
+  delay: 30
+  loop: "{{ network_gateway_output.results }}"
+
+- name: Get the first virtual network gateway facts
+  azure_rm_virtualnetworkgateway_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vngname }}01"
+  register: network_gateway1_output
+
+- name: Get the secondary virtual network gateway facts
+  azure_rm_virtualnetworkgateway_info:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vngname }}02"
   register: network_gateway2_output
 
-- name: Create a virtual network connection
+- name: Create a 'Vnet2Vnet' virtual network connection
   azure_rm_virtualnetworkgatewayconnection:
     resource_group: "{{ resource_group }}"
-    name: "new{{ rpfx }}"
-    virtual_network_gateway1: "{{ network_gateway1_output.id }}"
-    virtual_network_gateway2: "{{ network_gateway2_output.id }}"
-    local_network_gateway2: "{{ local_gateway_output.state.id }}"
+    name: "new{{ rpfx }}01"
+    virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
+    virtual_network_gateway2: "{{ network_gateway2_output.virtual_network_gatways[0].id }}"
     authorization_key: Password@0329
     connection_type: Vnet2Vnet
     connection_protocol: IKEv2
@@ -106,20 +118,41 @@
     express_route_gateway_bypass: false
   register: output
 
-- name: Assert the resource created
+- name: Assert the first resource created
   ansible.builtin.assert:
     that:
       - output.changed
 
-- name: Create a virtual network connection(Idempotent test)
+- name: Create a 'IPsec' type virtual network connection
   azure_rm_virtualnetworkgatewayconnection:
     resource_group: "{{ resource_group }}"
-    name: "new{{ rpfx }}"
-    virtual_network_gateway1: "{{ network_gateway1_output.id }}"
-    virtual_network_gateway2: "{{ network_gateway2_output.id }}"
+    name: "new{{ rpfx }}02"
+    virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
     local_network_gateway2: "{{ local_gateway_output.state.id }}"
-    authorization_key: Password@0329
-    connection_type: Vnet2Vnet
+    shared_key: Password@0329
+    connection_type: IPsec
+    connection_protocol: IKEv2
+    routing_weight: 0
+    dpd_timeout_seconds: 45
+    enable_bgp: false
+    use_local_azure_ip_address: false
+    use_policy_based_traffic_selectors: false
+    express_route_gateway_bypass: false
+  register: output
+
+- name: Assert the secondary resource created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Re-create the virtual network connection(Idempotent test)
+  azure_rm_virtualnetworkgatewayconnection:
+    resource_group: "{{ resource_group }}"
+    name: "new{{ rpfx }}02"
+    virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
+    local_network_gateway2: "{{ local_gateway_output.state.id }}"
+    shared_key: Password@0329
+    connection_type: IPsec
     connection_protocol: IKEv2
     routing_weight: 0
     dpd_timeout_seconds: 45
@@ -137,12 +170,11 @@
 - name: Update the virtual network connection(Update test)
   azure_rm_virtualnetworkgatewayconnection:
     resource_group: "{{ resource_group }}"
-    name: "new{{ rpfx }}"
-    virtual_network_gateway1: "{{ network_gateway1_output.id }}"
-    virtual_network_gateway2: "{{ network_gateway2_output.id }}"
+    name: "new{{ rpfx }}02"
+    virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
     local_network_gateway2: "{{ local_gateway_output.state.id }}"
-    authorization_key: Password@0329
-    connection_type: Vnet2Vnet
+    shared_key: Password@0329
+    connection_type: IPsec
     connection_protocol: IKEv2
     routing_weight: 1
     dpd_timeout_seconds: 60
@@ -162,7 +194,7 @@
 - name: Get the virtual network connection
   azure_rm_virtualnetworkgatewayconnection_info:
     resource_group: "{{ resource_group }}"
-    name: "new{{ rpfx }}"
+    name: "new{{ rpfx }}02"
   register: output
 
 - name: Assert the resource facts
@@ -178,26 +210,38 @@
 - name: Delete the virtual network connection
   azure_rm_virtualnetworkgatewayconnection:
     resource_group: "{{ resource_group }}"
-    name: "new{{ rpfx }}"
+    name: "new{{ rpfx }}{{ item }}"
     state: absent
   register: output
+  with_items:
+    - '01'
+    - '02'
 
 - name: Assert the resource deleted
   ansible.builtin.assert:
     that:
       - output.changed
 
-- name: Delete the first virtual network gateway
+- name: Delete the virtual network gateway
   azure_rm_virtualnetworkgateway:
     resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}"
+    name: "{{ vngname }}{{ item }}"
     state: absent
+  register: network_gateway_deleted
+  async: 2400
+  poll: 0
+  with_items:
+    - '01'
+    - '02'
 
-- name: Delete the secondary virtual network gateway
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}02"
-    state: absent
+- name: Wait for the virtual network gatway to be deleted
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: network_gateway
+  until: network_gateway.finished
+  retries: 120
+  delay: 20
+  loop: "{{ network_gateway_deleted.results }}"
 
 - name: Pause for 5 mimutes to delete the virtual network connection
   ansible.builtin.command: sleep 300
@@ -206,11 +250,8 @@
 - name: Delete the public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
-    name: "{{ pubipname }}"
+    name: "{{ pubipname }}{{ item }}"
     state: absent
-
-- name: Delete the public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    name: "{{ pubipname }}02"
-    state: absent
+  with_items:
+    - '01'
+    - '02'

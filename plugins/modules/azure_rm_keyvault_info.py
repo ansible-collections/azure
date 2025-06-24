@@ -25,6 +25,10 @@ options:
         description:
             - The name of the key vault.
         type: str
+    hsm_name:
+        description:
+            - The name of the HSM.
+        type: str
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -287,17 +291,39 @@ def keyvault_to_dict(vault):
     )
 
 
+def hsm_to_dict(hsm):
+    return dict(
+        id=hsm.id,
+        name=hsm.name,
+        hsm_uri=hsm.properties.hsm_uri,
+        location=hsm.location,
+        tags=hsm.tags,
+        identity=hsm.identity and hsm.identity.as_dict() or None,
+        enable_soft_delete=hsm.properties.enable_soft_delete,
+        soft_delete_retention_in_days=hsm.properties.soft_delete_retention_in_days
+        if hsm.properties.soft_delete_retention_in_days else 90,
+        enable_purge_protection=hsm.properties.enable_purge_protection
+        if hsm.properties.enable_purge_protection else False,
+        sku=dict(
+            family=hsm.sku.family,
+            name=hsm.sku.name
+        )
+    )
+
+
 class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
             name=dict(type='str'),
+            hsm_name=dict(type='str'),
             tags=dict(type='list', elements='str')
         )
 
         self.resource_group = None
         self.name = None
+        self.hsm_name = None
         self.tags = None
 
         self.results = dict(changed=False)
@@ -321,37 +347,79 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         if self.name:
             if self.resource_group:
-                self.results['keyvaults'] = self.get_by_name()
+                self.results['keyvaults'] = self.get_by_vault_name()
             else:
                 self.fail("resource_group is required when filtering by name")
+        elif self.hsm_name:
+            if self.resource_group:
+                self.results['hsms'] = self.get_by_hsm_name()
+            else:
+                self.fail("resource_group is required when filtering by hsm_name")
         elif self.resource_group:
-            self.results['keyvaults'] = self.list_by_resource_group()
+            self.results['keyvaults'] = self.list_vault_by_resource_group()
+            self.results['hsms'] = self.list_hsm_by_resource_group_hsm()
         else:
-            self.results['keyvaults'] = self.list()
+            self.results['keyvaults'] = self.list_vault()
+            self.results['hsms'] = self.list_hsm()
 
         return self.results
 
-    def get_by_name(self):
+    def get_by_hsm_name(self):
         '''
-        Gets the properties of the specified key vault.
+        Gets the properties of this specified hsm.
 
-        :return: deserialized key vaultstate dictionary
+        :return: deserialized hsm state dictionary
         '''
-        self.log("Get the key vault {0}".format(self.name))
-
+        self.log("Get the hsm {0}".format(self.hsm_name))
         results = []
         try:
-            response = self._client.vaults.get(resource_group_name=self.resource_group,
-                                               vault_name=self.name)
+            response = self._client.managed_hsms.get(resource_group_name=self.resource_group, name=self.hsm_name)
             self.log("Response : {0}".format(response))
+            if response and self.has_tags(response.tags, self.tags):
+                results.append(hsm_to_dict(response))
+        except ResourceNotFoundError as e:
+            self.log("Did not find the hsm {0}: {1}".format(self.hsm_name, str(e)))
+        return results
 
+    def get_by_vault_name(self):
+        '''
+        Gets the properties of this specified key vault.
+
+        :return: deserialized key vault state dictionary
+        '''
+        self.log("Get the key vault {0}".format(self.name))
+        results = []
+        try:
+            response = self._client.vaults.get(resource_group_name=self.resource_group, vault_name=self.name)
+            self.log("Response : {0}".format(response))
             if response and self.has_tags(response.tags, self.tags):
                 results.append(keyvault_to_dict(response))
         except ResourceNotFoundError as e:
             self.log("Did not find the key vault {0}: {1}".format(self.name, str(e)))
         return results
 
-    def list_by_resource_group(self):
+    def list_hsm_by_resource_group(self):
+        '''
+        Lists the properties of hsms in specific resource group.
+
+        :return: deserialized hsm state dictionary
+        '''
+        self.log("Get the hsms in resource group {0}".format(self.resource_group))
+
+        results = []
+        try:
+            response = list(self._client.managed_hsms.list_by_resource_group(resource_group_name=self.resource_group))
+            self.log("Response : {0}".format(response))
+
+            if response:
+                for item in response:
+                    if self.has_tags(item.tags, self.tags):
+                        results.append(hsm_to_dict(item))
+        except Exception as e:
+            self.log("Did not find hsms in resource group {0} : {1}.".format(self.resource_group, str(e)))
+        return results
+
+    def list_vault_by_resource_group(self):
         '''
         Lists the properties of key vaults in specific resource group.
 
@@ -372,7 +440,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
             self.log("Did not find key vaults in resource group {0} : {1}.".format(self.resource_group, str(e)))
         return results
 
-    def list(self):
+    def list_vault(self):
         '''
         Lists the properties of key vaults in specific subscription.
 
@@ -392,6 +460,28 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
                         results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
         except Exception as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
+        return results
+
+    def list_hsm(self):
+        '''
+        Lists the properties of hsms in specific subscription.
+
+        :return: deserialized hsms state dictionary
+        '''
+        self.log("Get the hsms in current subscription")
+
+        results = []
+        try:
+            response = list(self._client.managed_hsms.list_by_subscription())
+            self.log("Response : {0}".format(response))
+
+            if response:
+                for item in response:
+                    if self.has_tags(item.tags, self.tags):
+                        source_id = item.id.split('/')
+                        results.append(hsm_to_dict(self._client.managed_hsms.get(source_id[4], source_id[8])))
+        except Exception as e:
+            self.log("Did not find hsm in current subscription {0}.".format(str(e)))
         return results
 
 

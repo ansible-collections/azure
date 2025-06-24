@@ -252,10 +252,6 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
         )
 
     def exec_module(self, **kwargs):
-        is_old_facts = self.module._name == 'azure_rm_virtualmachinescaleset_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_virtualmachinescaleset_facts' module has been renamed to 'azure_rm_virtualmachinescaleset_info'",
-                                  version=(2.9, ))
 
         for key in self.module_args:
             setattr(self, key, kwargs[key])
@@ -339,16 +335,7 @@ class AzureRMVirtualMachineScaleSetInfo(AzureRMModuleBase):
 
                 result[index] = updated
 
-        if is_old_facts:
-            self.results['ansible_facts'] = {
-                'azure_vmss': result
-            }
-            if self.format == 'curated':
-                # proper result format we want to support in the future
-                # dropping 'ansible_facts' and shorter name 'vmss'
-                self.results['vmss'] = result
-        else:
-            self.results['vmss'] = result
+        self.results['vmss'] = result
 
         return self.results
 

@@ -338,6 +338,7 @@ options:
             - The outbound rules.
         type: list
         elements: dict
+        version_added: '3.5.0'
         suboptions:
             name:
                 description:

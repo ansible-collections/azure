@@ -339,10 +339,6 @@ class AzureRMSecurityGroupInfo(AzureRMModuleBase):
 
     def exec_module(self, **kwargs):
 
-        is_old_facts = self.module._name == 'azure_rm_securitygroup_facts'
-        if is_old_facts:
-            self.module.deprecate("The 'azure_rm_securitygroup_facts' module has been renamed to 'azure_rm_securitygroup_info'", version=(2.9, ))
-
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
@@ -351,10 +347,6 @@ class AzureRMSecurityGroupInfo(AzureRMModuleBase):
         else:
             info = self.list_items()
 
-        if is_old_facts:
-            self.results['ansible_facts'] = {
-                'azure_securitygroups': info
-            }
         self.results['securitygroups'] = info
 
         return self.results

@@ -266,6 +266,18 @@ state:
             type: bool
             returned: always
             sample: false
+        local_network_gateway2:
+            description:
+                - The reference to local network gateway resource.
+            type: complex
+            returned: when-used
+            contains:
+                id:
+                    description:
+                        - The ID of the local network gateway resource.
+                    type: str
+                    returned: always
+                    sample: /subscriptions/xxx-xxx/resourceGroups/rg/providers/Microsoft.Network/localNetworkGateways/rpfx001
         virtual_network_gateway1:
             description:
                 - The reference to virtual network gateway resource.
@@ -282,7 +294,7 @@ state:
             description:
                 - The reference to virtual network gateway resource.
             type: complex
-            returned: always
+            returned: when-used
             contains:
                 id:
                     description:
@@ -430,8 +442,9 @@ class AzureRMVirutalNetworkGatewayConnection(AzureRMModuleBase):
         response = None
         try:
             body = dict(location=self.location,
-                        virtual_network_gateway1=dict(id=self.virtual_network_gateway1),
-                        virtual_network_gateway2=dict(id=self.virtual_network_gateway2),
+                        virtual_network_gateway1=dict(id=self.virtual_network_gateway1) if self.virtual_network_gateway1 else None,
+                        virtual_network_gateway2=dict(id=self.virtual_network_gateway2) if self.virtual_network_gateway2 else None,
+                        local_network_gateway2=dict(id=self.local_network_gateway2) if self.local_network_gateway2 else None,
                         authorization_key=self.authorization_key,
                         connection_type=self.connection_type,
                         connection_protocol=self.connection_protocol,

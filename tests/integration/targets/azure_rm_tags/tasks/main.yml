@@ -1,0 +1,68 @@
+- name: Gather Resource Group info
+  azure_rm_resourcegroup_info:
+    name: "{{ resource_group_secondary }}"
+  register: __rg_info
+
+- name: List all the flags under the scope
+  azure_rm_tags_info:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+  register: output
+
+- name: Create new tags with scope
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert the tags created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create new tags with scope(Idempotent test)
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    tags:
+      key1: value1
+  register: output
+
+- name: Assert idempotent
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Update the tags with scope
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    operation: Merge
+    tags:
+      key2: value2
+  register: output
+
+- name: Assert the tags updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Get the tag info at thespecified resource
+  azure_rm_tags_info:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+  register: output
+
+- name: Assert the tag facts
+  ansible.builtin.assert:
+    that:
+      - output.tag_info | length == 1
+      - output.tag_info[0].properties.tags | length == 2
+
+- name: Delete the tags by scope
+  azure_rm_tags:
+    scope: "{{ __rg_info.resourcegroups.0.id }}"
+    state: absent
+  register: output
+
+- name: Assert the tag deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed

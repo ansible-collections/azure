@@ -1,4 +1,24 @@
 # Change Log
+## v3.5.0 (2025-06-18)
+
+### NEW MODULES
+  - security_domain_utils: ([#1717](https://github.com/ansible-collections/azure/pull/1717))
+  - azure_rm_keyvaultsecuritydomain: ([#1717](https://github.com/ansible-collections/azure/pull/1717))
+
+### FEATURE ENHANCEMENT
+  - Integration tests:
+    - Separate the VM test into different region ([#1951](https://github.com/ansible-collections/azure/pull/1951))
+    - Update test cases to work under ansible-2.19 Group2 ([#1953](https://github.com/ansible-collections/azure/pull/1953))
+  - azure_rm_keyvault: Add support for `hsm_name`, `administrators` and `identity` ([#1717](https://github.com/ansible-collections/azure/pull/1717))
+  - azure_rm_keyvault_info: Add support for `hsm_name`, `administrators` and `identity` ([#1717](https://github.com/ansible-collections/azure/pull/1717))
+  - Remove deprecated code since ansible-2.9 has been EOL [1949](https://github.com/ansible-collections/azure/pull/1949)
+  - pr-pipelines.yml: Add python `v3.12` and `v3.13` to CI pipeline ([#1954](https://github.com/ansible-collections/azure/pull/1954))
+  - requirements.txt: Bump `azure-cli-core` to `v2.74.0`  ([#1956](https://github.com/ansible-collections/azure/pull/1956))
+  - sanity-requirements.txt: Bump sanity test dependency ([#1956](https://github.com/ansible-collections/azure/pull/1956))
+
+### BUG FIXING
+  - azure_rm_resource_info: Fix failure on response with bytes body ([#1957](https://github.com/ansible-collections/azure/pull/1957))
+
 ## v3.4.0 (2025-05-29)
 
 ### NEW MODULES
