@@ -162,7 +162,8 @@ parameters:
       - "azure_rm_tags"
 
 trigger: none
-pr: none
+pr:
+  - dev
 
 pool:
   name: pool-ubuntu-2004
