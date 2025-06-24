@@ -1,6 +1,10 @@
 
 # How to Configure EDA to use Azure servicebus as a source
 
+## First - See the Ansible Rulebook Documentation
+
+Documentation about Ansbile Rulebooks and EDA are available [here](https://ansible.readthedocs.io/projects/rulebook/en/latest/).  See the Getting started and Installation sections before continuing.
+
 ## Example azure-rulebook.yml file:
 
 ```yaml
