@@ -362,3 +362,5 @@ action_groups:
     - azure.azcollection.azure_rm_afdruleset_info
     - azure.azcollection.azure_rm_afdrules
     - azure.azcollection.azure_rm_afdrules_info
+    - azure.azcollection.azure_rm_tags
+    - azure.azcollection.azure_rm_tags_info

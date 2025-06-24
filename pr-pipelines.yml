@@ -159,6 +159,7 @@ parameters:
       - "azure_rm_afdorigin"
       - "azure_rm_afdruleset"
       - "azure_rm_afdrules"
+      - "azure_rm_tags"
 
 trigger: none
 pr: none
