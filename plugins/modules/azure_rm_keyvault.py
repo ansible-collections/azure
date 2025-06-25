@@ -706,6 +706,9 @@ class AzureRMVaults(AzureRMModuleBaseExt):
             else:
                 response = self.create_update_hsm()
 
+            if response is None:
+                response = self.get_instance()
+
             self.log("Creation / Update done")
         elif self.to_do == Actions.Delete:
             self.log("Instance deleted")
@@ -757,7 +760,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the Key Vault instance.')
             self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
-        return response.as_dict()
+        return response and response.as_dict() or None
 
     def create_update_hsm(self):
         '''
@@ -796,7 +799,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the HSM instance.')
             self.fail("Error creating the HSM instance: {0}".format(str(exc)))
-        return response.as_dict()
+        return response and response.as_dict() or None
 
     def delete_keyvault(self):
         '''
