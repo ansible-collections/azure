@@ -607,6 +607,7 @@
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
     is_purge_deleted: true
+    state: absent
   register: output
 
 - name: Assert the state has changed
