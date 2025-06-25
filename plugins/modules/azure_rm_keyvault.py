@@ -811,6 +811,8 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         try:
             response = self.mgmt_client.vaults.delete(resource_group_name=self.resource_group,
                                                       vault_name=self.vault_name)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the Key Vault instance.')
             self.fail("Error deleting the Key Vault instance: {0}".format(str(e)))
@@ -860,9 +862,13 @@ class AzureRMVaults(AzureRMModuleBaseExt):
             if self.hsm_name:
                 self.log("Purge the deleted hsm vault instance {0}".format(self.hsm_name))
                 response = self.mgmt_client.managed_hsms.begin_purge_deleted(self.hsm_name, location)
+                if isinstance(response, LROPoller):
+                    response = self.get_poller_result(response)
             else:
                 self.log("Purge the deleted vault instance {0}".format(self.vault_name))
                 response = self.mgmt_client.vaults.begin_purge_deleted(self.vault_name, location)
+                if isinstance(response, LROPoller):
+                    response = self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the vault instance.')
             self.fail("Error purge the vault instance: {0}".format(str(e)))
