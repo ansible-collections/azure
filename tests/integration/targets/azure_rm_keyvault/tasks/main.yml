@@ -569,7 +569,6 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
-    is_purge_deleted: true
     state: absent
   check_mode: true
   register: output
@@ -583,7 +582,6 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
-    is_purge_deleted: true
     state: absent
   register: output
 
@@ -596,7 +594,6 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
-    is_purge_deleted: true
     state: absent
   register: output
 
@@ -604,6 +601,18 @@
   ansible.builtin.assert:
     that:
       - output.changed == false
+
+- name: Purge the deleted HSM vault
+  azure_rm_keyvault:
+    resource_group: "{{ resource_group }}"
+    hsm_name: "hsm{{ rpfx }}"
+    is_purge_deleted: true
+  register: output
+
+- name: Assert the state has changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
