@@ -273,6 +273,13 @@ options:
                         description:
                             - Property to specify whether NRP will ignore the check if parent subnet has serviceEndpoints configured.
                         type: bool
+    is_purge_deleted:
+        description:
+            - Whether permanently deletes the specified vault. aka Purges the deleted Azure key vault
+            - Default value is C(True)
+            - When I(is_purge_deleted) need I(location) to be configured, If not configured, the default locatioin of the resource group.
+        type: bool
+        default: True
     state:
         description:
             - Assert the state of the KeyVault. Use C(present) to create or update an KeyVault and C(absent) to delete it.
@@ -463,6 +470,10 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                     )
                 )
             ),
+            is_purge_deleted=dict(
+                type='bool',
+                default=True
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -479,6 +490,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         self.tags = None
         self.identity = None
         self.administrators = None
+        self.is_purge_deleted = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
@@ -724,6 +736,13 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         if response:
             self.results["id"] = response["id"]
 
+        if self.is_purge_deleted:
+            purge_response = self.get_deleted(self.parameters["location"])
+            if purge_response:
+                self.results['changed'] = True
+                if not self.check_mode:
+                    self.purge_deleted(self.parameters["location"])
+
         return self.results
 
     def create_update_keyvault(self):
@@ -816,6 +835,38 @@ class AzureRMVaults(AzureRMModuleBaseExt):
             self.fail("Error deleting the hsm instance: {0}".format(str(e)))
 
         return True
+
+    def get_deleted(self, location):
+        '''
+        Get deleted vault
+        :return: True or False
+        '''
+        try:
+            if self.hsm_name:
+                self.log("Get deleted hsm vault instance {0}".format(self.hsm_name))
+                self.mgmt_client.managed_hsms.get_deleted(self.hsm_name, location)
+            else:
+                self.log("Get deleted vault instance {0}".format(self.vault_name))
+                self.mgmt_client.vaults.get_deleted(self.vault_name, location)
+        except Exception as e:
+            self.log('Error attempting to delete the vault instance.')
+            return False
+        return True
+
+    def purge_deleted(self, location):
+        '''
+        Purge vault instance in the specified subscription and resource group.
+        '''
+        try:
+            if self.hsm_name:
+                self.log("Purge the deleted hsm vault instance {0}".format(self.hsm_name))
+                self.mgmt_client.managed_hsms.begin_purge_deleted(self.hsm_name, location)
+            else:
+                self.log("Purge the deleted vault instance {0}".format(self.vault_name))
+                self.mgmt_client.vaults.begin_purge_deleted(self.vault_name, location)
+        except Exception as e:
+            self.log('Error attempting to delete the vault instance.')
+            self.fail("Error purge the vault instance: {0}".format(str(e)))
 
     def get_instance(self):
         '''
