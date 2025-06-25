@@ -695,8 +695,8 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
             self.log("Need to Create / Update the instance")
 
+            self.results['changed'] = True
             if self.check_mode:
-                self.results['changed'] = True
                 return self.results
 
             self.parameters["tags"] = self.tags
@@ -706,13 +706,6 @@ class AzureRMVaults(AzureRMModuleBaseExt):
             else:
                 response = self.create_update_hsm()
 
-            if response is None:
-                response = self.get_instance()
-
-            if not old_response:
-                self.results['changed'] = True
-            else:
-                self.results['changed'] = old_response.__ne__(response)
             self.log("Creation / Update done")
         elif self.to_do == Actions.Delete:
             self.log("Instance deleted")
@@ -764,7 +757,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the Key Vault instance.')
             self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
-        return response and response.as_dict() or None
+        return response.as_dict()
 
     def create_update_hsm(self):
         '''
@@ -803,7 +796,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the HSM instance.')
             self.fail("Error creating the HSM instance: {0}".format(str(exc)))
-        return response and response.as_dict() or None
+        return response.as_dict()
 
     def delete_keyvault(self):
         '''
@@ -864,13 +857,9 @@ class AzureRMVaults(AzureRMModuleBaseExt):
             if self.hsm_name:
                 self.log("Purge the deleted hsm vault instance {0}".format(self.hsm_name))
                 response = self.mgmt_client.managed_hsms.begin_purge_deleted(self.hsm_name, location)
-                if isinstance(response, LROPoller):
-                    self.get_poller_result(response)
             else:
                 self.log("Purge the deleted vault instance {0}".format(self.vault_name))
                 response = self.mgmt_client.vaults.begin_purge_deleted(self.vault_name, location)
-                if isinstance(response, LROPoller):
-                    self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the vault instance.')
             self.fail("Error purge the vault instance: {0}".format(str(e)))
