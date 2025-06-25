@@ -569,6 +569,7 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
+    is_purge_deleted: true
     state: absent
   check_mode: true
   register: output
@@ -582,6 +583,7 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
+    is_purge_deleted: true
     state: absent
   register: output
 
@@ -594,6 +596,7 @@
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
     hsm_name: "hsm{{ rpfx }}"
+    is_purge_deleted: true
     state: absent
   register: output
 

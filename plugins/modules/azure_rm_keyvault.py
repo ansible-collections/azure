@@ -277,9 +277,9 @@ options:
         description:
             - Whether permanently deletes the specified vault. aka Purges the deleted Azure key vault
             - Default value is C(True)
-            - When I(is_purge_deleted) need I(location) to be configured, If not configured, the default locatioin of the resource group.
+            - When I(is_purge_deleted) is specified, the I(location) has to be configured. If not configured, the default locatioin of the resource group will be used.
         type: bool
-        default: True
+        default: False
     state:
         description:
             - Assert the state of the KeyVault. Use C(present) to create or update an KeyVault and C(absent) to delete it.
@@ -472,7 +472,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
             ),
             is_purge_deleted=dict(
                 type='bool',
-                default=True
+                default=False
             ),
             state=dict(
                 type='str',
@@ -849,7 +849,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 self.log("Get deleted vault instance {0}".format(self.vault_name))
                 self.mgmt_client.vaults.get_deleted(self.vault_name, location)
         except Exception as e:
-            self.log('Error attempting to delete the vault instance.')
+            self.log('Error attempting to get the deleted vault instance: {0}'.format(str(e)))
             return False
         return True
 
