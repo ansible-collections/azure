@@ -277,7 +277,8 @@ options:
         description:
             - Whether permanently deletes the specified vault. aka Purges the deleted Azure key vault
             - Default value is C(True)
-            - When I(is_purge_deleted) is specified, the I(location) has to be configured. If not configured, the default locatioin of the resource group will be used.
+            - When I(is_purge_deleted) is specified, the I(location) has to be configured.
+              If not configured, the default locatioin of the resource group will be used.
         type: bool
         default: False
     state:
