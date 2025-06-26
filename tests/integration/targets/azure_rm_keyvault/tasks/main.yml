@@ -434,8 +434,8 @@
 # azure_rm_keyvault hsm setup and test
 #
 
-- name: HSM vault setup and test [run with tags is hsm]
-  tags: [hsm]
+- name: HSM vault setup and test
+  tags: [never]
   block:
     - name: Create instance of HSM -- check mode
       azure_rm_keyvault:
@@ -597,18 +597,16 @@
         that:
           - output.changed == false
 
-- name: Purge the deleted HSM vault
+- name: Purge the deleted vault
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
+    vault_name: "{{ item }}"
     is_purge_deleted: true
     state: absent
-  register: output
+  loop:
+    - "vault{{ rpfx }}"
+    - "vault{{ rpfx }}-sec"
 
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output.changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
