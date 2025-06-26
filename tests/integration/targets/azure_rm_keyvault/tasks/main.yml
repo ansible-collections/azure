@@ -434,181 +434,173 @@
 # azure_rm_keyvault hsm setup and test
 #
 
-- name: Pause for 600 seconds
-  ansible.builtin.command: sleep 600
+- name: HSM vault setup and test [run with tags is hsm]
+  tags: [hsm]
+  block:
+    - name: Create instance of HSM -- check mode
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        tenant_id: "{{ tenant_id }}"
+        administrators:
+          - "{{ object_id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        soft_delete_retention_in_days: 7
+        sku:
+          name: Standard_B1
+          family: B
+      check_mode: true
+      register: output
 
-- name: Lookup service principal object id
-  ansible.builtin.set_fact:
-    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
-                   azure_client_id=azure_client_id,
-                   azure_secret=azure_secret,
-                   azure_tenant=tenant_id) }}"
-  register: object_id_facts
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output.changed
 
-- name: Create instance of HSM -- check mode
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    tenant_id: "{{ tenant_id }}"
-    administrators:
-      - "{{ object_id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: Standard_B1
-      family: B
-  check_mode: true
-  register: output
+    - name: Create instance of HSM
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        tenant_id: "{{ tenant_id }}"
+        administrators:
+          - "{{ object_id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        soft_delete_retention_in_days: 7
+        sku:
+          name: Standard_B1
+          family: B
+      register: output
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output.changed
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output.changed
 
-- name: Create instance of HSM
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    tenant_id: "{{ tenant_id }}"
-    administrators:
-      - "{{ object_id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: Standard_B1
-      family: B
-  register: output
+    - name: Create instance of HSM again
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        tenant_id: "{{ tenant_id }}"
+        administrators:
+          - "{{ object_id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        soft_delete_retention_in_days: 7
+        sku:
+          name: Standard_B1
+          family: B
+      register: output
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output.changed
+    - name: Assert the state has not changed
+      ansible.builtin.assert:
+        that:
+          - output.changed == false
 
-- name: Create instance of HSM again
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    tenant_id: "{{ tenant_id }}"
-    administrators:
-      - "{{ object_id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: Standard_B1
-      family: B
-  register: output
+    - name: Update existing HSM (add tags)
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        tenant_id: "{{ tenant_id }}"
+        administrators:
+          - "{{ object_id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        soft_delete_retention_in_days: 7
+        sku:
+          name: Standard_B1
+          family: B
+        tags:
+          aaa: bbb
+      register: output
 
-- name: Assert the state has not changed
-  ansible.builtin.assert:
-    that:
-      - output.changed == false
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output.changed == true
 
-- name: Update existing HSM (add tags)
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    tenant_id: "{{ tenant_id }}"
-    administrators:
-      - "{{ object_id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: Standard_B1
-      family: B
-    tags:
-      aaa: bbb
-  register: output
+    - name: Get hsm facts
+      azure_rm_keyvault_info:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+      register: facts
 
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output.changed == true
+    - name: Assert the facts are properly set
+      ansible.builtin.assert:
+        that:
+          - facts['hsms'] | length == 1
+          - facts['hsms'][0]['hsm_uri'] != None
+          - facts['hsms'][0]['name'] != None
+          - facts['hsms'][0]['sku'] != None
+          - facts['hsms'][0]['id'] != None
+          - facts['hsms'][0]['enable_soft_delete'] == true
+          - facts['hsms'][0]['soft_delete_retention_in_days'] == 7
 
-- name: Get hsm facts
-  azure_rm_keyvault_info:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-  register: facts
+    - name: Download the security domain file
+      azure_rm_keyvaultsecuritydomain:
+        keyvault_uri: https://hsm{{ rpfx }}.managedhsm.azure.net
+        sd_quorum: 2
+        sd_wrapping_keys:
+          - "{{ lookup('file', 'cert_0.cer') }}"
+          - "{{ lookup('file', 'cert_1.cer') }}"
+          - "{{ lookup('file', 'cert_2.cer') }}"
+        action: download
+      register: output
 
-- name: Assert the facts are properly set
-  ansible.builtin.assert:
-    that:
-      - facts['hsms'] | length == 1
-      - facts['hsms'][0]['hsm_uri'] != None
-      - facts['hsms'][0]['name'] != None
-      - facts['hsms'][0]['sku'] != None
-      - facts['hsms'][0]['id'] != None
-      - facts['hsms'][0]['enable_soft_delete'] == true
-      - facts['hsms'][0]['soft_delete_retention_in_days'] == 7
+    - name: Save the security domain file
+      ansible.builtin.debug:
+        var: output["security_domain"]
 
-- name: Download the security domain file
-  azure_rm_keyvaultsecuritydomain:
-    keyvault_uri: https://hsm{{ rpfx }}.managedhsm.azure.net
-    sd_quorum: 2
-    sd_wrapping_keys:
-      - "{{ lookup('file', 'cert_0.cer') }}"
-      - "{{ lookup('file', 'cert_1.cer') }}"
-      - "{{ lookup('file', 'cert_2.cer') }}"
-    action: download
-  register: output
+    #
+    # azure_rm_keyvault finalize & clean up
+    #
 
-- name: Save the security domain file
-  ansible.builtin.debug:
-    var: output["security_domain"]
+    - name: Delete instance of HSM -- check mode
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        state: absent
+      check_mode: true
+      register: output
 
-#
-# azure_rm_keyvault finalize & clean up
-#
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output.changed
 
-- name: Delete instance of HSM -- check mode
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    state: absent
-  check_mode: true
-  register: output
+    - name: Delete instance of HSM
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        state: absent
+      register: output
 
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output.changed
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output.changed
 
-- name: Delete instance of HSM
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    state: absent
-  register: output
+    - name: Delete unexisting instance of HSM
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        hsm_name: "hsm{{ rpfx }}"
+        state: absent
+      register: output
 
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output.changed
-
-- name: Delete unexisting instance of HSM
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
-    state: absent
-  register: output
-
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output.changed == false
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output.changed == false
 
 - name: Purge the deleted HSM vault
   azure_rm_keyvault:
     resource_group: "{{ resource_group }}"
-    hsm_name: "hsm{{ rpfx }}"
+    vault_name: "vault{{ rpfx }}"
     is_purge_deleted: true
     state: absent
   register: output
