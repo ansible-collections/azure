@@ -434,6 +434,9 @@
 # azure_rm_keyvault hsm setup and test
 #
 
+- name: Pause for 600 seconds
+  ansible.builtin.command: sleep 600
+
 - name: Lookup service principal object id
   ansible.builtin.set_fact:
     object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
