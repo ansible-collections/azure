@@ -312,6 +312,12 @@ servers:
             type: dict
             returned: always
             sample: { tag1: abc }
+        auth_config:
+            description:
+                - AuthConfig properties of a server.
+            type: dict
+            returned: always
+            sample: {"active_directory_auth": "Disabled", "password_auth": "Enabled", "tenant_id": null}
 '''
 
 
@@ -428,6 +434,7 @@ class AzureRMPostgreSqlFlexibleServersInfo(AzureRMModuleBase):
             source_server_resource_id=item.source_server_resource_id,
             point_in_time_utc=item.point_in_time_utc,
             availability_zone=item.availability_zone,
+            auth_config=dict()
         )
         if item.sku is not None:
             result['sku']['name'] = item.sku.name
@@ -460,6 +467,10 @@ class AzureRMPostgreSqlFlexibleServersInfo(AzureRMModuleBase):
             result['identity'] = item.identity.as_dict()
         else:
             result['identity'] = PostgreSQLFlexibleModels.UserAssignedIdentity(type='None').as_dict()
+        if item.auth_config:
+            result['auth_config']['active_directory_auth'] = item.auth_config.active_directory_auth
+            result['auth_config']['password_auth'] = item.auth_config.password_auth
+            result['auth_config']['tenant_id'] = item.auth_config.tenant_id
 
         return result
 
