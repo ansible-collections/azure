@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 magodo (@magodo), xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblevirtualendpoint_info
-version_added: "3.5.0"
+version_added: "3.6.0"
 short_description: Get or list Azure PostgreSQL Flexible Virtual Endpoints facts
 description:
     - Get or list facts of PostgreSQL Flexible Virtual Endpoints.
@@ -153,7 +151,7 @@ class AzureRMPostgreSqlFlexibleVirtualEndpointInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.virtual_endpoint_name is not None:
+        if self.virtual_endpoint_name:
             self.results['virtual_endpoints'] = self.get()
         else:
             self.results['virtual_endpoints'] = self.list_all()
@@ -170,7 +168,7 @@ class AzureRMPostgreSqlFlexibleVirtualEndpointInfo(AzureRMModuleBase):
         except ResourceNotFoundError:
             self.log('Could not get virtual endpoint facts for PostgreSQL Flexible Server.')
 
-        if response is not None:
+        if response:
             results.append(self.format_item(response))
 
         return results
@@ -185,7 +183,7 @@ class AzureRMPostgreSqlFlexibleVirtualEndpointInfo(AzureRMModuleBase):
         except Exception as ec:
             self.log('Could not list virtual endpoints facts for PostgreSQL Flexible Servers.')
 
-        if response is not None:
+        if response:
             for item in response:
                 results.append(self.format_item(item))
 

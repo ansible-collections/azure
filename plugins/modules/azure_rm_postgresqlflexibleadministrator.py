@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 magodo (@magodo), xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibleadministrator
-version_added: "3.5.0"
+version_added: "3.6.0"
 short_description: Manage PostgreSQL Flexible Administrator instance
 description:
     - Add or Delete instance of PostgreSQL Flexible Administrator.
@@ -52,7 +50,8 @@ options:
         type: str
     state:
         description:
-            - Assert the state of the PostgreSQL Flexible administrator. Use C(present) to create or update a administrator and C(absent) to delete it.
+            - Assert the state of the PostgreSQL Flexible administrator.
+            - Use C(present) to create or update a administrator and C(absent) to delete it.
         default: present
         type: str
         choices:

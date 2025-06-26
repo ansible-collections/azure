@@ -467,7 +467,7 @@ class AzureRMPostgreSqlFlexibleServersInfo(AzureRMModuleBase):
             result['identity'] = item.identity.as_dict()
         else:
             result['identity'] = PostgreSQLFlexibleModels.UserAssignedIdentity(type='None').as_dict()
-        if item.auth_config is not None:
+        if item.auth_config:
             result['auth_config']['active_directory_auth'] = item.auth_config.active_directory_auth
             result['auth_config']['password_auth'] = item.auth_config.password_auth
             result['auth_config']['tenant_id'] = item.auth_config.tenant_id

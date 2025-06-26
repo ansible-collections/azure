@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 magodo (@magodo), xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblebackup_info
-version_added: "3.5.0"
+version_added: "3.6.0"
 short_description: Get Azure PostgreSQL Flexible Backup facts
 description:
     - Get or list facts of PostgreSQL Flexible Backup.
@@ -150,7 +148,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.backup_name is not None:
+        if self.backup_name:
             self.results['backups'] = self.get()
         else:
             self.results['backups'] = self.list_all()
@@ -167,7 +165,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         except ResourceNotFoundError:
             self.log('Could not get backup facts for PostgreSQL Flexible Server.')
 
-        if response is not None:
+        if response:
             results.append(self.format_item(response))
 
         return results
@@ -182,7 +180,7 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         except Exception as ec:
             self.log('Could not list backups facts for PostgreSQL Flexible Servers.')
 
-        if response is not None:
+        if response:
             for item in response:
                 results.append(self.format_item(item))
 

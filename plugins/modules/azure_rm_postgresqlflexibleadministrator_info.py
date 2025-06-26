@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 magodo (@magodo), xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexibleadministrator_info
-version_added: "3.5.0"
+version_added: "3.6.0"
 short_description: Get Azure PostgreSQL Flexible Administrator facts
 description:
     - Get facts of PostgreSQL Flexible Administrator.
@@ -151,7 +149,7 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.object_id is not None:
+        if self.object_id:
             self.results['administrators'] = self.get()
         else:
             self.results['administrators'] = self.list_all()
@@ -168,7 +166,7 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         except ResourceNotFoundError:
             self.log('Could not get administrator facts for PostgreSQL Flexible Server.')
 
-        if response is not None:
+        if response:
             results.append(self.format_item(response))
 
         return results
@@ -183,7 +181,7 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         except Exception as ec:
             self.log('Could not list administrators facts for PostgreSQL Flexible Servers.')
 
-        if response is not None:
+        if response:
             for item in response:
                 results.append(self.format_item(item))
 
