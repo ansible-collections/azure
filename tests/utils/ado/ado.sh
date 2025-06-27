@@ -111,9 +111,9 @@ AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
 AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
-    ansible-galaxy collection list community.general
-    ansible-galaxy collection install community.general
-    ansible-galaxy collection list community.general
+    #ansible-galaxy collection list community.general
+    #ansible-galaxy collection install community.general
+    #ansible-galaxy collection list community.general
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive || { rm "$config_file"; die "failed to run integration test"; }
     rm "$config_file"
 fi

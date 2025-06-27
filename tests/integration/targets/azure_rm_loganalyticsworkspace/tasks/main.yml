@@ -289,7 +289,7 @@
 - name: Assert that data collection rule is present
   ansible.builtin.assert:
     that:
-      - name_rpfx + '-DCR' in (output.datacollectionrules | community.general.json_query('[*].name'))
+      - name_rpfx + '-DCR' in (output.datacollectionrules | json_query('[*].name'))
 
 - name: Use info module to gather information on data collection rules in subscription
   azure.azcollection.azure_rm_monitordatacollectionrules_info:
@@ -298,7 +298,7 @@
 - name: Assert that data collection rule is present
   ansible.builtin.assert:
     that:
-      - name_rpfx + '-DCR' in (output.datacollectionrules | community.general.json_query('[*].name'))
+      - name_rpfx + '-DCR' in (output.datacollectionrules | json_query('[*].name'))
 
 - name: Remove data collection rule (Check Mode On)
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -356,7 +356,7 @@
 - name: Assert that data collection rule is not present
   ansible.builtin.assert:
     that:
-      - name_rpfx + '-DCR' not in (output.datacollectionrules | community.general.json_query('[*].name'))
+      - name_rpfx + '-DCR' not in (output.datacollectionrules | json_query('[*].name'))
 
 - name: Use info module to gather information on data collection rules in subscription
   azure.azcollection.azure_rm_monitordatacollectionrules_info:
@@ -365,7 +365,7 @@
 - name: Assert that data collection rule is not present
   ansible.builtin.assert:
     that:
-      - name_rpfx + '-DCR' not in (output.datacollectionrules | community.general.json_query('[*].name'))
+      - name_rpfx + '-DCR' not in (output.datacollectionrules | json_query('[*].name'))
 
 - name: Remove Log Analytics workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
