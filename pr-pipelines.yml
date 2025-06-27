@@ -163,6 +163,7 @@ parameters:
       - "azure_rm_afdrules"
       - "azure_rm_tags"
 
+trigger:
 pr:
   - dev
 
