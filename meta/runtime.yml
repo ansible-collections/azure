@@ -204,6 +204,10 @@ action_groups:
     - azure.azcollection.azure_rm_postgresqlflexiblefirewallrule_info
     - azure.azcollection.azure_rm_postgresqlflexibleserver
     - azure.azcollection.azure_rm_postgresqlflexibleserver_info
+    - azure.azcollection.azure_rm_postgresqlflexiblebackup
+    - azure.azcollection.azure_rm_postgresqlflexiblebackup_info
+    - azure.azcollection.azure_rm_postgresqlflexiblevirtualendpoint
+    - azure.azcollection.azure_rm_postgresqlflexiblevirtualendpoint_info
     - azure.azcollection.azure_rm_postgresqlserver
     - azure.azcollection.azure_rm_postgresqlserver_info
     - azure.azcollection.azure_rm_privatednsrecordset
@@ -362,3 +366,5 @@ action_groups:
     - azure.azcollection.azure_rm_afdruleset_info
     - azure.azcollection.azure_rm_afdrules
     - azure.azcollection.azure_rm_afdrules_info
+    - azure.azcollection.azure_rm_tags
+    - azure.azcollection.azure_rm_tags_info

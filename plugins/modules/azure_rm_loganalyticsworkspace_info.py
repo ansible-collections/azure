@@ -19,11 +19,11 @@ options:
     resource_group:
         description:
             - Name of resource group.
-        required: True
         type: str
     name:
         description:
             - Name of the workspace.
+            - The resource group must be configured when name exists.
         type: str
     tags:
         description:
@@ -145,6 +145,7 @@ from ansible.module_utils.common.dict_transformations import _camel_to_snake
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -155,7 +156,7 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
-            resource_group=dict(type='str', required=True),
+            resource_group=dict(type='str'),
             name=dict(type='str'),
             tags=dict(type='list', elements='str'),
             show_shared_keys=dict(type='bool'),
@@ -185,10 +186,15 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.name:
-            item = self.get_workspace()
-            response = [item] if item else []
-        else:
+            if self.resource_group:
+                item = self.get_workspace()
+                response = [item] if item else []
+            else:
+                self.fail('The resource_group must be configured when name exists')
+        elif self.resource_group:
             response = self.list_by_resource_group()
+        else:
+            response = self.list()
 
         self.results['workspaces'] = [self.to_dict(x) for x in response if self.has_tags(x.tags, self.tags)]
         return self.results
@@ -202,22 +208,29 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
 
     def list_by_resource_group(self):
         try:
-            return self.log_analytics_client.resource_group.list(self.resource_group)
+            return self.log_analytics_client.workspaces.list_by_resource_group(self.resource_group)
+        except Exception as ec:
+            pass
+        return []
+
+    def list(self):
+        try:
+            return self.log_analytics_client.workspaces.list()
         except Exception:
             pass
         return []
 
-    def list_intelligence_packs(self):
+    def list_intelligence_packs(self, resource_group, name):
         try:
-            response = self.log_analytics_client.intelligence_packs.list(self.resource_group, self.name)
+            response = self.log_analytics_client.intelligence_packs.list(resource_group, name)
             return [x.as_dict() for x in response]
         except Exception as exc:
             self.fail('Error when listing intelligence packs {0}'.format(exc.message or str(exc)))
 
-    def list_management_groups(self):
+    def list_management_groups(self, resource_group, name):
         result = []
         try:
-            response = self.log_analytics_client.management_groups.list(self.resource_group, self.name)
+            response = self.log_analytics_client.management_groups.list(resource_group, name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -226,10 +239,10 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
             self.fail('Error when listing management groups {0}'.format(exc.message or str(exc)))
         return result
 
-    def list_usages(self):
+    def list_usages(self, resource_group, name):
         result = []
         try:
-            response = self.log_analytics_client.usages.list(self.resource_group, self.name)
+            response = self.log_analytics_client.usages.list(resource_group, name)
             while True:
                 result.append(response.next().as_dict())
         except StopIteration:
@@ -238,23 +251,24 @@ class AzureRMLogAnalyticsWorkspaceInfo(AzureRMModuleBase):
             self.fail('Error when listing usages {0}'.format(exc.message or str(exc)))
         return result
 
-    def get_shared_keys(self):
+    def get_shared_keys(self, resource_group, name):
         try:
-            return self.log_analytics_client.shared_keys.get_shared_keys(self.resource_group, self.name).as_dict()
+            return self.log_analytics_client.shared_keys.get_shared_keys(resource_group, name).as_dict()
         except Exception as exc:
             self.fail('Error when getting shared key {0}'.format(exc.message or str(exc)))
 
     def to_dict(self, workspace):
         result = workspace.as_dict()
         result['sku'] = _camel_to_snake(workspace.sku.name)
+        result['resource_group'] = parse_resource_id(result['id'])['resource_group']
         if self.show_intelligence_packs:
-            result['intelligence_packs'] = self.list_intelligence_packs()
+            result['intelligence_packs'] = self.list_intelligence_packs(result['resource_group'], result['name'])
         if self.show_management_groups:
-            result['management_groups'] = self.list_management_groups()
+            result['management_groups'] = self.list_management_groups(result['resource_group'], result['name'])
         if self.show_shared_keys:
-            result['shared_keys'] = self.get_shared_keys()
+            result['shared_keys'] = self.get_shared_keys(result['resource_group'], result['name'])
         if self.show_usages:
-            result['usages'] = self.list_usages()
+            result['usages'] = self.list_usages(result['resource_group'], result['name'])
         return result
 
 

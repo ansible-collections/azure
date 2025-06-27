@@ -226,6 +226,13 @@ azure_managed_disk:
             type: int
             returned: always
             sample: None
+        last_ownership_update_time:
+            description:
+                - The UTC time when the ownership state of the disk was last changed.
+                - The time the disk was last attached or detached from a VM or the time when the VM to which the disk was attached was deallocated or started.
+            returned: always
+            type: str
+            sample: "2025-06-27T01:55:10.239311+00:00"
         source_resource_id:
             description:
                 - This is the ARM id of the source snapshot or disk.
@@ -383,6 +390,7 @@ class AzureRMManagedDiskInfo(AzureRMModuleBase):
             upload_size_bytes=create_data.upload_size_bytes,
             logical_sector_size=create_data.logical_sector_size,
             performance_plus=create_data.performance_plus,
+            last_ownership_update_time=managed_disk.last_ownership_update_time,
             gallery_image_reference=dict(
                 id=create_data.gallery_image_reference.id,
                 shared_gallery_image_id=create_data.gallery_image_reference.shared_gallery_image_id,

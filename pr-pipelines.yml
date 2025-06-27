@@ -86,6 +86,8 @@ parameters:
       - "azure_rm_openshiftmanagedcluster"
       - "azure_rm_postgresqlserver"
       - "azure_rm_postgresqlflexibleserver"
+      - "azure_rm_postgresqlflexiblevirtualendpoint"
+      - "azure_rm_postgresqlflexiblebackup"
       - "azure_rm_privatednsrecordset"
       - "azure_rm_privatednszone"
       - "azure_rm_privateendpoint"
@@ -159,9 +161,10 @@ parameters:
       - "azure_rm_afdorigin"
       - "azure_rm_afdruleset"
       - "azure_rm_afdrules"
+      - "azure_rm_tags"
 
 pr:
-  - None
+  - dev
 
 pool:
   name: pool-ubuntu-2004

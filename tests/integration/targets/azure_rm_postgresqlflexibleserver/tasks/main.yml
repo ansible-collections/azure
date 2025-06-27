@@ -37,8 +37,8 @@
     resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
-      name: Standard_B1ms
-      tier: Burstable
+      name: Standard_D2s_v3
+      tier: GeneralPurpose
     administrator_login: azureuser
     administrator_login_password: "{{ password }}"
     version: 12
@@ -69,8 +69,8 @@
     resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
-      name: Standard_B1ms
-      tier: Burstable
+      name: Standard_D2s_v3
+      tier: GeneralPurpose
     administrator_login: azureuser
     administrator_login_password: "{{ password }}"
     version: 12
@@ -112,8 +112,8 @@
     resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
-      name: Standard_B1ms
-      tier: Burstable
+      name: Standard_D2s_v3
+      tier: GeneralPurpose
     administrator_login: azureuser
     administrator_login_password: "{{ password }}"
     version: 12
@@ -149,8 +149,8 @@
     resource_group: "{{ new_resource_group }}"
     name: postflexible{{ rpfx }}
     sku:
-      name: Standard_B1ms
-      tier: Burstable
+      name: Standard_D2s_v3
+      tier: GeneralPurpose
     administrator_login: azureuser
     administrator_login_password: "{{ password }}"
     version: 12
@@ -366,6 +366,110 @@
   ansible.builtin.assert:
     that:
       - output.settings | length > 0
+
+- name: Create a new backup for the postgresql flexible server
+  azure_rm_postgresqlflexiblebackup:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    backup_name: backup{{ rpfx }}
+  register: output
+
+- name: Assert the postgresql flexible server backup created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a new backup for the postgresql flexible server(Idempotent test)
+  azure_rm_postgresqlflexiblebackup:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    backup_name: backup{{ rpfx }}
+  register: output
+
+- name: Assert the postgresql flexible server backup no change
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Get the backup for the postgresql flexible server
+  azure_rm_postgresqlflexiblebackup_info:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    backup_name: backup{{ rpfx }}
+  register: output
+
+- name: Assert the postgresql flexible server backup facts
+  ansible.builtin.assert:
+    that:
+      - output.backups | length == 1
+
+- name: Delete the backup for the postgresql flexible server
+  azure_rm_postgresqlflexiblebackup:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    backup_name: backup{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the postgresql flexible server backup deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a new virtual endpoint for the postgresql flexible server
+  azure_rm_postgresqlflexiblevirtualendpoint:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    virtual_endpoint_name: vendpoint{{ rpfx }}
+    endpoint_type: ReadWrite
+    members:
+      - postflexible{{ rpfx }}
+  register: output
+
+- name: Assert the postgresql flexible server virtual endpoint created
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create a new virtual endpoint for the postgresql flexible server(Idempotent test)
+  azure_rm_postgresqlflexiblevirtualendpoint:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    virtual_endpoint_name: vendpoint{{ rpfx }}
+    endpoint_type: ReadWrite
+    members:
+      - postflexible{{ rpfx }}
+  register: output
+
+- name: Assert the postgresql flexible server virtual endpoint no changed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Get the virtual endpoint for the postgresql flexible server
+  azure_rm_postgresqlflexiblevirtualendpoint_info:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    virtual_endpoint_name: vendpoint{{ rpfx }}
+  register: output
+
+- name: Assert the postgresql flexible server backup facts
+  ansible.builtin.assert:
+    that:
+      - output.virtual_endpoints | length == 1
+
+- name: Delete the virtual endpoint for the postgresql flexible server
+  azure_rm_postgresqlflexiblevirtualendpoint:
+    resource_group: "{{ new_resource_group }}"
+    server_name: postflexible{{ rpfx }}
+    virtual_endpoint_name: vendpoint{{ rpfx }}
+    state: absent
+  register: output
+
+- name: Assert the postgresql flexible server virtual endpoint deleted
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Stop the postgresql flexible server
   azure_rm_postgresqlflexibleserver:
