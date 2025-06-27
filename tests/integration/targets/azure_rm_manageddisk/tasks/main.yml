@@ -158,6 +158,7 @@
       - "output.ansible_info.azure_managed_disk[0].os_type == 'linux'"
       - output.ansible_info.azure_managed_disk[0].public_network_access == "Enabled"
       - output.ansible_info.azure_managed_disk[0].network_access_policy == 'AllowAll'
+      - not output.ansible_info.azure_managed_disk[0].last_ownership_update_time
 
 - name: Set variables
   ansible.builtin.set_fact:
