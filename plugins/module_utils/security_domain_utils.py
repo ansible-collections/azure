@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 import array
 import base64
