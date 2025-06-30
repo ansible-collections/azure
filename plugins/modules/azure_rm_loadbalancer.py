@@ -975,7 +975,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                                 frontend_port_range_end=value.frontend_port_range_end,
                                 backend_port=value.backend_port)
                 if value.frontend_ip_configuration is not None:
-                    new_item['frontend_ip_configuration_name'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+                    new_item['frontend_ip_configuration_name'] = parse_resource_id(value.frontend_ip_configuration.id)['resource_name']
                 results['inbound_nat_pools'].append(new_item)
         else:
             results['inbound_nat_pools'] = None
@@ -991,7 +991,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                                 enable_floating_ip=value.enable_floating_ip,
                                 enable_tcp_reset=value.enable_tcp_reset)
                 if value.frontend_ip_configuration is not None:
-                    new_item['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+                    new_item['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['resource_name']
                 results['inbound_nat_rules'].append(new_item)
         else:
             results['inbound_nat_rules'] = None
@@ -1011,9 +1011,9 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                                 disable_outbound_snat=value.disable_outbound_snat,
                                 enable_tcp_reset=value.enable_tcp_reset)
                 if value.frontend_ip_configuration is not None:
-                    new_item['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['name']
+                    new_item['frontend_ip_configuration'] = parse_resource_id(value.frontend_ip_configuration.id)['resource_name']
                 if value.backend_address_pool is not None:
-                    new_item['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['name']
+                    new_item['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['resource_name']
                 if value.probe is not None:
                     new_item['probe'] = parse_resource_id(value.probe.id)['name']
                 results['load_balancing_rules'].append(new_item)
@@ -1031,11 +1031,11 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                                 idle_timeout_in_minutes=value.idle_timeout_in_minutes)
                 if value.frontend_ip_configurations is not None:
                     for key in value.frontend_ip_configurations:
-                        new_item['frontend_ip_configurations'].append(parse_resource_id(key.id)['name'])
+                        new_item['frontend_ip_configurations'].append(parse_resource_id(key.id)['resource_name'])
                 else:
                     new_item['frontend_ip_configurations'] = None
                 if value.backend_address_pool is not None:
-                    new_item['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['name']
+                    new_item['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['resource_name']
                 results['outbound_rules'].append(new_item)
         else:
             results['outbound_rules'] = None
