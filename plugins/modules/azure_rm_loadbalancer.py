@@ -997,7 +997,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
             results['inbound_nat_rules'] = None
         if item.load_balancing_rules is not None:
             results['load_balancing_rules'] = []
-            for value in results['load_balancing_rules']:
+            for value in item.load_balancing_rules:
                 new_item = dict(name=value.name,
                                 frontend_ip_configuration=None,
                                 backend_address_pool=None,
@@ -1006,7 +1006,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                                 load_distribution=value.load_distribution,
                                 frontend_port=value.frontend_port,
                                 backend_port=value.backend_port,
-                                idle_timeout=value.idle_timeout,
+                                idle_timeout=value.idle_timeout_in_minutes,
                                 enable_floating_ip=value.enable_floating_ip,
                                 disable_outbound_snat=value.disable_outbound_snat,
                                 enable_tcp_reset=value.enable_tcp_reset)
