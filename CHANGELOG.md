@@ -16,9 +16,7 @@
   - ad.sh: Cleanup ado.sh ([#1972](https://github.com/ansible-collections/azure/pull/1972))
   - pr-pipeline.yml:
     - Set default for pr-pipeline to latest versions (python+ansible) ([#1972](https://github.com/ansible-collections/azure/pull/1972))
-    - Restore the trigger that synchronizes the dev branch during the PR test ([#1978](https://github.com/ansible-collections/azure/pull/1978}}
-  - azure-pipelines.yml: Remove unused azure-pipelines.yml ([#1976](https://github.com/ansible-collections/azure/pull/1976))
-  - release-pipelines.yml: Remove unused release-pipelines.yml ([#1976](https://github.com/ansible-collections/azure/pull/1976))
+    - Restore the trigger that synchronizes the dev branch during the PR test ([#1978](https://github.com/ansible-collections/azure/pull/1978))
   - azure_rm_virtualnetworkgatewayconnection_info.py: Support return 'local_network_gateway2' ([#1958](https://github.com/ansible-collections/azure/pull/1958))
   - azure_rm_loadbalancer.py: Add support for 'outbound_rules' ([#1965](https://github.com/ansible-collections/azure/pull/1965))
   - azure_rm_loadbalancer_info.py: Support return 'outbound_rules' ([#1965](https://github.com/ansible-collections/azure/pull/1965))
@@ -28,8 +26,6 @@
   - azure_rm_manageddisk_info.py: Support return 'last_ownership_update_time' ([#1984](https://github.com/ansible-collections/azure/pull/1984))
 
 ### BUG FIXING
-  - tests/integration/targets/inventory_azure/playbooks/test_inventory_flush_part_1.yml: Fix Lint errors caused by repeate descriptions ([#1973](https://github.com/ansible-collections/azure/pull/197))
-  - tests/integration/targets/inventory_azure/playbooks/test_inventory_cache.yml: Fix Lint errors caused by repeate descriptions ([#1973](https://github.com/ansible-collections/azure/pull/197))
   - azure_rm_managementgroup_info.py: Fix the error of devel branch ansible detecting invalid document ([#1975](https://github.com/ansible-collections/azure/pull/1975))
   - azure_rm_virtualnetworkgatewayconnection.py: Fix the bug that IPSec type connection not work ([#1958](https://github.com/ansible-collections/azure/pull/1958))
   - azure_rm_loganalyticsworkspace_info.py: Fix the function reference error ([#1983](https://github.com/ansible-collections/azure/pull/1983))
