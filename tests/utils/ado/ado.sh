@@ -91,7 +91,7 @@ echo '--------------------------------------------'
 ansible-test env --dump --show --timeout "${timeout}" --color -v
 if [ "sanity" = "${GROUP_NO}" ]
 then
-    ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color -c "tests/lint/ignore-lint.txt"
+    ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color
     ansible-test sanity --color -v --junit
 else
     # See: https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template
