@@ -986,7 +986,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                                 frontend_ip_configuration=None,
                                 protocol=value.protocol,
                                 frontend_port=value.frontend_port,
-                                idle_timeout=value.idle_timeout,
+                                idle_timeout=value.idle_timeout_in_minutes,
                                 backend_port=value.backend_port,
                                 enable_floating_ip=value.enable_floating_ip,
                                 enable_tcp_reset=value.enable_tcp_reset)
@@ -1015,7 +1015,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
                 if value.backend_address_pool is not None:
                     new_item['backend_address_pool'] = parse_resource_id(value.backend_address_pool.id)['resource_name']
                 if value.probe is not None:
-                    new_item['probe'] = parse_resource_id(value.probe.id)['name']
+                    new_item['probe'] = parse_resource_id(value.probe.id)['resource_name']
                 results['load_balancing_rules'].append(new_item)
         else:
             results['load_balancing_rules'] = None
