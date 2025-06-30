@@ -1,4 +1,36 @@
 # Change Log
+## v3.6.0 (2025-06-30)
+
+### NEW MODULES
+  - azure_rm_virtualnetworkgateway_info.py: ([#1966](https://github.com/ansible-collections/azure/pull/1966))
+  - azure_rm_tag.py: ([#1943](https://github.com/ansible-collections/azure/pull/1943))
+  - azure_rm_tag_info.py: ([#1943](https://github.com/ansible-collections/azure/pull/1943))
+  - azure_rm_postgresqlflexiblebackup.py: ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_postgresqlflexiblebackup_info.py: ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_postgresqlflexiblevirtualendpoint.py: ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_postgresqlflexiblevirtualendpoint_info.py: ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_postgresqlflexibleadministrator.py: ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_postgresqlflexibleadministrator_info.py: ([1914](https://github.com/ansible-collections/azure/pull/1914))
+
+### FEATURE ENHANCEMENT
+  - ad.sh: Cleanup ado.sh ([#1972](https://github.com/ansible-collections/azure/pull/1972))
+  - pr-pipeline.yml:
+    - Set default for pr-pipeline to latest versions (python+ansible) ([#1972](https://github.com/ansible-collections/azure/pull/1972))
+    - Restore the trigger that synchronizes the dev branch during the PR test ([#1978](https://github.com/ansible-collections/azure/pull/1978))
+  - azure_rm_virtualnetworkgatewayconnection_info.py: Support return 'local_network_gateway2' ([#1958](https://github.com/ansible-collections/azure/pull/1958))
+  - azure_rm_loadbalancer.py: Add support for 'outbound_rules' ([#1965](https://github.com/ansible-collections/azure/pull/1965))
+  - azure_rm_loadbalancer_info.py: Support return 'outbound_rules' ([#1965](https://github.com/ansible-collections/azure/pull/1965))
+  - azure_rm_keyvault.py: New function to purge the deleted vaults ([#1981](https://github.com/ansible-collections/azure/pull/1981))
+  - azure_rm_postgresqlflexibleserver.py: Add support for 'auth_config' ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_postgresqlflexibleserver_info.py: Support return 'auth_config' ([1914](https://github.com/ansible-collections/azure/pull/1914))
+  - azure_rm_manageddisk_info.py: Support return 'last_ownership_update_time' ([#1984](https://github.com/ansible-collections/azure/pull/1984))
+
+### BUG FIXING
+  - azure_rm_managementgroup_info.py: Fix the error of devel branch ansible detecting invalid document ([#1975](https://github.com/ansible-collections/azure/pull/1975))
+  - azure_rm_virtualnetworkgatewayconnection.py: Fix the bug that IPSec type connection not work ([#1958](https://github.com/ansible-collections/azure/pull/1958))
+  - azure_rm_loganalyticsworkspace_info.py: Fix the function reference error ([#1983](https://github.com/ansible-collections/azure/pull/1983))
+
+
 ## v3.5.0 (2025-06-18)
 
 ### NEW MODULES
