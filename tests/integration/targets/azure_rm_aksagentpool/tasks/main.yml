@@ -121,7 +121,7 @@
       enable_vtpm: true
       enable_secure_boot: true
     availability_zones:
-      - 2
+      - 3
   register: output
 
 - name: Assert the node agent pool created
@@ -148,7 +148,7 @@
       enable_vtpm: true
       enable_secure_boot: true
     availability_zones:
-      - 2
+      - 3
   register: output
 
 - name: Assert the node agent pool not changed
@@ -186,7 +186,7 @@
       enable_vtpm: false
       enable_secure_boot: false
     availability_zones:
-      - 2
+      - 3
   register: output
 
 - name: Assert the node agent pool udpated
@@ -204,7 +204,7 @@
 - name: Assert node agent configuration
   ansible.builtin.assert:
     that:
-      - output.aks_agent_pools[0].availability_zones == [2]
+      - output.aks_agent_pools[0].availability_zones == [3]
       - output.aks_agent_pools[0].min_count == 2
       - output.aks_agent_pools[0].max_count == 20
       - output.aks_agent_pools[0].type_properties_type == "VirtualMachineScaleSets"
@@ -231,7 +231,7 @@
     max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
     availability_zones:
-      - 2
+      - 3
     kubelet_disk_type: OS
     workload_runtime: OCIContainer
     os_sku: Ubuntu
@@ -275,7 +275,7 @@
     max_count: 10
     orchestrator_version: "{{ agentpool_version.azure_orchestrator_version[0] }}"
     availability_zones:
-      - 2
+      - 3
     kubelet_disk_type: OS
     workload_runtime: OCIContainer
     os_sku: Ubuntu

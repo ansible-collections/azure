@@ -22,7 +22,7 @@
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_D2_v2
+        vm_size: Standard_B2s
         mode: System
     api_server_access_profile:
       authorized_ip_ranges:
@@ -77,7 +77,7 @@
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_D2_v2
+        vm_size: Standard_B2s
         mode: System
     api_server_access_profile:
       authorized_ip_ranges:
@@ -117,7 +117,7 @@
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_D2_v2
+        vm_size: Standard_B2s
         mode: System
     api_server_access_profile:
       authorized_ip_ranges:
@@ -173,7 +173,7 @@
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_D2_v2
+        vm_size: Standard_B2s
         mode: System
     api_server_access_profile:
       authorized_ip_ranges:
@@ -213,7 +213,7 @@
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_D2_v2
+        vm_size: Standard_B2s
         mode: System
     api_server_access_profile:
       authorized_ip_ranges:
@@ -262,7 +262,7 @@
     agent_pool_profiles:
       - name: default
         count: 1
-        vm_size: Standard_D2_v2
+        vm_size: Standard_B2s
         mode: System
     api_server_access_profile:
       authorized_ip_ranges:
