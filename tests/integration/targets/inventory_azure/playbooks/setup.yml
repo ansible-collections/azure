@@ -85,6 +85,8 @@
           sku: 20_04-lts
           version: latest
         tags:
+          AAP_Managed: Local
+          Ansible_OS: ubuntu20
           Deployment-Method: Ansible
           Automation-Method: Ansible
       register: vm_output_2

@@ -1,0 +1,63 @@
+---
+plugin: azure.azcollection.azure_kql
+
+graph_query: |
+  Resources
+      | where type =~ 'microsoft.compute/virtualmachines'
+      | project vmId = tolower(tostring(id)),
+                inventory_hostname = name,
+                tags,
+                location,
+                resourceGroup,
+                osType = tostring(properties.storageProfile.osDisk.osType),
+                powerState = tostring(properties.extended.instanceView.powerState.displayStatus),
+                hostName = properties.osProfile.computerName,
+                subscription_id = subscriptionId
+      | join kind=inner (ResourceContainers
+          | where type=='microsoft.resources/subscriptions'
+          | extend subscription_name = name,
+                   subscription_id = subscriptionId,
+                   state = properties.state
+          | where state == 'Enabled'
+          | project subscription_name,
+                    subscription_id)
+            on subscription_id
+      | project-away subscription_id1
+      | join (Resources
+          | where type =~ 'microsoft.network/networkinterfaces'
+          | mv-expand ipconfig=properties.ipConfigurations
+          | project vmId = tolower(tostring(properties.virtualMachine.id)),
+                    privateIp = ipconfig.properties.privateIPAddress,
+                    publicIpId = tostring(ipconfig.properties.publicIPAddress.id)
+          | join kind=leftouter (Resources
+              | where type =~ 'microsoft.network/publicipaddresses'
+              | project publicIpId = id, publicIp = properties.ipAddress
+          ) on publicIpId
+          | project-away publicIpId, publicIpId1
+          | summarize privateIps = make_list(privateIp), publicIps = make_list(publicIp) by vmId
+      ) on vmId
+      | project-away vmId1
+      | sort by inventory_hostname asc
+
+compose:
+    ansible_host: "(publicIps + privateIps) | first"
+
+groups:
+  AAP_Managed: "'AAP_Managed' in (tags|list)"
+  ubuntu18: "'AAP_Managed' in (tags|list) and 'ubuntu18' in tags.Ansible_OS"
+  ubuntu20: "'AAP_Managed' in (tags|list) and 'ubuntu20' in tags.Ansible_OS"
+  ubuntu22: "'AAP_Managed' in (tags|list) and 'ubuntu22' in tags.Ansible_OS"
+  rhel7: "'AAP_Managed' in (tags|list) and 'rhel7' in tags.Ansible_OS"
+  rhel8: "'AAP_Managed' in (tags|list) and 'rhel8' in tags.Ansible_OS"
+  rhel9: "'AAP_Managed' in (tags|list) and 'rhel9' in tags.Ansible_OS"
+
+keyed_groups:
+  - prefix: ""
+    separator: ""
+    key: osType
+  - prefix: ""
+    separator: ""
+    key: location
+  - prefix: ""
+    separator: ""
+    key: powerState
