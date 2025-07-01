@@ -292,7 +292,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
             if self.show_deleted_secret:
                 self.results['secrets'] = self.list_deleted_secrets()
             elif self.list_properties:
-                self.results['secrets'] = self.list_secret_secret()
+                self.results['secrets'] = self.list_secret_attribute()
             else:
                 self.results['secrets'] = self.list_secrets()
 
@@ -353,7 +353,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 self.name, str(e)))
         return results
 
-    def list_secret_secret(self):
+    def list_secret_attribute(self):
         '''
         List identifiers and attributes of all secrets in the vault, not include secret value.
 
