@@ -37,7 +37,24 @@ azure.azcollection.*:
        "storage": "STORAGE",
        "web": "WEB"
       } as $mapping |
-      (.aks_agent_pools // .ansible_facts.azure_vm // .ansible_facts.azure_vmss // .bastion_host // .connection // .database // .deployment // .elastic_pool // .firewall_policy // .firewall_rule // .instances // .ip_security_restrictions // .link_service // .long_term_retention_policy // .response // .state // .short_term_retention_policy // .) |
+      (.aks_agent_pools //
+       .ansible_facts.azure_vm /
+       .ansible_facts.azure_vmss //
+       .bastion_host //
+       .connection //
+       .database //
+       .deployment //
+       .elastic_pool //
+       .firewall_policy //
+       .firewall_rule //
+       .instances //
+       .ip_security_restrictions //
+       .link_service //
+       .long_term_retention_policy //
+       .response //
+       .state //
+       .short_term_retention_policy //
+       .) |
       (if type=="array" then .[]
         else if type=="object" then .
               else empty end
