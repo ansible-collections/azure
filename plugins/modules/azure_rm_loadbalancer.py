@@ -966,7 +966,7 @@ class AzureRMLoadBalancer(AzureRMModuleBaseExt):
         else:
             results['probes'] = None
         if item.inbound_nat_pools is not None:
-            results['inbound_nat_pools']  = []
+            results['inbound_nat_pools'] = []
             for value in item.inbound_nat_pools:
                 new_item = dict(name=value.name,
                                 frontend_ip_configuration_name=None,
