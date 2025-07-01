@@ -38,12 +38,6 @@ options:
             - Set to I(show_delete_secret=true) to show deleted secrets. Set to I(show_deleted_secret=false) to show not deleted secrets.
         type: bool
         default: false
-    list_properties:
-        description:
-            - Whether list properties of the vault, not include secret values.
-            - Requires secrets/list permission.
-        type: bool
-        default: false
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -75,11 +69,6 @@ EXAMPLES = '''
     vault_uri: "https://myVault.vault.azure.net"
     name: mySecret
     version: fd2682392a504455b79c90dd04a1bf46
-
-- name: List all secrets properties in specific key vault
-  azure_rm_keyvaultsecret_info:
-    vault_uri: "https://myVault.vault.azure.net"
-    list_properties: true
 
 - name: List all secrets in specific key vault
   azure_rm_keyvaultsecret_info:
@@ -248,7 +237,6 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                                     vault_uri=dict(type='str', required=True),
                                     show_deleted_secret=dict(type='bool',
                                                              default=False),
-                                    list_properties=dict(type='bool', default=False),
                                     tags=dict(type='list', elements='str'))
 
         self.vault_uri = None
@@ -256,7 +244,6 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         self.version = None
         self.show_deleted_secret = False
         self.tags = None
-        self.list_properties = None
 
         self.results = dict(changed=False)
         self._client = None
@@ -280,7 +267,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
             if self.show_deleted_secret:
                 self.results['secrets'] = self.get_deleted_secret()
             else:
-                if self.list_properties:
+                if self.version == 'all':
                     self.results['secrets'] = self.get_secret_versions()
                 else:
                     response = self.get_secret(self.name)
@@ -291,8 +278,6 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
         else:
             if self.show_deleted_secret:
                 self.results['secrets'] = self.list_deleted_secrets()
-            elif self.list_properties:
-                self.results['secrets'] = self.list_secret_attribute()
             else:
                 self.results['secrets'] = self.list_secrets()
 
@@ -353,28 +338,6 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
                 self.name, str(e)))
         return results
 
-    def list_secret_attribute(self):
-        '''
-        List identifiers and attributes of all secrets in the vault, not include secret value.
-
-        :return: An iterator of secrets, excluding their values
-        '''
-        self.log("List all serect's attribute")
-
-        results = []
-        try:
-            response = self._client.list_properties_of_secrets()
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    item = secretitem_to_dict(item)
-                    if self.has_tags(item['tags'], self.tags):
-                        results.append(item)
-        except Exception as e:
-            self.fail("Failed to obtain all secret attributes, Exception as {0}.".format(str(e)))
-        return results
-
     def list_secrets(self):
         '''
         Lists secrets in specific key vault.
@@ -390,7 +353,7 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
             if response:
                 for item in response:
-                    item = self.get_secret(item._id.split('/')[-1])
+                    item = self.get_secret(item._id.split('/')[-1]) if item._attributes.enabled else None
                     if item is not None:
                         results.append(item)
         except Exception as e:
