@@ -24,6 +24,7 @@ options:
     name:
         description:
             - Secret name. If not set, will list all secrets in vault_uri.
+            - When obtaining secret information, ignore the secrets that have been disabled.
         type: str
     version:
         description:
