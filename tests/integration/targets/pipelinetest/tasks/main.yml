@@ -5,9 +5,19 @@
       - name: test2
       - name: test3
 - name: Print the variables
-  debug:
+  ansible.builtin.debug:
     var: test_var
 
 - name: Print the name
-  debug:
+  ansible.builtin.debug:
+    var: test_var | json_query('[*].name')
+  ignore_errors: true
+
+- name: Print the name
+  ansible.builtin.debug:
+    var: test_var | ansible.builtin.json_query('[*].name')
+  ignore_errors: true
+
+- name: Print the name
+  ansible.builtin.debug:
     var: test_var | community.general.json_query('[*].name')
