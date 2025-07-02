@@ -87,14 +87,14 @@ pushd ~/ > /dev/null
 pip list
 ansible --version
 pip list |grep jmespath
-echo ' ------- uninstall community.general-----'
-ansible-galaxy collection uninstall community.general
+#echo ' ------- uninstall community.general-----'
+#ansible-galaxy collection uninstall community.general
 
 echo ' ---- install community.general -----'
 ansible-galaxy collection install community.general
 
 echo ' ---------- community.general installed -----'
-ansible-galaxy collection list community.general
+ansible-galaxy collection list community.general -v
 echo ' ---------- Check the json_query is availiable -----'
 ansible-doc -l | grep json_query
 echo ' -------- pirnt ansible version -----'
