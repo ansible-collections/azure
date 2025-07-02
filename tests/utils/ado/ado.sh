@@ -85,6 +85,7 @@ echo '--------------------------------------------'
 pip list
 ansible --version
 pip list |grep jmespath
+ansible-galaxy collection install community.general
 ansible-galaxy collection list community.general
 
 echo '--------------------------------------------'
