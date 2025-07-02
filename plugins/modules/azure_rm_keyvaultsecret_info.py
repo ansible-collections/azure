@@ -23,7 +23,6 @@ options:
         type: str
     name:
         description:
-            - Secret name. If not set, will list all secrets in vault_uri.
             - Secret name. If not set, will list all enabled secrets in vault_uri (disabled secrets will be skipped).
         type: str
     version:
