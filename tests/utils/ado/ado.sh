@@ -90,8 +90,12 @@ pip list |grep jmespath
 ansible-galaxy collection install community.general
 
 ansible-galaxy collection list community.general
+echo ' ---------- community.general installed -----'
 ansible-galaxy collection list azure.azcollection
-ansible-doc community.general.json_query
+echo ' ---------- Check the json_query is availiable -----'
+ansible-doc -l | grep json_query
+echo ' -------- pirnt ansible version -----'
+ansible --version
 
 ls -l ~/.ansible/collections
 popd > /dev/null
