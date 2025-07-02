@@ -25,6 +25,7 @@ parameters:
       - 'all'
       - "setup_azure"
       - 'sanity'
+      - 'pipelinetest'
       - "inventory_azure" # Group 1
       - 'azure_rm_adapplication'
       - "azure_rm_acs"
@@ -195,8 +196,8 @@ jobs:
       - bash: |
           group_no="all"
           case "${{ parameters.MODULE_NAME }}" in
-            sanity)
-              gropu_no=sanity
+            pipelinetest)
+              gropu_no=1
               ;;
             inventory_azure)
               group_no=1

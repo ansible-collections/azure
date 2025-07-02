@@ -1,0 +1,13 @@
+- name: Set variables
+  ansible.builtin.set_fact:
+    test_var:
+      - name: test1
+      - name: test2
+      - name: test3
+- name: Print the variables
+  debug:
+    var: test_var
+
+- name: Print the name
+  debug:
+    var: test_var | community.general.json_query('[*].name')
