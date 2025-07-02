@@ -47,6 +47,8 @@ pushd ~/ansible > /dev/null
     pip install paramiko PyYAML Jinja2 httplib2 six
 popd > /dev/null
 
+ansible-galaxy collection install community.general
+
 echo '--------------------------------------------'
 echo 'Copy and install our collection to a test directory'
 echo '--------------------------------------------'
@@ -85,7 +87,6 @@ echo '--------------------------------------------'
 pip list
 ansible --version
 pip list |grep jmespath
-ansible-galaxy collection install community.general
 ansible-galaxy collection list community.general
 
 echo '--------------------------------------------'

@@ -20,4 +20,8 @@
 
 - name: Print the name
   ansible.builtin.debug:
+    var: test_var | community.general.json_query('[*].name')
+
+- name: Print the name
+  ansible.builtin.debug:
     var: test_var | ansible_collections.community.general.json_query('[*].name')
