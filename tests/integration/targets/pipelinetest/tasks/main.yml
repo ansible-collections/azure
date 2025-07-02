@@ -9,48 +9,22 @@
     var: test_var
 
 - name: Print the name
-  ansible.builtin.debug:
+  debug:
+    msg: "{{ test_var }}"
+
+- name: Print the json_query facts
+  debug:
     msg: "{{ test_var | json_query('[*].name') }}"
   ignore_errors: true
 
-- name: Print the name
-  ansible.builtin.debug:
+- name: Print the ansible.builtin.json_qery facts
+  debug:
     msg: "{{ test_var | ansible.builtin.json_query('[*].name') }}"
   ignore_errors: true
 
-- name: Print the name
-  ansible.builtin.debug:
+- name: Print the community.general.json_query facts
+  debug:
     msg: "{{ test_var | community.general.json_query('[*].name') }}"
-  ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: "{{ test_var | json_query('[*].name') }}"
-  ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: "{{ test_var | ansible.builtin.json_query('[*].name') }}"
-  ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: "{{ test_var | community.general.json_query('[*].name') }}"
-  ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: test_var | json_query('[*].name')
-  ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: test_var | ansible.builtin.json_query('[*].name')
-  ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: test_var | community.general.json_query('[*].name')
   ignore_errors: true
 
 - name: Print the name
