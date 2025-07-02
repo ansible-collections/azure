@@ -90,14 +90,14 @@ pip list |grep jmespath
 #echo ' ------- uninstall community.general-----'
 #ansible-galaxy collection uninstall community.general
 
-echo ' ---- install community.general -----'
-ansible-galaxy collection install community.general
+#echo ' ---- install community.general -----'
+#ansible-galaxy collection install community.general
 
-echo ' ---------- community.general installed -----'
-ansible-galaxy collection list community.general -v
-echo ' ---------- Check the json_query is availiable -----'
-ansible-doc -l | grep json_query
-echo ' -------- pirnt ansible version -----'
+#echo ' ---------- community.general installed -----'
+ansible-galaxy collection list community.general
+#echo ' ---------- Check the json_query is availiable -----'
+#ansible-doc -l | grep json_query
+#echo ' -------- pirnt ansible version -----'
 ansible --version
 
 ls -l ~/.ansible/collections
