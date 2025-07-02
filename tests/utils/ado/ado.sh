@@ -89,7 +89,9 @@ ansible --version
 pip list |grep jmespath
 ansible-galaxy collection install community.general
 ansible-galaxy collection list community.general
+ansible-galaxy collection list azure.azcollection
 ansible-doc community.general.json_query
+ls -l ~/.ansible/collections
 popd > /dev/null
 
 echo '--------------------------------------------'
