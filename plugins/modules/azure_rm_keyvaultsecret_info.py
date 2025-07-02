@@ -23,7 +23,7 @@ options:
         type: str
     name:
         description:
-            - Secret name. If not set, will list all secrets in vault_uri.
+            - Secret name. If not set, will list all enabled secrets in vault_uri (disabled secrets will be skipped).
         type: str
     version:
         description:
@@ -353,7 +353,9 @@ class AzureRMKeyVaultSecretInfo(AzureRMModuleBase):
 
             if response:
                 for item in response:
-                    item = self.get_secret(item._id.split('/')[-1])
+                    # The API will raise exception if the secret is disabled.
+                    # Exception as (Forbidden) Operation get is not allowed on a disabled secret.
+                    item = self.get_secret(item._id.split('/')[-1]) if item._attributes.enabled else None
                     if item is not None:
                         results.append(item)
         except Exception as e:
