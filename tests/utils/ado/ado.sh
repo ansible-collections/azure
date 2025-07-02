@@ -84,6 +84,8 @@ echo "List dependencies and ansible version"
 echo '--------------------------------------------'
 pip list
 ansible --version
+pip list |grep jmespath
+ansible-galaxy collection list community.general
 
 echo '--------------------------------------------'
 echo 'Test'
