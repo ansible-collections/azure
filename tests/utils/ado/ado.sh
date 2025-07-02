@@ -91,7 +91,7 @@ echo ' ------- uninstall community.general-----'
 ansible-galaxy collection uninstall community.general
 
 echo ' ---- install community.general -----'
-ansible-galaxy collection install community.general --force
+ansible-galaxy collection install community.general
 
 echo ' ---------- community.general installed -----'
 ansible-galaxy collection list community.general
