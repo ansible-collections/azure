@@ -27,6 +27,11 @@
     msg: "{{ test_var | community.general.json_query('[*].name') }}"
   ignore_errors: true
 
+- name: Print the community.general.json_query facts
+  debug:
+    msg: "{{ test_var | map(attribute='name') | list }}"
+  ignore_errors: true
+
 - name: Print the name
   ansible.builtin.debug:
     var: test_var | community.general.json_query('[*].name')
