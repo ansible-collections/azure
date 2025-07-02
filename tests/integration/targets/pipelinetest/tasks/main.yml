@@ -21,7 +21,8 @@
 - name: Print the name
   ansible.builtin.debug:
     var: test_var | community.general.json_query('[*].name')
+  ignore_errors: true
 
 - name: Print the name
   ansible.builtin.debug:
-    var: test_var | ansible_collections.community.general.json_query('[*].name')
+    var: test_var | community.general.json_query('[*].name')
