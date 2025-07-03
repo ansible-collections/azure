@@ -329,7 +329,6 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
 
 try:
-    import pandas as pd
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.core.tools import is_valid_resource_id
 except ImportError:
@@ -492,7 +491,6 @@ class AzureRMSubnet(AzureRMModuleBase):
 
         results = dict()
         changed = False
-        pd.DataFrame(dict(a=33))
 
         try:
             self.log('Fetching subnet {0}'.format(self.name))
