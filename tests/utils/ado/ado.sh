@@ -56,9 +56,9 @@ mkdir -p "${TEST_DIR}"
 cp -aT "${SHIPPABLE_BUILD_DIR}" "${TEST_DIR}"
 cd "${TEST_DIR}"
 mkdir -p shippable/testresults
-pip install  -I -r "${TEST_DIR}/requirements.txt"
-pip install  -I -r "${TEST_DIR}/sanity-requirements.txt"
-pip install ansible-lint
+python -m pip install  -I -r "${TEST_DIR}/requirements.txt"
+python -m pip install  -I -r "${TEST_DIR}/sanity-requirements.txt"
+python -m pip install ansible-lint
 
 timeout=180
 

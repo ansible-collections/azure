@@ -492,7 +492,7 @@ class AzureRMSubnet(AzureRMModuleBase):
 
         results = dict()
         changed = False
-        print(pd)
+        pd.DataFrame(dict(a=33))
 
         try:
             self.log('Fetching subnet {0}'.format(self.name))
