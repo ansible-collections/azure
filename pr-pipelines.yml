@@ -196,6 +196,9 @@ jobs:
       - bash: |
           group_no="all"
           case "${{ parameters.MODULE_NAME }}" in
+            sanity)
+              gropu_no=sanity
+              ;;
             pipelinetest)
               gropu_no=1
               ;;
