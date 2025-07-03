@@ -10,7 +10,6 @@
     msg: "{{ test_var }}"
 
 
-- name: Print the community.general.json_query facts
+- name: Print the name list
   ansible.builtin.debug:
     msg: "{{ test_var | map(attribute='name') | list }}"
-  ignore_errors: true
