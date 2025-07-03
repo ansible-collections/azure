@@ -327,6 +327,7 @@ state:
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
+import pandas as pd
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -491,6 +492,7 @@ class AzureRMSubnet(AzureRMModuleBase):
 
         results = dict()
         changed = False
+        print(pd)
 
         try:
             self.log('Fetching subnet {0}'.format(self.name))
