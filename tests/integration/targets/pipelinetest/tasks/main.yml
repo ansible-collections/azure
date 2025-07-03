@@ -4,34 +4,13 @@
       - name: test1
       - name: test2
       - name: test3
+
 - name: Print the variables
   ansible.builtin.debug:
-    var: test_var
-
-- name: Print the name
-  debug:
     msg: "{{ test_var }}"
 
-- name: Print the json_query facts
-  debug:
-    msg: "{{ test_var | json_query('[*].name') }}"
-  ignore_errors: true
-
-- name: Print the ansible.builtin.json_qery facts
-  debug:
-    msg: "{{ test_var | ansible.builtin.json_query('[*].name') }}"
-  ignore_errors: true
 
 - name: Print the community.general.json_query facts
-  debug:
-    msg: "{{ test_var | community.general.json_query('[*].name') }}"
-  ignore_errors: true
-
-- name: Print the community.general.json_query facts
-  debug:
+  ansible.builtin.debug:
     msg: "{{ test_var | map(attribute='name') | list }}"
   ignore_errors: true
-
-- name: Print the name
-  ansible.builtin.debug:
-    var: test_var | community.general.json_query('[*].name')
