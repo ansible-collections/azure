@@ -327,11 +327,11 @@ state:
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
-import pandas as pd
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.core.tools import is_valid_resource_id
+    import pandas as pd
 except ImportError:
     # This is handled in azure_rm_common
     pass
