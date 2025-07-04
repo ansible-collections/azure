@@ -85,7 +85,7 @@ certificates:
                 - CER contents of the X509 certificate.
             type: str
             returned: always
-            sample: "bytearray(b'0......................x16')"
+            sample: "MIID*****************0pRjXE"
         name:
             description:
                 - The name of the certificate.
@@ -360,7 +360,7 @@ except ImportError:
 def certificatebundle_to_dict(certificate):
     response = dict(policy=dict(), properties=dict(), cert_data=None)
     if certificate.cer is not None:
-        response['cert_data'] = str(certificate.cer)
+        response['cert_data'] = base64.b64encode(certificate.cer).decode('utf-8')
     response['name'] = certificate.name
     if certificate.policy is not None:
         response['policy']['issuer_name'] = certificate.policy._issuer_name
