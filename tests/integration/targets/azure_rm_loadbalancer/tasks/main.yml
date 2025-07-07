@@ -2,6 +2,7 @@
   ansible.builtin.set_fact:
     pipaname: "pipa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     pipbname: "pipb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    pipcname: "pipc{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbvnname: "lbvn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbname_a: "lba{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
     lbname_b: "lbb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -10,16 +11,23 @@
     lbname_d: "lbd{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
   run_once: true
 
-- name: Create public ip
+- name: Create the first public ip
   azure_rm_publicipaddress:
     name: "{{ pipbname }}"
     sku: Standard
     allocation_method: Static
     resource_group: '{{ resource_group }}'
 
-- name: Create public ip
+- name: Create the secondary public ip
   azure_rm_publicipaddress:
     name: "{{ pipaname }}"
+    resource_group: '{{ resource_group }}'
+    sku: Standard
+    allocation_method: Static
+
+- name: Create the third public ip
+  azure_rm_publicipaddress:
+    name: "{{ pipcname }}"
     resource_group: '{{ resource_group }}'
     sku: Standard
     allocation_method: Static
@@ -203,22 +211,36 @@
     that:
       - not output.changed
 
+- name: Get the load balancer facts
+  azure_rm_loadbalancer_info:
+    resource_group: '{{ resource_group }}'
+    name: "{{ lbname_b }}"
+  register: output
+
+- name: Assert the load balancer facts
+  ansible.builtin.assert:
+    that:
+      - output.loadbalancers[0].load_balancing_rules | length == 1
+      - output.loadbalancers[0].frontend_ip_configurations | length == 2
+      - output.loadbalancers[0].backend_address_pools | length == 2
+      - output.loadbalancers[0].probes | length == 1
+      - output.loadbalancers[0].load_balancing_rules[0].enable_tcp_reset is true
+      - output.loadbalancers[0].load_balancing_rules[0].frontend_port == 80
+      - output.loadbalancers[0].outbound_rules |length == 1
+
 - name: Create load balancer again to check idempotency - change something
   azure_rm_loadbalancer:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
     sku: Standard
     frontend_ip_configurations:
-      - name: frontendip0
-        public_ip_address: "{{ pipaname }}"
-      - name: frontendip1
-        public_ip_address: "{{ pipbname }}"
+      - name: frontendip2
+        public_ip_address: "{{ pipcname }}"
     backend_address_pools:
-      - name: backendaddrp0
-      - name: backendaddrp1
+      - name: backendaddrp2
     probes:
-      - name: prob0
-        port: 80
+      - name: prob2
+        port: 81
         protocol: Tcp
         interval: 10
         fail_count: 3
@@ -230,10 +252,10 @@
         frontend_port_range_end: 40
         backend_port: 80
     load_balancing_rules:
-      - name: lbr
-        frontend_ip_configuration: frontendip0
-        backend_address_pool: backendaddrp0
-        probe: prob0
+      - name: lbr2
+        frontend_ip_configuration: frontendip2
+        backend_address_pool: backendaddrp2
+        probe: prob2
         frontend_port: 81
         backend_port: 8080
         idle_timeout: 4
@@ -256,7 +278,7 @@
     that:
       - output.changed
 
-- name: Get the load balancer facts
+- name: The second time to get the load balancer facts
   azure_rm_loadbalancer_info:
     resource_group: '{{ resource_group }}'
     name: "{{ lbname_b }}"
@@ -265,9 +287,10 @@
 - name: Assert the load balancer facts
   ansible.builtin.assert:
     that:
-      - output.loadbalancers[0].load_balancing_rules[0].enable_tcp_reset is false
-      - output.loadbalancers[0].load_balancing_rules[0].frontend_port == 81
-      - output.loadbalancers[0].outbound_rules |length == 1
+      - output.loadbalancers[0].load_balancing_rules | length == 2
+      - output.loadbalancers[0].frontend_ip_configurations | length == 3
+      - output.loadbalancers[0].backend_address_pools | length == 3
+      - output.loadbalancers[0].probes | length == 2
 
 - name: Delete load balancer
   azure_rm_loadbalancer:
