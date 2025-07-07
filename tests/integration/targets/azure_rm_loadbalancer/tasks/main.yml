@@ -448,6 +448,7 @@
   with_items:
     - "{{ pipaname }}"
     - "{{ pipbname }}"
+    - "{{ pipcname }}"
 
 - name: Cleanup subnet
   azure_rm_subnet:
