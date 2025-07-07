@@ -21,10 +21,11 @@
     state: present
   loop:
     - "ansible-test-loganalyze-identity"
+  register: user_assigned_id_creation
 
 - name: Set identities IDs to test. Identities ansible-test-loganalyze-identity have to be created previously
   ansible.builtin.set_fact:
-    user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-loganalyze-identity"
+    user_identity_1: "{{ user_assigned_id_creation.results.0.response.id }}"
 
 - name: Create Log Analytics Workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
@@ -160,12 +161,414 @@
     name: "{{ name_rpfx }}"
     resource_group: "{{ resource_group }}"
     retention_in_days: "{{ retention_days }}"
-  register: output
+  register: log_analytics_workspace_output
 
 - name: Assert the log anaytics workspace already created
   ansible.builtin.assert:
     that:
+      - not log_analytics_workspace_output.changed
+
+- name: Create data collection rule (check mode)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    location: "{{ location }}"
+    kind: Linux
+    description: Test for linux data collection rule
+    data_sources:
+      performance_counters:
+        - name: perfCounterDataSource
+          streams:
+            - Microsoft-Perf
+          sampling_frequency_in_seconds: 60
+          counter_specifiers:
+            - Processor(*)\\% Processor Time
+            - Processor(*)\\% Idle Time
+    destinations:
+      log_analytics:
+        - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+          name: "{{ log_analytics_workspace_output.name }}"
+    data_flows:
+      - destinations:
+          - "{{ log_analytics_workspace_output.name }}"
+        streams:
+          - Microsoft-Perf
+  check_mode: true
+  register: output
+
+- name: Assert the data collection rule is created (check mode)
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create data collection rule (no tags)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    location: "{{ location }}"
+    kind: Linux
+    description: Test for linux data collection rule
+    data_sources:
+      performance_counters:
+        - name: perfCounterDataSource
+          streams:
+            - Microsoft-Perf
+          sampling_frequency_in_seconds: 60
+          counter_specifiers:
+            - Processor(*)\\% Processor Time
+            - Processor(*)\\% Idle Time
+    destinations:
+      log_analytics:
+        - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+          name: "{{ log_analytics_workspace_output.name }}"
+    data_flows:
+      - destinations:
+          - "{{ log_analytics_workspace_output.name }}"
+        streams:
+          - Microsoft-Perf
+  register: output
+
+- name: Assert the data collection rule is created (no tags)
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Create data collection rule (no tags, idempotency check)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    location: "{{ location }}"
+    kind: Linux
+    description: Test for linux data collection rule
+    data_sources:
+      performance_counters:
+        - name: perfCounterDataSource
+          streams:
+            - Microsoft-Perf
+          sampling_frequency_in_seconds: 60
+          counter_specifiers:
+            - Processor(*)\\% Processor Time
+            - Processor(*)\\% Idle Time
+    destinations:
+      log_analytics:
+        - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+          name: "{{ log_analytics_workspace_output.name }}"
+    data_flows:
+      - destinations:
+          - "{{ log_analytics_workspace_output.name }}"
+        streams:
+          - Microsoft-Perf
+  register: output
+
+- name: Assert the data collection rule is already created (no tags)
+  ansible.builtin.assert:
+    that:
       - not output.changed
+
+- name: Create data collection rule (creation tags)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-creationtags-DCR"
+    resource_group: "{{ resource_group }}"
+    location: "{{ location }}"
+    kind: Linux
+    description: Test for linux data collection rule
+    data_sources:
+      performance_counters:
+        - name: perfCounterDataSource
+          streams:
+            - Microsoft-Perf
+          sampling_frequency_in_seconds: 60
+          counter_specifiers:
+            - Processor(*)\\% Processor Time
+            - Processor(*)\\% Idle Time
+    destinations:
+      log_analytics:
+        - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+          name: "{{ log_analytics_workspace_output.name }}"
+    data_flows:
+      - destinations:
+          - "{{ log_analytics_workspace_output.name }}"
+        streams:
+          - Microsoft-Perf
+    tags:
+      CreationTag1: CreationTagValue1
+  register: output
+
+- name: Assert the data collection rule is created (creation tags)
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.datacollectionrule.tags.CreationTag1 == 'CreationTagValue1'
+
+- name: Create data collection rule (creation tags, idempotency check)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-creationtags-DCR"
+    resource_group: "{{ resource_group }}"
+    location: "{{ location }}"
+    kind: Linux
+    description: Test for linux data collection rule
+    data_sources:
+      performance_counters:
+        - name: perfCounterDataSource
+          streams:
+            - Microsoft-Perf
+          sampling_frequency_in_seconds: 60
+          counter_specifiers:
+            - Processor(*)\\% Processor Time
+            - Processor(*)\\% Idle Time
+    destinations:
+      log_analytics:
+        - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+          name: "{{ log_analytics_workspace_output.name }}"
+    data_flows:
+      - destinations:
+          - "{{ log_analytics_workspace_output.name }}"
+        streams:
+          - Microsoft-Perf
+    tags:
+      CreationTag1: CreationTagValue1
+  register: output
+
+- name: Assert the data collection rule is already created (creation tags)
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.datacollectionrule.tags.CreationTag1 == 'CreationTagValue1'
+
+- name: Add tag to data collection rule
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: false
+    tags:
+      TestTag1: TestValue1
+  register: output
+
+- name: Assert the data collection rule tags are updated
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
+
+- name: Add tag to data collection rule (Idempotency)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: false
+    tags:
+      TestTag1: TestValue1
+  register: output
+
+- name: Assert the data collection rule tags are updated (Idempotency)
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
+
+- name: Add tag to data collection rule (append)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: true
+    tags:
+      TestTag2: TestValue2
+  register: output
+
+- name: Assert the data collection rule tags are updated (append)
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
+      - output.datacollectionrule.tags.TestTag2 == 'TestValue2'
+
+- name: Add tag to data collection rule (append, idempotency)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: true
+    tags:
+      TestTag2: TestValue2
+  register: output
+
+- name: Assert the data collection rule tags are updated (append, idempotency)
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
+      - output.datacollectionrule.tags.TestTag2 == 'TestValue2'
+
+- name: Replace tags of data collection rule
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: false
+    tags:
+      TestTag3: TestValue3
+  register: output
+
+- name: Assert the data collection rule tags are replaced
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.datacollectionrule.tags.TestTag1 is not defined
+      - output.datacollectionrule.tags.TestTag2 is not defined
+      - output.datacollectionrule.tags.TestTag3 == 'TestValue3'
+
+- name: Replace tags of data collection rule (idempotency)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: false
+    tags:
+      TestTag3: TestValue3
+  register: output
+
+- name: Assert the data collection rule tags are replaced (idempotency)
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.datacollectionrule.tags.TestTag1 is not defined
+      - output.datacollectionrule.tags.TestTag2 is not defined
+      - output.datacollectionrule.tags.TestTag3 == 'TestValue3'
+
+- name: Remove tags of data collection rule
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: false
+  register: output
+
+- name: Assert the data collection rule tags are removed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+      - output.datacollectionrule.tags.TestTag1 is not defined
+      - output.datacollectionrule.tags.TestTag2 is not defined
+      - output.datacollectionrule.tags.TestTag3 is not defined
+
+- name: Remove tags of data collection rule (idempotency)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    append_tags: false
+  register: output
+
+- name: Assert the data collection rule tags are removed (idempotency)
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+      - output.datacollectionrule.tags.TestTag1 is not defined
+      - output.datacollectionrule.tags.TestTag2 is not defined
+      - output.datacollectionrule.tags.TestTag3 is not defined
+
+- name: Use info module to gather information on data collection rule (direct match)
+  azure.azcollection.azure_rm_monitordatacollectionrules_info:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that data collection rule is present (direct match)
+  ansible.builtin.assert:
+    that:
+      - output.datacollectionrules.0.name == name_rpfx + '-DCR'
+
+- name: Use info module to gather information on data collection rules in resource group (list resource group)
+  azure.azcollection.azure_rm_monitordatacollectionrules_info:
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that data collection rule is present (list resource group)
+  ansible.builtin.assert:
+    that:
+      - name_rpfx + '-DCR' in (output.datacollectionrules | map(attribute='name') | list)
+
+- name: Use info module to gather information on data collection rules in subscription (list subscription)
+  azure.azcollection.azure_rm_monitordatacollectionrules_info:
+  register: output
+
+- name: Assert that data collection rule is present (list subscription)
+  ansible.builtin.assert:
+    that:
+      - name_rpfx + '-DCR' in (output.datacollectionrules | map(attribute='name') | list)
+
+- name: Remove data collection rule (Check Mode On)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  check_mode: true
+  register: output
+
+- name: Assert the data collection rule is changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Remove data collection rule
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert the data collection rule is changed
+  ansible.builtin.assert:
+    that:
+      - output.changed
+
+- name: Remove data collection rule (check if actually removed)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert the data collection rule is already removed
+  ansible.builtin.assert:
+    that:
+      - not output.changed
+
+- name: Use info module to make sure data collection rule is gone (direct match)
+  azure.azcollection.azure_rm_monitordatacollectionrules_info:
+    name: "{{ name_rpfx }}-DCR"
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that data collection rule is not present (direct match)
+  ansible.builtin.assert:
+    that:
+      - output.datacollectionrules | length == 0
+
+- name: Use info module to gather information on data collection rules in resource group (list resource group)
+  azure.azcollection.azure_rm_monitordatacollectionrules_info:
+    resource_group: "{{ resource_group }}"
+  register: output
+
+- name: Assert that data collection rule is not present (list resource group)
+  ansible.builtin.assert:
+    that:
+      - name_rpfx + '-DCR' not in (output.datacollectionrules | map(attribute='name') | list)
+
+- name: Use info module to gather information on data collection rules in subscription (list subscription)
+  azure.azcollection.azure_rm_monitordatacollectionrules_info:
+  register: output
+
+- name: Assert that data collection rule is not present (list subscription)
+  ansible.builtin.assert:
+    that:
+      - name_rpfx + '-DCR' not in (output.datacollectionrules | map(attribute='name') | list)
+
+- name: Remove data collection rule (creation tags)
+  azure.azcollection.azure_rm_monitordatacollectionrules:
+    name: "{{ name_rpfx }}-creationtags-DCR"
+    resource_group: "{{ resource_group }}"
+    state: absent
+  register: output
+
+- name: Assert the data collection rule is changed (creation tags)
+  ansible.builtin.assert:
+    that:
+      - output.changed
 
 - name: Remove Log Analytics workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
