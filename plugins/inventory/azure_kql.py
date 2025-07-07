@@ -18,6 +18,9 @@ DOCUMENTATION = r'''
         - See https://learn.microsoft.com/en-us/azure/virtual-machines/resource-graph-samples?tabs=azure-cli
           for how to craft your own query.  The one requirement is that you need to provide inventory_hostname.
         - Requires a YAML configuration file whose name ends with 'azure_kql.(yml|yaml)'
+        - Be aware that currently Azure Resource Graph may not be consistent with the actual state of your
+          resources.  It can take up to 30 minutes for updates to propagate.  This applies both for resources
+          to appear and to dissapear.
 '''
 
 EXAMPLES = '''
