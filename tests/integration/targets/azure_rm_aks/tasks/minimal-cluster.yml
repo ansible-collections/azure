@@ -44,7 +44,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Get AKS fact
@@ -98,7 +98,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Use minimal parameters and user-assigned identity
   azure_rm_aks:
@@ -138,7 +138,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Get AKS fact
@@ -194,7 +194,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Use minimal parameters and user-assigned 2 identity
   azure_rm_aks:
@@ -234,7 +234,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Get AKS fact
@@ -284,7 +284,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the AKS instance
   azure_rm_aks:
@@ -296,7 +296,7 @@
 - name: Assert the AKS instance is well deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create Log Analytics Workspace
   azure_rm_loganalyticsworkspace:
@@ -348,7 +348,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new kubernet service with security parameters (Idempotent test)
   azure_rm_aks:
@@ -390,7 +390,7 @@
 - name: Assert the AKS instance no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the kubernet service security parameters parameters
   azure_rm_aks:
@@ -432,7 +432,7 @@
 - name: Assert the AKS instance updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get AKS fact
   azure_rm_aks_info:

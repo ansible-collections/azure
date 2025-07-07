@@ -32,7 +32,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update Origin Group (idempotent test)
@@ -55,7 +55,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create Origin Group 2
   azure_rm_afdorigingroup:
@@ -77,7 +77,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Load info for all Origin Groups
@@ -90,7 +90,7 @@
   ansible.builtin.assert:
     that:
       - output.afdorigingroups | length == 2
-      - not output.changed
+      - output is not changed
 
 - name: Delete Origin Group 2
   azure_rm_afdorigingroup:
@@ -103,7 +103,7 @@
 - name: Assert the resource was deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Load Origin Group info
@@ -124,7 +124,7 @@
       - output.afdorigingroups[0].load_balancing_settings.additional_latency_in_milliseconds == 50
       - output.afdorigingroups[0].load_balancing_settings.sample_size == 4
       - output.afdorigingroups[0].load_balancing_settings.successful_samples_required == 3
-      - not output.changed
+      - output is not changed
 
 - name: Update Origin Group (with different values)
   azure_rm_afdorigingroup:
@@ -146,7 +146,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update Origin Group (idempotent test)
   azure_rm_afdorigingroup:
@@ -168,7 +168,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Origin Group
   azure_rm_afdorigingroup:
@@ -181,7 +181,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete Origin Group (idempotent test)
   azure_rm_afdorigingroup:
@@ -194,7 +194,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Frontdoor Profile
   azure_rm_cdnprofile:

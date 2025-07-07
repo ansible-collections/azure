@@ -85,7 +85,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update Route (idempotent test)
@@ -111,7 +111,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.id
 
 - name: Load Route info
@@ -129,7 +129,7 @@
       - output.afdroutes[0].enabled_state == 'Enabled'
       - output.afdroutes[0].id
       - output.afdroutes[0].rule_sets | length == 1
-      - not output.changed
+      - output is not changed
 
 - name: Update Route (with different values)
   azure_rm_afdroute:
@@ -156,7 +156,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update Route (idempotent test)
@@ -184,7 +184,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.id
 
 - name: Delete Route
@@ -200,7 +200,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Delete Route (idempotent test)
@@ -216,7 +216,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Origin
   azure_rm_afdorigin:

@@ -221,7 +221,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to create v2 instance of Application Gateway with rewrite rules - no update
   azure_rm_appgateway:
@@ -379,7 +379,7 @@
 - name: Assert the resource instance is not updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Try to create v2 instance of Application Gateway with rewrite rules - update rewrite rule
   azure_rm_appgateway:
@@ -540,7 +540,7 @@
 - name: Assert the resource instance is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to create v2 instance of Application Gateway with UserAssigned identity
   azure_rm_appgateway:
@@ -706,7 +706,7 @@
 - name: Assert the resource instance is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to create v2 instance of Application Gateway with no Update
   azure_rm_appgateway:
@@ -872,7 +872,7 @@
 - name: Assert the resource instance is updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates
   azure_rm_appgateway:
@@ -1042,7 +1042,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 
 - name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates - no update
@@ -1213,7 +1213,7 @@
 - name: Assert the resource instance is not updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Configure public IP for waf_v2 gateway
   azure_rm_publicipaddress:
@@ -1387,7 +1387,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to create waf_v2 instance of Application Gateway with waf configuration - no update
   azure_rm_appgateway:
@@ -1554,7 +1554,7 @@
 - name: Assert the resource instance is not updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Configure public IP for waf policy gateway
   azure_rm_publicipaddress:
@@ -1723,7 +1723,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to create waf policy instance of Application Gateway - no update
   azure_rm_appgateway:
@@ -1885,7 +1885,7 @@
 - name: Assert the resource instance is not updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete v2 instance of Application Gateway
   azure_rm_appgateway:
@@ -1896,7 +1896,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete waf_v2 instance of Application Gateway
   azure_rm_appgateway:
@@ -1907,7 +1907,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete waf policy instance of Application Gateway
   azure_rm_appgateway:
@@ -1918,7 +1918,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete public IP for v2 gateway
   azure_rm_publicipaddress:
@@ -1929,7 +1929,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete public IP for waf v2 gateway
   azure_rm_publicipaddress:
@@ -1940,7 +1940,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete virtual network
   azure_rm_virtualnetwork:

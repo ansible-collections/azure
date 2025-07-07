@@ -38,7 +38,7 @@
 - name: Assert success on daily backup policy creation
   ansible.builtin.assert:
     that:
-      - daily_policy_output.changed
+      - daily_policy_output is changed
       - daily_policy_output.name == policy_name_daily
 
 - name: Assert Policy Success Retrieving Info
@@ -66,7 +66,7 @@
 - name: Assert that there is no change after second deletion of daily backup policy
   ansible.builtin.assert:
     that:
-      - not daily_policy_output_idempotent.changed
+      - daily_policy_output_idempotent is not changed
 
 - name: Create a daily enhanced VM backup policy
   azure.azcollection.azure_rm_backuppolicy:
@@ -93,7 +93,7 @@
 - name: Assert success on daily backup policy creation
   ansible.builtin.assert:
     that:
-      - daily_policy_output_enhanced.changed
+      - daily_policy_output_enhanced is changed
       - daily_policy_output_enhanced.name == policy_name_daily_enhanced
 
 - name: Assert Policy Success Retrieving Info
@@ -121,7 +121,7 @@
 - name: Assert success on update of daily policy
   ansible.builtin.assert:
     that:
-      - daily_policy_output_update.changed
+      - daily_policy_output_update is changed
       - daily_policy_output_update.name == policy_name_daily
 
 - name: Create a weekly VM backup policy
@@ -145,7 +145,7 @@
 - name: Assert success on weekly backup policy creation
   ansible.builtin.assert:
     that:
-      - weekly_policy_output.changed
+      - weekly_policy_output is changed
       - weekly_policy_output.name == policy_name_weekly
 
 - name: Update weekly VM backup policy
@@ -169,7 +169,7 @@
 - name: Assert success on update of weekly policy
   ansible.builtin.assert:
     that:
-      - weekly_policy_output_update.changed
+      - weekly_policy_output_update is changed
       - weekly_policy_output_update.name == policy_name_weekly
 
 - name: Delete a daily VM backup policy
@@ -183,7 +183,7 @@
 - name: Assert success on daily backup policy deletion
   ansible.builtin.assert:
     that:
-      - daily_policy_output_delete.changed
+      - daily_policy_output_delete is changed
 
 - name: Delete a daily VM enhanced backup policy
   azure.azcollection.azure_rm_backuppolicy:
@@ -196,7 +196,7 @@
 - name: Assert success on daily enhanced backup policy deletion
   ansible.builtin.assert:
     that:
-      - daily_policy_output_enhanced_delete.changed
+      - daily_policy_output_enhanced_delete is changed
 
 - name: Delete a weekly VM backup policy
   azure.azcollection.azure_rm_backuppolicy:
@@ -209,7 +209,7 @@
 - name: Assert success on weekly backup policy deletion
   ansible.builtin.assert:
     that:
-      - weekly_policy_output_delete.changed
+      - weekly_policy_output_delete is changed
 
 - name: Delete a daily VM backup policy (idempotent)
   azure.azcollection.azure_rm_backuppolicy:
@@ -222,7 +222,7 @@
 - name: Assert that there is no change after second deletion of daily backup policy
   ansible.builtin.assert:
     that:
-      - not daily_policy_output_delete_idempotent.changed
+      - daily_policy_output_delete_idempotent is not changed
 
 - name: Delete a daily VM enhanced backup policy (idempotent)
   azure.azcollection.azure_rm_backuppolicy:
@@ -235,7 +235,7 @@
 - name: Assert that there is no change after second deletion of daily enhanced backup policy
   ansible.builtin.assert:
     that:
-      - not daily_policy_output_enhanced_delete_idempotent.changed
+      - daily_policy_output_enhanced_delete_idempotent is not changed
 
 - name: Delete a weekly VM backup policy (idempotent)
   azure.azcollection.azure_rm_backuppolicy:
@@ -248,4 +248,4 @@
 - name: Assert that there is no change after second deletion of weekly backup policy
   ansible.builtin.assert:
     that:
-      - not weekly_policy_output_delete_idempotent.changed
+      - weekly_policy_output_delete_idempotent is not changed

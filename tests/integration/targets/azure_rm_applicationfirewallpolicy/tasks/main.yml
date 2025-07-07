@@ -64,7 +64,7 @@
 - name: Assert the there is no application firewall policy
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new application firewall policy
   azure_rm_applicationfirewallpolicy:
@@ -127,7 +127,7 @@
 - name: Assert the policy created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new application firewall policy (Idempotent Test)
   azure_rm_applicationfirewallpolicy:
@@ -190,7 +190,7 @@
 - name: Assert the policy no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the new application firewall policy
   azure_rm_applicationfirewallpolicy:
@@ -272,7 +272,7 @@
 - name: Assert the policy updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the application gateway facts
   azure_rm_applicationfirewallpolicy_info:
@@ -299,4 +299,4 @@
 - name: Assert the policy deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

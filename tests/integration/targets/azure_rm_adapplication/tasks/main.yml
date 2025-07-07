@@ -15,7 +15,7 @@
 
 - name: Assert create successfully
   ansible.builtin.assert:
-    that: create_output.changed
+    that: create_output is changed
 
 - name: Create application by app_id again idempotent test
   azure_rm_adapplication:
@@ -25,7 +25,7 @@
 
 - name: Assert application by app_id the idempotent success
   ansible.builtin.assert:
-    that: not output_app_id.changed
+    that: output_app_id is not changed
 
 - name: Create application with more parameters
   azure_rm_adapplication:
@@ -56,7 +56,7 @@
 
 - name: Assert secondary resource create success
   ansible.builtin.assert:
-    that: second_output.changed
+    that: second_output is changed
 
 - name: Get ad app info by object id
   azure_rm_adapplication_info:
@@ -101,7 +101,7 @@
 
 - name: Assert the application delete success
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete ad app by app id again
   azure_rm_adapplication:
@@ -112,7 +112,7 @@
 
 - name: Assert the secondary application delete no changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Get ad app info by app id
   azure_rm_adapplication_info:

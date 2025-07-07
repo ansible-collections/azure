@@ -48,7 +48,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update Origin (idempotent test)
@@ -69,7 +69,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Load Origin info
   azure_rm_afdorigin_info:
@@ -91,7 +91,7 @@
       - output.afdorigins[0].origin_host_header == '10.0.0.1'
       - output.afdorigins[0].priority == 1
       - output.afdorigins[0].weight == 123
-      - not output.changed
+      - output is not changed
 
 - name: Create Origin 2
   azure_rm_afdorigin:
@@ -111,7 +111,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Load Origin info for both
@@ -125,7 +125,7 @@
   ansible.builtin.assert:
     that:
       - output.afdorigins | length == 2
-      - not output.changed
+      - output is not changed
 
 - name: Update Origin (with different values)
   azure_rm_afdorigin:
@@ -144,7 +144,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update Origin Group (idempotent test)
   azure_rm_afdorigin:
@@ -163,7 +163,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Origin
   azure_rm_afdorigin:
@@ -177,7 +177,7 @@
 - name: Assert the resource was deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete Origin 2
   azure_rm_afdorigin:
@@ -191,7 +191,7 @@
 - name: Assert the resource was delete
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete Origin (idempotent test)
   azure_rm_afdorigin:
@@ -205,7 +205,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Origin Group
   azure_rm_afdorigingroup:

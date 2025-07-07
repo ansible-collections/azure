@@ -29,7 +29,7 @@
 - name: Assert the automation runbook is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create automation runbook with default parameters (idempotent)
   azure_rm_automationrunbook:
@@ -43,7 +43,7 @@
 - name: Assert the automation runbook is well created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create automation runbook with more paramters
   azure_rm_automationrunbook:
@@ -62,7 +62,7 @@
 - name: Assert the automation runbook is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update automation runbook with more paramters
   azure_rm_automationrunbook:
@@ -81,7 +81,7 @@
 - name: Assert the automation runbook is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Publish automation runbook
   azure_rm_automationrunbook:
@@ -94,7 +94,7 @@
 - name: Assert the automation runbook is well published
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get automation runbook
   azure_rm_automationrunbook_info:

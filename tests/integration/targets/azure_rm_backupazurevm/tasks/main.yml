@@ -17,7 +17,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Trigger an on-demand backup for a protected Azure VM
   azure_rm_backupazurevm:
@@ -32,7 +32,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Stop protection but retain existing data
   azure_rm_backupazurevm:
@@ -46,7 +46,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get backup azure vm info
   azure_rm_backupazurevm_info:
@@ -73,4 +73,4 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

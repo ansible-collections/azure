@@ -15,8 +15,8 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed == True
-      - output.failed == False
+      - output is changed
+      - output is not failed
 
 - name: Recreate api management service idempotent test
   azure_rm_apimanagementservice:
@@ -31,8 +31,8 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed == False
-      - output.failed == False
+      - output is not changed
+      - output is not failed
 
 - name: Get api management service information
   azure_rm_apimanagementservice_info:
@@ -55,4 +55,4 @@
 - name: Assert the changes
   ansible.builtin.assert:
     that:
-      - output.changed == True
+      - output is changed

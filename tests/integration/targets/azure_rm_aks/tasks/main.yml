@@ -110,7 +110,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Get AKS fact
@@ -161,7 +161,7 @@
 - name: Assert the AKS instance is well update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get AKS fact
   azure_rm_aks_info:
@@ -219,7 +219,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get available version
   azure_rm_aksversion_info:
@@ -262,7 +262,7 @@
 - name: Assert the AKS instance is upgraded
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.kubernetes_version == version1.azure_aks_versions[0]
       - output.addon.httpApplicationRouting.enabled ==  False
       - output.agent_pool_profiles[0].count == 1
@@ -303,7 +303,7 @@
 - name: Assert the aks idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Upgrade the AKS instance with agent pool profiles
   azure_rm_aks:
@@ -341,7 +341,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
   ignore_errors: true
   register: ignore_errors_register
@@ -381,7 +381,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Upgrade the AKS instance with multiple agent pool profiles
   azure_rm_aks:
@@ -424,7 +424,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - "output.agent_pool_profiles | length == 2"
       - output.provisioning_state == 'Succeeded'
       - output.agent_pool_profiles[1].mode == 'User'
@@ -470,7 +470,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the default2 agent_pool mode from User to System
   azure_rm_aks:
@@ -513,7 +513,7 @@
 - name: Assert the AKS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - "output.agent_pool_profiles | length == 2"
       - output.provisioning_state == 'Succeeded'
       - output.agent_pool_profiles[1].mode == 'System'
@@ -579,7 +579,7 @@
 - name: Assert the AKS instance is well deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the AKS instance (idempotent)
   azure_rm_aks:
@@ -591,7 +591,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get AKS fact
   azure_rm_aks_info:

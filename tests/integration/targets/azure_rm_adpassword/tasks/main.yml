@@ -12,7 +12,7 @@
 - name: Assert the password created
   ansible.builtin.assert:
     that:
-      - ad_fact.changed
+      - ad_fact is changed
 
 - name: Create second ad password by app_object_id
   azure_rm_adpassword:
@@ -23,7 +23,7 @@
 - name: Assert the secondary password created
   ansible.builtin.assert:
     that:
-      - ad_fact02.changed
+      - ad_fact02 is changed
 
 - name: Create ad service principal
   azure_rm_adserviceprincipal:
@@ -47,7 +47,7 @@
 - name: Assert the third add password created
   ansible.builtin.assert:
     that:
-      - ad_fact03.changed
+      - ad_fact03 is changed
 
 - name: Can't update ad password
   azure_rm_adpassword:
@@ -82,7 +82,7 @@
 - name: Assert the ad password deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete all ad password
   azure_rm_adpassword:
@@ -94,4 +94,4 @@
 - name: Assert the ad password delete
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

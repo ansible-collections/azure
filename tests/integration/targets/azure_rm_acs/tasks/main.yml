@@ -22,7 +22,7 @@
 - name: Assert the ACS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Scale the ACS instance from 1 to 2 - DCOS
@@ -49,7 +49,7 @@
 - name: Assert the ACS instance is well scaled
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.agent_pool_profiles[0].count == 2
 
 - name: Delete the DCOS ACS instance - DCOS
@@ -97,7 +97,7 @@
 - name: Assert the ACS instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Scale the ACS instance from 1 to 2 - Swarm
@@ -124,7 +124,7 @@
 - name: Assert the ACS instance is well scaled
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.agent_pool_profiles[0].count == 2
 
 - name: Delete the ACS instance - Swarm

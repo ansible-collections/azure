@@ -88,7 +88,7 @@
 - name: Assert the bastion host created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create bastion host (Idempotent Test)
   azure_rm_bastionhost:
@@ -116,7 +116,7 @@
 - name: Assert the bastion host no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Pause for 15 mimutes to Bastion host updating
   ansible.builtin.command:
@@ -149,7 +149,7 @@
 - name: Assert the bastion host updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get bastion host info
   azure_rm_bastionhost_info:
