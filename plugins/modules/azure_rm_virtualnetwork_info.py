@@ -251,7 +251,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
             virtualnetworks=[]
         )
 
-        self.required_if = [('name', '*', ['resource_group'])]
+        self.required_by = {'name': 'resource_group'}
 
         self.name = None
         self.resource_group = None
@@ -262,7 +262,7 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
                                                           supports_check_mode=True,
                                                           supports_tags=False,
                                                           facts_module=True,
-                                                          required_if=self.required_if)
+                                                          required_by=self.required_by)
 
     def exec_module(self, **kwargs):
 

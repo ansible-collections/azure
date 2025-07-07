@@ -1358,10 +1358,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ansible_facts=dict(azure_vm=None)
         )
 
-        required_if = [('os_disk_encryption_set', '*', ['managed_disk_type'])]
+        required_by = {'os_disk_encryption_set': 'managed_disk_type'}
 
         super(AzureRMVirtualMachine, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                    supports_check_mode=True, required_if=required_if)
+                                                    supports_check_mode=True, required_by=required_by)
 
     @property
     def boot_diagnostics_present(self):
