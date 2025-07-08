@@ -108,7 +108,7 @@
 - name: Assert the Managed policy created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create storage account management policy rule(Idempotent test)
   azure_rm_storageaccountmanagementpolicy:
@@ -160,7 +160,7 @@
 - name: Assert the Managed policy no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create storage account management policy rule(Updating test)
   azure_rm_storageaccountmanagementpolicy:
@@ -212,7 +212,7 @@
 - name: Assert the Managed policy updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get storage account management policy
   azure_rm_storageaccountmanagementpolicy_info:
@@ -239,4 +239,4 @@
 - name: Assert the Managed policy deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

@@ -15,7 +15,7 @@
 
 - name: Assert that host group is created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create a host group again (Idempotent test)
   azure_rm_hostgroup:
@@ -30,7 +30,7 @@
 
 - name: Assert that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update a host group
   azure_rm_hostgroup:
@@ -47,7 +47,7 @@
 
 - name: Assert that host group is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get host group facts
   azure_rm_hostgroup_info:
@@ -58,7 +58,7 @@
 - name: Assert the host group facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.hostgroups[0].name == "{{ group_name }}"
       - results.hostgroups[0].location == "eastus"
       - results.hostgroups[0].platform_fault_domain_count == 1
@@ -74,7 +74,7 @@
 
 - name: Assert that host group is deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete host group again (Idempotent test)
   azure_rm_hostgroup:
@@ -85,4 +85,4 @@
 
 - name: Asset that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

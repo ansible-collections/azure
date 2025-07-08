@@ -36,7 +36,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create Azure Recovery Service vault (idempotent)
   azure_rm_recoveryservicesvault:
@@ -51,7 +51,7 @@
 - name: Assert that output has no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update Azure Recovery Service vault with UserAssigned
   azure_rm_recoveryservicesvault:
@@ -69,7 +69,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update Azure Recovery Service vault with UserAssignd (idempotent)
   azure_rm_recoveryservicesvault:
@@ -87,7 +87,7 @@
 - name: Assert that output has no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update Azure Recovery Service vault with UserAssigned X2
   azure_rm_recoveryservicesvault:
@@ -106,7 +106,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update Azure Recovery Service vault with UserAssignd X2 (idempotent)
   azure_rm_recoveryservicesvault:
@@ -125,7 +125,7 @@
 - name: Assert that output has no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get Azure Recovery Service Vault Details
   azure_rm_recoveryservicesvault_info:
@@ -199,7 +199,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Pause 3 minutes - wait for resource update to finish
   ansible.builtin.pause:
@@ -214,7 +214,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.response.tags.TestTag1 is defined
       - output.response.tags.TestTag1 == 'TestValue1'
 
@@ -232,7 +232,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Pause 3 minutes - wait for resource update to finish
   ansible.builtin.pause:
@@ -247,7 +247,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.response.tags.TestTag1 is defined
       - output.response.tags.TestTag1 == 'TestValue1'
       - output.response.tags.TestTag2 is defined
@@ -267,7 +267,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Pause 3 minutes - wait for resource update to finish
   ansible.builtin.pause:
@@ -282,7 +282,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - not output.response.tags.TestTag1 is defined
       - not output.response.tags.TestTag2 is defined
       - output.response.tags.TestTag3 is defined
@@ -299,7 +299,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

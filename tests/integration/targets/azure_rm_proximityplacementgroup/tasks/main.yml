@@ -12,7 +12,7 @@
 
 - name: Assert that placement group is created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create a proximity placement group again (Idempotent test)
   azure_rm_proximityplacementgroup:
@@ -24,7 +24,7 @@
 
 - name: Assert that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update a proximity placement group
   azure_rm_proximityplacementgroup:
@@ -38,7 +38,7 @@
 
 - name: Assert that placement group is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get proximity placement group facts
   azure_rm_proximityplacementgroup_info:
@@ -49,7 +49,7 @@
 - name: Assert the proximity placement facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.proximityplacementgroups[0].name == "{{ group_name }}"
       - results.proximityplacementgroups[0].location == "eastus"
       - results.proximityplacementgroups[0].proximity_placement_group_type == "Standard"
@@ -63,7 +63,7 @@
 
 - name: Assert that placement group is deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete proximity placement group again (Idempotent test)
   azure_rm_proximityplacementgroup:
@@ -74,4 +74,4 @@
 
 - name: Asset that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

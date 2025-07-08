@@ -38,7 +38,7 @@
   ansible.builtin.assert:
     that:
       - output.id
-      - output.changed
+      - output is changed
       - output.tags
 
 - name: Create a namespace (idempontent)
@@ -51,7 +51,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update namespace - ManagedIdentity SystemAssigned
   azure_rm_servicebus:
@@ -65,7 +65,7 @@
 - name: Assert SystemAssigned
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.identity.type == "SystemAssigned"
 
 - name: Gather facts
@@ -94,7 +94,7 @@
 - name: Assert UserAssigned
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.identity.type == "UserAssigned"
       - output.identity.user_assigned_identities | length == 1
       - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
@@ -114,7 +114,7 @@
 - name: Assert UserAssigned
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.identity.type == "UserAssigned"
       - output.identity.user_assigned_identities | length == 2
       - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
@@ -136,7 +136,7 @@
 - name: Assert UserAssigned
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.identity.type == "UserAssigned"
       - output.identity.user_assigned_identities | length == 1
       - output.identity.user_assigned_identities[managed_identity_ids[2]] is defined
@@ -158,7 +158,7 @@
 - name: Assert the service bus created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update the secondary namespace
   azure_rm_servicebus:
@@ -177,7 +177,7 @@
 - name: Assert the service bus udpated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather the namespace facts
   azure_rm_servicebus_info:
@@ -209,7 +209,7 @@
   ansible.builtin.assert:
     that:
       - queue.id
-      - queue.changed
+      - queue is changed
 
 - name: Create a topic (check mode)
   azure_rm_servicebustopic:
@@ -225,7 +225,7 @@
 - name: Assert the check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a topic
   azure_rm_servicebustopic:
@@ -240,7 +240,7 @@
 - name: Assert the topic created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
       - "'subscription_count' not in output"
 
@@ -257,7 +257,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create test policy
   azure_rm_servicebussaspolicy:
@@ -279,7 +279,7 @@
   ansible.builtin.assert:
     that:
       - subs.id
-      - subs.changed
+      - subs is changed
 
 - name: Retrive topic
   azure_rm_servicebus_info:

@@ -26,8 +26,8 @@
 - name: Assert the second virtual network created
   ansible.builtin.assert:
     that:
-      - vnet1.changed
-      - vnet2.changed
+      - vnet1 is changed
+      - vnet2 is changed
 
 - name: Create virtual network peering (check mode)
   azure_rm_virtualnetworkpeering:
@@ -44,7 +44,7 @@
 
 - name: Assert the virtual network peering check mode
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create virtual network peering
   azure_rm_virtualnetworkpeering:
@@ -60,7 +60,7 @@
 
 - name: Assert the virtual network peering created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Update virtual network peering (idempotent)
   azure_rm_virtualnetworkpeering:
@@ -76,7 +76,7 @@
 
 - name: Assert the virtual network peering idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update virtual network peering
   azure_rm_virtualnetworkpeering:
@@ -92,7 +92,7 @@
 
 - name: Assert the virtual network peering updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get facts
   azure_rm_virtualnetworkpeering_info:

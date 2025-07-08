@@ -43,7 +43,7 @@
 - name: Assert there is no log analytics workspace
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get Log Analytics workspace information
   azure_rm_loganalyticsworkspace_info:
@@ -77,7 +77,7 @@
 - name: Assert the log analytics workspace created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.retention_in_days == 30
       - output.intelligence_packs | selectattr('name', 'equalto', 'Backup') | map(attribute='enabled') | first == true
       - output.intelligence_packs | selectattr('name', 'equalto', 'Containers') | map(attribute='enabled') | first == true
@@ -104,7 +104,7 @@
 - name: Assert the log analytics workspace updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.retention_in_days == retention_days
       - output.tags.key2 == 'value2'
       - output.identity.type == 'UserAssigned'
@@ -123,7 +123,7 @@
 - name: Assert the log analytics workspace facts
   ansible.builtin.assert:
     that:
-      - not facts.changed
+      - facts is not changed
       - facts.workspaces | length > 0
       - facts.workspaces[0].retention_in_days == retention_days
       - facts.workspaces[0].intelligence_packs | length > 0
@@ -147,7 +147,7 @@
 - name: Assert the log analytics workspace facts
   ansible.builtin.assert:
     that:
-      - not facts.changed
+      - facts is not changed
       - facts.workspaces | length > 0
       - facts.workspaces[0].retention_in_days == retention_days
       - facts.workspaces[0].intelligence_packs is not defined
@@ -166,7 +166,7 @@
 - name: Assert the log anaytics workspace already created
   ansible.builtin.assert:
     that:
-      - not log_analytics_workspace_output.changed
+      - log_analytics_workspace_output is not changed
 
 - name: Create data collection rule (check mode)
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -199,7 +199,7 @@
 - name: Assert the data collection rule is created (check mode)
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create data collection rule (no tags)
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -231,7 +231,7 @@
 - name: Assert the data collection rule is created (no tags)
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create data collection rule (no tags, idempotency check)
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -263,7 +263,7 @@
 - name: Assert the data collection rule is already created (no tags)
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create data collection rule (creation tags)
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -297,7 +297,7 @@
 - name: Assert the data collection rule is created (creation tags)
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.datacollectionrule.tags.CreationTag1 == 'CreationTagValue1'
 
 - name: Create data collection rule (creation tags, idempotency check)
@@ -332,7 +332,7 @@
 - name: Assert the data collection rule is already created (creation tags)
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.datacollectionrule.tags.CreationTag1 == 'CreationTagValue1'
 
 - name: Add tag to data collection rule
@@ -347,7 +347,7 @@
 - name: Assert the data collection rule tags are updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
 
 - name: Add tag to data collection rule (Idempotency)
@@ -362,7 +362,7 @@
 - name: Assert the data collection rule tags are updated (Idempotency)
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
 
 - name: Add tag to data collection rule (append)
@@ -377,7 +377,7 @@
 - name: Assert the data collection rule tags are updated (append)
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
       - output.datacollectionrule.tags.TestTag2 == 'TestValue2'
 
@@ -393,7 +393,7 @@
 - name: Assert the data collection rule tags are updated (append, idempotency)
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.datacollectionrule.tags.TestTag1 == 'TestValue1'
       - output.datacollectionrule.tags.TestTag2 == 'TestValue2'
 
@@ -409,7 +409,7 @@
 - name: Assert the data collection rule tags are replaced
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.datacollectionrule.tags.TestTag1 is not defined
       - output.datacollectionrule.tags.TestTag2 is not defined
       - output.datacollectionrule.tags.TestTag3 == 'TestValue3'
@@ -426,7 +426,7 @@
 - name: Assert the data collection rule tags are replaced (idempotency)
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.datacollectionrule.tags.TestTag1 is not defined
       - output.datacollectionrule.tags.TestTag2 is not defined
       - output.datacollectionrule.tags.TestTag3 == 'TestValue3'
@@ -441,7 +441,7 @@
 - name: Assert the data collection rule tags are removed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.datacollectionrule.tags.TestTag1 is not defined
       - output.datacollectionrule.tags.TestTag2 is not defined
       - output.datacollectionrule.tags.TestTag3 is not defined
@@ -456,7 +456,7 @@
 - name: Assert the data collection rule tags are removed (idempotency)
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.datacollectionrule.tags.TestTag1 is not defined
       - output.datacollectionrule.tags.TestTag2 is not defined
       - output.datacollectionrule.tags.TestTag3 is not defined
@@ -502,7 +502,7 @@
 - name: Assert the data collection rule is changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Remove data collection rule
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -514,7 +514,7 @@
 - name: Assert the data collection rule is changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Remove data collection rule (check if actually removed)
   azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -526,7 +526,7 @@
 - name: Assert the data collection rule is already removed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Use info module to make sure data collection rule is gone (direct match)
   azure.azcollection.azure_rm_monitordatacollectionrules_info:
@@ -568,7 +568,7 @@
 - name: Assert the data collection rule is changed (creation tags)
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Remove Log Analytics workspace (Check Mode On)
   azure_rm_loganalyticsworkspace:
@@ -581,7 +581,7 @@
 - name: Assert there is no log anaytics workspace
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get Log Analytics workspace information(Check still exists after remove Check Mode On)
   azure_rm_loganalyticsworkspace_info:
@@ -626,7 +626,7 @@
 - name: Assert the log analytics workspace deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get Log Analytics workspace information
   azure_rm_loganalyticsworkspace_info:
@@ -650,7 +650,7 @@
 - name: Assert the log analytics workspace deleted
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Destroy User Managed Identities
   azure_rm_resource:

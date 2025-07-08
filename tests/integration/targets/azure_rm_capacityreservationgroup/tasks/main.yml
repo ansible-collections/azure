@@ -27,7 +27,7 @@
 - name: Assert the capacity reservation group created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update the capacity reservation group's tag
   azure_rm_capacityreservationgroup:
@@ -43,7 +43,7 @@
 - name: Assert the capacity reservation group updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Recreate the capacity reservation group(idempotent test)
   azure_rm_capacityreservationgroup:
@@ -59,7 +59,7 @@
 - name: Assert the capacity reservation group no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get capacity reservation group by name
   azure_rm_capacityreservationgroup_info:
@@ -82,4 +82,4 @@
 - name: Assert the capacity reservation group deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

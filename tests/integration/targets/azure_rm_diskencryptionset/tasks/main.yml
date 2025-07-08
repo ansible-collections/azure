@@ -102,7 +102,7 @@
 
 - name: Assert that disk encryption set is created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create disk encryption set (Idempotent test)
   azure_rm_diskencryptionset:
@@ -115,7 +115,7 @@
 
 - name: Assert that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update disk encryption set
   azure_rm_diskencryptionset:
@@ -130,7 +130,7 @@
 
 - name: Assert that disk encryption set is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get disk encryption set facts
   azure_rm_diskencryptionset_info:
@@ -141,7 +141,7 @@
 - name: Assert the disk encryption facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.diskencryptionsets[0].id != None
       - results.diskencryptionsets[0].name == "{{ set_name }}"
       - results.diskencryptionsets[0].active_key != None
@@ -165,7 +165,7 @@
 
 - name: Assert that disk encryption set with first UserAssigned Identity was updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create disk encryption set with first UserAssigned Identity (Idempotent test)
   azure_rm_diskencryptionset:
@@ -183,7 +183,7 @@
 
 - name: Assert that output is not changed (with first UserAssigned Identity)
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Get disk encryption set with first UserAssigned Identity facts
   azure_rm_diskencryptionset_info:
@@ -194,7 +194,7 @@
 - name: Assert the disk encryption set  with UserAssigned Identity facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.diskencryptionsets[0].id != None
       - results.diskencryptionsets[0].name == "{{ set_name }}"
       - results.diskencryptionsets[0].active_key != None
@@ -220,7 +220,7 @@
 
 - name: Assert that disk encryption set with second UserAssigned is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get disk encryption set with UserAssigned Identity facts
   azure_rm_diskencryptionset_info:
@@ -231,7 +231,7 @@
 - name: Assert the disk encryption set  with second UserAssigned Identity facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.diskencryptionsets[0].id != None
       - results.diskencryptionsets[0].name == "{{ set_name }}"
       - results.diskencryptionsets[0].active_key != None
@@ -257,7 +257,7 @@
 
 - name: Assert that disk encryption set with (SystemAssigned, UserAssigned) is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get disk encryption set with (SystemAssigned, UserAssigned) facts
   azure_rm_diskencryptionset_info:
@@ -268,7 +268,7 @@
 - name: Assert the disk encryption set with (SystemAssigned, UserAssigned) facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.diskencryptionsets[0].id != None
       - results.diskencryptionsets[0].name == "{{ set_name }}"
       - results.diskencryptionsets[0].active_key != None
@@ -287,7 +287,7 @@
 
 - name: Assert that disk encryption set is deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete disk encryption set (Idempotent test)
   azure_rm_diskencryptionset:
@@ -298,7 +298,7 @@
 
 - name: Asset that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Delete the Key Vault
   azure_rm_keyvault:

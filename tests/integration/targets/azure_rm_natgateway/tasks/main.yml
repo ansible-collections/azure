@@ -34,7 +34,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get NAT gateways
   azure_rm_natgateway_info:
@@ -53,7 +53,7 @@
 - name: Assert that gateway is well created
   ansible.builtin.assert:
     that:
-      - natgw_output.changed
+      - natgw_output is changed
       - natgw_output.resource_group == "{{ resource_group }}"
       - natgw_output.name == "nat-gateway{{ rpfx }}1"
       - natgw_output.location == "{{ rg_location }}"
@@ -75,7 +75,7 @@
 - name: Assert the resource instance is not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Try to update instance of NAT Gateway - change timeout
   azure_rm_natgateway:
@@ -86,7 +86,7 @@
 - name: Assert the resource instance is changed
   ansible.builtin.assert:
     that:
-      - natgw_output.changed
+      - natgw_output is changed
       - natgw_output.location == "{{ rg_location }}"
 - name: Get NAT gateways
   azure_rm_natgateway_info:
@@ -109,7 +109,7 @@
 - name: Assert the resource instance is not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create public IP for NAT Gateway
   azure_rm_publicipaddress:
@@ -144,7 +144,7 @@
 - name: Assert the resource instance is changed
   ansible.builtin.assert:
     that:
-      - natgw_output.changed
+      - natgw_output is changed
 - name: Get NAT gateways
   azure_rm_natgateway_info:
     name: nat-gateway{{ rpfx }}1
@@ -168,7 +168,7 @@
 - name: Assert the resource instance is changed
   ansible.builtin.assert:
     that:
-      - natgw_output.changed
+      - natgw_output is changed
 - name: Get NAT gateways
   azure_rm_natgateway_info:
     name: nat-gateway{{ rpfx }}1
@@ -191,7 +191,7 @@
 - name: Assert the resource instance is changed
   ansible.builtin.assert:
     that:
-      - natgw_output.changed
+      - natgw_output is changed
 - name: Get NAT gateways
   azure_rm_natgateway_info:
     name: nat-gateway{{ rpfx }}1
@@ -289,7 +289,7 @@
 - name: Assert the resource instance is changed
   ansible.builtin.assert:
     that:
-      - natgw_output.changed
+      - natgw_output is changed
       - natgw_output.location == "eastus"
 - name: Get NAT gateways
   azure_rm_natgateway_info:

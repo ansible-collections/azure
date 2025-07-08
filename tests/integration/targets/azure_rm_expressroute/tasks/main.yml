@@ -25,7 +25,7 @@
 
 - name: Assert the excpress route check mode result
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 
 - name: Create Express route
@@ -50,7 +50,7 @@
 
 - name: Assert the express route created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 
 - name: Update Express route
@@ -76,7 +76,7 @@
 - name: Assert the express route updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 
@@ -101,7 +101,7 @@
 - name: Assert the idempotent
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 #
 # azure_rm_expressroute cleanup
@@ -121,4 +121,4 @@
 
 - name: Assert the express route deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

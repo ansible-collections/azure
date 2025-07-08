@@ -75,7 +75,7 @@
 
 - name: Assert the keyvault certificate created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: For the keyvault certificate idempotent test
   azure_rm_keyvaultcertificate:
@@ -102,7 +102,7 @@
 
 - name: Assert the keyvault certificate no changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update thekeyvault certificate
   azure_rm_keyvaultcertificate:
@@ -129,7 +129,7 @@
 
 - name: Assert the keyvault certificate changed
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get the keyvault certificate facts
   azure_rm_keyvaultcertificate_info:
@@ -157,7 +157,7 @@
 
 - name: Assert the keyvault certificate imported
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete the keyvault certificate
   azure_rm_keyvaultcertificate:
@@ -189,7 +189,7 @@
 
 - name: Assert the keyvault certificate recovered
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Purge the keyvault certificate
   azure_rm_keyvaultcertificate:
@@ -200,7 +200,7 @@
 
 - name: Assert the keyvault certificate purged
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: List all delete keyvault certificate
   azure_rm_keyvaultcertificate_info:

@@ -33,7 +33,7 @@
 - name: Assert create check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create log profile
   azure_rm_monitorlogprofile:
@@ -55,7 +55,7 @@
 - name: Assert create
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update log profile (idempotence)
@@ -78,7 +78,7 @@
 - name: Assert update idempotence
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update log profile
   azure_rm_monitorlogprofile:
@@ -99,7 +99,7 @@
 - name: Assert update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete log profile (check mode)
   azure_rm_monitorlogprofile:
@@ -110,7 +110,7 @@
 - name: Assert delete
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete log profile
   azure_rm_monitorlogprofile:
@@ -120,7 +120,7 @@
 - name: Assert delete
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete log profile (idempotence)
   azure_rm_monitorlogprofile:
@@ -130,4 +130,4 @@
 - name: Assert delete
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed

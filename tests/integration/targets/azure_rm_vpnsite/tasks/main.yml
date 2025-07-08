@@ -28,7 +28,7 @@
 - name: Assert the vpn site created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create the VpnSite without change (Idempotent test)
   azure_rm_vpnsite:
@@ -56,7 +56,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the VpnSite's device properties
   azure_rm_vpnsite:
@@ -84,7 +84,7 @@
 - name: Assert the vpn site updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the VpnSite info
   azure_rm_vpnsite_info:

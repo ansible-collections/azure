@@ -34,7 +34,7 @@
 - name: Assert the container registry instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.admin_user_enabled
       - output.location == location
       - output.sku == 'Premium'
@@ -71,7 +71,7 @@
 - name: Assert the ACR instance is well updated
   ansible.builtin.assert:
     that:
-      - output.changed == True
+      - output is changed
       - output.admin_user_enabled == False
       - output.sku == 'Standard'
       - output.tags['NewTag'] == 'newtag'
@@ -88,7 +88,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.registries[0]['name'] != None
       - output.registries[0]['location'] != None
       - output.registries[0]['admin_user_enabled'] != None
@@ -106,7 +106,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.registries[0]['name'] != None
       - output.registries[0]['location'] != None
       - output.registries[0]['admin_user_enabled'] != None
@@ -144,7 +144,7 @@
 - name: Assert the container registry instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - managed_identity_ids[0] in output.identity.user_assigned_identities
 
 - name: Update second container registry to test appending identity
@@ -167,7 +167,7 @@
 - name: Assert the container registry instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - managed_identity_ids[0] in output.identity.user_assigned_identities
       - managed_identity_ids[1] in output.identity.user_assigned_identities
 
@@ -188,7 +188,7 @@
 - name: Assert the container registry instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - '"user_assigned_identities" not in output.identity'
 
 - name: Delete first container registry

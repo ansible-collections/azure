@@ -39,7 +39,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of SQL Server
   azure_rm_sqlserver:
@@ -55,7 +55,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
 
 - name: Gather facts SQL Server
@@ -80,7 +80,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
       - output.state == 'Ready'
 
 - name: Create extended instance of SQL Server
@@ -105,7 +105,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
 
 - name: Gather facts SQL Server
@@ -141,7 +141,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - not output is not changed
       - output.state == 'Ready'
 
 - name: Update SQL admin password
@@ -155,7 +155,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of SQL Server with Azure AD admin
   azure_rm_sqlserver:
@@ -175,7 +175,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
   when: run_azuread_tests | bool
 
@@ -197,7 +197,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - not output is not changed
       - output.state == 'Ready'
   when: run_azuread_tests | bool
 
@@ -211,7 +211,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers['sqlsrv' ~ random_postfix ].id != None
       - output.servers['sqlsrv' ~ random_postfix ].name == 'sqlsrv' ~ random_postfix
       - output.servers['sqlsrv' ~ random_postfix ].type != None
@@ -232,7 +232,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers['sqlsrv-extended-' ~ random_postfix ].id != None
       - output.servers['sqlsrv-extended-' ~ random_postfix ].name == 'sqlsrv-extended-' ~ random_postfix
       - output.servers['sqlsrv-extended-' ~ random_postfix ].type != None
@@ -257,7 +257,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers['sqlsrv-azuread-' ~ random_postfix ].id != None
       - output.servers['sqlsrv-azuread-' ~ random_postfix ].name == 'sqlsrv-azuread-' ~ random_postfix
       - output.servers['sqlsrv-azuread-' ~ random_postfix ].type != None
@@ -284,7 +284,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers == {}
 
 - name: Gather facts SQL Server - list
@@ -294,7 +294,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers['sqlsrv' ~ random_postfix ].id != None
       - output.servers['sqlsrv' ~ random_postfix ].name == 'sqlsrv' ~ random_postfix
       - output.servers['sqlsrv' ~ random_postfix ].type != None
@@ -317,7 +317,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of SQL Database
   azure_rm_sqldatabase:
@@ -332,7 +332,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.status == 'Online'
 
 - name: Create again instance of SQL Database
@@ -348,7 +348,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
       - output.status == 'Online'
 
 # test database point in time restore
@@ -380,7 +380,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of SQL Database Point in time recovery
   azure_rm_sqldatabase:
@@ -392,7 +392,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 # test database facter:
 - name: Create second SQL Database
@@ -411,7 +411,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0].id != None
       - output.databases[0].name != None
       - output.databases[0].location != None
@@ -429,7 +429,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0].id != None
       - output.databases[0].name != None
       - output.databases[0].location != None
@@ -466,7 +466,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of SQL Database
   azure_rm_sqldatabase:
@@ -478,7 +478,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of SQL Database
   azure_rm_sqldatabase:
@@ -490,7 +490,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 # Test With SKU
 - name: Create SQL Database with sku -- check mode
@@ -507,7 +507,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create SQL Database with sku
   azure_rm_sqldatabase:
@@ -524,7 +524,7 @@
 - name: Assert the resource instance is well created with good SKU
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.status == 'Online'
 
 - name: Gather facts SQL Database with good SKU
@@ -536,7 +536,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0].id != None
       - output.databases[0].name != None
       - output.databases[0].location != None
@@ -561,7 +561,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
       - output.status == 'Online'
 
 - name: Create again instance of SQL Database with New SKU
@@ -579,7 +579,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.status == 'Online'
 
 - name: Gather facts SQL Database with good New SKU
@@ -591,7 +591,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0].id != None
       - output.databases[0].name != None
       - output.databases[0].location != None
@@ -611,7 +611,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 # test database facts without databases
 - name: Gather facts SQL Database
@@ -623,7 +623,7 @@
 - name: Assert that empty dictionary was returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases | length == 0
 
 - name: Gather facts SQL Database
@@ -634,7 +634,7 @@
 - name: Assert that empty dictionary was returned (one database is there by default)
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases | length == 1
 
 # azure_rm_sqlfirewallrule tests
@@ -651,7 +651,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Firewall Rule
   azure_rm_sqlfirewallrule:
@@ -664,7 +664,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create again instance of Firewall Rule
   azure_rm_sqlfirewallrule:
@@ -677,7 +677,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 #
 # azure_rm_sqlserverfirewallrule_facts
@@ -700,7 +700,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules[0].id != None
       - output.rules[0].resource_group != None
       - output.rules[0].server_name != None
@@ -716,7 +716,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules[0].id != None
       - output.rules[0].id != None
       - output.rules[0].resource_group != None
@@ -753,7 +753,7 @@
 - name: Assert that empty dictionary was returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules | length == 0
 
 # azure_rm_sqlelasticpool test
@@ -771,7 +771,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of SQL Elastic Pool
   azure_rm_sqlelasticpool:
@@ -786,7 +786,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of SQL Elastic Pool -- Idempotent test
   azure_rm_sqlelasticpool:
@@ -801,7 +801,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - not output is not changed
 
 - name: Update instance of SQL Elastic Pool
   azure_rm_sqlelasticpool:
@@ -816,7 +816,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts SQL Database
   azure_rm_sqlelasticpool_info:
@@ -828,7 +828,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.elastic_pool[0].zone_redundant == false
       - output.elastic_pool[0].tags | length == 2
 
@@ -843,7 +843,7 @@
 - name: Assert the resource instance is deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 # finalise & clean up azure_rm_sqlserver test
 
@@ -857,7 +857,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of SQL Server
   azure_rm_sqlserver:
@@ -868,7 +868,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of SQL Server
   azure_rm_sqlserver:
@@ -879,7 +879,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Delete extended instance of SQL Server
   azure_rm_sqlserver:

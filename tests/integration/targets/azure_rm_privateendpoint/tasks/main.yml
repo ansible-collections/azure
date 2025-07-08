@@ -140,7 +140,7 @@
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.id is defined
       - output.state.provisioning_state == "Succeeded"
       - output.state.tags | length == 1
@@ -163,7 +163,7 @@
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
   ignore_errors: true
   register: ignore_errors_register
 
@@ -186,7 +186,7 @@
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.tags | length == 2
 
 - name: Get private endpoint info
@@ -217,7 +217,7 @@
 - name: Assert the secondary private endpoint created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create an application security group
   azure_rm_applicationsecuritygroup:
@@ -258,7 +258,7 @@
 - name: Assert the secondary private endpoint created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the third private endpoint
   azure_rm_privateendpoint:
@@ -284,7 +284,7 @@
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete private endpoint ( Idempotent Test)
   azure_rm_privateendpoint:
@@ -296,4 +296,4 @@
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed

@@ -14,7 +14,7 @@
 
 - name: Assert the notification hub check mode
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create Notification Hub  (check mode)
   azure_rm_notificationhub:
@@ -28,7 +28,7 @@
 
 - name: Assert the notfication hub check mode
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create Namespace Hub
   azure_rm_notificationhub:
@@ -40,7 +40,7 @@
 
 - name: Assert the notification hub created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create Notification Hub
   azure_rm_notificationhub:
@@ -53,7 +53,7 @@
 
 - name: Assert the notification hub created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Update Namespace
   azure_rm_notificationhub:
@@ -67,7 +67,7 @@
 - name: Assert the namespace updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Update Notification Hub
@@ -83,7 +83,7 @@
 - name: Assert the notification hub updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace
@@ -106,7 +106,7 @@
 - name: Assert the notification hub check mode
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 #
 # azure_rm_ddos_notification hub and namspace cleanup
@@ -134,7 +134,7 @@
 
 - name: Assert the namespace deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Delete Notification Hub
   azure_rm_notificationhub:
@@ -160,4 +160,4 @@
 
 - name: Assert the notificationhub deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

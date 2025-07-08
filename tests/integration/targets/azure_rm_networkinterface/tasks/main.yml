@@ -97,7 +97,7 @@
 - name: Assert the check mode facts
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create most simple NIC with virtual_network resource_group
   azure_rm_networkinterface:
@@ -115,7 +115,7 @@
 - name: Assert the NIC created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.id
       - output.state.ip_configuration.primary
 
@@ -156,7 +156,7 @@
 - name: Assert the NIC created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create most simple NIC (idempotent)
   azure_rm_networkinterface:
@@ -172,7 +172,7 @@
 - name: Assert NIC created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update security group (check mode)
   azure.azcollection.azure_rm_networkinterface:
@@ -189,7 +189,7 @@
 - name: Assert the security group check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update security group
   azure.azcollection.azure_rm_networkinterface:
@@ -205,7 +205,7 @@
 - name: Assert the security group check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.network_security_group.name == "tn{{ rpfx }}sg"
 
 - name: Update public ip address (check mode)
@@ -226,7 +226,7 @@
 - name: Assert the public ip check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update public ip address
   azure.azcollection.azure_rm_networkinterface:
@@ -245,7 +245,7 @@
 - name: Assert the public ip check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.network_security_group.name == "tn{{ rpfx }}sg"
       - output.state.ip_configurations[0].public_ip_address.name == "tn{{ rpfx }}"
 
@@ -265,7 +265,7 @@
 - name: Assert the network check mode facts
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update accelerated networking
   azure.azcollection.azure_rm_networkinterface:
@@ -282,7 +282,7 @@
 - name: Assert the network check mode facts
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.network_security_group.name == "tn{{ rpfx }}sg"
       - output.state.ip_configurations[0].public_ip_address.name == "tn{{ rpfx }}"
       - output.state.enable_accelerated_networking
@@ -303,7 +303,7 @@
 - name: Assert the NIC check mode facts
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update dns server (check mode)
   azure_rm_networkinterface:
@@ -323,7 +323,7 @@
 - name: Assert the NIC check mode facts
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update NIC
   azure_rm_networkinterface:
@@ -362,7 +362,7 @@
 - name: Assert NIC update facts
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.dns_settings.dns_servers == ['8.9.10.11', '7.8.9.10']
       - output.state.enable_ip_forwarding
       - output.state.network_security_group.name == "tn{{ rpfx }}sg"
@@ -407,7 +407,7 @@
 - name: Assert the NIC no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get fact of the new created NIC
   azure_rm_networkinterface_info:
@@ -465,7 +465,7 @@
 - name: Assert the NIC changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.dns_settings.dns_servers == ['8.9.10.11']
       - output.state.enable_ip_forwarding
       - output.state.network_security_group.name == "tn{{ rpfx }}sg"
@@ -483,7 +483,7 @@
 - name: Assert check mode creation
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create Application security group
   azure_rm_applicationsecuritygroup:
@@ -496,7 +496,7 @@
 - name: Assert application security group creation
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id != ''
 
 - name: Get Application security group
@@ -524,7 +524,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update application security group
   azure_rm_applicationsecuritygroup:
@@ -538,7 +538,7 @@
 - name: Assert update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create Application security group in secondary resource group
   azure_rm_applicationsecuritygroup:
@@ -566,7 +566,7 @@
 - name: Assert creation succeeded
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create Nic with application security groups (idempotent)
   azure_rm_networkinterface:
@@ -590,7 +590,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update Nic with application security groups
   azure_rm_networkinterface:
@@ -611,7 +611,7 @@
 - name: Assert update succeeded
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get fact of the new created NIC
   azure_rm_networkinterface_info:
@@ -705,7 +705,7 @@
 - name: Assert the NIC created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.ip_configurations | length == 1
       - output.state.ip_configurations[0].application_gateway_backend_address_pools | length == 1
       - output.state.ip_configurations[0].application_gateway_backend_address_pools[0] == appgw_output.id + '/backendAddressPools/test_backend_address_pool'
@@ -731,7 +731,7 @@
 - name: Assert the NIC idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get facts for appgw nic
   azure_rm_networkinterface_info:
@@ -756,7 +756,7 @@
 - name: Assert the NIC deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete application gateway
   azure_rm_appgateway:
@@ -767,7 +767,7 @@
 - name: Assert the application gateway deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the NIC (check mode)
   azure_rm_networkinterface:
@@ -780,7 +780,7 @@
 - name: Assert the NIC check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the NIC
   azure_rm_networkinterface:
@@ -792,7 +792,7 @@
 - name: Assert the NIC deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the NIC (idempotent)
   azure_rm_networkinterface:
@@ -804,7 +804,7 @@
 - name: Assert the NIC idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete load balancer
   azure_rm_loadbalancer:
@@ -827,7 +827,7 @@
 - name: Assert the NIC deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.results | length == 4
 
 - name: Delete the NIC
@@ -847,7 +847,7 @@
 - name: Assert delete check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the application security group
   azure_rm_applicationsecuritygroup:
@@ -859,7 +859,7 @@
 - name: Assert the deletion
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete second application security group
   azure_rm_applicationsecuritygroup:
@@ -881,7 +881,7 @@
 - name: Assert the security group deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.results | length == 2
 
 - name: Delete virtual network
@@ -894,4 +894,4 @@
 - name: Assert the virtual network deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

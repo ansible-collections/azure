@@ -51,7 +51,7 @@
 - name: Assert the VM created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create virtual machine ephmeral OS disk
   azure_rm_virtualmachine:
@@ -73,7 +73,7 @@
 - name: Assert the vm created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ansible_facts.azure_vm.properties.storageProfile.osDisk.diffDiskSettings.option == 'Local'
 
 - name: Check virtual machine ephmeral OS disk idempotent
@@ -96,7 +96,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Check virtual machine ephmeral OS disk can't update
   azure_rm_virtualmachine:
@@ -117,7 +117,7 @@
 - name: Assert the vm updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete VM
   azure_rm_virtualmachine:

@@ -17,7 +17,7 @@
   ansible.builtin.assert:
     that:
       - not output.id
-      - output.changed
+      - output is changed
 
 - name: Create a route table
   azure_rm_routetable:
@@ -30,7 +30,7 @@
 - name: Assert the route table created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Create a route table (idemponent)
@@ -44,7 +44,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get facts of the table
   azure_rm_routetable_info:
@@ -71,7 +71,7 @@
 - name: Assert check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - not output.id
 
 - name: Create route
@@ -86,7 +86,7 @@
 - name: Assert the route created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Create route (idemponent)
@@ -101,7 +101,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update route
   azure_rm_route:
@@ -115,7 +115,7 @@
 - name: Assert the route updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get facts of the route
   azure_rm_route_info:
@@ -162,7 +162,7 @@
 - name: Assert the route deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete route (idemponent)
   azure_rm_route:
@@ -175,7 +175,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete route table (check mode)
   azure_rm_routetable:
@@ -194,7 +194,7 @@
 - name: Assert the route table deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete route table (idemponent)
   azure_rm_routetable:
@@ -206,4 +206,4 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed

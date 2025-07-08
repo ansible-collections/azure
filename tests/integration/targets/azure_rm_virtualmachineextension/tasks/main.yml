@@ -93,7 +93,7 @@
   register: results
 - name: Assert that VM Extension ran
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Query extension
   azure_rm_virtualmachineextension_info:
@@ -104,7 +104,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - results.changed == False
+      - results is not changed
       - results.extensions[0]['id'] != None
       - results.extensions[0]['resource_group'] != None
       - results.extensions[0]['virtual_machine_name'] != None
@@ -129,7 +129,7 @@
   register: results
 - name: Assert no updates
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Create VM Extension (force update)
   azure_rm_virtualmachineextension:
@@ -145,7 +145,7 @@
   register: results
 - name: Assert updates
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: List extensions
   azure_rm_virtualmachineextension_info:
@@ -155,7 +155,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - results.changed == False
+      - results is not changed
       - results.extensions[0]['id'] != None
       - results.extensions[0]['resource_group'] != None
       - results.extensions[0]['virtual_machine_name'] != None
@@ -176,7 +176,7 @@
   register: results
 - name: Assert that VM Extension deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete VM Extension (idempotent)
   azure_rm_virtualmachineextension:
@@ -187,7 +187,7 @@
   register: results
 - name: Assert no changes
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Create VM Extension to configure python required for VM diagnostic extension
   azure_rm_virtualmachineextension:
@@ -202,7 +202,7 @@
   register: results
 - name: Assert that VM Extension ran
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Install VM Extension for diagnostics
   azure_rm_virtualmachineextension:
@@ -218,7 +218,7 @@
   register: results
 - name: Assert extension installed
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Install VM Extension for diagnostics (idempotent)
   azure_rm_virtualmachineextension:
@@ -234,7 +234,7 @@
   register: results
 - name: Assert no updates
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: List extensions
   azure_rm_virtualmachineextension_info:
@@ -244,7 +244,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - results.changed == False
+      - results is not changed
       - results.extensions | length >= 2
       - "'python-install' in results.extensions | map(attribute='name')"
       - "'linux-diagnostics' in results.extensions | map(attribute='name')"

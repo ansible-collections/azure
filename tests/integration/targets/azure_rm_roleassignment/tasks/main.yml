@@ -50,7 +50,7 @@
 - name: Check intended failures
   ansible.builtin.assert:
     that:
-      - item.failed
+      - item is failed
   loop: "{{ failures_info.results }}"
 
 - name: Intentional failures mutable
@@ -90,7 +90,7 @@
 - name: Check intended failures
   ansible.builtin.assert:
     that:
-      - item.failed
+      - item is failed
   loop: "{{ failures_mutable.results }} "
 
 - name: Get resource group info
@@ -123,8 +123,8 @@
 - name: Check idempotence
   ansible.builtin.assert:
     that:
-      - az_role_assignment_name_idempotent.changed == False
-      - az_role_assignment_scope_idempotent.changed == False
+      - az_role_assignment_name_idempotent is not changed
+      - az_role_assignment_scope_idempotent is not changed
 #
 # - name: List Role Assignments by Name
 #   azure_rm_roleassignment_info:
@@ -164,7 +164,7 @@
     id: "{{ az_role_assignment_create.id }}"
     state: absent
   register: az_role_assignment_delete
-  when: az_role_assignment_create.changed
+  when: az_role_assignment_create is changed
 
 - name: Create role assignment with name
   azure_rm_roleassignment:
@@ -198,7 +198,7 @@
     role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
     state: absent
   register: az_role_assignment_delete
-  # when: az_role_assignment_create.changed
+  # when: az_role_assignment_create is changed
   ignore_errors: true
 
 - name: Absent assignment that doesn't exist - id
@@ -228,7 +228,7 @@
 # - name: Check intended failures info
 #   ansible.builtin.assert:
 #     that:
-#       - item.changed == false
+#       - item is not changed
 #   loop:
 #     - "{{ absent_nochange_properties }}"
 #     - "{{ absent_nochange_id }}"

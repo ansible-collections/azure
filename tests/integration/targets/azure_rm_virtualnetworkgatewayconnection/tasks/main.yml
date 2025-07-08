@@ -121,7 +121,7 @@
 - name: Assert the first resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a 'IPsec' type virtual network connection
   azure_rm_virtualnetworkgatewayconnection:
@@ -143,7 +143,7 @@
 - name: Assert the secondary resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Re-create the virtual network connection(Idempotent test)
   azure_rm_virtualnetworkgatewayconnection:
@@ -165,7 +165,7 @@
 - name: Assert the resource no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the virtual network connection(Update test)
   azure_rm_virtualnetworkgatewayconnection:
@@ -189,7 +189,7 @@
 - name: Assert the resource updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the virtual network connection
   azure_rm_virtualnetworkgatewayconnection_info:
@@ -220,7 +220,7 @@
 - name: Assert the resource deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the virtual network gateway
   azure_rm_virtualnetworkgateway:

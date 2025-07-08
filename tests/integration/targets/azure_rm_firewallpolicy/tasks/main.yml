@@ -19,7 +19,7 @@
 
 - name: Assert that firewall policy is created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create a firewall policy again (Idempotent test)
   azure_rm_firewallpolicy:
@@ -38,7 +38,7 @@
 
 - name: Assert that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update a firewall policy
   azure_rm_firewallpolicy:
@@ -59,7 +59,7 @@
 
 - name: Assert that firewall policy is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get firewall policy facts
   azure_rm_firewallpolicy_info:
@@ -70,7 +70,7 @@
 - name: Assert the firewall policy facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.firewallpolicies[0].id != None
       - results.firewallpolicies[0].name == "{{ policy_name }}"
       - results.firewallpolicies[0].threat_intel_mode == "Deny"
@@ -87,7 +87,7 @@
 
 - name: Assert that firewall policy is deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete firewall policy again (Idempotent test)
   azure_rm_firewallpolicy:
@@ -98,4 +98,4 @@
 
 - name: Asset that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

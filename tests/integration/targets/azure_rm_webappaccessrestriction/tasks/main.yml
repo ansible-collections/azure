@@ -52,7 +52,7 @@
 
 - name: Assert the resource is well created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: "Create webapp access restriction"
   azure_rm_webappaccessrestriction:
@@ -78,7 +78,7 @@
 - name: Assert the resource is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 3
       - output.ip_security_restrictions[0].action == 'Allow'
       - output.ip_security_restrictions[0].ip_address == '1.1.1.1/24'
@@ -97,7 +97,7 @@
 - name: Assert restrictions
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.ip_security_restrictions | length == 3
       - output.ip_security_restrictions[0].action == 'Allow'
       - output.ip_security_restrictions[0].ip_address == '1.1.1.1/24'
@@ -132,7 +132,7 @@
 
 - name: Assert the resource is not changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: "Delete specific webapp access restriction"
   azure_rm_webappaccessrestriction:
@@ -148,7 +148,7 @@
 - name: Assert the resource is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 1
       - output.ip_security_restrictions[0].action == 'Allow'
       - output.ip_security_restrictions[0].ip_address == '1.1.1.1/24'
@@ -168,7 +168,7 @@
 - name: Assert the resource is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 1
       - output.ip_security_restrictions[0].action == 'Deny'
       - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
@@ -188,7 +188,7 @@
 - name: Assert the resource is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 1
       - output.ip_security_restrictions[0].action == 'Deny'
       - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
@@ -213,7 +213,7 @@
 - name: Assert the resource is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 1
       - output.ip_security_restrictions[0].action == 'Deny'
       - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
@@ -245,7 +245,7 @@
 - name: Assert the resource is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 1
       - output.ip_security_restrictions[0].action == 'Deny'
       - output.ip_security_restrictions[0].ip_address == '1.2.3.4/24'
@@ -278,7 +278,7 @@
   register: output
 - name: Assert the resource is not changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: "Delete webapp access restrictions"
   azure_rm_webappaccessrestriction:
@@ -289,7 +289,7 @@
 - name: Assert the resource is deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.ip_security_restrictions | length == 0
       - output.scm_ip_security_restrictions | length == 0
       - output.scm_ip_security_restrictions_use_main == false
@@ -302,7 +302,7 @@
 - name: Assert no restrictions
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.ip_security_restrictions | length <= 1
       - output.scm_ip_security_restrictions | length <= 1
       - output.scm_ip_security_restrictions_use_main == false

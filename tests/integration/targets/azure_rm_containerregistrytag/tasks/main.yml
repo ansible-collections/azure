@@ -41,7 +41,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import tag (actually import)
   azure_rm_containerregistrytag:
@@ -55,7 +55,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import tag (test idempotency)
   azure_rm_containerregistrytag:
@@ -69,7 +69,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Import additional tag
   azure_rm_containerregistrytag:
@@ -83,7 +83,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import additional tag
   azure_rm_containerregistrytag:
@@ -97,7 +97,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import additional tag
   azure_rm_containerregistrytag:
@@ -111,7 +111,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Load all tags
   azure_rm_containerregistrytag_info:
@@ -185,7 +185,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete tag by name (actually delete)
   azure_rm_containerregistrytag:
@@ -196,7 +196,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete tag by name (test idempotency)
   azure_rm_containerregistrytag:
@@ -207,7 +207,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Load tags by repository
   azure_rm_containerregistrytag_info:
@@ -232,7 +232,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete repository (actually delete)
   azure_rm_containerregistrytag:
@@ -242,7 +242,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete repository (test idempotency)
   azure_rm_containerregistrytag:
@@ -252,7 +252,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Load all tags
   azure_rm_containerregistrytag_info:
@@ -276,7 +276,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import tag with same name (test idempotency)
   azure_rm_containerregistrytag:
@@ -288,7 +288,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Import tag with different repo, same name
   azure_rm_containerregistrytag:
@@ -301,7 +301,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import tag with different repo, same name (test idempotency)
   azure_rm_containerregistrytag:
@@ -314,7 +314,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Import tag with different name, same repo
   azure_rm_containerregistrytag:
@@ -327,7 +327,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Import tag with different name, same repo (test idempotency)
   azure_rm_containerregistrytag:
@@ -340,7 +340,7 @@
   register: output
 - name: Assert output
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Load all tags
   azure_rm_containerregistrytag_info:

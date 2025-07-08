@@ -39,7 +39,7 @@
 - name: Assert creating redis cache check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a redis cache
   azure_rm_rediscache:
@@ -54,7 +54,7 @@
 - name: Assert creating redis cache
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Get facts
@@ -86,7 +86,7 @@
 - name: Assert output not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the redis cache ManagedIdentity UserAssigned
   azure_rm_rediscache:
@@ -106,7 +106,7 @@
 - name: Assert output changed
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Get redis-cache facts
   azure_rm_rediscache_info:
@@ -152,7 +152,7 @@
     - name: Assert output changed
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Update redis cache configuration
       azure_rm_rediscache:
@@ -170,7 +170,7 @@
     - name: Assert output changed
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Scale up the redis cache
       azure_rm_rediscache:
@@ -187,7 +187,7 @@
     - name: Assert the redis cache
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Force reboot redis cache
       azure_rm_rediscache:
@@ -203,7 +203,7 @@
     - name: Assert redis rebooted
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Delete the redis cache (Check Mode)
       azure_rm_rediscache:
@@ -218,7 +218,7 @@
 
     - name: Assert deleting redis cache check mode
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
 
     - name: Delete the redis cache
       azure_rm_rediscache:
@@ -233,7 +233,7 @@
     - name: Assert the redis cache deleted
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
       tags: [long_run, never]
 
 
@@ -252,7 +252,7 @@
 - name: Assert creating redis cache
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get facts for enhanced cache
   azure_rm_rediscache_info:
@@ -304,7 +304,7 @@
     - name: Assert output not changed
       ansible.builtin.assert:
         that:
-          - not output.changed
+          - output is not changed
 
     - name: Update redis cache public network access
       azure_rm_rediscache:
@@ -321,7 +321,7 @@
     - name: Assert output changed
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Get facts for enhanced cache
       azure_rm_rediscache_info:
@@ -346,7 +346,7 @@
     - name: Assert the redis cache deleted
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
       tags: [long_run, never]
 
 
@@ -379,7 +379,7 @@
 - name: Assert creating redis cache
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Get facts
@@ -409,7 +409,7 @@
 - name: Assert check mode creation
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Long-running key/firewallrule tests [run with `--tags long_run,untagged` to enable]
 # Creating firewall rule need Redis status is running, while creating redis Cache costs about 20 mins async operation,
@@ -440,7 +440,7 @@
     - name: Assert creation
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
           - output.id
 
     - name: Update firewall rule idempotence
@@ -455,7 +455,7 @@
     - name: Assert idempotence
       ansible.builtin.assert:
         that:
-          - output.changed == false
+          - output is not changed
 
     - name: Update firewall rule
       azure_rm_rediscachefirewallrule:
@@ -468,7 +468,7 @@
     - name: Assert updating
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Get key facts
       azure_rm_rediscache_info:
@@ -491,7 +491,7 @@
     - name: Assert output
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Get facts after key regeneration
       azure_rm_rediscache_info:
@@ -517,7 +517,7 @@
     - name: Assert deletion
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Delete the redis cache
       azure_rm_rediscache:

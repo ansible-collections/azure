@@ -19,7 +19,7 @@
 - name: Assert the virtual hub is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Create a VirtualHub (idempotent)
@@ -32,7 +32,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get Virtual Hub Info
   azure_rm_virtualhub_info:
@@ -73,7 +73,7 @@
 - name: Assert the virtual hub is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Delete Second VirtualHub
@@ -92,4 +92,4 @@
 - name: Assert the AKS instance is upgraded
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

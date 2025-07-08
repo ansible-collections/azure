@@ -190,7 +190,7 @@
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
   azure_rm_virtualmachinescaleset:
@@ -233,7 +233,7 @@
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Retrieve scaleset VMSS fact
   azure_rm_virtualmachinescaleset_info:
@@ -388,7 +388,7 @@
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get VMSS to ansible.builtin.assert no VMSS is created in check mode
   azure_rm_virtualmachinescaleset_info:
@@ -438,7 +438,7 @@
 
 - name: Assert that VMSS was created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create VMSS -- test upgrade_policy idempotence and load balancer
   azure_rm_virtualmachinescaleset:
@@ -475,7 +475,7 @@
 
 - name: Assert that VMSS was created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Retrieve scaleset facts
   azure_rm_virtualmachinescaleset_info:
@@ -538,7 +538,7 @@
 
 - name: Assert that nothing was changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Install VMSS Extension
   azure_rm_virtualmachinescalesetextension:
@@ -554,7 +554,7 @@
 
 - name: Assert that something was changed
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Install Again VMSS Extension - again
   azure_rm_virtualmachinescalesetextension:
@@ -570,7 +570,7 @@
 
 - name: Assert that nothing was changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Query extension
   azure_rm_virtualmachinescalesetextension_info:
@@ -582,7 +582,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - results.changed == False
+      - results is not changed
       - results.extensions[0]['id'] != None
       - results.extensions[0]['resource_group'] != None
       - results.extensions[0]['vmss_name'] != None
@@ -602,7 +602,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - results.changed == False
+      - results is not changed
       - results.extensions[0]['id'] != None
       - results.extensions[0]['resource_group'] != None
       - results.extensions[0]['vmss_name'] != None
@@ -623,7 +623,7 @@
 
 - name: Assert that change was reported
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Upgrade instance to the latest image
   azure_rm_virtualmachinescalesetinstance:
@@ -635,7 +635,7 @@
 
 - name: Assert that something has changed
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Stop virtual machine
   azure_rm_virtualmachinescalesetinstance:
@@ -647,7 +647,7 @@
 
 - name: Assert that something has changed
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete instance
   azure_rm_virtualmachinescalesetinstance:
@@ -659,7 +659,7 @@
 
 - name: Assert that something has changed
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:
@@ -693,7 +693,7 @@
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
   azure_rm_virtualmachinescaleset:
@@ -721,7 +721,7 @@
 - name: Assert that VMSS ran
   ansible.builtin.assert:
     that:
-      - 'results.changed'
+      - 'results is changed'
       - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].enable_accelerated_networking == true'
       - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].network_security_group != {}'
 
@@ -751,7 +751,7 @@
 - name: Assert that nothing has changed
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 - name: Create VMSS with security group in same resource group, with accelerated networking.
   azure_rm_virtualmachinescaleset:
@@ -779,7 +779,7 @@
 - name: Assert that something has changed
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Update VMSS with security group in different resource group.
   azure_rm_virtualmachinescaleset:
@@ -809,7 +809,7 @@
 # - name: Assert that security group is correct
 #  ansible.builtin.assert:
 #    that:
-#      - 'results.changed'
+#      - 'results is changed'
 #      - '"testNetworkSecurityGroup2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
 
 - name: Delete VMSS
@@ -846,7 +846,7 @@
 - name: Assert vmss created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
 
 - name: Check VMSS ephmeral OS disk can't udpate
@@ -948,7 +948,7 @@
 
 - name: Assert that VMSS can be created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete VMSS
   azure_rm_virtualmachinescaleset:

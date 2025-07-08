@@ -92,7 +92,7 @@
 
 - name: Assert there is no private link service
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create private link service
   azure_rm_privatelinkservice:
@@ -124,7 +124,7 @@
 
 - name: Assert the private link service created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create private link service (Idempotent test)
   azure_rm_privatelinkservice:
@@ -156,7 +156,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update private link service
   azure_rm_privatelinkservice:
@@ -189,7 +189,7 @@
 
 - name: Assert the private link service update
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get private link service info by name
   azure_rm_privatelinkservice_info:
@@ -241,7 +241,7 @@
 
 - name: Assert the private endpoint connection updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get private endpoint connection info by name
   azure_rm_privateendpointconnection_info:
@@ -267,7 +267,7 @@
 
 - name: Assert the private endpoint connection deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete private endpoint
   azure_rm_privateendpoint:
@@ -277,7 +277,7 @@
 
 - name: Assert the private endpoint deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Pause for 5 mimutes to waiting
   ansible.builtin.command: sleep 300
@@ -292,7 +292,7 @@
 
 - name: Assert the private link service deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Pause for 5 mimutes to waiting
   ansible.builtin.command: sleep 300

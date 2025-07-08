@@ -51,7 +51,7 @@
 
 - name: Assert load balancer created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create load balancer
   azure_rm_loadbalancer:
@@ -65,7 +65,7 @@
 
 - name: Assert load balancer created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create load balancer -- idempotent
   azure_rm_loadbalancer:
@@ -80,7 +80,7 @@
 - name: Assert no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete load balancer
   azure_rm_loadbalancer:
@@ -91,7 +91,7 @@
 
 - name: Assert load balancer deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete load balancer (idempotent)
   azure_rm_loadbalancer:
@@ -102,7 +102,7 @@
 
 - name: Assert load balancer deleted (idempotent)
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Create another load balancer with more options
   azure_rm_loadbalancer:
@@ -155,7 +155,7 @@
 - name: Assert complex load balancer created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.sku.name == 'Standard'
 
 - name: Create load balancer again to check idempotency
@@ -209,7 +209,7 @@
 - name: Assert that output has not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the load balancer facts
   azure_rm_loadbalancer_info:
@@ -276,7 +276,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: The second time to get the load balancer facts
   azure_rm_loadbalancer_info:
@@ -331,7 +331,7 @@
 - name: Assert complex load balancer created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete load balancer
   azure_rm_loadbalancer:
@@ -370,7 +370,7 @@
 
 - name: Assert complex load balancer created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete load balancer
   azure_rm_loadbalancer:
@@ -431,7 +431,7 @@
 - name: Assert complex load balancer created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.frontend_ip_configurations[0].zones | length == 3
 
 - name: Delete load balancer

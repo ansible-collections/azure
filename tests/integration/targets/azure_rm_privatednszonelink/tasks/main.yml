@@ -46,7 +46,7 @@
 
 - name: Assert that virtual network link is created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create a virtual network link (Idempotent test)
   azure_rm_privatednszonelink:
@@ -59,7 +59,7 @@
 
 - name: Assert that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update a virtual network link
   azure_rm_privatednszonelink:
@@ -73,7 +73,7 @@
 
 - name: Assert that virtual network link is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get virtual network link
   azure_rm_privatednszonelink_info:
@@ -85,7 +85,7 @@
 - name: Assert the virtual network link facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.virtualnetworklinks[0].name == "{{ link_name }}"
       - results.virtualnetworklinks[0].registration_enabled == true
       - results.virtualnetworklinks[0].provisioning_state == "Succeeded"
@@ -100,7 +100,7 @@
 
 - name: Assert that virtual network link is deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete virtual network link (Idempotent test)
   azure_rm_privatednszonelink:
@@ -112,7 +112,7 @@
 
 - name: Asset that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Delete virtual network
   azure_rm_virtualnetwork:

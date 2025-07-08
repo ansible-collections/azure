@@ -58,7 +58,7 @@
 - name: Assert the resource is created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create mysql flexible server again(Idempotent Test)
   azure_rm_mysqlflexibleserver:
@@ -89,7 +89,7 @@
 - name: Assert the resource is no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create mysql flexible server again(Idempotent Test)
   azure_rm_mysqlflexibleserver:
@@ -120,7 +120,7 @@
 - name: Assert the resource is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts mysql flexible Server -- by name
   azure_rm_mysqlflexibleserver_info:
@@ -148,7 +148,7 @@
 - name: Assert the database is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a MySQL flexible database again(Idempotent Test)
   azure_rm_mysqlflexibledatabase:
@@ -162,7 +162,7 @@
 - name: Assert the database no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the MySQL flexible database facts
   azure_rm_mysqlflexibledatabase_info:
@@ -189,7 +189,7 @@
 - name: Assert the firewall rule is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a MySQL flexible firewall rule again(Idempotent Test)
   azure_rm_mysqlflexiblefirewallrule:
@@ -203,7 +203,7 @@
 - name: Assert the firewall rule no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create a MySQL flexible firewall rule again(Update Test)
   azure_rm_mysqlflexiblefirewallrule:
@@ -217,7 +217,7 @@
 - name: Assert the firewall rule is well updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the MySQL flexible firewall rule facts
   azure_rm_mysqlflexiblefirewallrule_info:
@@ -257,7 +257,7 @@
 - name: Assert the MySQL configuration is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the MySQL flexible configuration by name
   azure_rm_mysqlflexibleconfiguration_info:
@@ -283,7 +283,7 @@
 - name: Assert the database deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the mysql flexible server
   azure_rm_mysqlflexibleserver:
@@ -295,4 +295,4 @@
 - name: Assert the flexible server deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

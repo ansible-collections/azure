@@ -11,7 +11,7 @@
 
 - name: Assert that Private DNS zone was created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create "A" record set with multiple records
   azure_rm_privatednsrecordset:
@@ -27,7 +27,7 @@
 
 - name: Assert that A record set was created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Re-run "A" record with same values
   azure_rm_privatednsrecordset:
@@ -43,7 +43,7 @@
 
 - name: Assert that A record set was not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update "A" record set with additional record
   azure_rm_privatednsrecordset:
@@ -59,7 +59,7 @@
 - name: Assert that new record was appended
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Re-update "A" record set with additional record
   azure_rm_privatednsrecordset:
@@ -75,7 +75,7 @@
 - name: Assert that A record set was not changed
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 - name: Remove 1 record from record set
   azure_rm_privatednsrecordset:
@@ -92,7 +92,7 @@
 - name: Assert that record was deleted
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Check_mode test
   azure_rm_privatednsrecordset:
@@ -108,7 +108,7 @@
 - name: Assert that check_mode returns new state
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Get information for A DNS recordset from Private DNS zone
   azure_rm_privatednsrecordset_info:
@@ -121,7 +121,7 @@
 - name: Assert the DNS recoredset facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.dnsrecordsets[0].id != None
       - results.dnsrecordsets[0].fqdn != None
       - results.dnsrecordsets[0].record_type == 'A'
@@ -140,7 +140,7 @@
 
 - name: Assert that record set deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Re-run record set absent (idempotence test)
   azure_rm_privatednsrecordset:
@@ -153,7 +153,7 @@
 
 - name: Assert recored set deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Create SRV records in a new record set
   azure_rm_privatednsrecordset:
@@ -173,7 +173,7 @@
 - name: Assert that SRV record set was created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Get information for SRV DNS recordset from Private DNS zone
   azure_rm_privatednsrecordset_info:
@@ -186,7 +186,7 @@
 - name: Assert the DNS recordset facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.dnsrecordsets[0].id != None
       - results.dnsrecordsets[0].fqdn != None
       - results.dnsrecordsets[0].record_type == 'SRV'
@@ -212,7 +212,7 @@
 - name: Assert that TXT record set was created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Get information for TXT DNS recordset from Private DNS zone
   azure_rm_privatednsrecordset_info:
@@ -225,7 +225,7 @@
 - name: Assert the DNS recordset facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.dnsrecordsets[0].id != None
       - results.dnsrecordsets[0].fqdn != None
       - results.dnsrecordsets[0].record_type == 'TXT'
@@ -253,7 +253,7 @@
 - name: Assert that SOA record set was created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Delete DNS zone
   azure_rm_privatednszone:

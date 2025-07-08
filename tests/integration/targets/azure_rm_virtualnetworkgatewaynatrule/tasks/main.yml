@@ -66,7 +66,7 @@
 - name: Assert the virtual network nat rule is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a virtual netowrk nat rule(Idempotent test)
   azure_rm_virtualnetworkgatewaynatrule:
@@ -84,7 +84,7 @@
 - name: Assert the virtual network nat rule no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create a new virtual netowrk nat rule (Update test)
   azure_rm_virtualnetworkgatewaynatrule:
@@ -102,7 +102,7 @@
 - name: Assert the virtual network nat rule is well Updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the virtual netowrk nat rule facts
   azure_rm_virtualnetworkgatewaynatrule_info:
@@ -129,7 +129,7 @@
 - name: Assert the virtual network nat rule deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Pause for 5 mimutes to delete the virtual network gateway
   ansible.builtin.command: sleep 300

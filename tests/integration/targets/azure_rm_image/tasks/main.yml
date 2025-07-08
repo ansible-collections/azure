@@ -88,7 +88,7 @@
 
 - name: Assert the image check mode
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create an image from VM
   azure_rm_image:
@@ -104,7 +104,7 @@
 - name: Assert the image created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Create an image from VM (idempotent)
@@ -119,7 +119,7 @@
 - name: Assert the image created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.id
 
 - name: Gather information about image created
@@ -145,7 +145,7 @@
 - name: Assert the image check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete image
   azure_rm_image:
@@ -157,7 +157,7 @@
 - name: Assert the imaged deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete image (idempotent)
   azure_rm_image:
@@ -169,7 +169,7 @@
 - name: Assert the image has deleted
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Test encrypted images
   ansible.builtin.include_tasks: azure_test_encrypted.yml

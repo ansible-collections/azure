@@ -25,7 +25,7 @@
 
 - name: Check the devtest lab changed
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a DevTest Lab (Idempotent test)
   azure_rm_devtestlab:
@@ -39,7 +39,7 @@
 
 - name: Check the devtest lab not changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Get devtest lab facts
   azure_rm_devtestlab_info:
@@ -66,7 +66,7 @@
 - name: Assert the devtest lab virtual network create successfully
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the devtest lab virtual network
   azure_rm_devtestlabvirtualnetwork_info:
@@ -108,7 +108,7 @@
 - name: Assert the devtest lab virtual machine create successfully
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get devtest lab info
   azure_rm_devtestlabvirtualmachine_info:
@@ -136,7 +136,7 @@
 - name: Assert the devtest lab image create successufully
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get custom image
   azure_rm_devtestlabcustomimage_info:
@@ -177,7 +177,7 @@
 - name: Assert the devtest lab policy creatre successfully
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the devtest lab policy facts
   azure_rm_devtestlabpolicy_info:
@@ -203,7 +203,7 @@
 - name: Assert the devtest lab schedule create sussessfully
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get devtest lab schedule
   azure_rm_devtestlabschedule_info:

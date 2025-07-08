@@ -37,7 +37,7 @@
 
 - name: Assert created fail
   ansible.builtin.assert:
-    that: output.failed
+    that: output is failed
 
 - name: Add the subnet back
   azure_rm_subnet:
@@ -50,7 +50,7 @@
 - name: Assert the subnet created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.address_prefix == "10.1.0.0/24"
 
 - name: Add the subnet back (idempontent)
@@ -62,7 +62,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Create network security group
   azure_rm_securitygroup:
@@ -99,7 +99,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Able to completely remove service endpoints
   azure_rm_subnet:
@@ -135,7 +135,7 @@
 - name: Assert the subnet update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.network_security_group.id == nsg.state.id
 
 - name: Update the subnet (idempotent)
@@ -150,7 +150,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Create subnet with IPv4 and IPv6
   azure_rm_subnet:
@@ -165,7 +165,7 @@
 - name: Assert the subnet created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - not output.state.address_prefix
       - output.state.address_prefixes | length > 0
 
@@ -181,7 +181,7 @@
 
 - name: Assert the subnet updated
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update the subnet's IPv4 and IPv6 address
   azure_rm_subnet:
@@ -197,7 +197,7 @@
 - name: Assert the subnet update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update the subnet with network policies
   azure_rm_subnet:
@@ -210,7 +210,7 @@
 
 - name: Assert the subnet updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: The subnet with network policies should be idempotent
   azure_rm_subnet:
@@ -223,7 +223,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update the subnet with delegations
   azure_rm_subnet:
@@ -237,7 +237,7 @@
 
 - name: Assert the subnet updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: The subnet with delegations should be idempotent
   azure_rm_subnet:
@@ -251,7 +251,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Get subnet facts
   azure_rm_subnet_info:
@@ -263,7 +263,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.subnets[0]['id'] != None
       - output.subnets[0]['resource_group'] != None
       - output.subnets[0]['virtual_network_name'] != None
@@ -286,7 +286,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.subnets[0]['id'] != None
       - output.subnets[0]['resource_group'] != None
       - output.subnets[0]['virtual_network_name'] != None
@@ -313,7 +313,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Remove subnet
   azure_rm_subnet:

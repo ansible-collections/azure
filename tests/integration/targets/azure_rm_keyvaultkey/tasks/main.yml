@@ -62,7 +62,7 @@
       register: output
     - name: Assert the keyvault key created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault key
       azure_rm_keyvaultkey:
@@ -90,7 +90,7 @@
       register: output
     - name: Assert the keyvault key created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault key
       azure_rm_keyvaultkey:
@@ -118,7 +118,7 @@
       register: output
     - name: Assert the keyvault key created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault key
       azure_rm_keyvaultkey:
@@ -146,7 +146,7 @@
       register: output
     - name: Assert the keyvault key created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault key
       azure_rm_keyvaultkey:
@@ -176,7 +176,7 @@
       register: output
     - name: Assert the keyvault key created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault ke
       azure_rm_keyvaultkey:
@@ -193,7 +193,7 @@
 
 - name: Assert the keyvault key deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Delete instance of Key Vault
   azure_rm_keyvault:

@@ -99,7 +99,7 @@
 - name: Assert the postgresql flexible server create success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Assert User identity assigned
   ansible.builtin.assert:
@@ -142,7 +142,7 @@
 - name: Assert the postgresql server create success
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update postgresql flexible server with multiple parameters
   azure_rm_postgresqlflexibleserver:
@@ -183,7 +183,7 @@
 - name: Assert the postgresql server update success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts postgresql flexible Server
   azure_rm_postgresqlflexibleserver_info:
@@ -237,7 +237,7 @@
 - name: Assert the postgresql flexible database created success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a postgresql flexible database(Idempotent test)
   azure_rm_postgresqlflexibledatabase:
@@ -251,7 +251,7 @@
 - name: Assert the postgresql flexible database no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the postgresql flexibe database facts
   azure_rm_postgresqlflexibledatabase_info:
@@ -277,7 +277,7 @@
 - name: Assert the postgresql flexible database deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a postgresql flexible firwall rule (Check mode)
   azure_rm_postgresqlflexiblefirewallrule:
@@ -300,7 +300,7 @@
 - name: Assert the postgrepsql flexible firewall rule created well
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create the postgresql flexible firwall rule (Idempotent test)
   azure_rm_postgresqlflexiblefirewallrule:
@@ -314,7 +314,7 @@
 - name: Assert the postgresql flexible firewall rule support idempotent test
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the postgresql flexible firwall rule
   azure_rm_postgresqlflexiblefirewallrule:
@@ -328,7 +328,7 @@
 - name: Assert the postgresql flexible server update well
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the postgresql flexible firwall rule facts
   azure_rm_postgresqlflexiblefirewallrule_info:
@@ -354,7 +354,7 @@
 - name: Assert the postgresql flexible server delete well
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: List the postgresql flexible config facts
   azure_rm_postgresqlflexibleconfiguration_info:
@@ -377,7 +377,7 @@
 - name: Assert the postgresql flexible server backup created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new backup for the postgresql flexible server(Idempotent test)
   azure_rm_postgresqlflexiblebackup:
@@ -389,7 +389,7 @@
 - name: Assert the postgresql flexible server backup no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the backup for the postgresql flexible server
   azure_rm_postgresqlflexiblebackup_info:
@@ -414,7 +414,7 @@
 - name: Assert the postgresql flexible server backup deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new virtual endpoint for the postgresql flexible server
   azure_rm_postgresqlflexiblevirtualendpoint:
@@ -429,7 +429,7 @@
 - name: Assert the postgresql flexible server virtual endpoint created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new virtual endpoint for the postgresql flexible server(Idempotent test)
   azure_rm_postgresqlflexiblevirtualendpoint:
@@ -444,7 +444,7 @@
 - name: Assert the postgresql flexible server virtual endpoint no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the virtual endpoint for the postgresql flexible server
   azure_rm_postgresqlflexiblevirtualendpoint_info:
@@ -469,7 +469,7 @@
 - name: Assert the postgresql flexible server virtual endpoint deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Stop the postgresql flexible server
   azure_rm_postgresqlflexibleserver:
@@ -481,7 +481,7 @@
 - name: Assert the postgresql server stop success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Pause for 10 mimutes
   ansible.builtin.pause:
@@ -498,7 +498,7 @@
 - name: Assert the postgresql server restart success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete postgresql flexible server
   azure_rm_postgresqlflexibleserver:
@@ -510,7 +510,7 @@
 - name: Assert the postgresql server is well deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
@@ -534,4 +534,4 @@
 - name: Assert the resource group is well deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
