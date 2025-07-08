@@ -79,8 +79,8 @@
     that:
       - output.changed
       - output.retention_in_days == 30
-      # - output.intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
-      # - output.intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
+      - output.intelligence_packs | selectattr('name', 'equalto', 'Backup') | map(attribute='enabled') | first == true
+      - output.intelligence_packs | selectattr('name', 'equalto', 'Containers') | map(attribute='enabled') | first == true
       - output.sku == 'per_gb2018'
       - output.tags.key1 == 'value1'
       - output.identity.type == 'SystemAssigned'
@@ -89,8 +89,8 @@
   azure_rm_loganalyticsworkspace:
     name: "{{ name_rpfx }}"
     intelligence_packs:
-      Backup: true
-      Containers: true
+      Backup: false
+      Containers: false
     retention_in_days: "{{ retention_days }}"
     resource_group: "{{ resource_group }}"
     tags:
@@ -127,8 +127,8 @@
       - facts.workspaces | length > 0
       - facts.workspaces[0].retention_in_days == retention_days
       - facts.workspaces[0].intelligence_packs | length > 0
-      # - facts.workspaces[0].intelligence_packs | json_query('[?name == `Backup`].enabled') | first == true
-      # - facts.workspaces[0].intelligence_packs | json_query('[?name == `Containers`].enabled') | first == true
+      - facts.workspaces[0].intelligence_packs | selectattr('name', 'equalto', 'Containers') | map(attribute='enabled') | first == false
+      - facts.workspaces[0].intelligence_packs | selectattr('name', 'equalto', 'Backup') | map(attribute='enabled') | first == false
       - facts.workspaces[0].shared_keys is defined
       - facts.workspaces[0].shared_keys.primary_shared_key is defined
       - facts.workspaces[0].shared_keys.secondary_shared_key is defined
