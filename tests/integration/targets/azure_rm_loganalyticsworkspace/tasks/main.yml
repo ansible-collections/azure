@@ -79,7 +79,7 @@
     that:
       - output.changed
       - output.retention_in_days == 30
-      - output.intelligence_packs | selectattr('name', 'equalto', 'Containers') | map(attribute='enabled') | first == true
+      - output.intelligence_packs | selectattr('name', 'equalto', 'Backup') | map(attribute='enabled') | first == true
       - output.intelligence_packs | selectattr('name', 'equalto', 'Containers') | map(attribute='enabled') | first == true
       - output.sku == 'per_gb2018'
       - output.tags.key1 == 'value1'
