@@ -83,6 +83,7 @@ options:
         choices:
             - None
             - Spot
+            - Regular
     eviction_policy:
         description:
             - Specifies the eviction policy for the Azure Spot virtual machine.
@@ -754,7 +755,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
             tier=dict(type='str', choices=['Basic', 'Standard']),
             capacity=dict(type='int', default=1),
             upgrade_policy=dict(type='str', choices=['Automatic', 'Manual']),
-            priority=dict(type='str', choices=['None', 'Spot']),
+            priority=dict(type='str', choices=['None', 'Spot', 'Regular']),
             eviction_policy=dict(type='str', choices=['Deallocate', 'Delete']),
             max_price=dict(type='float', default=-1),
             admin_username=dict(type='str'),
@@ -1346,6 +1347,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         vmss_resource.virtual_machine_profile.billing_profile = self.compute_models.BillingProfile(
                             max_price=self.max_price
                         )
+                    elif self.priority == 'Regular':
+                        vmss_resource.virtual_machine_profile.priority = self.priority
 
                     if self.scale_in_policy:
                         vmss_resource.scale_in_policy = self.gen_scale_in_policy()
