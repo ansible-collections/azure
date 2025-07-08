@@ -1,0 +1,27 @@
+---
+- name: Config hosts
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Set facts
+      ansible.builtin.include_vars: vars.yml
+
+    - name: Refresh inventory
+      ansible.builtin.meta: refresh_inventory
+
+    - name: Test vm_name_2 in Inventory
+      ansible.builtin.assert:
+        that:
+          - vm_name_2 in hostvars
+
+    - name: Test vm_name_2 in groups[AAP_Managed]
+      ansible.builtin.assert:
+        that:
+          - vm_name_2 in groups['AAP_Managed']
+          - vm_name_2 in groups['ubuntu20']
+
+    - name: Test vm_name in Inventory
+      ansible.builtin.assert:
+        that:
+          - vm_name in hostvars

@@ -2,13 +2,13 @@
 
 set -eux
 
+export ANSIBLE_INVENTORY=test.azure_rm.yml
+
 # make sure inventory is empty at the begining of the tests
 ansible-playbook playbooks/empty_inventory_config.yml "$@"
 
 # create vm
 ansible-playbook playbooks/setup.yml "$@"
-
-export ANSIBLE_INVENTORY=test.azure_rm.yml
 
 # using fully qualified name
 ansible-playbook playbooks/create_inventory_config.yml "$@"  
@@ -33,6 +33,11 @@ ansible-playbook playbooks/test_inventory_flush_part_2.yml "$@"
 ansible-playbook --flush-cache playbooks/test_inventory_flush_part_3.yml "$@"
 ansible-playbook playbooks/test_inventory_flush_part_3.yml "$@"
 
+# using kql
+export ANSIBLE_INVENTORY=test.azure_kql.yml
+ansible-playbook playbooks/empty_inventory_config.yml "$@"
+ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "template=kql.yml"
+ansible-playbook playbooks/test_inventory_kql.yml "$@"
 
 # teardown
 ansible-playbook playbooks/teardown.yml "$@"

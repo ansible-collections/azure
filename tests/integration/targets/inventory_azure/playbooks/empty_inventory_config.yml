@@ -6,6 +6,6 @@
   tasks:
     - name: Write inventory config file
       ansible.builtin.copy:
-        dest: ../test.azure_rm.yml
+        dest: "../{{ lookup('ansible.builtin.env', 'ANSIBLE_INVENTORY') }}"
         content: ""
         mode: preserve
