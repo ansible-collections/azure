@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -218,6 +216,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure_tags
 
 author:
+    - magodo (@magodo)
     - xuzhang3 (@xuzhang3)
     - Fred-sun (@Fred-sun)
 
@@ -427,10 +426,10 @@ class AzureRMPostgreSqlFlexibleMigration(AzureRMModuleBase):
 
         old_response = self.get_postgresqlflexiblemigration()
 
-        if self.migration_subscription_id is None:
+        if not self.migration_subscription_id:
             self.migration_subscription_id = self.subscription_id
         resource_group = self.get_resource_group(self.resource_group)
-        if self.parameters.get('location') is None:
+        if not self.parameters.get('location'):
             # Set default location
             self.parameters['location'] = resource_group.location
 

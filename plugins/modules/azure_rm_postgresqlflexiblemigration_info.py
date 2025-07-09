@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
-#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblemigration_info
-version_added: "3.4.0"
+version_added: "3.7.0"
 short_description: Get or list Azure PostgreSQL Flexible Migration facts
 description:
     - Get or list facts of PostgreSQL Flexible Migration.
@@ -36,6 +34,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
+    - magodo (@magodo)
     - xuzhang3 (@xuzhang3)
     - Fred-sun (@Fred-sun)
 
@@ -129,13 +128,14 @@ class AzureRMPostgreSqlFlexibleMigrationInfo(AzureRMModuleBase):
         self.migration_name = None
         self.target_db_server_name = None
         self.migration_subscription_id = None
+
         super(AzureRMPostgreSqlFlexibleMigrationInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False, facts_module=True)
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.migration_subscription_id is None:
+        if not self.migration_subscription_id:
             self.migration_subscription_id = self.subscription_id
 
         if self.migration_name is not None:
