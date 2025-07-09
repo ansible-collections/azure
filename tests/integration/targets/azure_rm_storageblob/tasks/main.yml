@@ -63,7 +63,7 @@
   register: upload_facts
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: "not upload_facts.changed"
+    that: upload_facts is not changed
 
 - name: Download file idempotence
   azure_rm_storageblob:
@@ -75,7 +75,7 @@
   register: download_results
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not download_results.changed
+    that: download_results is not changed
 
 - name: Delete file
   ansible.builtin.file:
@@ -92,7 +92,7 @@
   register: download_results
 - name: Assert download file
   ansible.builtin.assert:
-    that: "download_results.changed"
+    that: download_results is not changed
 
 - name: Find file
   ansible.builtin.find:
@@ -131,7 +131,7 @@
 
 - name: Assert the blob created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Update the blob with I(standard_blob_tier=Cool)
   azure_rm_storageblob:
@@ -146,7 +146,7 @@
 
 - name: Assert the blob updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get the blob facts
   azure_rm_storageblob_info:
@@ -171,7 +171,7 @@
   register: output
 - name: Assert no blobs
   ansible.builtin.assert:
-    that: "not output.changed"
+    that: output is not changed
 
 - name: Delete blob object
   azure_rm_storageblob:
@@ -183,7 +183,7 @@
   register: output
 - name: Assert the blob deleted
   ansible.builtin.assert:
-    that: "output.changed"
+    that: output is changed
 
 - name: Delete container
   azure_rm_storageblob:
@@ -194,7 +194,7 @@
   register: output
 - name: Assert delete the container
   ansible.builtin.assert:
-    that: "output.changed"
+    that: output is changed
 
 - name: Delete storage account
   azure_rm_storageaccount:
@@ -213,7 +213,7 @@
 
 - name: Assert the blob deleted
   ansible.builtin.assert:
-    that: "output.changed"
+    that: output is changed
 
 - name: Delete container
   azure_rm_storageblob:
@@ -225,7 +225,7 @@
 
 - name: Assert delete the container
   ansible.builtin.assert:
-    that: "output.changed"
+    that: output is changed
 
 - name: Delete storage account
   azure_rm_storageaccount:

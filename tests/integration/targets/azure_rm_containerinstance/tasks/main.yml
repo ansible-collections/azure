@@ -48,7 +48,7 @@
 - name: Assert the container instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Create sample container instance -- same parameters
@@ -72,7 +72,7 @@
 - name: Assert the container instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
 
 - name: Create sample container instance -- force update
   azure_rm_containerinstance:
@@ -102,7 +102,7 @@
 - name: Assert the container instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
 
 - name: Create second container instance for testing purposes
@@ -172,7 +172,7 @@
 - name: Assert the container instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts for single Container Instance
   azure_rm_containerinstance_info:
@@ -187,7 +187,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.containerinstances[0]['resource_group'] != None
       - output.containerinstances[0]['name'] != None
       - output.containerinstances[0]['os_type'] != None
@@ -206,7 +206,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.containerinstances[0]['resource_group'] != None
       - output.containerinstances[0]['name'] != None
       - output.containerinstances[0]['os_type'] != None
@@ -259,7 +259,7 @@
 - name: Assert that user identities are used
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - managed_identity_ids[0] in output.containerinstances[0].identity.user_assigned_identities
       - managed_identity_ids[1] in output.containerinstances[0].identity.user_assigned_identities
 
@@ -325,7 +325,7 @@
 - name: Assert the container instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.provisioning_state == 'Succeeded'
   register: ignore_errors_register
   ignore_errors: true
@@ -346,7 +346,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.containerinstances[0]['resource_group'] != None
       - output.containerinstances[0]['name'] != None
       - output.containerinstances[0]['os_type'] != None
@@ -412,7 +412,7 @@
 - name: Assert the container instance is deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Remove container instance
   azure_rm_containerinstance:
@@ -454,7 +454,7 @@
 - name: Assert the changed is false
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

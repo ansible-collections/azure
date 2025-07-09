@@ -25,7 +25,7 @@
 - name: Assert the network watcher is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a Network Watcher again(Idempotent test)
   azure_rm_networkwatcher:
@@ -40,7 +40,7 @@
 - name: Assert the network watcher is no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the network watcher facts
   azure_rm_networkwatcher_info:
@@ -75,4 +75,4 @@
 - name: Assert the network watcher is well delete
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

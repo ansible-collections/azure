@@ -35,8 +35,8 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - newapi.changed == True
-      - newapi.failed == False
+      - newapi is changed
+      - newapi is not failed
 
 - name: Create a new API instance Idempotent
   azure_rm_apimanagement:
@@ -54,8 +54,8 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - newapi_idempotent.changed == False
-      - newapi_idempotent.failed == False
+      - newapi_idempotent is not changed
+      - newapi_idempotent is not failed
 
 - name: Update protocols
   azure_rm_apimanagement:
@@ -74,7 +74,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - updateapi.changed == True
+      - updateapi is changed
 
 - name: Create different format api
   azure_rm_apimanagement:
@@ -91,8 +91,8 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - newopenapi.changed == True
-      - newopenapi.failed == False
+      - newopenapi is changed
+      - newopenapi is not failed
 
 - name: Get api information
   azure_rm_apimanagement_info:
@@ -117,7 +117,7 @@
 - name: Assert the changes
   ansible.builtin.assert:
     that:
-      - deleteapi.changed == True
+      - deleteapi is changed
 
 - name: Delete an api Idempotent
   azure_rm_apimanagement:
@@ -130,7 +130,7 @@
 - name: Assert the changes
   ansible.builtin.assert:
     that:
-      - deleteapi_idempotent.changed == False
+      - deleteapi_idempotent is not changed
 
 - name: Delete an api
   azure_rm_apimanagement:

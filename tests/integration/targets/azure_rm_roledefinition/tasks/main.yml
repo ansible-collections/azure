@@ -26,7 +26,7 @@
 - name: Assert creating role definition check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a role definition
   azure_rm_roledefinition:
@@ -48,7 +48,7 @@
 - name: Assert creating role definition
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 
 ## because of the bug of azure service , the following tasks will cause failures randomly
@@ -101,7 +101,7 @@
 # - name: ansible.builtin.assert output not changed
 #  ansible.builtin.assert:
 #    that:
-#      - not output.changed
+#      - output is not changed
 #
 # - name: Update the role definition
 #  azure_rm_roledefinition:
@@ -125,7 +125,7 @@
 # - name: ansible.builtin.assert output changed
 #  ansible.builtin.assert:
 #    that:
-#      - output.changed
+#      - output is changed
 #
 # - name: Get role definition facts
 #  azure_rm_roledefinition_info:
@@ -154,7 +154,7 @@
 # - name: Assert creating role definition check mode
 #  ansible.builtin.assert:
 #    that:
-#      - output.changed
+#      - output is changed
 #
 # - name: Create a role assignment
 #  azure_rm_roleassignment:
@@ -166,7 +166,7 @@
 # - name: Assert creating role assignment
 #  ansible.builtin.assert:
 #    that:
-#      - output.changed
+#      - output is changed
 #
 # - name: Get facts
 #  azure_rm_roleassignment_info:
@@ -197,7 +197,7 @@
 #
 # - name: ansible.builtin.assert deleting role definition check mode
 #  ansible.builtin.assert:
-#    that: output.changed
+#    that: output is changed
 #
 # - name: Delete the role definition
 #  azure_rm_roledefinition:
@@ -208,4 +208,4 @@
 #
 # - ansible.builtin.assert:
 #    that:
-#      - output.changed
+#      - output is changed

@@ -105,7 +105,7 @@
 - name: Assert the datebase is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new sql managed instance database (Idempotent test)
   azure_rm_sqlmidatabase:
@@ -121,7 +121,7 @@
 - name: Assert the datebase has no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the sql managed instance database tags
   azure_rm_sqlmidatabase:
@@ -137,7 +137,7 @@
 - name: Assert the datebase udpated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the sql managed instance database facts
   azure_rm_sqlmidatabase_info:
@@ -184,7 +184,7 @@
 - name: Assert the sql managed datebase long term retention policy updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get sql managed database long term retention policy by name
   azure_rm_sqlmidblongtermretentionpolicy_info:
@@ -229,7 +229,7 @@
 - name: Assert the sql managed datebase short term retention policy updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the sql managed instance database short term retention policy facts
   azure_rm_sqlmidbshorttermretentionpolicy_info:
@@ -256,7 +256,7 @@
 - name: Assert the sql managed datebase deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete sql managed instance
   azure_rm_sqlmanagedinstance:

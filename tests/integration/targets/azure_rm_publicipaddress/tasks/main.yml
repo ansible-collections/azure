@@ -68,7 +68,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update tags
   azure_rm_publicipaddress:

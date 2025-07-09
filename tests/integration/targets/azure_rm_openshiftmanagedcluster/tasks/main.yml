@@ -99,7 +99,7 @@
 
 - name: Assert the cluster created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 
 - name: Get available clusters for a specific resource_group
@@ -183,4 +183,4 @@
 
 - name: Assert the cluster deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed

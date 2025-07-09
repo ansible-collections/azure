@@ -34,7 +34,7 @@
 - name: Assert the check mode result
   ansible.builtin.assert:
     that:
-      - iothub.changed
+      - iothub is changed
 
 - name: Query IoT Hub
   azure_rm_iothub_info:
@@ -56,7 +56,7 @@
 - name: Assert tht iot hub created
   ansible.builtin.assert:
     that:
-      - iothub.changed
+      - iothub is changed
 
 - name: Update IoT Hub (identity)
   azure_rm_iothub:
@@ -72,7 +72,7 @@
 - name: Assert tht iot hub created
   ansible.builtin.assert:
     that:
-      - iothub.changed
+      - iothub is changed
 
 - name: Get the IoT Hub facts
   azure_rm_iothub_info:
@@ -104,7 +104,7 @@
 - name: Assert the iot hub created
   ansible.builtin.assert:
     that:
-      - not iothub.changed
+      - iothub is not changed
 
 - name: Update IoT Hub (identity)
   azure_rm_iothub:
@@ -121,7 +121,7 @@
 - name: Assert tht iot hub created
   ansible.builtin.assert:
     that:
-      - iothub.changed
+      - iothub is changed
 
 - name: Get the IoT Hub facts
   azure_rm_iothub_info:
@@ -248,7 +248,7 @@
 - name: Assert iot hub check mode result
   ansible.builtin.assert:
     that:
-      - iothub.changed
+      - iothub is changed
 
 - name: Delete IoT Hub
   azure_rm_iothub:
@@ -260,7 +260,7 @@
 - name: Assert the iot hub deleted
   ansible.builtin.assert:
     that:
-      - iothub.changed
+      - iothub is changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

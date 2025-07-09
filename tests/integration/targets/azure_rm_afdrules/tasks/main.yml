@@ -55,7 +55,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update Rule 1 (idempotent test)
@@ -89,7 +89,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.id
 
 - name: Load Rule info
@@ -110,7 +110,7 @@
       - output.afdrules[0].match_processing_behavior == "Continue"
       - output.afdrules[0].order == 1
       - output.afdrules[0].rule_set_name == "{{ ruleset }}"
-      - not output.changed
+      - output is not changed
 
 - name: Delete Rule
   azure_rm_afdrules:
@@ -124,7 +124,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Delete Rule (idempotent test)
@@ -139,7 +139,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create Ruleset
   azure_rm_afdruleset:

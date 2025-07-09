@@ -99,7 +99,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Cluster
   azure_rm_hdinsightcluster:
@@ -148,7 +148,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Wait for instance of Cluster provisioning to complete
   azure_rm_hdinsightcluster_info:
@@ -205,7 +205,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Create again instance of Cluster -- resize and add tags
   azure_rm_hdinsightcluster:
@@ -258,7 +258,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get facts of Cluster
   azure_rm_hdinsightcluster_info:
@@ -269,7 +269,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.clusters[0]['id'] != None
       - output.clusters[0]['resource_group'] != None
       - output.clusters[0]['name'] != None
@@ -296,7 +296,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of Cluster
   azure_rm_hdinsightcluster:
@@ -307,7 +307,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: managedidentity.yml

@@ -60,7 +60,7 @@
       register: output
     - name: Assert the keyvault secret created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault secret
       azure_rm_keyvaultsecret:
@@ -97,4 +97,4 @@
 
 - name: Assert the keyvault secret deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed

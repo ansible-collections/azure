@@ -14,7 +14,7 @@
 - name: Check the check mode return
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create automation account
   azure_rm_automationaccount:
@@ -25,7 +25,7 @@
 - name: Assert the account created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Create automation account
@@ -37,7 +37,7 @@
 - name: Assert the account already created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get automation account
   azure_rm_automationaccount_info:
@@ -68,7 +68,7 @@
 - name: Assert the account deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete account
   azure_rm_automationaccount:
@@ -80,7 +80,7 @@
 - name: Assert the account deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete account
   azure_rm_automationaccount:
@@ -92,4 +92,4 @@
 - name: Assert the account delete
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed

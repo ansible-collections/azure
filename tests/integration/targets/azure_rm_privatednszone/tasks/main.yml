@@ -11,7 +11,7 @@
 
 - name: Assert there is no private dns zone resource
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create a private DNS zone
   azure_rm_privatednszone:
@@ -21,7 +21,7 @@
 
 - name: Assert the private dns zone created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Update private DNS zone with tags
   azure_rm_privatednszone:
@@ -34,7 +34,7 @@
 - name: Assert the private dns zone updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Test idempotent
@@ -46,7 +46,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 - name: Retrieve DNS Zone Facts
   azure_rm_privatednszone_info:
@@ -79,4 +79,4 @@
 
 - name: Assert the private dns zone deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

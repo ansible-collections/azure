@@ -34,7 +34,7 @@
 - name: Check intentional name failure.
   ansible.builtin.assert:
     that:
-      - output.failed
+      - output is failed
       - output.msg is regex('AccountNameInvalid')
 
 - name: Delete storage accounts to prepare fresh deployment
@@ -63,7 +63,7 @@
 - name: Assert status succeeded and results match expectations
   ansible.builtin.assert:
     that:
-      - defaults_output.changed
+      - defaults_output is changed
       - defaults_output.state.name == storage_account_name_default
       - defaults_output.state.id is defined
       - defaults_output.state.https_only
@@ -83,7 +83,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.static_website is defined
       - not output.state.static_website.enabled
       - output.state.static_website.index_document == None
@@ -101,7 +101,7 @@
 - name: Assert not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Enable storage account static website
   azure_rm_storageaccount:
@@ -115,7 +115,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.static_website is defined
       - output.state.static_website.enabled
       - output.state.static_website.index_document == None
@@ -135,7 +135,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.static_website is defined
       - output.state.static_website.enabled
       - output.state.static_website.index_document == 'index.html'
@@ -155,7 +155,7 @@
 - name: Assert not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create new storage account with Hierarchical Namespace enabled
   azure_rm_storageaccount:
@@ -169,7 +169,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.large_file_shares_state == 'Enabled'
 
 - name: Gather facts of storage account
@@ -201,7 +201,7 @@
 - name: Assert the storage account well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create new storage account with immutable_storage_with_versioning(Idempotent test)
   azure_rm_storageaccount:
@@ -220,7 +220,7 @@
 - name: Assert the storage account no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the storage account with immutable_storage_with_versioning
   azure_rm_storageaccount:
@@ -239,7 +239,7 @@
 - name: Assert the storage account well updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts of storage account
   azure_rm_storageaccount_info:
@@ -270,7 +270,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.static_website is defined
       - output.state.static_website.enabled
       - output.state.static_website.index_document == "abc.htm"
@@ -295,7 +295,7 @@
 - name: Assert not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update storage account with different identity
   azure_rm_storageaccount:
@@ -341,7 +341,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.identity.type == "SystemAssigned"
 
 - name: Disable storage account static website
@@ -356,7 +356,7 @@
 - name: Assert output
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.static_website is defined
       - not output.state.static_website.enabled
       - output.state.static_website.index_document == None
@@ -372,7 +372,7 @@
 - name: Assert status succeeded and results match I(kind=FileStorage)
   ansible.builtin.assert:
     that:
-      - filestorage_output.changed
+      - filestorage_output is changed
       - filestorage_output.state.sku_name == "Premium_ZRS"
 
 - name: Create new storage account with explicit parameters
@@ -413,7 +413,7 @@
 - name: Assert status succeeded and correct parameter results
   ansible.builtin.assert:
     that:
-      - explicit_output.changed
+      - explicit_output is changed
       - explicit_output.state.id is defined
       - explicit_output.state.blob_cors | length == 1
       - not explicit_output.state.https_only
@@ -461,7 +461,7 @@
 - name: Assert that properties have not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.state.access_tier == explicit_output.state.access_tier
       - output.state.allow_blob_public_access == explicit_output.state.allow_blob_public_access
       - output.state.blob_cors == explicit_output.state.blob_cors
@@ -488,7 +488,7 @@
 - name: Assert that properties have not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.state.access_tier == explicit_output.state.access_tier
       - output.state.allow_blob_public_access == explicit_output.state.allow_blob_public_access
       - output.state.blob_cors == explicit_output.state.blob_cors
@@ -542,7 +542,7 @@
 - name: Assert account change success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.allow_blob_public_access == False
       - output.state.allow_blob_public_access != None
       - output.state.https_only == False
@@ -564,7 +564,7 @@
 - name: Assert account type change failed
   ansible.builtin.assert:
     that:
-      - output.failed
+      - output is failed
       - output.msg is regex('Storage account of type .* cannot be changed')
 
 - name: Unverified custom domain failure
@@ -579,7 +579,7 @@
 - name: Assert CNAME failure
   ansible.builtin.assert:
     that:
-      - output.failed
+      - output is failed
       - output.msg is regex('custom domain name could not be verified')
 
 - name: Create storage account with no public access
@@ -595,7 +595,7 @@
 - name: Assert desired account config
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.https_only
       - output.state.minimum_tls_version == 'TLS1_2'
       - not output.state.allow_blob_public_access
@@ -614,7 +614,7 @@
 - name: Assert no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Gather facts by tags
   azure_rm_storageaccount_info:
@@ -711,7 +711,7 @@
 - name: Assert storage account with (require_infrastructure_encryption=false) created
   ansible.builtin.assert:
     that:
-      - encryption_output.changed
+      - encryption_output is changed
 
 - name: Get account with (require_infrastructure_encryption=false)
   azure_rm_storageaccount_info:
@@ -741,7 +741,7 @@
 - name: Assert storage account is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a storage account with allow_shared_key_access(Idempotent test)
   azure_rm_storageaccount:
@@ -757,7 +757,7 @@
 - name: Assert storage account no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the storage account
   azure_rm_storageaccount:
@@ -773,7 +773,7 @@
 - name: Assert storage account is well updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the storage accounts facts
   azure_rm_storageaccount_info:

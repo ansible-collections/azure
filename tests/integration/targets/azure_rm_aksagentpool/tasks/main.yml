@@ -127,7 +127,7 @@
 - name: Assert the node agent pool created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Add agent pool (Idempotent test)
   azure_rm_aksagentpool:
@@ -154,7 +154,7 @@
 - name: Assert the node agent pool not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get cluster's node agent pool info
   azure_rm_aksagentpool_info:
@@ -192,7 +192,7 @@
 - name: Assert the node agent pool udpated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get cluster's node agent pool info
   azure_rm_aksagentpool_info:
@@ -255,7 +255,7 @@
 - name: Assert the node agent pool create well
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new agent pool with multi parameters( Idempotent test)
   azure_rm_aksagentpool:
@@ -299,7 +299,7 @@
 - name: Assert the node agent pool no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete node agent pool
   azure_rm_aksagentpool:
@@ -319,4 +319,4 @@
 - name: Assert the node agent pool has deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

@@ -28,7 +28,7 @@
 - name: Assert the registration assignment check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a RegistrationAssignment
   azure_rm_registrationassignment:
@@ -40,7 +40,7 @@
 - name: Assert the registration assignment created
   ansible.builtin.assert:
     that:
-      - output2.changed
+      - output2 is changed
 
 - name: Create a RegistrationAssignment -- idempotent
   azure_rm_registrationassignment:
@@ -53,7 +53,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get a RegistrationAssignment
   azure_rm_registrationassignment_info:

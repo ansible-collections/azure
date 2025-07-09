@@ -76,7 +76,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -108,7 +108,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create again instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -140,7 +140,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Pause for 600 seconds
   ansible.builtin.command: sleep 600
@@ -177,7 +177,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create second instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -210,7 +210,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update second instance of Database Account - replace user-identity
   azure_rm_cosmosdbaccount:
@@ -244,7 +244,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get facts of single account
   azure_rm_cosmosdbaccount_info:
@@ -255,7 +255,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed == False
       - output.accounts | length == 1
       - output.accounts[0]['id'] != None
       - output.accounts[0]['resource_group'] == resource_group
@@ -311,7 +311,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed == False
       - output.accounts[0]['primary_master_key'] != None
       - output.accounts[0]['secondary_master_key'] != None
       - output.accounts[0]['primary_readonly_master_key'] != None
@@ -327,7 +327,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed == False
       - "'primary_master_key' not in output.accounts[0]"
       - "'secondary_master_key' not in output.accounts[0]"
       - output.accounts[0]['primary_readonly_master_key'] != None
@@ -341,7 +341,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed == False
       - output.accounts | length == 1
       - output.accounts[0]['id'] != None
       - output.accounts[0]['resource_group'] == resource_group
@@ -379,7 +379,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed == False
       - output.accounts | length >= 2
       - dbname in (output.accounts | map(attribute='name'))
       - db2name in (output.accounts | map(attribute='name'))
@@ -414,7 +414,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get facts for free tier account
   azure_rm_cosmosdbaccount_info:
@@ -442,7 +442,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -453,7 +453,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -464,7 +464,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Delete second instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -475,7 +475,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete free tier instance of Database Account
   azure_rm_cosmosdbaccount:
@@ -486,7 +486,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Clean up virtual network
   azure_rm_virtualnetwork:

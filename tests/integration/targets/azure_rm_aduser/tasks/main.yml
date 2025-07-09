@@ -52,7 +52,7 @@
 - name: Assert Nothing Changed
   ansible.builtin.assert:
     that:
-      - attempted_update_with_no_changes_should_pass["changed"] == False
+      - attempted_update_with_no_changes_should_pass is not changed
 
 - name: User_principal_name Should Pass
   azure_rm_aduser_info:

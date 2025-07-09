@@ -26,7 +26,7 @@
 - name: Assert the resource was created and returns expected variables
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
       - output.host_name
 
@@ -45,7 +45,7 @@
 - name: Assert the resource has not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Load Endpoint info
   azure_rm_afdendpoint_info:
@@ -64,7 +64,7 @@
       - output.afdendpoints[0].id
       - output.afdendpoints[0].profile_name == profile
       - output.afdendpoints[0].tags.test == 'tag value'
-      - not output.changed
+      - output is not changed
 
 - name: Update EndPoint (with different values)
   azure_rm_afdendpoint:
@@ -81,7 +81,7 @@
 - name: Assert the resource has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update EndPoint (idempotent test)
   azure_rm_afdendpoint:
@@ -98,7 +98,7 @@
 - name: Assert the resource has not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update EndPoint (replace tags)
   azure_rm_afdendpoint:
@@ -115,7 +115,7 @@
 - name: Assert the resource has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Load Endpoint info
   azure_rm_afdendpoint_info:
@@ -132,7 +132,7 @@
       - output.afdendpoints[0].enabled_state == 'Disabled'
       - output.afdendpoints[0].tags['test2'] == 'a tag value'
       - output.afdendpoints[0].tags['newtag'] is not defined
-      - not output.changed
+      - output is not changed
 
 - name: Delete EndPoint
   azure_rm_afdendpoint:
@@ -145,7 +145,7 @@
 - name: Assert the resource was deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete EndPoint (idempotent test)
   azure_rm_afdendpoint:
@@ -158,7 +158,7 @@
 - name: Assert the delete function is idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Frontdoor Profile
   azure_rm_cdnprofile:

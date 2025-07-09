@@ -69,7 +69,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Key Vault
   azure_rm_keyvault:
@@ -97,7 +97,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Key Vault again
   azure_rm_keyvault:
@@ -124,7 +124,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Update existing Key Vault (add a rule and tags)
   azure_rm_keyvault:
@@ -163,7 +163,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get key vault facts
   azure_rm_keyvault_info:
@@ -247,7 +247,7 @@
 
 - name: Assert the keyvault created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Update instance of Key Vault
   azure_rm_keyvault:
@@ -285,7 +285,7 @@
 
 - name: Assert the keyvault Updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get key vault facts
   azure_rm_keyvault_info:
@@ -323,7 +323,7 @@
       register: output
     - name: Assert the keyvault key created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault key
       azure_rm_keyvaultkey:
@@ -355,7 +355,7 @@
 
 - name: Assert the keyvault deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 #
 # azure_rm_keyvaultsecret tests
@@ -373,7 +373,7 @@
       register: output
     - name: Assert the keyvault secret created
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
   rescue:
     - name: Delete the keyvault secret
       azure_rm_keyvaultsecret:
@@ -390,7 +390,7 @@
 
 - name: Assert the keyvault secret deleted
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 #
 # azure_rm_keyvault finalize & clean up
@@ -406,7 +406,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of Key Vault
   azure_rm_keyvault:
@@ -417,7 +417,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of Key Vault
   azure_rm_keyvault:
@@ -428,7 +428,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 #
 # azure_rm_keyvault hsm setup and test
@@ -457,7 +457,7 @@
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Create instance of HSM
       azure_rm_keyvault:
@@ -478,7 +478,7 @@
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Create instance of HSM again
       azure_rm_keyvault:
@@ -499,7 +499,7 @@
     - name: Assert the state has not changed
       ansible.builtin.assert:
         that:
-          - output.changed == false
+          - output is not changed
 
     - name: Update existing HSM (add tags)
       azure_rm_keyvault:
@@ -522,7 +522,7 @@
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
-          - output.changed == true
+          - output is changed
 
     - name: Get hsm facts
       azure_rm_keyvault_info:
@@ -571,7 +571,7 @@
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Delete instance of HSM
       azure_rm_keyvault:
@@ -583,7 +583,7 @@
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
-          - output.changed
+          - output is changed
 
     - name: Delete unexisting instance of HSM
       azure_rm_keyvault:
@@ -595,7 +595,7 @@
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
-          - output.changed == false
+          - output is not changed
 
 - name: Purge the deleted vault
   azure_rm_keyvault:

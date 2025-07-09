@@ -20,7 +20,7 @@
 - name: Assert app service was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Create a linux plan
@@ -35,7 +35,7 @@
 - name: Assert app service was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Get app service plan by name
@@ -61,7 +61,7 @@
 
 - name: Assert app service is not updated
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update a windows plan sku
   azure_rm_appserviceplan:
@@ -73,7 +73,7 @@
 - name: Assert app service was updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update a linux plan number of workers
   azure_rm_appserviceplan:
@@ -87,7 +87,7 @@
 - name: Assert app service was updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create premium linux plan
   azure_rm_appserviceplan:
@@ -100,7 +100,7 @@
 - name: Assert app service was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Create premium linux plan idempotent
@@ -113,4 +113,4 @@
 
 - name: Assert app service is not updated
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed

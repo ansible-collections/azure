@@ -19,7 +19,7 @@
 
 - name: Assert that something has changed
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Call REST API
   azure_rm_resource:
@@ -35,7 +35,7 @@
 
 - name: Assert that nothing has changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Call REST API
   azure_rm_resource:
@@ -54,7 +54,7 @@
 
 - name: Assert that something has changed
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Try to get information about account
   azure_rm_resource_info:
@@ -68,7 +68,7 @@
 - name: Assert value was returned
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.response[0]['name'] != None
       - output.response | length == 1
 
@@ -82,7 +82,7 @@
 - name: Assert value was returned
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.response[0]['name'] != None
       - output.response | length >= 1
 
@@ -95,7 +95,7 @@
 - name: Assert value was returned
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.response[0]['name'] != None
       - output.response | length >= 1
 
@@ -107,7 +107,7 @@
 - name: Assert value was returned
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.response | length >= 1
 
 - name: Create storage account that requires LRO polling

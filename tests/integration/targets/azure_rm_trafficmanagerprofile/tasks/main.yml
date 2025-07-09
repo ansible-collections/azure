@@ -60,7 +60,7 @@
 - name: Assert the Traffic Manager profile is well created
   ansible.builtin.assert:
     that:
-      - tm.changed
+      - tm is changed
 
 - name: Gather Traffic Manager profile facts
   azure_rm_trafficmanagerprofile_info:
@@ -98,7 +98,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the Traffic Manager profile
   azure_rm_trafficmanagerprofile:
@@ -123,7 +123,7 @@
 - name: Assert the Traffic Manager profile is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create the Seconday Traffic Manager profile
   azure_rm_trafficmanagerprofile:
@@ -151,7 +151,7 @@
 - name: Assert the Traffic Manager profile is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update the Seconday Traffic Manager profile
   azure_rm_trafficmanagerprofile:
@@ -183,7 +183,7 @@
 - name: Assert the Traffic Manager profile is well updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather Seconday Traffic Manager profile facts
   azure_rm_trafficmanagerprofile_info:
@@ -215,7 +215,7 @@
 - name: Assert check mode changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get endpoint
   azure_rm_trafficmanagerendpoint_info:
@@ -243,7 +243,7 @@
 - name: Assert endpoint create changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get endpoint
   azure_rm_trafficmanagerendpoint_info:
@@ -294,7 +294,7 @@
 - name: Assert endpoint creation idempotent
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
 
 - name: Delete second endpoint
   azure_rm_trafficmanagerendpoint:
@@ -308,7 +308,7 @@
 - name: Assert endpoint deletion changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get endpoint
   azure_rm_trafficmanagerendpoint_info:
@@ -351,7 +351,7 @@
 - name: Assert the Traffic Manager profile is well deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get Traffic Manager profile fact
   azure_rm_trafficmanagerprofile_info:

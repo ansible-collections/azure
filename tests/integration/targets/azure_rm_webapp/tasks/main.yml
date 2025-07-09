@@ -61,7 +61,7 @@
 - name: Assert output changed
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Get the web app
   azure_rm_webapp_info:
@@ -114,7 +114,7 @@
 
 - name: Assert web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get web app with name
   azure_rm_webapp_info:
@@ -147,7 +147,7 @@
 - name: Assert the web app was updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get web app with name
   azure_rm_webapp_info:
@@ -186,7 +186,7 @@
 
 - name: Assert the web app was updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a win web app with python run time and php run time
   azure_rm_webapp:
@@ -204,7 +204,7 @@
 
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a docker web app with some app settings
   azure_rm_webapp:
@@ -223,7 +223,7 @@
 
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a docker web app with private acr registry
   azure_rm_webapp:
@@ -242,7 +242,7 @@
 
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a linux web app with nodejs framework
   azure_rm_webapp:
@@ -272,7 +272,7 @@
 
 - name: Assert idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update nodejs framework
   azure_rm_webapp:
@@ -289,7 +289,7 @@
 
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a linux web app with deployment source github
   azure_rm_webapp:
@@ -307,7 +307,7 @@
 
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Assert error that java is mutually exclusive with frameworks
   azure_rm_webapp:
@@ -356,7 +356,7 @@
 
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get facts with publish profile
   azure_rm_webapp_info:
@@ -394,7 +394,7 @@
   register: output
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a web app with various site config params - idempotent
   azure_rm_webapp:
@@ -420,7 +420,7 @@
   register: output
 - name: Assert the web app not changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Get facts for site config params
   azure_rm_webapp_info:
@@ -459,7 +459,7 @@
   register: output
 - name: Assert the web app was updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get facts for site config params
   azure_rm_webapp_info:
@@ -499,7 +499,7 @@
   register: output
 - name: Assert the web app was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create a web app with HTTP 2.0 - idempotent
   azure_rm_webapp:
@@ -526,7 +526,7 @@
   register: output
 - name: Assert the web app not changed
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Get facts for HTTP 2.0 appp
   azure_rm_webapp_info:
@@ -566,7 +566,7 @@
   register: output
 - name: Assert the web app was updated
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Get facts for HTTP 2.0 appp
   azure_rm_webapp_info:
@@ -605,7 +605,7 @@
 - name: Assert the web app is well created
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Update the web app with site_auth_settings
   azure_rm_webapp:
@@ -631,7 +631,7 @@
 - name: Assert the web app is well updated
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Get the web app facts
   azure_rm_webapp_info:
@@ -668,7 +668,7 @@
 - name: Assert the web app is well updated
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Get the web app facts
   azure_rm_webapp_info:
@@ -701,7 +701,7 @@
 - name: Assert the web app is well updated
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Get the web app facts
   azure_rm_webapp_info:
@@ -735,7 +735,7 @@
 - name: Assert the web app is not updated
   ansible.builtin.assert:
     that:
-      not output.changed
+      output is not changed
 
 - name: Get the web app facts
   azure_rm_webapp_info:
@@ -766,7 +766,7 @@
 - name: Assert the web app is well updated
   ansible.builtin.assert:
     that:
-      output.changed
+      output is changed
 
 - name: Get the web app facts
   azure_rm_webapp_info:
@@ -795,7 +795,7 @@
 - name: Assert slot check mode creation
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a webapp slot
   azure_rm_webappslot:
@@ -811,7 +811,7 @@
 - name: Assert slot creation
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update webapp slot (idempotence)
   azure_rm_webappslot:
@@ -826,7 +826,7 @@
 - name: Assert idempotence
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update webapp slot
   azure_rm_webappslot:
@@ -844,7 +844,7 @@
 - name: Assert updating
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Swap webapp slot
   azure_rm_webappslot:
@@ -859,7 +859,7 @@
 - name: Assert swap
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Stop webapp slot
   azure_rm_webappslot:
@@ -873,7 +873,7 @@
 - name: Assert stopped
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the webapp resource
   azure_rm_webapp:

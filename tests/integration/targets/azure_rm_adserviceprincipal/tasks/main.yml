@@ -16,7 +16,7 @@
 - name: Assert the ad service prinicipal created
   ansible.builtin.assert:
     that:
-      - ad_fact.changed
+      - ad_fact is changed
 
 - name: Create ad service principal (idempontent)
   azure_rm_adserviceprincipal:
@@ -27,7 +27,7 @@
 - name: Assert the ad service principal idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get ad service principal info by app_id
   azure_rm_adserviceprincipal_info:
@@ -67,4 +67,4 @@
 - name: Assert the ad service principals deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

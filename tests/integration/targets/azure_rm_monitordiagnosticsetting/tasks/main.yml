@@ -67,7 +67,7 @@
 - name: Assert no settings
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.settings | length == 0
 
 - name: Create storage-based diagnostic setting for vnet (check mode)
@@ -84,7 +84,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create storage-based diagnostic setting for vnet (actually create)
   azure_rm_monitordiagnosticsetting:
@@ -99,7 +99,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.name == 'logs-storage'
       - output.state.storage_account.id == storage_output.state.id
       - output.state.logs | length == 1
@@ -125,7 +125,7 @@
 - name: Assert resource not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create storage-based diagnostic setting for vnet by resource dict (idempotent)
   azure_rm_monitordiagnosticsetting:
@@ -143,7 +143,7 @@
 - name: Assert resource not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update storage-based diagnostic setting for vnet
   azure_rm_monitordiagnosticsetting:
@@ -156,7 +156,7 @@
 - name: Assert resource updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.name == 'logs-storage'
       - output.state.storage_account.id == storage_output.state.id
       - output.state.logs | length == 1
@@ -181,7 +181,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.name == 'logs-storage2'
       - output.state.storage_account.id == storage2_output.state.id
       - output.state.logs | length == 1
@@ -208,7 +208,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.logs[0].retention_policy.days == 30
 
 - name: Update second storage-based diagnostic setting for vnet (idempotent)
@@ -226,7 +226,7 @@
 - name: Assert resource not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get diagnostic settings for virtual network
   azure_rm_monitordiagnosticsetting_info:
@@ -311,7 +311,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.name == 'logs'
       - output.state.storage_account.id == storage_output.state.id
       - output.state.event_hub.namespace == 'hub-{{ rpfx }}'
@@ -352,7 +352,7 @@
 - name: Assert resource created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update diagnostic setting to remove storage and log category
   azure_rm_monitordiagnosticsetting:
@@ -377,7 +377,7 @@
 - name: Assert resource updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - not output.state.storage_account
       - output.state.logs | length == 5
       - output.state.logs[0].category == 'AppServiceHTTPLogs'
@@ -398,7 +398,7 @@
 - name: Assert resource delete
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete diagnostic setting via resource dict (idempotent)
   azure_rm_monitordiagnosticsetting:
@@ -412,7 +412,7 @@
 - name: Assert resource delete
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete diagnostic setting (check mode)
   azure_rm_monitordiagnosticsetting:
@@ -424,7 +424,7 @@
 - name: Assert resource deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete diagnostic setting (actually delete)
   azure_rm_monitordiagnosticsetting:
@@ -435,7 +435,7 @@
 - name: Assert resource deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete diagnostic setting (idempotent)
   azure_rm_monitordiagnosticsetting:
@@ -446,7 +446,7 @@
 - name: Assert resource already deleted
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete second diagnostic setting
   azure_rm_monitordiagnosticsetting:
@@ -457,7 +457,7 @@
 - name: Assert resource deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 # ------ teardown ------
 

@@ -30,8 +30,8 @@
 - name: Assert Otherwise Changed Returns are Equal
   ansible.builtin.assert:
     that:
-      - group_create_changed_shouldpass.changed == True
-      - group_create_unchanged_shouldpass.changed == False
+      - group_create_changed_shouldpass is changed
+      - group_create_unchanged_shouldpass is not changed
       - group_create_changed_shouldpass.display_name == group_create_unchanged_shouldpass.display_name
       - group_create_changed_shouldpass.mail_enabled == group_create_unchanged_shouldpass.mail_enabled
       - group_create_changed_shouldpass.mail_nickname == group_create_unchanged_shouldpass.mail_nickname
@@ -90,7 +90,7 @@
 - name: Validate nothing changed from already present member
   ansible.builtin.assert:
     that:
-      - add_already_present_member_to_group_shouldpass.changed == false
+      - add_already_present_member_to_group_shouldpass is not changed
 
 - name: Ensure member is not in group using object_id
   azure_rm_adgroup:
@@ -118,7 +118,7 @@
 - name: Validate nothing changed from already absent member
   ansible.builtin.assert:
     that:
-      - remove_already_absent_member_from_group_shouldpass.changed == false
+      - remove_already_absent_member_from_group_shouldpass is not changed
 
 - name: Return a specific group using object_id
   azure_rm_adgroup_info:

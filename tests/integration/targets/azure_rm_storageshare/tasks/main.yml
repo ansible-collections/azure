@@ -31,7 +31,7 @@
 - name: Assert create success
   ansible.builtin.assert:
     that:
-      - create_result.changed
+      - create_result is changed
       - create_result.state.name == share_name
       - create_result.state.share_quota == quota
       - create_result.state.metadata.source == metadata.source
@@ -49,7 +49,7 @@
 
 - name: Assert idempotence
   ansible.builtin.assert:
-    that: not create_result.changed
+    that: create_result is not changed
 
 - name: Get share details
   azure_rm_storageshare_info:
@@ -61,7 +61,7 @@
 - name: Assert storage share details
   ansible.builtin.assert:
     that:
-      - not share_facts.changed
+      - share_facts is not changed
       - share_facts.storageshares.name == share_name
       - share_facts.storageshares.share_quota == quota
       - share_facts.storageshares.metadata.source == metadata.source
@@ -86,7 +86,7 @@
 
 - name: Assert share update success
   ansible.builtin.assert:
-    that: update_result.changed
+    that: update_result is changed
 
 - name: Get updated details
   azure_rm_storageshare_info:

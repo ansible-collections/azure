@@ -32,7 +32,7 @@
 
 - name: Assert that IP group is created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create same IP group again (Idempotent test)
   azure_rm_ipgroup:
@@ -50,7 +50,7 @@
 
 - name: Assert that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update IP group
   azure_rm_ipgroup:
@@ -65,7 +65,7 @@
 
 - name: Assert that IP group is updated
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Get IP group facts
   azure_rm_ipgroup_info:
@@ -76,7 +76,7 @@
 - name: Assert the ip group facts
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.ipgroups[0].id != None
       - results.ipgroups[0].name == "{{ group_name }}"
       - results.ipgroups[0].location == "eastus"
@@ -93,7 +93,7 @@
 
 - name: Assert that IP group is deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Delete IP group again (Idempotent test)
   azure_rm_ipgroup:
@@ -104,4 +104,4 @@
 
 - name: Asset that output is not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

@@ -22,7 +22,7 @@
 
 - name: Assert the virtual network gateway check mode
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create virtual network gateway Generation2 (check mode)
   check_mode: true
@@ -41,7 +41,7 @@
 
 - name: Assert the virtual network gateway check mode
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Long-running virtualnetworkgateway tests
   block:
@@ -137,7 +137,7 @@
 
     - name: Assert the idempotent
       ansible.builtin.assert:
-        that: not output.changed
+        that: output is not changed
 
     - name: Update virtual network gateway
       azure_rm_virtualnetworkgateway:
@@ -154,7 +154,7 @@
 
     - name: Assert the virtual network gateway updated
       ansible.builtin.assert:
-        that: output.changed
+        that: output is changed
 
     - name: List the virtual network gateway and filter by tags
       azure_rm_virtualnetworkgateway_info:
@@ -198,7 +198,7 @@
 
 - name: Assert the virtual network gateway deleted
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 # Clean up networking components after test
 - name: Delete subnet

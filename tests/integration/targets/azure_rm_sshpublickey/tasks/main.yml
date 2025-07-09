@@ -15,7 +15,7 @@
 - name: Assert the SSH Public Key created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new SSH Public Key (Idempotent test)
   azure_rm_sshpublickey:
@@ -30,7 +30,7 @@
 - name: Assert the SSH Public key no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update SSH Public Key with tags and public key
   azure_rm_sshpublickey:
@@ -44,7 +44,7 @@
 - name: Assert the SSH Public key Updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get ssh public keys by name
   azure_rm_sshpublickey_info:
@@ -67,4 +67,4 @@
 - name: Assert the SSH Public Key deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

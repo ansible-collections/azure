@@ -118,7 +118,7 @@
 - name: Assert the resource instance is not exist
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create sql managed instance
   azure_rm_sqlmanagedinstance:
@@ -147,7 +147,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Wait for sql managed instance provisioning to complete
   azure_rm_sqlmanagedinstance_info:
@@ -184,7 +184,7 @@
 - name: Assert the resource instance no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Upgrade sql managed instance with tags
   azure_rm_sqlmanagedinstance:
@@ -214,7 +214,7 @@
 - name: Assert the resource instance is update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get SQL managed instance by name
   azure_rm_sqlmanagedinstance_info:

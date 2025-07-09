@@ -18,7 +18,7 @@
 - name: Assert the tags created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create new tags with scope(Idempotent test)
   azure_rm_tags:
@@ -30,7 +30,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the tags with scope
   azure_rm_tags:
@@ -43,7 +43,7 @@
 - name: Assert the tags updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the tag info at thespecified resource
   azure_rm_tags_info:
@@ -65,4 +65,4 @@
 - name: Assert the tag deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

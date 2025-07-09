@@ -67,7 +67,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.new.identity.type == "UserAssigned"
       - output.new.identity.user_assigned_identities | length == 1
       - output.new.identity.user_assigned_identities[managed_identity_ids[0]] is defined
@@ -91,7 +91,7 @@
 - name: Assert the resource wasn't changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.new.identity.type == "UserAssigned"
       - output.new.identity.user_assigned_identities | length == 1
       - output.new.identity.user_assigned_identities[managed_identity_ids[0]] is defined
@@ -115,7 +115,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.new.identity.type == "UserAssigned"
       - output.new.identity.user_assigned_identities | length == 1
       - output.new.identity.user_assigned_identities[managed_identity_ids[1]] is defined
@@ -153,7 +153,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.new.identity.type == "SystemAssigned"
       - output.new.identity.user_assigned_identities is not defined
 
@@ -178,7 +178,7 @@
 - name: Assert the application was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new batchaccount application again(Idempotent test)
   azure_rm_batchaccountapplication:
@@ -192,7 +192,7 @@
 - name: Assert the application no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Upgrade the application
   azure_rm_batchaccountapplication:
@@ -206,7 +206,7 @@
 - name: Assert the application was updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the batchaccount application facts
   azure_rm_batchaccountapplication_info:
@@ -240,7 +240,7 @@
 - name: Assert the application package was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new batch account application package again(Idempotent test)
   azure_rm_batchaccountapplicationpackage:
@@ -253,7 +253,7 @@
 - name: Assert the application package no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get the application package facts
   azure_rm_batchaccountapplicationpackage_info:
@@ -405,7 +405,7 @@
 - name: Assert the pool was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new batch account pool again(Idempotent test)
   azure_rm_batchaccountpool:
@@ -468,7 +468,7 @@
 - name: Assert the pool no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Upgrade the batch account pool
   azure_rm_batchaccountpool:
@@ -531,7 +531,7 @@
 - name: Assert the pool was updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the batch account pool facts by name
   azure_rm_batchaccountpool_info:
@@ -562,7 +562,7 @@
 - name: Assert the pool stop resize
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Disable the batch account pool auto_scale
   azure_rm_batchaccountpool:
@@ -575,7 +575,7 @@
 - name: Assert the pool disable auto_scale
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the batch account pool
   azure_rm_batchaccountpool:
@@ -588,7 +588,7 @@
 - name: Assert the pool deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the application package
   azure_rm_batchaccountapplicationpackage:
@@ -602,7 +602,7 @@
 - name: Assert the application package deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the application
   azure_rm_batchaccountapplication:
@@ -614,7 +614,7 @@
 - name: Assert the application deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete Batch Account
   azure_rm_batchaccount:
@@ -626,7 +626,7 @@
 - name: Assert that state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Clean up storage account
   azure_rm_storageaccount:

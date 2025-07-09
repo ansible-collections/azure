@@ -44,7 +44,7 @@
 - name: Assert status succeeded (Check Mode)
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state
 
 - name: Create new managed disk succesfully
@@ -63,7 +63,7 @@
 - name: Assert status succeeded and results include an Id value
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.disk_size_gb == 1
       - output.state.id is defined
       - output.state.os_type == None
@@ -81,7 +81,7 @@
 - name: Assert status succeeded and results include an Id value
   ansible.builtin.assert:
     that:
-      - disk2.changed
+      - disk2 is changed
       - disk2.state.id is defined
 
 - name: Create disk to a new managed disk with zone and os type
@@ -97,7 +97,7 @@
 - name: Assert status succeeded and results include an Id value
   ansible.builtin.assert:
     that:
-      - disk3.changed
+      - disk3 is changed
       - disk3.state.id is defined
       - disk3.state.zone == "1"
       - disk3.state.os_type == "windows"
@@ -134,7 +134,7 @@
 - name: Assert the disk updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.storage_account_type == "StandardSSD_LRS"
       - output.state.disk_size_gb == 2
       - "output.state.tags | length == 2"
@@ -180,7 +180,7 @@
 - name: Assert the disk created
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create new managed disk with  I(account_type=StandardSSD_ZRS)
   azure_rm_manageddisk:
@@ -194,7 +194,7 @@
 - name: Assert the managed disk update
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.storage_account_type == "StandardSSD_ZRS"
       - output.state.disk_size_gb == 2
 
@@ -223,7 +223,7 @@
 - name: Assert the managed disk created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.storage_account_type == "Premium_ZRS"
       - output.state.disk_size_gb == 2
 
@@ -255,7 +255,7 @@
 - name: Assert the managed disk Created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create new managed disk with throught parameters(Idempotent Test)
   azure_rm_manageddisk:
@@ -272,7 +272,7 @@
 - name: Assert the managed disk no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the managed disk
   azure_rm_manageddisk:
@@ -289,7 +289,7 @@
 - name: Assert the managed disk updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the managed disk facts
   azure_rm_manageddisk_info:
@@ -326,7 +326,7 @@
 - name: Assert status succeeded and results include an Id value
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete managed disk (Check Mode)
   azure_rm_manageddisk:
@@ -339,7 +339,7 @@
 - name: Assert status succeeded
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state
 
 - name: Gather Resource Group info
@@ -373,7 +373,7 @@
 - name: Assert Tags
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.tags.testtag1 == 'TestValue1'
 
 - name: Update tags (replace) on managed disk (fromimage)
@@ -388,7 +388,7 @@
 - name: Assert Tags
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state
       - output.state.tags.testtag1 is not defined
       - output.state.tags.testtag2 == 'TestValue2'
@@ -405,7 +405,7 @@
 - name: Assert Tags
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state
       - output.state.tags.testtag1 is not defined
       - output.state.tags.testtag2 == 'TestValue2'

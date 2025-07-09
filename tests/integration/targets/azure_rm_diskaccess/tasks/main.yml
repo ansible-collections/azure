@@ -23,7 +23,7 @@
 - name: Assert the disk access created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a new disk access(Idempotent Test)
   azure_rm_diskaccess:
@@ -37,7 +37,7 @@
 - name: Assert the disk access no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the disk access
   azure_rm_diskaccess:
@@ -51,7 +51,7 @@
 - name: Assert the disk access updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the disk access facts
   azure_rm_diskaccess_info:
@@ -74,4 +74,4 @@
 - name: Assert the disk access deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

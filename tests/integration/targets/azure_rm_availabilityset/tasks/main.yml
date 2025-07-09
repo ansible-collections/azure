@@ -9,7 +9,7 @@
 
 - name: Assert the availability created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create an availability set with default options
   azure_rm_availabilityset:
@@ -21,7 +21,7 @@
 
 - name: Assert the availability created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create proximity placement group name
   ansible.builtin.set_fact:
@@ -47,7 +47,7 @@
 
 - name: Assert the availability set created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Modify availabilty set immutable options - no changes, fail for immutable options
   azure_rm_availabilityset:
@@ -63,7 +63,7 @@
 - name: Assert availabilty set modified
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
 
 - name: Modify availabilty set immutable options and set tags - change tags and fail for immutable options
@@ -82,7 +82,7 @@
 - name: Assert the availabilty set idempotent
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.msg == 'You tried to change platform_update_domain_count but is was unsuccessful. An Availability Set is immutable, except tags'
 
 - name: Modify availabilty set options to update tags
@@ -133,7 +133,7 @@
 - name: Assert the check mode test
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.checktest1 == 'modified1'
 
 #
@@ -148,8 +148,8 @@
 - name: Assert the availabilty set facts
   ansible.builtin.assert:
     that:
-      - not results.changed
-      - not results.failed
+      - results is not changed
+      - results is not failed
       - results.ansible_info.azure_availabilitysets[0].platform_fault_domain_count == 2
       - results.ansible_info.azure_availabilitysets[0].platform_update_domain_count == 5
       - results.ansible_info.azure_availabilitysets[0].sku == 'Aligned'
@@ -165,7 +165,7 @@
 - name: Assert the availabilty set deleted
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Delete an availability set
   azure_rm_availabilityset:
@@ -183,7 +183,7 @@
 - name: Assert check mode return
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 - name: Delete an availability set
   azure_rm_availabilityset:

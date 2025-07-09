@@ -35,7 +35,7 @@
 
 - name: Assert the check mode result
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create Event Hub (check mode)
   azure_rm_eventhub:
@@ -49,7 +49,7 @@
 
 - name: Assert the check mode result
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create Event Hub Namespace
   azure_rm_eventhub:
@@ -61,7 +61,7 @@
 
 - name: Assert the event hub namespace created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create Event Hub
   azure_rm_eventhub:
@@ -73,7 +73,7 @@
 
 - name: Assert the event hub created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Update Namespace
   azure_rm_eventhub:
@@ -88,7 +88,7 @@
 - name: Assert the namespace updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Update Namespace - add SystemAssigned Identity
@@ -106,7 +106,7 @@
 - name: Assert the Namespace updated with the SystemAssigned Identity
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace with the SystemAssigned Identity
@@ -118,7 +118,7 @@
 - name: Assert the facts of the Namespace with the SystemAssigned Identity
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.namespace[0].name == "{{ namespace_name }}"
       - results.namespace[0].identity.type == 'SystemAssigned'
       - results.namespace[0].identity.user_assigned_identities is not defined
@@ -141,7 +141,7 @@
 - name: Assert the Namespace updated with the first UserAssigned Identity
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace with the first UserAssigned Identity
@@ -153,7 +153,7 @@
 - name: Assert the facts of the Namespace with the first UserAssigned Identity
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.namespace[0].name == "{{ namespace_name }}"
       - results.namespace[0].identity.type == 'UserAssigned'
       - results.namespace[0].identity.user_assigned_identities | length == 1
@@ -178,7 +178,7 @@
 - name: Assert the Namespace updated with the second UserAssigned Identity
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace with the second UserAssigned Identity
@@ -190,7 +190,7 @@
 - name: Assert the facts of the Namespace with the second UserAssigned Identity
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.namespace[0].name == "{{ namespace_name }}"
       - results.namespace[0].identity.type == 'UserAssigned'
       - results.namespace[0].identity.user_assigned_identities | length == 1
@@ -214,7 +214,7 @@
 - name: Assert the Namespace updated with multiple identities
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace with multiple identities
@@ -226,7 +226,7 @@
 - name: Assert the facts of the Namespace with multiple identities
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.namespace[0].name == "{{ namespace_name }}"
       - results.namespace[0].identity.type == 'SystemAssigned, UserAssigned'
       - results.namespace[0].identity.user_assigned_identities | length == 2
@@ -248,7 +248,7 @@
 - name: Assert the event hub updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Test idempotent
   azure_rm_eventhub:
@@ -263,7 +263,7 @@
 - name: Assert idempotent success
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 # cleanup
 - name: Delete Event Hub
@@ -285,7 +285,7 @@
 
 - name: Assert the event hub deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Delete Namespace
   azure_rm_eventhub:
@@ -309,7 +309,7 @@
 
 - name: Assert the namespace deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Create Namespace - with multiple UserAssigned Identities
   azure_rm_eventhub:
@@ -330,7 +330,7 @@
 - name: Assert the Namespace updated with multiple UserAssigned Identities
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve Namespace with multiple UserAssigned Identities
@@ -342,7 +342,7 @@
 - name: Assert the facts of the Namespace with multiple UserAssigned Identities
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
       - results.namespace[0].name == "{{ namespace_name }}"
       - results.namespace[0].identity.type == 'UserAssigned'
       - results.namespace[0].identity.user_assigned_identities | length == 2
@@ -363,7 +363,7 @@
 
 - name: Assert the namespace deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Delete user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

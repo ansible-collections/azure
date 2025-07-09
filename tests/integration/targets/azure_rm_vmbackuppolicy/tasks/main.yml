@@ -23,7 +23,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create VM Backup Policy (idempotent)
   azure_rm_vmbackuppolicy:
@@ -36,7 +36,7 @@
 - name: Assert that output has no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get VM Backup Policy Details
   azure_rm_vmbackuppolicy_info:
@@ -62,7 +62,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete Azure Recovery Service vault
   azure_rm_recoveryservicesvault:
@@ -75,4 +75,4 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

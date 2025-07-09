@@ -109,7 +109,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create Azure Firewall -- idempotent
   azure_rm_azurefirewall:
@@ -180,7 +180,7 @@
 - name: Assert that output has not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create Azure Firewall -- change something
   azure_rm_azurefirewall:
@@ -248,7 +248,7 @@
 - name: Assert that output has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get info of the Azure Firewall
   azure_rm_azurefirewall_info:
@@ -259,7 +259,7 @@
 - name: Assert the azure firewall facts
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.firewalls['id'] != None
       - output.firewalls['name'] != None
       - output.firewalls['location'] != None
@@ -279,7 +279,7 @@
 - name: Assert the azure firewall deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the public IP address
   azure_rm_publicipaddress:

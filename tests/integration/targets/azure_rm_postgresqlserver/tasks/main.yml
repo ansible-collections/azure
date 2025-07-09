@@ -21,7 +21,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of PostgreSQL Server
   azure_rm_postgresqlserver:
@@ -39,7 +39,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
 
 - name: Create again instance of PostgreSQL Server
@@ -58,7 +58,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
       - output.state == 'Ready'
 
 - name: Update instance of PostgreSQL Server, change storage size
@@ -77,7 +77,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
 - name: Print the postgresql server states
   ansible.builtin.debug:
@@ -136,7 +136,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers[0]['id'] != None
       - output.servers[0]['name'] != None
       - output.servers[0]['location'] != None
@@ -157,7 +157,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers[0]['id'] != None
       - output.servers[0]['name'] != None
       - output.servers[0]['location'] != None
@@ -192,7 +192,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of PostgreSQL Database
   azure_rm_postgresqldatabase:
@@ -205,7 +205,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.name == 'testdatabase'
 
 - name: Create again instance of PostgreSQL Database
@@ -219,7 +219,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
       - output.name == 'testdatabase'
 
 - name: Try to update PostgreSQL Database without force_update
@@ -234,7 +234,7 @@
 - name: Assert that nothing has changed
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
 
 - name: Try to update PostgreSQL Database with force_update
   azure_rm_postgresqldatabase:
@@ -248,7 +248,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.name == 'testdatabase'
 
 - name: Create second instance of PostgreSQL Database
@@ -267,7 +267,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0]['server_name'] != None
       - output.databases[0]['name'] != None
       - output.databases[0]['charset'] != None
@@ -281,7 +281,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0]['server_name'] != None
       - output.databases[0]['name'] != None
       - output.databases[0]['charset'] != None
@@ -302,7 +302,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of PostgreSQL Database
   azure_rm_postgresqldatabase:
@@ -314,7 +314,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of PostgreSQL Database
   azure_rm_postgresqldatabase:
@@ -326,7 +326,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 #
 # azure_rm_postgresqlfirewallrule
@@ -344,7 +344,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Firewall Rule
   azure_rm_postgresqlfirewallrule:
@@ -357,7 +357,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create again instance of Firewall Rule
   azure_rm_postgresqlfirewallrule:
@@ -370,7 +370,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Create Firewall Rule - second
   azure_rm_postgresqlfirewallrule:
@@ -389,7 +389,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules[0].id != None
       - output.rules[0].server_name != None
       - output.rules[0].name != None
@@ -405,7 +405,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules[0].id != None
       - output.rules[0].server_name != None
       - output.rules[0].name != None
@@ -428,7 +428,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of Firewall Rule
   azure_rm_postgresqlfirewallrule:
@@ -440,7 +440,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of Firewall Rule
   azure_rm_postgresqlfirewallrule:
@@ -452,7 +452,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Delete instance of Firewall Rule - second
   azure_rm_postgresqlfirewallrule:
@@ -470,7 +470,7 @@
 - name: Assert that empty list was returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - "output.rules | length == 0"
 
 #
@@ -487,7 +487,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to change default configuration
   azure_rm_postgresqlconfiguration:
@@ -499,7 +499,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to change default configuration -- idempotent
   azure_rm_postgresqlconfiguration:
@@ -511,7 +511,7 @@
 - name: Assert that change was not registered
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Try to reset configuration
   azure_rm_postgresqlconfiguration:
@@ -523,7 +523,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to reset configuration -- idempotent
   azure_rm_postgresqlconfiguration:
@@ -535,7 +535,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Gather facts PostgreSQL Configuration
   azure_rm_postgresqlconfiguration_info:
@@ -546,7 +546,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.settings[0].id != None
       - output.settings[0].name != None
       - output.settings[0].value != None
@@ -562,7 +562,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.settings[0].id != None
       - output.settings[0].name != None
       - output.settings[0].value != None
@@ -584,7 +584,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of PostgreSQL Server
   azure_rm_postgresqlserver:
@@ -595,7 +595,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of PostgreSQL Server
   azure_rm_postgresqlserver:
@@ -606,7 +606,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed
 
 - name: Delete second instance of PostgreSQL Server
   azure_rm_postgresqlserver:

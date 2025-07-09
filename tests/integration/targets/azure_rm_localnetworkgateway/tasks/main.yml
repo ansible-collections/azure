@@ -39,7 +39,7 @@
 - name: Assert the local network gateway is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.provisioning_state == 'Succeeded'
 
 - name: Create a new local network gateway(Idempotent test)
@@ -62,7 +62,7 @@
 - name: Assert the local network gateway no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create a new local network gateway(Update test)
   azure_rm_localnetworkgateway:
@@ -84,7 +84,7 @@
 - name: Assert the local network gateway updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get a new local network gateway
   azure_rm_localnetworkgateway_info:
@@ -95,7 +95,7 @@
 - name: Assert the local network gateway facts
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
       - output.state[0].bgp_settings.asn == 10
       - output.state[0].bgp_settings.peer_weight == 5
       - "output.state[0].tags | length == 1"
@@ -111,4 +111,4 @@
 - name: Assert the local network gateway is deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

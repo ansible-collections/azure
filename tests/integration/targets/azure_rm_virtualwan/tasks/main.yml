@@ -17,7 +17,7 @@
 - name: Assert the virtual wan created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a VirtualWan again (Idempotent test)
   azure_rm_virtualwan:
@@ -28,7 +28,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the VirtualWan
   azure_rm_virtualwan:
@@ -44,7 +44,7 @@
 - name: Assert the virtual wan updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get VirtualWan info
   azure_rm_virtualwan_info:

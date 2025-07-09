@@ -77,7 +77,7 @@
 - name: Assert the CDN profile is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id != ''
 
 - name: Gather CDN profile facts
@@ -116,7 +116,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the CDN profile - replace user identity
   azure_rm_cdnprofile:
@@ -140,7 +140,7 @@
 - name: Assert the CDN profile is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather CDN profile facts
   azure_rm_cdnprofile_info:
@@ -179,7 +179,7 @@
 - name: Assert the CDN profile is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather CDN profile facts
   azure_rm_cdnprofile_info:
@@ -216,7 +216,7 @@
 - name: Assert the CDN profile is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather CDN profile facts
   azure_rm_cdnprofile_info:
@@ -285,7 +285,7 @@
 - name: Assert the Azure CDN endpoint is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Get facts of a Azure CDN endpoint
@@ -324,7 +324,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Stop a Azure CDN endpoint
   azure_rm_cdnendpoint:
@@ -337,7 +337,7 @@
 - name: Assert stopped
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Stop a Azure CDN endpoint(idempotent)
   azure_rm_cdnendpoint:
@@ -350,7 +350,7 @@
 - name: Assert still stopped and not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Start a Azure CDN endpoint
   azure_rm_cdnendpoint:
@@ -363,7 +363,7 @@
 - name: Assert started
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Update the Azure CDN endpoint
   azure_rm_cdnendpoint:
@@ -380,7 +380,7 @@
 - name: Assert the Azure CDN endpoint is updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete a Azure CDN endpoint(check mode)
   azure_rm_cdnendpoint:
@@ -407,7 +407,7 @@
 - name: Assert the CDN profile is well deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get CDN profile fact
   azure_rm_cdnprofile_info:

@@ -120,7 +120,7 @@
   register: output
 - name: Assert resource not updated
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update tags
   azure_rm_securitygroup:
@@ -225,7 +225,7 @@
   register: output
 - name: Assert resource not updated
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Add a single one group
   azure_rm_securitygroup:
@@ -248,7 +248,7 @@
 - name: Assert resource updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state.rules | length == 2
 
 # Use azure_rm_resource module to create with uppercase protocol name
@@ -289,7 +289,7 @@
 - name: Assert resource not updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create Application security group 1
   azure_rm_applicationsecuritygroup:
@@ -328,7 +328,7 @@
 - name: Assert resource retrieved
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create security group with application security group - Idempotent
   azure_rm_securitygroup:
@@ -351,7 +351,7 @@
 - name: Assert resource not updated
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete security group
   azure_rm_securitygroup:

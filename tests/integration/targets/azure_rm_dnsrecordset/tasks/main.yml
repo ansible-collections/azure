@@ -11,7 +11,7 @@
 
 - name: Assert that DNS zone was created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create public ip
   azure_rm_publicipaddress:
@@ -34,7 +34,7 @@
 
 - name: Assert that A record set was created
   ansible.builtin.assert:
-    that: output.changed
+    that: output is changed
 
 - name: Create "A" record set with multiple records
   azure_rm_dnsrecordset:
@@ -50,7 +50,7 @@
 
 - name: Assert that A record set was created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Re-run "A" record with same values
   azure_rm_dnsrecordset:
@@ -66,7 +66,7 @@
 
 - name: Assert that A record set was not changed
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Update "A" record set with additional record
   azure_rm_dnsrecordset:
@@ -82,7 +82,7 @@
 - name: Assert that new record was appended
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Re-update "A" record set with additional record
   azure_rm_dnsrecordset:
@@ -98,7 +98,7 @@
 - name: Assert that A record set was not changed
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 - name: Remove 1 record from record set
   azure_rm_dnsrecordset:
@@ -115,7 +115,7 @@
 - name: Assert that record was deleted
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Check_mode test
   azure_rm_dnsrecordset:
@@ -131,7 +131,7 @@
 - name: Assert that check_mode returns new state
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 # FUTURE: add facts module calls to ensure that we really didn't touch anything
 
@@ -146,7 +146,7 @@
 
 - name: Assert that record set deleted
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Re-run record set absent(idempotence test)
   azure_rm_dnsrecordset:
@@ -159,7 +159,7 @@
 
 - name: Assert the record set deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed
 
 - name: Create SRV records in a new record set
   azure_rm_dnsrecordset:
@@ -179,7 +179,7 @@
 - name: Assert that SRV record set was created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Create TXT records in a new record set
   azure_rm_dnsrecordset:
@@ -199,7 +199,7 @@
 - name: Assert that TXT record set was created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Update SOA record
   azure_rm_dnsrecordset:
@@ -221,7 +221,7 @@
 - name: Assert that SOA record set was created
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
 
 - name: Delete DNS zone
   azure_rm_dnszone:

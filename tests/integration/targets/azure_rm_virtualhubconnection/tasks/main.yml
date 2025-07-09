@@ -68,7 +68,7 @@
 - name: Assert the virtual hub connection is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create virtual hub connection (idempotent test)
   azure_rm_virtualhubconnection:
@@ -102,7 +102,7 @@
 - name: Assert the virtual hub connection no changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update virtual hub connection
   azure_rm_virtualhubconnection:
@@ -138,7 +138,7 @@
 - name: Assert the virtual hub connection no changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get virtual hub connection info
   azure_rm_virtualhubconnection_info:

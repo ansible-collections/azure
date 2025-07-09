@@ -51,7 +51,7 @@
 - name: Assert status succeeded
   ansible.builtin.assert:
     that:
-      - vm_output.changed
+      - vm_output is changed
 
 - name: Delete VM
   azure_rm_virtualmachine:

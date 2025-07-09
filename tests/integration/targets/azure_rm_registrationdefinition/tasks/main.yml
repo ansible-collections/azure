@@ -23,7 +23,7 @@
 - name: Assert creating registration definition check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a RegistrationDefinition with scope
   azure_rm_registrationdefinition:
@@ -40,7 +40,7 @@
 - name: Assert creating registration definition
   ansible.builtin.assert:
     that:
-      - output2.changed
+      - output2 is changed
 
 - name: Create a RegistrationDefinition
   azure_rm_registrationdefinition:
@@ -56,7 +56,7 @@
 - name: Assert creating registration definition
   ansible.builtin.assert:
     that:
-      - output1.changed
+      - output1 is changed
 
 - name: Create a RegistrationDefinition (idempotent)
   azure_rm_registrationdefinition:
@@ -73,7 +73,7 @@
 - name: Assert creating registration definition
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update the RegistrationDefinition properties description and name
   azure_rm_registrationdefinition:
@@ -90,7 +90,7 @@
 - name: Assert creating registration definition
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get the Registration Definition info
   azure_rm_registrationdefinition_info:
@@ -126,7 +126,7 @@
 - name: Assert delete registration definition success
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete the registration definition
   azure_rm_registrationdefinition:

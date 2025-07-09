@@ -13,7 +13,7 @@
 - name: Assert the workspace check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
@@ -37,7 +37,7 @@
   ansible.builtin.assert:
     that:
       - output.retention_in_days == 40
-      - output.changed
+      - output is changed
       - output.intelligence_packs
 
 - name: Create workspace (idempontent)
@@ -50,7 +50,7 @@
 - name: Assert idempotent
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
@@ -91,7 +91,7 @@
 - name: Assert the loganalytics workspace check mode
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
@@ -114,7 +114,7 @@
 - name: Assert the loganalytics workspace deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get workspace
   azure_rm_loganalyticsworkspace_info:
@@ -137,4 +137,4 @@
 - name: Assert the loganalystics workspace deleted
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed

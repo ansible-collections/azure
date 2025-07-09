@@ -22,7 +22,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of MariaDB Server
   azure_rm_mariadbserver:
@@ -41,7 +41,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
 
 - name: Create again instance of MariaDB Server
@@ -61,7 +61,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed == false
       - output.state == 'Ready'
 
 - name: Update instance of MariaDB Server, change storage size
@@ -81,7 +81,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.state == 'Ready'
 - name: Print the state of the mariadb server
   ansible.builtin.debug:
@@ -138,7 +138,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers[0]['id'] != None
       - output.servers[0]['name'] != None
       - output.servers[0]['location'] != None
@@ -158,7 +158,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.servers[0]['id'] != None
       - output.servers[0]['name'] != None
       - output.servers[0]['location'] != None
@@ -191,7 +191,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of MariaDB Database
   azure_rm_mariadbdatabase:
@@ -204,7 +204,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.name == 'testdatabase'
 
 - name: Create again instance of MariaDB Database
@@ -218,7 +218,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed == false
       - output.name == 'testdatabase'
 
 - name: Try to update database without force_update
@@ -233,7 +233,7 @@
 - name: Assert that nothing has changed
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
 
 - name: Update instance of database using force_update
   azure_rm_mariadbdatabase:
@@ -247,7 +247,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.name == 'testdatabase'
 
 - name: Create second instance of MariaDB Database
@@ -266,7 +266,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.databases[0]['server_name'] != None
       - output.databases[0]['name'] != None
       - output.databases[0]['charset'] != None
@@ -280,7 +280,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed 
       - output.databases[0]['server_name'] != None
       - output.databases[0]['name'] != None
       - output.databases[0]['charset'] != None
@@ -301,7 +301,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of MariaDB Database
   azure_rm_mariadbdatabase:
@@ -313,7 +313,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of MariaDB Database
   azure_rm_mariadbdatabase:
@@ -325,7 +325,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed == false
 
 #
 # azure_rm_firewallrule tests below
@@ -342,7 +342,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Firewall Rule
   azure_rm_mariadbfirewallrule:
@@ -355,7 +355,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create again instance of Firewall Rule
   azure_rm_mariadbfirewallrule:
@@ -368,7 +368,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed == false
 
 - name: Delete instance of Firewall Rule -- check mode
   azure_rm_mariadbfirewallrule:
@@ -381,7 +381,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create instance of Firewall Rule -- second
   azure_rm_mariadbfirewallrule:
@@ -394,7 +394,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts MariaDB Firewall Rule
   azure_rm_mariadbfirewallrule_info:
@@ -405,7 +405,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules[0].id != None
       - output.rules[0].server_name != None
       - output.rules[0].name != None
@@ -421,7 +421,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules[0].id != None
       - output.rules[0].server_name != None
       - output.rules[0].name != None
@@ -443,7 +443,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of Firewall Rule
   azure_rm_mariadbfirewallrule:
@@ -455,7 +455,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed == false
 
 - name: Delete instance of Firewall Rule - second
   azure_rm_mariadbfirewallrule:
@@ -473,7 +473,7 @@
 - name: Assert that empty list was returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.rules | length == 0
 
 #
@@ -490,7 +490,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to delete default configuraion
   azure_rm_mariadbconfiguration_info:
@@ -512,7 +512,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Try to change default configuraion
   azure_rm_mariadbconfiguration:
@@ -524,7 +524,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to change default configuration -- idempotent
   azure_rm_mariadbconfiguration:
@@ -536,7 +536,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Try to reset configuration
   azure_rm_mariadbconfiguration:
@@ -548,7 +548,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Try to reset configuration -- idempotent
   azure_rm_mariadbconfiguration:
@@ -560,7 +560,7 @@
 - name: Assert that change was registered
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Gather facts MariaDB Configuration
   azure_rm_mariadbconfiguration_info:
@@ -571,7 +571,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.settings[0].id != None
       - output.settings[0].name != None
       - output.settings[0].value != None
@@ -587,7 +587,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output.changed == False
+      - output is not changed
       - output.settings[0].id != None
       - output.settings[0].name != None
       - output.settings[0].value != None
@@ -609,7 +609,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete instance of MariaDB Server
   azure_rm_mariadbserver:
@@ -620,7 +620,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete unexisting instance of MariaDB Server
   azure_rm_mariadbserver:
@@ -631,7 +631,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output.changed == false
+      - output is not changed == false
 
 - name: Delete second instance of MariaDB Server
   azure_rm_mariadbserver:

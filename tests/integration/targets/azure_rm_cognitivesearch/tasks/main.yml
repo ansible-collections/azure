@@ -14,7 +14,7 @@
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - invalid_hosting_name.failed == True
+      - invalid_hosting_name is failed
 
 - name: Create invalid Azure Search - Partition Count High Density
   azure_rm_cognitivesearch:
@@ -29,7 +29,7 @@
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - invalid_partition_count.failed == True
+      - invalid_partition_count is failed
 
 - name: Create invalid Azure Search - Partition Count
   azure_rm_cognitivesearch:
@@ -42,7 +42,7 @@
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - invalid_partition_count.failed == True
+      - invalid_partition_count is failed
 
 - name: Create invalid Azure Search - Replica Count
   azure_rm_cognitivesearch:
@@ -56,7 +56,7 @@
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - invalid_replica_count.failed == True
+      - invalid_replica_count is failed
 
 - name: Create invalid Azure Search - Replica Count SKU basic
   azure_rm_cognitivesearch:
@@ -70,7 +70,7 @@
 - name: Assert task failed
   ansible.builtin.assert:
     that:
-      - invalid_replica_count.failed == True
+      - invalid_replica_count is failed
 
 - name: Create basic Azure Search
   azure_rm_cognitivesearch:
@@ -81,7 +81,7 @@
 - name: Assert status Succeeded and results
   ansible.builtin.assert:
     that:
-      - search_info.changed
+      - search_info is changed
       - search_info.state.id is defined
       - search_info.state.identity.type == "None"
       - search_info.state.identity.principal_id is not defined
@@ -124,7 +124,7 @@
 - name: Assert that idempotence is ok
   ansible.builtin.assert:
     that:
-      - not search_info.changed
+      - search_info is not changed
 
 - name: Delete Azure Search
   azure_rm_cognitivesearch:
@@ -152,7 +152,7 @@
 - name: Assert status Succeeded and results
   ansible.builtin.assert:
     that:
-      - search_info.changed
+      - search_info is changed
       - search_info.state.id is defined
       - search_info.state.identity.type == "SystemAssigned"
       - search_info.state.identity.principal_id is defined
@@ -184,7 +184,7 @@
 - name: Assert that idempotence is ok
   ansible.builtin.assert:
     that:
-      - not search_info.changed
+      - search_info is not changed
 
 - name: Delete Azure Search
   azure_rm_cognitivesearch:

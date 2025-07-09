@@ -54,7 +54,7 @@
 - name: Assert the snapshot created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create a managed disk
   azure_rm_manageddisk:
@@ -77,7 +77,7 @@
 - name: Assert the snapshot idempotent result
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: List the snapshot instance by resource group
   azure_rm_snapshot_info:

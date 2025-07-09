@@ -12,7 +12,7 @@
 
 - name: Assert the ddos protection check mode return
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Create DDoS protection plan
   azure_rm_ddosprotectionplan:
@@ -23,7 +23,7 @@
 
 - name: Assert the ddos protection created
   ansible.builtin.assert:
-    that: results.changed
+    that: results is changed
 
 - name: Update DDoS protection plan
   azure_rm_ddosprotectionplan:
@@ -37,7 +37,7 @@
 - name: Assert the ddos protection updated
   ansible.builtin.assert:
     that:
-      - results.changed
+      - results is changed
       - results.state.tags.test == 'modified'
 
 - name: Retrieve DDoS protection plan
@@ -61,7 +61,7 @@
 - name: Assert the ddos protection created
   ansible.builtin.assert:
     that:
-      - not results.changed
+      - results is not changed
 
 #
 # azure_rm_ddosprotectionplan cleanup
@@ -84,4 +84,4 @@
 
 - name: Assert the ddos protection plan deleted
   ansible.builtin.assert:
-    that: not results.changed
+    that: results is not changed

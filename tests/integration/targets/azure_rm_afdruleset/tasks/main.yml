@@ -23,7 +23,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Update Ruleset (idempotent test)
@@ -37,7 +37,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Create Ruleset 2
   azure_rm_afdruleset:
@@ -50,7 +50,7 @@
 - name: Assert the resource was created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Load info for all Rulesets
@@ -63,7 +63,7 @@
   ansible.builtin.assert:
     that:
       - output.afdrulesets | length == 2
-      - not output.changed
+      - output is not changed
 
 - name: Delete Origin Group 2
   azure_rm_afdruleset:
@@ -76,7 +76,7 @@
 - name: Assert the resource was deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
       - output.id
 
 - name: Load info for all Rulesets
@@ -90,7 +90,7 @@
     that:
       - output.afdrulesets | length == 1
       - output.afdrulesets[0].name == "{{ ruleset }}"
-      - not output.changed
+      - output is not changed
 
 - name: Delete Ruleset
   azure_rm_afdruleset:
@@ -103,7 +103,7 @@
 - name: Assert the resource was changed
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Delete Ruleset (idempotent test)
   azure_rm_afdruleset:
@@ -116,7 +116,7 @@
 - name: Assert the resource was not changed
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Delete Frontdoor Profile
   azure_rm_cdnprofile:

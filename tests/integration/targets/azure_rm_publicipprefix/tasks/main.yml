@@ -35,7 +35,7 @@
 - name: Assert the public IP prefix is well created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create public ip prefix (Idempotent test)
   azure_rm_publicipprefix:
@@ -55,7 +55,7 @@
 - name: Assert the public IP prefix no change
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update public ip prefix (Update tags)
   azure_rm_publicipprefix:
@@ -75,7 +75,7 @@
 - name: Assert the public IP prefix change
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Gather facts for a public ip prefix
   azure_rm_publicipprefix_info:
@@ -99,4 +99,4 @@
 - name: Assert the public IP prefix deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

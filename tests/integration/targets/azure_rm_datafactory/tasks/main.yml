@@ -23,7 +23,7 @@
 - name: Assert the data factory created
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Create data factory again (Idempotent test)
   azure_rm_datafactory:
@@ -37,7 +37,7 @@
 - name: Assert the idempotent success
   ansible.builtin.assert:
     that:
-      - not output.changed
+      - output is not changed
 
 - name: Update data factory
   azure_rm_datafactory:
@@ -52,7 +52,7 @@
 - name: Assert the data factory updated
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed
 
 - name: Get data factory info
   azure_rm_datafactory_info:
@@ -76,4 +76,4 @@
 - name: Assert the data factory deleted
   ansible.builtin.assert:
     that:
-      - output.changed
+      - output is changed

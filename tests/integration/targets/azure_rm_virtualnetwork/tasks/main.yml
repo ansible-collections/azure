@@ -111,7 +111,7 @@
 
 - name: Assert the virtual network idempotent
   ansible.builtin.assert:
-    that: not output.changed
+    that: output is not changed
 
 - name: Update tags
   azure_rm_virtualnetwork:
@@ -152,7 +152,7 @@
 
 - name: Assert the virtual network updated
   ansible.builtin.assert:
-    that: output.failed
+    that: output is failed
 
 - name: Purge address prefixes
   azure_rm_virtualnetwork:
