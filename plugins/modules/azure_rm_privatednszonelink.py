@@ -46,6 +46,7 @@ options:
             - When set to C(NxDomainRedirect), Azure DNS resolver falls back to public resolution
               if private dns query resolution results in non-existent domain response.
         type: str
+        version_added: "3.7.0"
         choices:
             - Default
             - NxDomainRedirect
