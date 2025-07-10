@@ -9,7 +9,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_postgresqlflexiblemigration
-version_added: "3.4.0"
+version_added: "3.7.0"
 short_description: Manage PostgreSQL Flexible migration instance
 description:
     - Create, update or delete instance of PostgreSQL Flexible migration.
@@ -423,11 +423,11 @@ class AzureRMPostgreSqlFlexibleMigration(AzureRMModuleBase):
         old_response = None
         response = None
         changed = False
+        if not self.migration_subscription_id:
+            self.migration_subscription_id = self.subscription_id
 
         old_response = self.get_postgresqlflexiblemigration()
 
-        if not self.migration_subscription_id:
-            self.migration_subscription_id = self.subscription_id
         resource_group = self.get_resource_group(self.resource_group)
         if not self.parameters.get('location'):
             # Set default location

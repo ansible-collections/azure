@@ -58,38 +58,47 @@ migrations:
     description:
         - A list of dictionaries containing facts for PostgreSQL Flexible Migration.
     returned: always
-    type: complex
-    contains:
-        id:
-            description:
-                - Resource ID of the postgresql flexible migration.
-            returned: always
-            type: str
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.DBforPostgreSQL/flexibleServers/postflex/migrations/fredmigration"
-        resource_group_name:
-            description:
-                - The resource group name of the target database server.
-            returned: always
-            type: str
-            sample: testRG
-        target_db_server_name:
-            description:
-                - The name of the target database server.
-            returned: always
-            type: str
-            sample: postflex
-        migration_name:
-            description:
-                - The name of the migration.
-            returned: always
-            type: str
-            sample: migration_name
-        type:
-            description:
-                - The type of the resource.
-            returned: always
-            type: str
-            sample: Microsoft.DBforPostgreSQL/flexibleServers/migrations
+    type: list
+    sample: [
+            {
+                "current_status": {
+                    "current_sub_state_details": {
+                        "current_sub_state": "ValidationInProgress",
+                        "db_details": {}
+                    },
+                    "state": "InProgress"
+                },
+                "dbs_to_migrate": [
+                    "ticketdb",
+                    "timedb",
+                    "inventorydb"
+                ],
+                "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG03/providers/Microsoft.DBforPostgreSQL/flexibleServers/postflexiblefredtest02/migrations/testmigration",
+                "location": "East US",
+                "migrate_roles": "False",
+                "migration_id": "47214695-22af-4424-b67d-3bb1e8fee8b3",
+                "migration_mode": "Online",
+                "migration_option": "ValidateAndMigrate",
+                "migration_window_start_time_in_utc": "2025-07-09T08:04:44.360622Z",
+                "name": "testmigration",
+                "overwrite_dbs_in_target": "True",
+                "setup_logical_replication_on_source_db_if_needed": "False",
+                "source_db_server_resource_id": "20.121.44.182:22@azureuser",
+                "source_type": "OnPremises",
+                "ssl_mode": "Prefer",
+                "target_db_server_metadata": {
+                    "location": "East US",
+                    "sku": {
+                        "name": "Standard_B1ms",
+                        "tier": "Burstable"
+                    },
+                    "storage_mb": 131072,
+                    "version": "12"
+                },
+                "target_db_server_resource_id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG03/providers/Microsoft.DBforPostgreSQL/flexibleServers/postflexiblefredtest02",
+                "type": "Microsoft.DBforPostgreSQL/flexibleServers/migrations"
+            }
+        ]
 '''
 
 
