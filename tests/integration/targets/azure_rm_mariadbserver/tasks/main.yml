@@ -280,7 +280,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output is not changed 
+      - output is not changed
       - output.databases[0]['server_name'] != None
       - output.databases[0]['name'] != None
       - output.databases[0]['charset'] != None
