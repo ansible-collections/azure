@@ -31,7 +31,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: webappplan{{ rpfx }}
       is_linux: false
-      sku: S1
+      sku: B1
 
 - name: "Create webapp vnetconnection - check mode"
   azure_rm_webappvnetconnection:

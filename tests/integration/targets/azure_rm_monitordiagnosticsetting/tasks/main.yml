@@ -20,7 +20,7 @@
       name: "webapp-{{ rpfx }}-plan"
       resource_group: "{{ resource_group }}"
       is_linux: false
-      sku: S1
+      sku: B1
   register: webapp_output
 
 - name: Create storage account
