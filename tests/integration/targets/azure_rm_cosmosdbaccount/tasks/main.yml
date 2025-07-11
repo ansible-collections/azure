@@ -255,7 +255,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output is not changed == False
+      - output is not changed
       - output.accounts | length == 1
       - output.accounts[0]['id'] != None
       - output.accounts[0]['resource_group'] == resource_group
@@ -311,7 +311,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output is not changed == False
+      - output is not changed
       - output.accounts[0]['primary_master_key'] != None
       - output.accounts[0]['secondary_master_key'] != None
       - output.accounts[0]['primary_readonly_master_key'] != None
@@ -327,7 +327,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output is not changed == False
+      - output is not changed
       - "'primary_master_key' not in output.accounts[0]"
       - "'secondary_master_key' not in output.accounts[0]"
       - output.accounts[0]['primary_readonly_master_key'] != None
@@ -341,7 +341,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output is not changed == False
+      - output is not changed
       - output.accounts | length == 1
       - output.accounts[0]['id'] != None
       - output.accounts[0]['resource_group'] == resource_group
@@ -379,7 +379,7 @@
 - name: Assert that facts are returned
   ansible.builtin.assert:
     that:
-      - output is not changed == False
+      - output is not changed
       - output.accounts | length >= 2
       - dbname in (output.accounts | map(attribute='name'))
       - db2name in (output.accounts | map(attribute='name'))

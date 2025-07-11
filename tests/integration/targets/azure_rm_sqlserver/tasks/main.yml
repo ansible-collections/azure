@@ -141,7 +141,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - not output is not changed
+      - output is not changed
       - output.state == 'Ready'
 
 - name: Update SQL admin password
@@ -197,7 +197,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - not output is not changed
+      - output is not changed
       - output.state == 'Ready'
   when: run_azuread_tests | bool
 
@@ -801,7 +801,7 @@
 - name: Assert the resource instance is well created
   ansible.builtin.assert:
     that:
-      - not output is not changed
+      - output is not changed
 
 - name: Update instance of SQL Elastic Pool
   azure_rm_sqlelasticpool:

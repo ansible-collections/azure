@@ -61,7 +61,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output is not changed == false
+      - output is not changed
       - output.state == 'Ready'
 
 - name: Update instance of MariaDB Server, change storage size
@@ -218,7 +218,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output is not changed == false
+      - output is not changed
       - output.name == 'testdatabase'
 
 - name: Try to update database without force_update
@@ -325,7 +325,7 @@
 - name: Assert the state has changed
   ansible.builtin.assert:
     that:
-      - output is not changed == false
+      - output is not changed
 
 #
 # azure_rm_firewallrule tests below
@@ -368,7 +368,7 @@
 - name: Assert the state has not changed
   ansible.builtin.assert:
     that:
-      - output is not changed == false
+      - output is not changed
 
 - name: Delete instance of Firewall Rule -- check mode
   azure_rm_mariadbfirewallrule:
