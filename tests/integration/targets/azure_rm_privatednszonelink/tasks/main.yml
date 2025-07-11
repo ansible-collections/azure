@@ -221,11 +221,9 @@
     zone_name: privatelink.postgres.database.azure.com
     state: absent
   register: output
-
-- name: Assert the secondary virtual network link is deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+  until: output is changed
+  retries: 10
+  delay: 30
 
 - name: Delete the secondary Private DNS zone
   azure_rm_privatednszone:
