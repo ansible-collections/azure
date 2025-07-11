@@ -202,10 +202,11 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- name: Delete private DNS zone
-  azure_rm_privatednszone:
+- name: Delete the secondary private dns zone link
+  azure_rm_privatednszonelink:
     resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
+    name: "{{ link_name }}-secondary"
+    zone_name: privatelink.postgres.database.azure.com
     state: absent
 
 - name: Delete the secondary virtual network
@@ -214,16 +215,11 @@
     resource_group: "{{ resource_group }}"
     state: absent
 
-- name: Delete the secondary private dns zone link
-  azure_rm_privatednszonelink:
+- name: Delete private DNS zone
+  azure_rm_privatednszone:
     resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}-secondary"
-    zone_name: privatelink.postgres.database.azure.com
+    name: "{{ domain_name }}.com"
     state: absent
-  register: output
-  until: output is changed
-  retries: 10
-  delay: 30
 
 - name: Delete the secondary Private DNS zone
   azure_rm_privatednszone:
