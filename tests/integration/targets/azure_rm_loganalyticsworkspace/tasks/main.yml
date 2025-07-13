@@ -597,12 +597,14 @@
 - name: List the Log Analytics workspace under specific resource group
   azure_rm_loganalyticsworkspace_info:
     resource_group: "{{ resource_group }}"
+    tags:
+      - key2
   register: facts
 
 - name: Assert only one log analytics workspace
   ansible.builtin.assert:
     that:
-      - facts.workspaces | length >= 1
+      - facts.workspaces | length == 1
 
 - name: List all Log Analytics workspaces and filter unexist tags
   azure_rm_loganalyticsworkspace_info:
