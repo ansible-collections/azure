@@ -780,10 +780,6 @@
       - output.webapps[0].identity.type == 'SystemAssigned'
       - '"user_assigned_identities" not in output.webapps[0].identity'
 
-- name: Set I(location=Canada Central)
-  ansible.builtin.set_fact:
-    location: "Canada Central"
-
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
     resource_group: "{{ resource_group_datalake }}"
