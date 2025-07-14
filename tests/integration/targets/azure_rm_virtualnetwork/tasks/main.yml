@@ -1,6 +1,6 @@
 - name: Create a new resource group for vnet test
   azure_rm_resourcegroup:
-    resource_group: "{{ resource_group }}-vnet"
+    name: "{{ resource_group }}-vnet"
     location: eastus
 
 - name: Prepare random number
@@ -206,6 +206,6 @@
 
 - name: Force delete the resource group
   azure_rm_resourcegroup:
-    resource_group: "{{ resource_group }}-vnet"
+    name: "{{ resource_group }}-vnet"
     state: absent
     force: true

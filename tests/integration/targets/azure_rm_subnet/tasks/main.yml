@@ -1,3 +1,8 @@
+- name: Create a new resource group for subnet test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-subnet"
+    location: eastus
+
 - name: Create virtual network
   azure_rm_virtualnetwork:
     name: My_Virtual_Network
@@ -333,3 +338,9 @@
     name: My_Virtual_Network
     resource_group: "{{ resource_group }}"
     state: absent
+
+- name: Force delete the resource group
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-subnet"
+    state: absent
+    force: true
