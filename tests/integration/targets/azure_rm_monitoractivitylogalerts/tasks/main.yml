@@ -1,0 +1,536 @@
+- name: Create a new resource group for monitor activity log alert test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-logalert"
+    location: eastus
+  register: resource_group_output
+
+- name: For monitor activity log alert test
+  block:
+    - name: Prepare variables
+      ansible.builtin.set_fact:
+        # Random string
+        random_string: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        action_group_mail: user@example.com
+      run_once: true
+
+    # ------ prerequisite resources, existing resource group, new action group ------
+
+    - name: Create action group
+      azure.azcollection.azure_rm_monitoractiongroups:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "actiongroup-{{ random_string }}"
+        state: present
+        enabled: true
+        location: Global
+        email_receivers:
+          - email_address: "{{ action_group_mail }}"
+            name: "sendmailto{{ action_group_mail | split('@') | first }}"
+            use_common_alert_schema: true
+        group_short_name: AGShortName
+      register: action_group_output
+
+    # ------ tests ------
+
+    - name: Create activity log alert (check mode)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ resource_group_output.state.id }}"
+        condition:
+          all_of:
+            - equals: ResourceHealth
+              field: category
+            - any_of:
+                - equals: Unknown
+                  field: properties.currentHealthStatus
+                - equals: Unavailable
+                  field: properties.currentHealthStatus
+                - equals: Degraded
+                  field: properties.currentHealthStatus
+            - any_of:
+                - equals: Unknown
+                  field: properties.previousHealthStatus
+                - equals: Unavailable
+                  field: properties.previousHealthStatus
+                - equals: Degraded
+                  field: properties.previousHealthStatus
+                - equals: Available
+                  field: properties.previousHealthStatus
+            - any_of:
+                - equals: PlatformInitiated
+                  field: properties.cause
+        actions:
+          action_groups:
+            - action_group_id: "{{ action_group_output.actiongroup.id }}"
+        tags:
+          CreationTag1: CreationTagValue1
+      check_mode: true
+      register: output
+
+    - name: Assert that activity log alert has been created (check mode)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Create activity log alert (no tags)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ resource_group_output.state.id }}"
+        condition:
+          all_of:
+            - equals: ResourceHealth
+              field: category
+            - any_of:
+                - equals: Unknown
+                  field: properties.currentHealthStatus
+                - equals: Unavailable
+                  field: properties.currentHealthStatus
+                - equals: Degraded
+                  field: properties.currentHealthStatus
+            - any_of:
+                - equals: Unknown
+                  field: properties.previousHealthStatus
+                - equals: Unavailable
+                  field: properties.previousHealthStatus
+                - equals: Degraded
+                  field: properties.previousHealthStatus
+                - equals: Available
+                  field: properties.previousHealthStatus
+            - any_of:
+                - equals: PlatformInitiated
+                  field: properties.cause
+        actions:
+          action_groups:
+            - action_group_id: "{{ action_group_output.actiongroup.id }}"
+      register: output
+
+    - name: Assert that activity log alert has been created (no tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          - output.activitylogalert.tags is not defined
+
+    - name: Create activity log alert (no tags, idempotency check)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ resource_group_output.state.id }}"
+        condition:
+          all_of:
+            - equals: ResourceHealth
+              field: category
+            - any_of:
+                - equals: Unknown
+                  field: properties.currentHealthStatus
+                - equals: Unavailable
+                  field: properties.currentHealthStatus
+                - equals: Degraded
+                  field: properties.currentHealthStatus
+            - any_of:
+                - equals: Unknown
+                  field: properties.previousHealthStatus
+                - equals: Unavailable
+                  field: properties.previousHealthStatus
+                - equals: Degraded
+                  field: properties.previousHealthStatus
+                - equals: Available
+                  field: properties.previousHealthStatus
+            - any_of:
+                - equals: PlatformInitiated
+                  field: properties.cause
+        actions:
+          action_groups:
+            - action_group_id: "{{ action_group_output.actiongroup.id }}"
+      register: output
+
+    - name: Assert that activity log alert has not changed during idempotency check (no tags)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          - output.activitylogalert.tags is not defined
+
+    - name: Create activity log alert (creation tags)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-creationtags-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ resource_group_output.state.id }}"
+        condition:
+          all_of:
+            - equals: ResourceHealth
+              field: category
+            - any_of:
+                - equals: Unknown
+                  field: properties.currentHealthStatus
+                - equals: Unavailable
+                  field: properties.currentHealthStatus
+                - equals: Degraded
+                  field: properties.currentHealthStatus
+            - any_of:
+                - equals: Unknown
+                  field: properties.previousHealthStatus
+                - equals: Unavailable
+                  field: properties.previousHealthStatus
+                - equals: Degraded
+                  field: properties.previousHealthStatus
+                - equals: Available
+                  field: properties.previousHealthStatus
+            - any_of:
+                - equals: PlatformInitiated
+                  field: properties.cause
+        actions:
+          action_groups:
+            - action_group_id: "{{ action_group_output.actiongroup.id }}"
+        tags:
+          CreationTag1: CreationTagValue1
+      register: output
+
+    - name: Assert that activity log alert has been created (creation tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.activitylogalert.tags.CreationTag1 == 'CreationTagValue1'
+
+    - name: Create activity log alert (creation tags, idempotency check)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-creationtags-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ resource_group_output.state.id }}"
+        condition:
+          all_of:
+            - equals: ResourceHealth
+              field: category
+            - any_of:
+                - equals: Unknown
+                  field: properties.currentHealthStatus
+                - equals: Unavailable
+                  field: properties.currentHealthStatus
+                - equals: Degraded
+                  field: properties.currentHealthStatus
+            - any_of:
+                - equals: Unknown
+                  field: properties.previousHealthStatus
+                - equals: Unavailable
+                  field: properties.previousHealthStatus
+                - equals: Degraded
+                  field: properties.previousHealthStatus
+                - equals: Available
+                  field: properties.previousHealthStatus
+            - any_of:
+                - equals: PlatformInitiated
+                  field: properties.cause
+        actions:
+          action_groups:
+            - action_group_id: "{{ action_group_output.actiongroup.id }}"
+        tags:
+          CreationTag1: CreationTagValue1
+      register: output
+
+    - name: Assert that activity log alert has not changed during idempotency check (creation tags)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.activitylogalert.tags.CreationTag1 == 'CreationTagValue1'
+
+    - name: Add tag to existing activity log alert
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that activity log alert has been changed (add tag)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.activitylogalert.tags.TestTag1 == 'TestValue1'
+
+    - name: Add tag to existing activity log alert (idempontency)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that activity log alert has been changed (add tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.activitylogalert.tags.TestTag1 == 'TestValue1'
+
+    - name: Add tag to existing activity log alert (append)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that activity log alert has been changed (add tag)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.activitylogalert.tags.TestTag1 == 'TestValue1'
+          - output.activitylogalert.tags.TestTag2 == 'TestValue2'
+
+    - name: Add tag to existing activity log alert (append, idempotency)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that activity log alert has been changed (add tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.activitylogalert.tags.TestTag1 == 'TestValue1'
+          - output.activitylogalert.tags.TestTag2 == 'TestValue2'
+
+    - name: Replace tag on existing activity log alert
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        append_tags: false
+        tags:
+          TestTag3: TestValue3
+      register: output
+
+    - name: Assert that activity log alert tag has been changed (replace tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.activitylogalert.tags.TestTag1 is not defined
+          - output.activitylogalert.tags.TestTag2 is not defined
+          - output.activitylogalert.tags.TestTag3 == 'TestValue3'
+
+    - name: Replace tag on existing activity log alert (idempontency)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        append_tags: false
+        tags:
+          TestTag3: TestValue3
+      register: output
+
+    - name: Assert that activity log alert tag has been changed (replace tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.activitylogalert.tags.TestTag1 is not defined
+          - output.activitylogalert.tags.TestTag2 is not defined
+          - output.activitylogalert.tags.TestTag3 == 'TestValue3'
+
+    - name: Remove tags on existing activity log alert
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        append_tags: false
+      register: output
+
+    - name: Assert that activity log alert has been changed (remove tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          # - output.activitylogalert.tags is not defined
+          - output.activitylogalert.tags | length == 0
+
+    - name: Remove tags on existing activity log alert (idempotency)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        append_tags: false
+      register: output
+
+    - name: Assert that activity log alert has been changed (remove tags, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          # - output.activitylogalert.tags is not defined
+          - output.activitylogalert.tags | length == 0
+
+    - name: Disable an activity log alert
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        enabled: false
+      register: output
+
+    - name: Assert that activity log alert has been disabled
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - not output.activitylogalert.enabled
+
+    - name: Disable an activity log alert (idempotency)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: present
+        enabled: false
+      register: output
+
+    - name: Assert that activity log alert has been disabled (idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - not output.activitylogalert.enabled
+
+    - name: Get information about a activity log alert
+      azure.azcollection.azure_rm_monitoractivitylogalerts_info:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+      register: output
+
+    - name: Assert that activity log alert list is properly filled
+      ansible.builtin.assert:
+        that:
+          - output.activitylogalerts | length == 1
+
+    - name: List all activity log alerts (resource group level)
+      azure.azcollection.azure_rm_monitoractivitylogalerts_info:
+        resource_group: "{{ resource_group }}-logalert"
+      register: output
+
+    - name: Assert that activity log alert list includes created activity log alert (resource group level)
+      ansible.builtin.assert:
+        that:
+          - ('activitylogalert-' + random_string) in (output.activitylogalerts | map(attribute='name') | list)
+
+    - name: List all activity log alerts (subscription level)
+      azure.azcollection.azure_rm_monitoractivitylogalerts_info:
+      register: output
+
+    - name: Assert that activity log alert list includes created activity log alert (subscription level)
+      ansible.builtin.assert:
+        that:
+          - ('activitylogalert-' + random_string) in (output.activitylogalerts | map(attribute='name') | list)
+
+    # ------ teardown ------
+
+    - name: Delete activity log alert (check mode)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert that activity log alert has been deleted (check mode)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Delete activity log alert
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that activity log alert has been deleted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Delete activity log alert (idempontency check)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that activity log alert has been deleted (idempotency check)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Delete activity log alert (creation tags)
+      azure.azcollection.azure_rm_monitoractivitylogalerts:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-creationtags-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that activity log alert has been deleted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Delete action group
+      azure.azcollection.azure_rm_monitoractiongroups:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "actiongroup-{{ random_string }}"
+        state: absent
+
+    # # ------ safety checks, ensure everything is gone ------
+
+    - name: Make sure delection succeeded
+      azure.azcollection.azure_rm_monitoractivitylogalerts_info:
+        resource_group: "{{ resource_group }}-logalert"
+        name: "activitylogalert-{{ random_string }}"
+      register: output
+
+    - name: Assert that activity log alert is no longer found
+      ansible.builtin.assert:
+        that:
+          - output.activitylogalerts | length == 0
+
+    - name: List all activity log alerts after deletion (resource group level)
+      azure.azcollection.azure_rm_monitoractivitylogalerts_info:
+        resource_group: "{{ resource_group }}-logalert"
+      register: output
+
+    - name: Assert that activity log alert list no longer includes created activity log alert (resource group level)
+      ansible.builtin.assert:
+        that:
+          - ('activitylogalert-' + random_string) not in (output.activitylogalerts | map(attribute='name') | list)
+
+    - name: List all activity log alerts after deletion (subscription level)
+      azure.azcollection.azure_rm_monitoractivitylogalerts_info:
+      register: output
+
+    - name: Assert that activity log alert list no longer includes created activity log alert (subscription level)
+      ansible.builtin.assert:
+        that:
+          - ('activitylogalert-' + random_string) not in (output.activitylogalerts | map(attribute='name') | list)
+
+  always:
+    - name: Force delete the log alert resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-logalert"
+        force_delete_nonempty: true
+        state: absent
