@@ -1,35 +1,34 @@
 ---
-- hosts: localhost
+- name: Delete resource group
+  hosts: localhost
   connection: local
-  collections:
-    - azure.azcollection
   tasks:
     - name: Query all resource group
-      azure_rm_resourcegroup_info:
+      azure.azcollection.azure_rm_resourcegroup_info:
       register: output
 
     - name: Force delete the first resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ item }}"
         state: absent
-        force: yes
+        force: true
       with_items: "{{ output.resourcegroups | selectattr('name', 'search', '^' + RESOURCE_GROUP) | map(attribute='name') | list }}"
       async: 3600
       poll: 0
       register: first_output
 
     - name: Force delete the secondary resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ item }}"
         state: absent
-        force: yes
+        force: true
       with_items: "{{ output.resourcegroups | selectattr('name', 'search', '^' + RESOURCE_GROUP_SECONDARY) | map(attribute='name') | list }}"
       async: 3600
       poll: 0
       register: secondary_output
 
     - name: Wait for secondary delete complete
-      async_status: jid={{ item.ansible_job_id }}
+      ansible.builtin.async_status: jid={{ item.ansible_job_id }}
       register: job
       until: job.finished
       retries: 300
@@ -37,7 +36,7 @@
       with_items: "{{ first_output.results }}"
 
     - name: Wait for fist delete complete
-      async_status: jid={{ item.ansible_job_id }}
+      ansible.builtin.async_status: jid={{ item.ansible_job_id }}
       register: job
       until: job.finished
       retries: 300
