@@ -288,16 +288,19 @@ jobs:
       TEST_RESOURCE_GROUP_THIRD: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_third'] ]
       TEST_RESOURCE_GROUP_DATALAKE: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     steps:
-      - script: |
-          ansible-playbook tests/utils/delete_rg/delete_rg.yml -e "RESOURCE_GROUP=$(TEST_RESOURCE_GROUP) RESOURCE_GROUP_SECONDARY=${{ TEST_RESOURCE_GROUP_SECONDARY }}"
-        displayName: "Delete resource group"
-
       - task: AzureCLI@2
         inputs:
           azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
+              az group list --query "[?starts_with(name, 'v-xisuRG') || starts_with(name, 'fredrg')].name" -o tsv | while read rg;
+              # az group list --query "[?starts_with(name, $(TEST_RESOURCE_GROUP)) || starts_with(name, $(TEST_RESOURCE_GROUP_SECONDARY))].name" -o tsv | while read rg;
+              do
+                echo "Deleting resource group: $rg"
+                az group show --name "$rg"
+                #az group delete --name "$rg" --yes --no-wait
+              done
               #        az group delete -n $(TEST_RESOURCE_GROUP) --yes --no-wait
               #        az group delete -n $(TEST_RESOURCE_GROUP_SECONDARY) --yes --no-wait
               az group delete -n $(TEST_RESOURCE_GROUP_THIRD) --yes --no-wait
