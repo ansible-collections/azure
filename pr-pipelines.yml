@@ -289,7 +289,7 @@ jobs:
       TEST_RESOURCE_GROUP_DATALAKE: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group_datalake'] ]
     steps:
       - script: |
-        ansible-playbook tests/utils/delete_rg/delete_rg.yml -e "RESOURCE_GROUP=$(TEST_RESOURCE_GROUP) RESOURCE_GROUP_SECONDARY=${{ TEST_RESOURCE_GROUP_SECONDARY }}"
+          ansible-playbook tests/utils/delete_rg/delete_rg.yml -e "RESOURCE_GROUP=$(TEST_RESOURCE_GROUP) RESOURCE_GROUP_SECONDARY=${{ TEST_RESOURCE_GROUP_SECONDARY }}"
         displayName: "Delete resource group"
 
       - task: AzureCLI@2
