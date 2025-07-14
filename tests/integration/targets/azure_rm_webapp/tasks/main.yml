@@ -780,6 +780,14 @@
       - output.webapps[0].identity.type == 'SystemAssigned'
       - '"user_assigned_identities" not in output.webapps[0].identity'
 
+- name: Update app service plan I(sku=P0v3)
+  azure_rm_appserviceplan:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_plan_name }}"
+    sku: P0v3
+    is_linux: false
+    number_of_workers: 1
+
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
     resource_group: "{{ resource_group_datalake }}"
