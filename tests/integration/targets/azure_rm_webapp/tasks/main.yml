@@ -41,7 +41,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}"
       is_linux: false
-      sku: S1
+      sku: B1
 
 - name: Create a windows web app with existing app service plan
   azure_rm_webapp:
@@ -215,7 +215,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_plan_name }}"
       is_linux: true
-      sku: S1
+      sku: B1
       number_of_workers: 1
     container_settings:
       name: "ansible/ansible:ubuntu1404"
@@ -379,7 +379,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_app_name }}-siteconfig-plan"
       is_linux: true
-      sku: S1
+      sku: B1
     frameworks:
       - name: java
         version: "8"
@@ -405,7 +405,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_app_name }}-siteconfig-plan"
       is_linux: true
-      sku: S1
+      sku: B1
     frameworks:
       - name: java
         version: "8"
@@ -444,7 +444,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_app_name }}-siteconfig-plan"
       is_linux: true
-      sku: S1
+      sku: B1
     frameworks:
       - name: java
         version: "8"
@@ -483,7 +483,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_app_name }}-http20-plan"
       is_linux: true
-      sku: S1
+      sku: B1
     frameworks:
       - name: java
         version: "8"
@@ -510,7 +510,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_app_name }}-http20-plan"
       is_linux: true
-      sku: S1
+      sku: B1
     frameworks:
       - name: java
         version: "8"
@@ -550,7 +550,7 @@
       resource_group: "{{ linux_app_plan_resource_group }}"
       name: "{{ linux_app_name }}-http20-plan"
       is_linux: true
-      sku: S1
+      sku: B1
     frameworks:
       - name: java
         version: "8"
@@ -589,7 +589,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-auth"
       is_linux: false
-      sku: S1
+      sku: B1
     site_auth_settings:
       client_id: "{{ azure_client_id }}"
       default_provider: 'MicrosoftAccount'
@@ -615,7 +615,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-auth"
       is_linux: false
-      sku: S1
+      sku: B1
     site_auth_settings:
       client_id: "{{ azure_client_id }}"
       default_provider: 'MicrosoftAccount'
@@ -657,7 +657,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
-      sku: S1
+      sku: B1
     identity:
       type: UserAssigned
       user_assigned_identities:
@@ -690,7 +690,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
-      sku: S1
+      sku: B1
     identity:
       type: "SystemAssigned, UserAssigned"
       user_assigned_identities:
@@ -724,7 +724,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
-      sku: S1
+      sku: B1
     identity:
       type: "SystemAssigned, UserAssigned"
       user_assigned_identities:
@@ -758,7 +758,7 @@
       resource_group: "{{ resource_group_datalake }}"
       name: "{{ win_plan_name }}-identity"
       is_linux: false
-      sku: S1
+      sku: B1
     identity:
       type: "SystemAssigned"
   register: output
@@ -779,6 +779,14 @@
     that:
       - output.webapps[0].identity.type == 'SystemAssigned'
       - '"user_assigned_identities" not in output.webapps[0].identity'
+
+- name: Update app service plan I(sku=P0v3)
+  azure_rm_appserviceplan:
+    resource_group: "{{ linux_app_plan_resource_group }}"
+    name: "{{ linux_plan_name }}"
+    sku: P0v3
+    is_linux: false
+    number_of_workers: 1
 
 - name: Create a webapp slot (Check mode)
   azure_rm_webappslot:
