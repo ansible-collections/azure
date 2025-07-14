@@ -1,3 +1,8 @@
+- name: Create a new resource group for vnet test
+  azure_rm_resourcegroup:
+    resource_group: "{{ resource_group }}-vnet"
+    location: eastus
+
 - name: Prepare random number
   ansible.builtin.set_fact:
     vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
@@ -198,3 +203,9 @@
     name: "{{ vnetname }}"
     resource_group: "{{ resource_group }}"
     state: absent
+
+- name: Force delete the resource group
+  azure_rm_resourcegroup:
+    resource_group: "{{ resource_group }}-vnet"
+    state: absent
+    force: true
