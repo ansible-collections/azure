@@ -92,7 +92,7 @@
   register: download_results
 - name: Assert download file
   ansible.builtin.assert:
-    that: download_results is not changed
+    that: download_results is changed
 
 - name: Find file
   ansible.builtin.find:
