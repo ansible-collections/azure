@@ -597,6 +597,8 @@
 - name: List the Log Analytics workspace under specific resource group
   azure_rm_loganalyticsworkspace_info:
     resource_group: "{{ resource_group }}"
+    tags:
+      - key2
   register: facts
 
 - name: Assert only one log analytics workspace
