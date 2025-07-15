@@ -1,318 +1,331 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    set_name: "des{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    tenant_id: "{{ azure_tenant }}"
-  run_once: true
-
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}"
-  register: __rg_info
+    location: eastus
 
-- name: Set location based on resource group
-  ansible.builtin.set_fact:
-    location: "{{ __rg_info.resourcegroups.0.location }}"
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        set_name: "des{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        tenant_id: "{{ azure_tenant }}"
+      run_once: true
 
-- name: Lookup service principal object id
-  ansible.builtin.set_fact:
-    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
-                   azure_client_id=azure_client_id,
-                   azure_secret=azure_secret,
-                   azure_tenant=tenant_id) }}"
-  register: object_id_facts
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}"
+      register: __rg_info
 
-- name: Create identity and policy ids arrays
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
-    access_policies_object_ids: ["{{ object_id }}"]
+    - name: Set location based on resource group
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'diskencryptionsets'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Lookup service principal object id
+      ansible.builtin.set_fact:
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=tenant_id) }}"
+      register: object_id_facts
+
+    - name: Create identity and policy ids arrays
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
+        access_policies_object_ids: ["{{ object_id }}"]
+
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'diskencryptionsets'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
 
 
-- name: Create policies keys list
-  ansible.builtin.set_fact:
-    policies_keys_list:
-      - get
-      - list
-      - wrapkey
-      - unwrapkey
-      - create
-      - update
-      - import
-      - delete
-      - backup
-      - restore
-      - recover
-      - purge
+    - name: Create policies keys list
+      ansible.builtin.set_fact:
+        policies_keys_list:
+          - get
+          - list
+          - wrapkey
+          - unwrapkey
+          - create
+          - update
+          - import
+          - delete
+          - backup
+          - restore
+          - recover
+          - purge
 
-- name: Create a key vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ rpfx }}"
-    enabled_for_disk_encryption: true
-    vault_tenant: "{{ tenant_id }}"
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ access_policies_object_ids[0] }}"
-        keys: "{{ policies_keys_list }}"
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ access_policies_object_ids[1] }}"
-        keys: "{{ policies_keys_list }}"
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ access_policies_object_ids[2] }}"
-        keys: "{{ policies_keys_list }}"
-    enable_purge_protection: true
+    - name: Create a key vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        vault_name: "myvault{{ rpfx }}"
+        enabled_for_disk_encryption: true
+        vault_tenant: "{{ tenant_id }}"
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ access_policies_object_ids[0] }}"
+            keys: "{{ policies_keys_list }}"
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ access_policies_object_ids[1] }}"
+            keys: "{{ policies_keys_list }}"
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ access_policies_object_ids[2] }}"
+            keys: "{{ policies_keys_list }}"
+        enable_purge_protection: true
 
-- name: Create a key in key vault
-  azure_rm_keyvaultkey:
-    key_name: testkey
-    keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
+    - name: Create a key in key vault
+      azure_rm_keyvaultkey:
+        key_name: testkey
+        keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
 
-- name: Get latest version of key
-  azure_rm_keyvaultkey_info:
-    vault_uri: https://myvault{{ rpfx }}.vault.azure.net
-    name: testkey
-  register: results
+    - name: Get latest version of key
+      azure_rm_keyvaultkey_info:
+        vault_uri: https://myvault{{ rpfx }}.vault.azure.net
+        name: testkey
+      register: results
 
-- name: Assert the key vault facts
-  ansible.builtin.set_fact:
-    key_url: "{{ results['keys'][0]['kid'] }}"
+    - name: Assert the key vault facts
+      ansible.builtin.set_fact:
+        key_url: "{{ results['keys'][0]['kid'] }}"
 
-- name: Create disk encryption set
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-  register: results
+    - name: Create disk encryption set
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+      register: results
 
-- name: Assert that disk encryption set is created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that disk encryption set is created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Create disk encryption set (Idempotent test)
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-  register: results
+    - name: Create disk encryption set (Idempotent test)
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+      register: results
 
-- name: Assert that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Update disk encryption set
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-    tags:
-      key1: "value1"
-  register: results
+    - name: Update disk encryption set
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Assert that disk encryption set is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that disk encryption set is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Get disk encryption set facts
-  azure_rm_diskencryptionset_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-  register: results
+    - name: Get disk encryption set facts
+      azure_rm_diskencryptionset_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+      register: results
 
-- name: Assert the disk encryption facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.diskencryptionsets[0].id != None
-      - results.diskencryptionsets[0].name == "{{ set_name }}"
-      - results.diskencryptionsets[0].active_key != None
-      - results.diskencryptionsets[0].provisioning_state == "Succeeded"
-      - results.diskencryptionsets[0].tags | length > 0
-      - results.diskencryptionsets[0].identity.type == 'SystemAssigned'
+    - name: Assert the disk encryption facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.diskencryptionsets[0].id != None
+          - results.diskencryptionsets[0].name == "{{ set_name }}"
+          - results.diskencryptionsets[0].active_key != None
+          - results.diskencryptionsets[0].provisioning_state == "Succeeded"
+          - results.diskencryptionsets[0].tags | length > 0
+          - results.diskencryptionsets[0].identity.type == 'SystemAssigned'
 
-- name: Update disk encryption set with first UserAssigned Identity
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    tags:
-      key1: "value1"
-  register: results
+    - name: Update disk encryption set with first UserAssigned Identity
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Assert that disk encryption set with first UserAssigned Identity was updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that disk encryption set with first UserAssigned Identity was updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Create disk encryption set with first UserAssigned Identity (Idempotent test)
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    tags:
-      key1: "value1"
-  register: results
+    - name: Create disk encryption set with first UserAssigned Identity (Idempotent test)
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Assert that output is not changed (with first UserAssigned Identity)
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that output is not changed (with first UserAssigned Identity)
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Get disk encryption set with first UserAssigned Identity facts
-  azure_rm_diskencryptionset_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-  register: results
+    - name: Get disk encryption set with first UserAssigned Identity facts
+      azure_rm_diskencryptionset_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+      register: results
 
-- name: Assert the disk encryption set  with UserAssigned Identity facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.diskencryptionsets[0].id != None
-      - results.diskencryptionsets[0].name == "{{ set_name }}"
-      - results.diskencryptionsets[0].active_key != None
-      - results.diskencryptionsets[0].provisioning_state == "Succeeded"
-      - results.diskencryptionsets[0].tags | length > 0
-      - results.diskencryptionsets[0].identity.type == 'UserAssigned'
-      - results.diskencryptionsets[0].identity.user_assigned_identities | length == 1
-      - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: Assert the disk encryption set  with UserAssigned Identity facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.diskencryptionsets[0].id != None
+          - results.diskencryptionsets[0].name == "{{ set_name }}"
+          - results.diskencryptionsets[0].active_key != None
+          - results.diskencryptionsets[0].provisioning_state == "Succeeded"
+          - results.diskencryptionsets[0].tags | length > 0
+          - results.diskencryptionsets[0].identity.type == 'UserAssigned'
+          - results.diskencryptionsets[0].identity.user_assigned_identities | length == 1
+          - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: Update disk encryption set with second UserAssigned
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-    identity:
-      type: UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[1] }}"
-    tags:
-      key1: "value1"
-  register: results
+    - name: Update disk encryption set with second UserAssigned
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[1] }}"
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Assert that disk encryption set with second UserAssigned is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that disk encryption set with second UserAssigned is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Get disk encryption set with UserAssigned Identity facts
-  azure_rm_diskencryptionset_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-  register: results
+    - name: Get disk encryption set with UserAssigned Identity facts
+      azure_rm_diskencryptionset_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+      register: results
 
-- name: Assert the disk encryption set  with second UserAssigned Identity facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.diskencryptionsets[0].id != None
-      - results.diskencryptionsets[0].name == "{{ set_name }}"
-      - results.diskencryptionsets[0].active_key != None
-      - results.diskencryptionsets[0].provisioning_state == "Succeeded"
-      - results.diskencryptionsets[0].tags | length > 0
-      - results.diskencryptionsets[0].identity.type == 'UserAssigned'
-      - results.diskencryptionsets[0].identity.user_assigned_identities | length == 1
-      - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Assert the disk encryption set  with second UserAssigned Identity facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.diskencryptionsets[0].id != None
+          - results.diskencryptionsets[0].name == "{{ set_name }}"
+          - results.diskencryptionsets[0].active_key != None
+          - results.diskencryptionsets[0].provisioning_state == "Succeeded"
+          - results.diskencryptionsets[0].tags | length > 0
+          - results.diskencryptionsets[0].identity.type == 'UserAssigned'
+          - results.diskencryptionsets[0].identity.user_assigned_identities | length == 1
+          - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Update disk encryption set with SystemAssigned, UserAssigned
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    state: present
-    identity:
-      type: SystemAssigned, UserAssigned
-      user_assigned_identity: "{{ managed_identity_ids[0] }}"
-    tags:
-      key1: "value1"
-  register: results
+    - name: Update disk encryption set with SystemAssigned, UserAssigned
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        state: present
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Assert that disk encryption set with (SystemAssigned, UserAssigned) is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that disk encryption set with (SystemAssigned, UserAssigned) is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Get disk encryption set with (SystemAssigned, UserAssigned) facts
-  azure_rm_diskencryptionset_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-  register: results
+    - name: Get disk encryption set with (SystemAssigned, UserAssigned) facts
+      azure_rm_diskencryptionset_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+      register: results
 
-- name: Assert the disk encryption set with (SystemAssigned, UserAssigned) facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.diskencryptionsets[0].id != None
-      - results.diskencryptionsets[0].name == "{{ set_name }}"
-      - results.diskencryptionsets[0].active_key != None
-      - results.diskencryptionsets[0].provisioning_state == "Succeeded"
-      - results.diskencryptionsets[0].tags | length > 0
-      - results.diskencryptionsets[0].identity.type == 'SystemAssigned, UserAssigned'
-      - results.diskencryptionsets[0].identity.user_assigned_identities | length == 1
-      - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: Assert the disk encryption set with (SystemAssigned, UserAssigned) facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.diskencryptionsets[0].id != None
+          - results.diskencryptionsets[0].name == "{{ set_name }}"
+          - results.diskencryptionsets[0].active_key != None
+          - results.diskencryptionsets[0].provisioning_state == "Succeeded"
+          - results.diskencryptionsets[0].tags | length > 0
+          - results.diskencryptionsets[0].identity.type == 'SystemAssigned, UserAssigned'
+          - results.diskencryptionsets[0].identity.user_assigned_identities | length == 1
+          - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: Delete disk encryption set
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    state: absent
-  register: results
+    - name: Delete disk encryption set
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        state: absent
+      register: results
 
-- name: Assert that disk encryption set is deleted
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that disk encryption set is deleted
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete disk encryption set (Idempotent test)
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ set_name }}"
-    state: absent
-  register: results
+    - name: Delete disk encryption set (Idempotent test)
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ set_name }}"
+        state: absent
+      register: results
 
-- name: Asset that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Asset that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Delete the Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ rpfx }}"
-    state: absent
+    - name: Delete the Key Vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        vault_name: "myvault{{ rpfx }}"
+        state: absent
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'diskencryptionsets'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'diskencryptionsets'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

@@ -1,464 +1,477 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    pipaname: "pipa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    pipbname: "pipb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    pipcname: "pipc{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    lbvnname: "lbvn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    lbname_a: "lba{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    lbname_b: "lbb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    lbname_c1: "lbc1-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    lbname_c2: "lbc2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    lbname_d: "lbd{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create the first public ip
-  azure_rm_publicipaddress:
-    name: "{{ pipbname }}"
-    sku: Standard
-    allocation_method: Static
-    resource_group: '{{ resource_group }}'
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        pipaname: "pipa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        pipbname: "pipb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        pipcname: "pipc{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        lbvnname: "lbvn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        lbname_a: "lba{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        lbname_b: "lbb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        lbname_c1: "lbc1-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        lbname_c2: "lbc2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        lbname_d: "lbd{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
 
-- name: Create the secondary public ip
-  azure_rm_publicipaddress:
-    name: "{{ pipaname }}"
-    resource_group: '{{ resource_group }}'
-    sku: Standard
-    allocation_method: Static
+    - name: Create the first public ip
+      azure_rm_publicipaddress:
+        name: "{{ pipbname }}"
+        sku: Standard
+        allocation_method: Static
+        resource_group: '{{ resource_group }}'
 
-- name: Create the third public ip
-  azure_rm_publicipaddress:
-    name: "{{ pipcname }}"
-    resource_group: '{{ resource_group }}'
-    sku: Standard
-    allocation_method: Static
+    - name: Create the secondary public ip
+      azure_rm_publicipaddress:
+        name: "{{ pipaname }}"
+        resource_group: '{{ resource_group }}'
+        sku: Standard
+        allocation_method: Static
 
-- name: Clear load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_a }}"
-    state: absent
+    - name: Create the third public ip
+      azure_rm_publicipaddress:
+        name: "{{ pipcname }}"
+        resource_group: '{{ resource_group }}'
+        sku: Standard
+        allocation_method: Static
 
-- name: Create load balancer -- check mode
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_a }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendip0
-        public_ip_address: "{{ pipaname }}"
-  check_mode: true
-  register: output
+    - name: Clear load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_a }}"
+        state: absent
 
-- name: Assert load balancer created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_a }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendip0
-        public_ip_address: "{{ pipaname }}"
-  register: output
-
-- name: Assert load balancer created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create load balancer -- idempotent
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_a }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendip0
-        public_ip_address: "{{ pipaname }}"
-  register: output
-
-- name: Assert no change
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_a }}"
-    state: absent
-  register: output
-
-- name: Assert load balancer deleted
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Delete load balancer (idempotent)
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_a }}"
-    state: absent
-  register: output
-
-- name: Assert load balancer deleted (idempotent)
-  ansible.builtin.assert:
-    that: output is not changed
-
-- name: Create another load balancer with more options
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_b }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendip0
-        public_ip_address: "{{ pipaname }}"
-      - name: frontendip1
-        public_ip_address: "{{ pipbname }}"
-    backend_address_pools:
-      - name: backendaddrp0
-      - name: backendaddrp1
-    probes:
-      - name: prob0
-        port: 80
-        protocol: Tcp
-        interval: 10
-        fail_count: 3
-    inbound_nat_pools:
-      - name: inboundnatp0
-        frontend_ip_configuration_name: frontendip0
-        protocol: Tcp
-        frontend_port_range_start: 30
-        frontend_port_range_end: 40
-        backend_port: 80
-    load_balancing_rules:
-      - name: lbr
-        frontend_ip_configuration: frontendip0
-        backend_address_pool: backendaddrp0
-        probe: prob0
-        frontend_port: 80
-        backend_port: 8080
-        idle_timeout: 4
-        load_distribution: Default
-        protocol: Tcp
-        enable_tcp_reset: true
-    outbound_rules:
-      - name: outrule
-        allocated_outbound_ports: 800
+    - name: Create load balancer -- check mode
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_a }}"
+        sku: Standard
         frontend_ip_configurations:
-          - frontendip1
-        backend_address_pool: backendaddrp1
-        protocol: Tcp
-        enable_tcp_reset: true
-        idle_timeout_in_minutes: 4
-  register: output
+          - name: frontendip0
+            public_ip_address: "{{ pipaname }}"
+      check_mode: true
+      register: output
 
-- name: Assert complex load balancer created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.sku.name == 'Standard'
+    - name: Assert load balancer created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Create load balancer again to check idempotency
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_b }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendip0
-        public_ip_address: "{{ pipaname }}"
-      - name: frontendip1
-        public_ip_address: "{{ pipbname }}"
-    backend_address_pools:
-      - name: backendaddrp0
-      - name: backendaddrp1
-    probes:
-      - name: prob0
-        port: 80
-        protocol: Tcp
-        interval: 10
-        fail_count: 3
-    inbound_nat_pools:
-      - name: inboundnatp0
-        frontend_ip_configuration_name: frontendip0
-        protocol: Tcp
-        frontend_port_range_start: 30
-        frontend_port_range_end: 40
-        backend_port: 80
-    load_balancing_rules:
-      - name: lbr
-        frontend_ip_configuration: frontendip0
-        backend_address_pool: backendaddrp0
-        probe: prob0
-        frontend_port: 80
-        backend_port: 8080
-        idle_timeout: 4
-        load_distribution: Default
-        protocol: Tcp
-        enable_tcp_reset: true
-    outbound_rules:
-      - name: outrule
-        allocated_outbound_ports: 800
+    - name: Create load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_a }}"
+        sku: Standard
         frontend_ip_configurations:
-          - frontendip1
-        backend_address_pool: backendaddrp1
-        protocol: Tcp
-        enable_tcp_reset: true
-        idle_timeout_in_minutes: 4
-  register: output
+          - name: frontendip0
+            public_ip_address: "{{ pipaname }}"
+      register: output
 
-- name: Assert that output has not changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Assert load balancer created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Get the load balancer facts
-  azure_rm_loadbalancer_info:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_b }}"
-  register: output
-
-- name: Assert the load balancer facts
-  ansible.builtin.assert:
-    that:
-      - output.loadbalancers[0].load_balancing_rules | length == 1
-      - output.loadbalancers[0].frontend_ip_configurations | length == 2
-      - output.loadbalancers[0].backend_address_pools | length == 2
-      - output.loadbalancers[0].probes | length == 1
-      - output.loadbalancers[0].load_balancing_rules[0].enable_tcp_reset is true
-      - output.loadbalancers[0].load_balancing_rules[0].frontend_port == 80
-      - output.loadbalancers[0].outbound_rules |length == 1
-
-- name: Create load balancer again to check idempotency - change something
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_b }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendip2
-        public_ip_address: "{{ pipcname }}"
-    backend_address_pools:
-      - name: backendaddrp2
-    probes:
-      - name: prob2
-        port: 81
-        protocol: Tcp
-        interval: 10
-        fail_count: 3
-    inbound_nat_pools:
-      - name: inboundnatp0
-        frontend_ip_configuration_name: frontendip0
-        protocol: Tcp
-        frontend_port_range_start: 30
-        frontend_port_range_end: 40
-        backend_port: 80
-    load_balancing_rules:
-      - name: lbr2
-        frontend_ip_configuration: frontendip2
-        backend_address_pool: backendaddrp2
-        probe: prob2
-        frontend_port: 81
-        backend_port: 8080
-        idle_timeout: 4
-        load_distribution: Default
-        protocol: Tcp
-        enable_tcp_reset: false
-    outbound_rules:
-      - name: outrule
-        allocated_outbound_ports: 800
+    - name: Create load balancer -- idempotent
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_a }}"
+        sku: Standard
         frontend_ip_configurations:
-          - frontendip1
-        backend_address_pool: backendaddrp1
-        protocol: Tcp
-        enable_tcp_reset: true
-        idle_timeout_in_minutes: 4
-  register: output
+          - name: frontendip0
+            public_ip_address: "{{ pipaname }}"
+      register: output
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: The second time to get the load balancer facts
-  azure_rm_loadbalancer_info:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_b }}"
-  register: output
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_a }}"
+        state: absent
+      register: output
 
-- name: Assert the load balancer facts
-  ansible.builtin.assert:
-    that:
-      - output.loadbalancers[0].load_balancing_rules | length == 2
-      - output.loadbalancers[0].frontend_ip_configurations | length == 3
-      - output.loadbalancers[0].backend_address_pools | length == 3
-      - output.loadbalancers[0].probes | length == 2
+    - name: Assert load balancer deleted
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_b }}"
-    state: absent
+    - name: Delete load balancer (idempotent)
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_a }}"
+        state: absent
+      register: output
 
-- name: Create load balancer with multiple parameters
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_c1 }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendipconf0
-        public_ip_address: "{{ pipaname }}"
-    backend_address_pools:
-      - name: backendaddrpool0
-    probes:
-      - name: prob0
-        port: 80
-    inbound_nat_pools:
-      - name: inboundnatpool0
-        frontend_ip_configuration_name: frontendipconf0
-        protocol: Tcp
-        frontend_port_range_start: 80
-        frontend_port_range_end: 81
-        backend_port: 8080
-    load_balancing_rules:
-      - name: lbrbalancingrule0
-        frontend_ip_configuration: frontendipconf0
-        backend_address_pool: backendaddrpool0
-        frontend_port: 80
-        backend_port: 80
-        probe: prob0
-        disable_outbound_snat: true
-  register: output
+    - name: Assert load balancer deleted (idempotent)
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert complex load balancer created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create another load balancer with more options
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_b }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: frontendip0
+            public_ip_address: "{{ pipaname }}"
+          - name: frontendip1
+            public_ip_address: "{{ pipbname }}"
+        backend_address_pools:
+          - name: backendaddrp0
+          - name: backendaddrp1
+        probes:
+          - name: prob0
+            port: 80
+            protocol: Tcp
+            interval: 10
+            fail_count: 3
+        inbound_nat_pools:
+          - name: inboundnatp0
+            frontend_ip_configuration_name: frontendip0
+            protocol: Tcp
+            frontend_port_range_start: 30
+            frontend_port_range_end: 40
+            backend_port: 80
+        load_balancing_rules:
+          - name: lbr
+            frontend_ip_configuration: frontendip0
+            backend_address_pool: backendaddrp0
+            probe: prob0
+            frontend_port: 80
+            backend_port: 8080
+            idle_timeout: 4
+            load_distribution: Default
+            protocol: Tcp
+            enable_tcp_reset: true
+        outbound_rules:
+          - name: outrule
+            allocated_outbound_ports: 800
+            frontend_ip_configurations:
+              - frontendip1
+            backend_address_pool: backendaddrp1
+            protocol: Tcp
+            enable_tcp_reset: true
+            idle_timeout_in_minutes: 4
+      register: output
 
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_c1 }}"
-    state: absent
+    - name: Assert complex load balancer created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.sku.name == 'Standard'
 
-- name: Create load balancer with multiple parameters
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_c2 }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendipconf0
-        public_ip_address: "{{ pipaname }}"
-    backend_address_pools:
-      - name: backendaddrpool0
-    probes:
-      - name: prob0
-        port: 80
-    load_balancing_rules:
-      - name: lbrbalancingrule0
-        frontend_ip_configuration: frontendipconf0
-        backend_address_pool: backendaddrpool0
-        frontend_port: 80
-        backend_port: 80
-        probe: prob0
-        disable_outbound_snat: true
-    inbound_nat_rules:
-      - name: inboundnatrule0
-        backend_port: 8080
-        protocol: Tcp
-        frontend_port: 8080
-        frontend_ip_configuration: frontendipconf0
-  register: output
+    - name: Create load balancer again to check idempotency
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_b }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: frontendip0
+            public_ip_address: "{{ pipaname }}"
+          - name: frontendip1
+            public_ip_address: "{{ pipbname }}"
+        backend_address_pools:
+          - name: backendaddrp0
+          - name: backendaddrp1
+        probes:
+          - name: prob0
+            port: 80
+            protocol: Tcp
+            interval: 10
+            fail_count: 3
+        inbound_nat_pools:
+          - name: inboundnatp0
+            frontend_ip_configuration_name: frontendip0
+            protocol: Tcp
+            frontend_port_range_start: 30
+            frontend_port_range_end: 40
+            backend_port: 80
+        load_balancing_rules:
+          - name: lbr
+            frontend_ip_configuration: frontendip0
+            backend_address_pool: backendaddrp0
+            probe: prob0
+            frontend_port: 80
+            backend_port: 8080
+            idle_timeout: 4
+            load_distribution: Default
+            protocol: Tcp
+            enable_tcp_reset: true
+        outbound_rules:
+          - name: outrule
+            allocated_outbound_ports: 800
+            frontend_ip_configurations:
+              - frontendip1
+            backend_address_pool: backendaddrp1
+            protocol: Tcp
+            enable_tcp_reset: true
+            idle_timeout_in_minutes: 4
+      register: output
 
-- name: Assert complex load balancer created
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Assert that output has not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_c2 }}"
-    state: absent
+    - name: Get the load balancer facts
+      azure_rm_loadbalancer_info:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_b }}"
+      register: output
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ lbvnname }}"
-    address_prefixes: "10.10.0.0/16"
+    - name: Assert the load balancer facts
+      ansible.builtin.assert:
+        that:
+          - output.loadbalancers[0].load_balancing_rules | length == 1
+          - output.loadbalancers[0].frontend_ip_configurations | length == 2
+          - output.loadbalancers[0].backend_address_pools | length == 2
+          - output.loadbalancers[0].probes | length == 1
+          - output.loadbalancers[0].load_balancing_rules[0].enable_tcp_reset is true
+          - output.loadbalancers[0].load_balancing_rules[0].frontend_port == 80
+          - output.loadbalancers[0].outbound_rules |length == 1
 
-- name: Add subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
-    address_prefix: "10.10.0.0/24"
-    virtual_network: "{{ lbvnname }}"
-  register: subnet
+    - name: Create load balancer again to check idempotency - change something
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_b }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: frontendip2
+            public_ip_address: "{{ pipcname }}"
+        backend_address_pools:
+          - name: backendaddrp2
+        probes:
+          - name: prob2
+            port: 81
+            protocol: Tcp
+            interval: 10
+            fail_count: 3
+        inbound_nat_pools:
+          - name: inboundnatp0
+            frontend_ip_configuration_name: frontendip0
+            protocol: Tcp
+            frontend_port_range_start: 30
+            frontend_port_range_end: 40
+            backend_port: 80
+        load_balancing_rules:
+          - name: lbr2
+            frontend_ip_configuration: frontendip2
+            backend_address_pool: backendaddrp2
+            probe: prob2
+            frontend_port: 81
+            backend_port: 8080
+            idle_timeout: 4
+            load_distribution: Default
+            protocol: Tcp
+            enable_tcp_reset: false
+        outbound_rules:
+          - name: outrule
+            allocated_outbound_ports: 800
+            frontend_ip_configurations:
+              - frontendip1
+            backend_address_pool: backendaddrp1
+            protocol: Tcp
+            enable_tcp_reset: true
+            idle_timeout_in_minutes: 4
+      register: output
 
-- name: Create internal loadbalancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_d }}"
-    sku: Standard
-    frontend_ip_configurations:
-      - name: frontendipconf0
-        private_ip_address: 10.10.0.10
-        private_ip_allocation_method: Static
-        subnet: "{{ subnet.state.id }}"
-        zones:
-          - 1
-          - 2
-          - 3
-    backend_address_pools:
-      - name: backendaddrpool0
-    probes:
-      - name: prob0
-        port: 80
-    inbound_nat_pools:
-      - name: inboundnatpool0
-        frontend_ip_configuration_name: frontendipconf0
-        protocol: Tcp
-        frontend_port_range_start: 80
-        frontend_port_range_end: 81
-        backend_port: 8080
-    load_balancing_rules:
-      - name: lbrbalancingrule0
-        frontend_ip_configuration: frontendipconf0
-        backend_address_pool: backendaddrpool0
-        frontend_port: 80
-        backend_port: 80
-        probe: prob0
-        disable_outbound_snat: false
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert complex load balancer created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.frontend_ip_configurations[0].zones | length == 3
+    - name: The second time to get the load balancer facts
+      azure_rm_loadbalancer_info:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_b }}"
+      register: output
 
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: '{{ resource_group }}'
-    name: "{{ lbname_d }}"
-    state: absent
+    - name: Assert the load balancer facts
+      ansible.builtin.assert:
+        that:
+          - output.loadbalancers[0].load_balancing_rules | length == 2
+          - output.loadbalancers[0].frontend_ip_configurations | length == 3
+          - output.loadbalancers[0].backend_address_pools | length == 3
+          - output.loadbalancers[0].probes | length == 2
 
-- name: Cleanup public ip
-  azure_rm_publicipaddress:
-    name: "{{ item }}"
-    resource_group: '{{ resource_group }}'
-    state: absent
-  with_items:
-    - "{{ pipaname }}"
-    - "{{ pipbname }}"
-    - "{{ pipcname }}"
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_b }}"
+        state: absent
 
-- name: Cleanup subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
-    virtual_network: "{{ lbvnname }}"
-    state: absent
+    - name: Create load balancer with multiple parameters
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_c1 }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: frontendipconf0
+            public_ip_address: "{{ pipaname }}"
+        backend_address_pools:
+          - name: backendaddrpool0
+        probes:
+          - name: prob0
+            port: 80
+        inbound_nat_pools:
+          - name: inboundnatpool0
+            frontend_ip_configuration_name: frontendipconf0
+            protocol: Tcp
+            frontend_port_range_start: 80
+            frontend_port_range_end: 81
+            backend_port: 8080
+        load_balancing_rules:
+          - name: lbrbalancingrule0
+            frontend_ip_configuration: frontendipconf0
+            backend_address_pool: backendaddrpool0
+            frontend_port: 80
+            backend_port: 80
+            probe: prob0
+            disable_outbound_snat: true
+      register: output
 
-- name: Cleanup virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ lbvnname }}"
-    state: absent
+    - name: Assert complex load balancer created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_c1 }}"
+        state: absent
+
+    - name: Create load balancer with multiple parameters
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_c2 }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: frontendipconf0
+            public_ip_address: "{{ pipaname }}"
+        backend_address_pools:
+          - name: backendaddrpool0
+        probes:
+          - name: prob0
+            port: 80
+        load_balancing_rules:
+          - name: lbrbalancingrule0
+            frontend_ip_configuration: frontendipconf0
+            backend_address_pool: backendaddrpool0
+            frontend_port: 80
+            backend_port: 80
+            probe: prob0
+            disable_outbound_snat: true
+        inbound_nat_rules:
+          - name: inboundnatrule0
+            backend_port: 8080
+            protocol: Tcp
+            frontend_port: 8080
+            frontend_ip_configuration: frontendipconf0
+      register: output
+
+    - name: Assert complex load balancer created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_c2 }}"
+        state: absent
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ lbvnname }}"
+        address_prefixes: "10.10.0.0/16"
+
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
+        address_prefix: "10.10.0.0/24"
+        virtual_network: "{{ lbvnname }}"
+      register: subnet
+
+    - name: Create internal loadbalancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_d }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: frontendipconf0
+            private_ip_address: 10.10.0.10
+            private_ip_allocation_method: Static
+            subnet: "{{ subnet.state.id }}"
+            zones:
+              - 1
+              - 2
+              - 3
+        backend_address_pools:
+          - name: backendaddrpool0
+        probes:
+          - name: prob0
+            port: 80
+        inbound_nat_pools:
+          - name: inboundnatpool0
+            frontend_ip_configuration_name: frontendipconf0
+            protocol: Tcp
+            frontend_port_range_start: 80
+            frontend_port_range_end: 81
+            backend_port: 8080
+        load_balancing_rules:
+          - name: lbrbalancingrule0
+            frontend_ip_configuration: frontendipconf0
+            backend_address_pool: backendaddrpool0
+            frontend_port: 80
+            backend_port: 80
+            probe: prob0
+            disable_outbound_snat: false
+      register: output
+
+    - name: Assert complex load balancer created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.frontend_ip_configurations[0].zones | length == 3
+
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: '{{ resource_group }}'
+        name: "{{ lbname_d }}"
+        state: absent
+
+    - name: Cleanup public ip
+      azure_rm_publicipaddress:
+        name: "{{ item }}"
+        resource_group: '{{ resource_group }}'
+        state: absent
+      with_items:
+        - "{{ pipaname }}"
+        - "{{ pipbname }}"
+        - "{{ pipcname }}"
+
+    - name: Cleanup subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: "lb{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}sb"
+        virtual_network: "{{ lbvnname }}"
+        state: absent
+
+    - name: Cleanup virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ lbvnname }}"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

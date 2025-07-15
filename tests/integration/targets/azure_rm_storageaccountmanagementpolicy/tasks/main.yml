@@ -1,242 +1,255 @@
-- name: Set random value
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create storage account with static website disabled
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "st{{ rpfx }}"
-    account_type: Standard_LRS
-    kind: StorageV2
-    static_website:
-      enabled: false
+- name: For test
+  block:
+    - name: Set random value
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Create storage account management policy rule (Check mode test)
-  azure_rm_storageaccountmanagementpolicy:
-    resource_group: "{{ resource_group }}"
-    storage_account_name: "st{{ rpfx }}"
-    rules:
-      - name: olcmtest
-        type: Lifecycle
-        enabled: false
-        definition:
-          actions:
-            base_blob:
-              enable_auto_tier_to_hot_from_cool: true
-              delete:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-              tier_to_cool:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-              tier_to_archive:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-            snapshot:
-              tier_to_cool:
-                days_after_creation_greater_than: 22
-              tier_to_archive:
-                days_after_creation_greater_than: 22
-              delete:
-                days_after_creation_greater_than: 22
-            version:
-              tier_to_archive:
-                days_after_creation_greater_than: 22
-              tier_to_cool:
-                days_after_creation_greater_than: 22
-              delete:
-                days_after_creation_greater_than: 22
-          filters:
-            prefix_match:
-              - olcmtestcontainer
-            blob_types:
-              - blockBlob
-              - appendBlob
-            blob_index_match:
-              - name: tags6
-                op: '=='
-                value: value6
-  check_mode: true
+    - name: Create storage account with static website disabled
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}"
+        name: "st{{ rpfx }}"
+        account_type: Standard_LRS
+        kind: StorageV2
+        static_website:
+          enabled: false
 
-- name: Create storage account management policy rule
-  azure_rm_storageaccountmanagementpolicy:
-    resource_group: "{{ resource_group }}"
-    storage_account_name: "st{{ rpfx }}"
-    rules:
-      - name: olcmtest
-        type: Lifecycle
-        enabled: false
-        definition:
-          actions:
-            base_blob:
-              enable_auto_tier_to_hot_from_cool: true
-              delete:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-              tier_to_cool:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-              tier_to_archive:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-            snapshot:
-              tier_to_cool:
-                days_after_creation_greater_than: 22
-              tier_to_archive:
-                days_after_creation_greater_than: 22
-              delete:
-                days_after_creation_greater_than: 22
-            version:
-              tier_to_archive:
-                days_after_creation_greater_than: 22
-              tier_to_cool:
-                days_after_creation_greater_than: 22
-              delete:
-                days_after_creation_greater_than: 22
-          filters:
-            prefix_match:
-              - olcmtestcontainer
-            blob_types:
-              - blockBlob
-              - appendBlob
-            blob_index_match:
-              - name: tags6
-                op: '=='
-                value: value6
-  register: output
+    - name: Create storage account management policy rule (Check mode test)
+      azure_rm_storageaccountmanagementpolicy:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "st{{ rpfx }}"
+        rules:
+          - name: olcmtest
+            type: Lifecycle
+            enabled: false
+            definition:
+              actions:
+                base_blob:
+                  enable_auto_tier_to_hot_from_cool: true
+                  delete:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                  tier_to_cool:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                  tier_to_archive:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                snapshot:
+                  tier_to_cool:
+                    days_after_creation_greater_than: 22
+                  tier_to_archive:
+                    days_after_creation_greater_than: 22
+                  delete:
+                    days_after_creation_greater_than: 22
+                version:
+                  tier_to_archive:
+                    days_after_creation_greater_than: 22
+                  tier_to_cool:
+                    days_after_creation_greater_than: 22
+                  delete:
+                    days_after_creation_greater_than: 22
+              filters:
+                prefix_match:
+                  - olcmtestcontainer
+                blob_types:
+                  - blockBlob
+                  - appendBlob
+                blob_index_match:
+                  - name: tags6
+                    op: '=='
+                    value: value6
+      check_mode: true
 
-- name: Assert the Managed policy created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create storage account management policy rule
+      azure_rm_storageaccountmanagementpolicy:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "st{{ rpfx }}"
+        rules:
+          - name: olcmtest
+            type: Lifecycle
+            enabled: false
+            definition:
+              actions:
+                base_blob:
+                  enable_auto_tier_to_hot_from_cool: true
+                  delete:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                  tier_to_cool:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                  tier_to_archive:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                snapshot:
+                  tier_to_cool:
+                    days_after_creation_greater_than: 22
+                  tier_to_archive:
+                    days_after_creation_greater_than: 22
+                  delete:
+                    days_after_creation_greater_than: 22
+                version:
+                  tier_to_archive:
+                    days_after_creation_greater_than: 22
+                  tier_to_cool:
+                    days_after_creation_greater_than: 22
+                  delete:
+                    days_after_creation_greater_than: 22
+              filters:
+                prefix_match:
+                  - olcmtestcontainer
+                blob_types:
+                  - blockBlob
+                  - appendBlob
+                blob_index_match:
+                  - name: tags6
+                    op: '=='
+                    value: value6
+      register: output
 
-- name: Create storage account management policy rule(Idempotent test)
-  azure_rm_storageaccountmanagementpolicy:
-    resource_group: "{{ resource_group }}"
-    storage_account_name: "st{{ rpfx }}"
-    rules:
-      - name: olcmtest
-        type: Lifecycle
-        enabled: false
-        definition:
-          actions:
-            base_blob:
-              enable_auto_tier_to_hot_from_cool: true
-              delete:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-              tier_to_cool:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-              tier_to_archive:
-                days_after_modification_greater_than: 22
-                days_after_last_access_time_greater_than: 22
-            snapshot:
-              tier_to_cool:
-                days_after_creation_greater_than: 22
-              tier_to_archive:
-                days_after_creation_greater_than: 22
-              delete:
-                days_after_creation_greater_than: 22
-            version:
-              tier_to_archive:
-                days_after_creation_greater_than: 22
-              tier_to_cool:
-                days_after_creation_greater_than: 22
-              delete:
-                days_after_creation_greater_than: 22
-          filters:
-            prefix_match:
-              - olcmtestcontainer
-            blob_types:
-              - blockBlob
-              - appendBlob
-            blob_index_match:
-              - name: tags6
-                op: '=='
-                value: value6
-  register: output
+    - name: Assert the Managed policy created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the Managed policy no change
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create storage account management policy rule(Idempotent test)
+      azure_rm_storageaccountmanagementpolicy:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "st{{ rpfx }}"
+        rules:
+          - name: olcmtest
+            type: Lifecycle
+            enabled: false
+            definition:
+              actions:
+                base_blob:
+                  enable_auto_tier_to_hot_from_cool: true
+                  delete:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                  tier_to_cool:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                  tier_to_archive:
+                    days_after_modification_greater_than: 22
+                    days_after_last_access_time_greater_than: 22
+                snapshot:
+                  tier_to_cool:
+                    days_after_creation_greater_than: 22
+                  tier_to_archive:
+                    days_after_creation_greater_than: 22
+                  delete:
+                    days_after_creation_greater_than: 22
+                version:
+                  tier_to_archive:
+                    days_after_creation_greater_than: 22
+                  tier_to_cool:
+                    days_after_creation_greater_than: 22
+                  delete:
+                    days_after_creation_greater_than: 22
+              filters:
+                prefix_match:
+                  - olcmtestcontainer
+                blob_types:
+                  - blockBlob
+                  - appendBlob
+                blob_index_match:
+                  - name: tags6
+                    op: '=='
+                    value: value6
+      register: output
 
-- name: Create storage account management policy rule(Updating test)
-  azure_rm_storageaccountmanagementpolicy:
-    resource_group: "{{ resource_group }}"
-    storage_account_name: "st{{ rpfx }}"
-    rules:
-      - name: olcmtest
-        type: Lifecycle
-        enabled: false
-        definition:
-          actions:
-            base_blob:
-              enable_auto_tier_to_hot_from_cool: true
-              delete:
-                days_after_modification_greater_than: 33
-                days_after_last_access_time_greater_than: 33
-              tier_to_cool:
-                days_after_modification_greater_than: 33
-                days_after_last_access_time_greater_than: 33
-              tier_to_archive:
-                days_after_modification_greater_than: 33
-                days_after_last_access_time_greater_than: 33
-            snapshot:
-              tier_to_cool:
-                days_after_creation_greater_than: 33
-              tier_to_archive:
-                days_after_creation_greater_than: 33
-              delete:
-                days_after_creation_greater_than: 33
-            version:
-              tier_to_archive:
-                days_after_creation_greater_than: 33
-              tier_to_cool:
-                days_after_creation_greater_than: 33
-              delete:
-                days_after_creation_greater_than: 33
-          filters:
-            prefix_match:
-              - olcmtestcontainer
-            blob_types:
-              - blockBlob
-              - appendBlob
-            blob_index_match:
-              - name: tags6
-                op: '=='
-                value: value6
-  register: output
+    - name: Assert the Managed policy no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the Managed policy updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create storage account management policy rule(Updating test)
+      azure_rm_storageaccountmanagementpolicy:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "st{{ rpfx }}"
+        rules:
+          - name: olcmtest
+            type: Lifecycle
+            enabled: false
+            definition:
+              actions:
+                base_blob:
+                  enable_auto_tier_to_hot_from_cool: true
+                  delete:
+                    days_after_modification_greater_than: 33
+                    days_after_last_access_time_greater_than: 33
+                  tier_to_cool:
+                    days_after_modification_greater_than: 33
+                    days_after_last_access_time_greater_than: 33
+                  tier_to_archive:
+                    days_after_modification_greater_than: 33
+                    days_after_last_access_time_greater_than: 33
+                snapshot:
+                  tier_to_cool:
+                    days_after_creation_greater_than: 33
+                  tier_to_archive:
+                    days_after_creation_greater_than: 33
+                  delete:
+                    days_after_creation_greater_than: 33
+                version:
+                  tier_to_archive:
+                    days_after_creation_greater_than: 33
+                  tier_to_cool:
+                    days_after_creation_greater_than: 33
+                  delete:
+                    days_after_creation_greater_than: 33
+              filters:
+                prefix_match:
+                  - olcmtestcontainer
+                blob_types:
+                  - blockBlob
+                  - appendBlob
+                blob_index_match:
+                  - name: tags6
+                    op: '=='
+                    value: value6
+      register: output
 
-- name: Get storage account management policy
-  azure_rm_storageaccountmanagementpolicy_info:
-    resource_group: "{{ resource_group }}"
-    storage_account_name: "st{{ rpfx }}"
-  register: output
+    - name: Assert the Managed policy updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the management policy rule facts
-  ansible.builtin.assert:
-    that:
-      - output.state.policy.rules[0].enabled is false
-      - output.state.policy.rules[0].name == 'olcmtest'
-      - output.state.policy.rules[0].type == 'Lifecycle'
-      - output.state.policy.rules[0].definition.actions.base_blob.enable_auto_tier_to_hot_from_cool is true
-      - output.state.policy.rules | length == 1
+    - name: Get storage account management policy
+      azure_rm_storageaccountmanagementpolicy_info:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "st{{ rpfx }}"
+      register: output
 
-- name: Delete the storage account management policy's rule
-  azure_rm_storageaccountmanagementpolicy:
-    resource_group: "{{ resource_group }}"
-    storage_account_name: "st{{ rpfx }}"
-    state: absent
-  register: output
+    - name: Assert the management policy rule facts
+      ansible.builtin.assert:
+        that:
+          - output.state.policy.rules[0].enabled is false
+          - output.state.policy.rules[0].name == 'olcmtest'
+          - output.state.policy.rules[0].type == 'Lifecycle'
+          - output.state.policy.rules[0].definition.actions.base_blob.enable_auto_tier_to_hot_from_cool is true
+          - output.state.policy.rules | length == 1
 
-- name: Assert the Managed policy deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the storage account management policy's rule
+      azure_rm_storageaccountmanagementpolicy:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "st{{ rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the Managed policy deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

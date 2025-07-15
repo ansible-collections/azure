@@ -1,265 +1,278 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=25) }}"
-
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    name: "{{ random_postfix }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-      - fdda:e69b:1587:495e::/64
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.3
-    resource_group: "{{ resource_group }}"
-
-- name: Create a route table
-  azure_rm_routetable:
-    name: "{{ random_postfix }}"
-    resource_group: "{{ resource_group }}"
-    tags:
-      purpose: testing
-
-- name: Create security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ random_postfix }}"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    purge_rules: true
-    rules:
-      - name: DenySSH
-        protocol: Tcp
-        destination_port_range: 22
-        access: Deny
-        priority: 100
-        direction: Inbound
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
-
-- name: Add the subnet back
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: "{{ random_postfix }}"
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/24"
-    security_group:
-      resource_gorup: "{{ resource_group }}"
-      name: "{{ random_postfix }}"
-    route_table:
-      name: "{{ random_postfix }}"
-      resource_group: "{{ resource_group }}"
-    delegations:
-      - name: 'mysqlinstance'
-        serviceName: "Microsoft.Sql/managedInstances"
-  register: subnet_output
-
-- name: Create sql managed instance
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    identity:
-      type: SystemAssigned
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 8
-    administrator_login: azureuser
-    administrator_login_password: "{{ password }}"
-    storage_size_in_gb: 256
-    v_cores: 8
-
-- name: Create a new sql managed instance database(checkmode test)
-  azure_rm_sqlmidatabase:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    collation: SQL_Latin1_General_CP1_CI_AS
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
     location: eastus
-    tags:
-      key1: value1
-  check_mode: true
 
-- name: Create a new sql managed instance database
-  azure_rm_sqlmidatabase:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    collation: SQL_Latin1_General_CP1_CI_AS
-    location: eastus
-    tags:
-      key1: value1
-  register: output
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=25) }}"
 
-- name: Assert the datebase is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        name: "{{ random_postfix }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+          - fdda:e69b:1587:495e::/64
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.3
+        resource_group: "{{ resource_group }}"
 
-- name: Create a new sql managed instance database (Idempotent test)
-  azure_rm_sqlmidatabase:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    collation: SQL_Latin1_General_CP1_CI_AS
-    location: eastus
-    tags:
-      key1: value1
-  register: output
+    - name: Create a route table
+      azure_rm_routetable:
+        name: "{{ random_postfix }}"
+        resource_group: "{{ resource_group }}"
+        tags:
+          purpose: testing
 
-- name: Assert the datebase has no changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ random_postfix }}"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        purge_rules: true
+        rules:
+          - name: DenySSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Deny
+            priority: 100
+            direction: Inbound
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
 
-- name: Update the sql managed instance database tags
-  azure_rm_sqlmidatabase:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    collation: SQL_Latin1_General_CP1_CI_AS
-    location: eastus
-    tags:
-      key2: value2
-  register: output
+    - name: Add the subnet back
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: "{{ random_postfix }}"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: "10.1.0.0/24"
+        security_group:
+          resource_gorup: "{{ resource_group }}"
+          name: "{{ random_postfix }}"
+        route_table:
+          name: "{{ random_postfix }}"
+          resource_group: "{{ resource_group }}"
+        delegations:
+          - name: 'mysqlinstance'
+            serviceName: "Microsoft.Sql/managedInstances"
+      register: subnet_output
 
-- name: Assert the datebase udpated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create sql managed instance
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group }}"
+        name: "{{ random_postfix }}"
+        subnet_id: "{{ subnet_output.state.id }}"
+        identity:
+          type: SystemAssigned
+        sku:
+          name: GP_Gen5
+          tier: GeneralPurpose
+          family: Gen5
+          capacity: 8
+        administrator_login: azureuser
+        administrator_login_password: "{{ password }}"
+        storage_size_in_gb: 256
+        v_cores: 8
 
-- name: Get the sql managed instance database facts
-  azure_rm_sqlmidatabase_info:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-  register: output
+    - name: Create a new sql managed instance database(checkmode test)
+      azure_rm_sqlmidatabase:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        collation: SQL_Latin1_General_CP1_CI_AS
+        location: eastus
+        tags:
+          key1: value1
+      check_mode: true
 
-- name: Assert the datebase facts
-  ansible.builtin.assert:
-    that:
-      - output.database[0].tags |length == 2
-      - output.database[0].collation == "SQL_Latin1_General_CP1_CI_AS"
+    - name: Create a new sql managed instance database
+      azure_rm_sqlmidatabase:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        collation: SQL_Latin1_General_CP1_CI_AS
+        location: eastus
+        tags:
+          key1: value1
+      register: output
 
-- name: Get sql managed database long term retention policy by name
-  azure_rm_sqlmidblongtermretentionpolicy_info:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    policy_name: default
-  register: output
+    - name: Assert the datebase is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the sql managed datebase long term retention policy facts
-  ansible.builtin.assert:
-    that:
-      - output.long_term_retention_policy[0].name == 'default'
-      - output.long_term_retention_policy[0].monthly_retention == "PT0S"
-      - output.long_term_retention_policy[0].yearly_retention == "PT0S"
-      - output.long_term_retention_policy[0].weekly_retention == "PT0S"
-      - output.long_term_retention_policy[0].week_of_year == 0
+    - name: Create a new sql managed instance database (Idempotent test)
+      azure_rm_sqlmidatabase:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        collation: SQL_Latin1_General_CP1_CI_AS
+        location: eastus
+        tags:
+          key1: value1
+      register: output
 
-- name: Update the database long term retention policy
-  azure_rm_sqlmidblongtermretentionpolicy:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    policy_name: default
-    monthly_retention: P3M
-    week_of_year: 13
-    weekly_retention: P13W
-    yearly_retention: P3Y
-  register: output
+    - name: Assert the datebase has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the sql managed datebase long term retention policy updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the sql managed instance database tags
+      azure_rm_sqlmidatabase:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        collation: SQL_Latin1_General_CP1_CI_AS
+        location: eastus
+        tags:
+          key2: value2
+      register: output
 
-- name: Get sql managed database long term retention policy by name
-  azure_rm_sqlmidblongtermretentionpolicy_info:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    policy_name: default
-  register: output
+    - name: Assert the datebase udpated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the sql managed datebase long term retention policy facts
-  ansible.builtin.assert:
-    that:
-      - output.long_term_retention_policy[0].name == 'default'
-      - output.long_term_retention_policy[0].monthly_retention == "P3M"
-      - output.long_term_retention_policy[0].yearly_retention == "P3Y"
-      - output.long_term_retention_policy[0].weekly_retention == "P13W"
-      - output.long_term_retention_policy[0].week_of_year == 13
+    - name: Get the sql managed instance database facts
+      azure_rm_sqlmidatabase_info:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+      register: output
 
-- name: Get the sql managed instance database short term retention policy facts
-  azure_rm_sqlmidbshorttermretentionpolicy_info:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    policy_name: default
-  register: output
+    - name: Assert the datebase facts
+      ansible.builtin.assert:
+        that:
+          - output.database[0].tags |length == 2
+          - output.database[0].collation == "SQL_Latin1_General_CP1_CI_AS"
 
-- name: Assert the sql managed datebase short term retention policy facts
-  ansible.builtin.assert:
-    that:
-      - output.short_term_retention_policy[0].name == 'default'
-      - output.short_term_retention_policy[0].retention_days == 7
+    - name: Get sql managed database long term retention policy by name
+      azure_rm_sqlmidblongtermretentionpolicy_info:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        policy_name: default
+      register: output
 
-- name: Update the sql managed short term retetion
-  azure_rm_sqlmidbshorttermretentionpolicy:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    policy_name: default
-    retention_days: 10
-  register: output
+    - name: Assert the sql managed datebase long term retention policy facts
+      ansible.builtin.assert:
+        that:
+          - output.long_term_retention_policy[0].name == 'default'
+          - output.long_term_retention_policy[0].monthly_retention == "PT0S"
+          - output.long_term_retention_policy[0].yearly_retention == "PT0S"
+          - output.long_term_retention_policy[0].weekly_retention == "PT0S"
+          - output.long_term_retention_policy[0].week_of_year == 0
 
-- name: Assert the sql managed datebase short term retention policy updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the database long term retention policy
+      azure_rm_sqlmidblongtermretentionpolicy:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        policy_name: default
+        monthly_retention: P3M
+        week_of_year: 13
+        weekly_retention: P13W
+        yearly_retention: P3Y
+      register: output
 
-- name: Get the sql managed instance database short term retention policy facts
-  azure_rm_sqlmidbshorttermretentionpolicy_info:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    policy_name: default
-  register: output
+    - name: Assert the sql managed datebase long term retention policy updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the sql managed datebase short term retention policy facts
-  ansible.builtin.assert:
-    that:
-      - output.short_term_retention_policy[0].name == 'default'
-      - output.short_term_retention_policy[0].retention_days == 10
+    - name: Get sql managed database long term retention policy by name
+      azure_rm_sqlmidblongtermretentionpolicy_info:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        policy_name: default
+      register: output
 
-- name: Delete the sql managed database
-  azure_rm_sqlmidatabase:
-    resource_group: "{{ resource_group }}"
-    managed_instance_name: "{{ random_postfix }}"
-    database_name: "database{{ random_postfix }}"
-    state: absent
-  register: output
+    - name: Assert the sql managed datebase long term retention policy facts
+      ansible.builtin.assert:
+        that:
+          - output.long_term_retention_policy[0].name == 'default'
+          - output.long_term_retention_policy[0].monthly_retention == "P3M"
+          - output.long_term_retention_policy[0].yearly_retention == "P3Y"
+          - output.long_term_retention_policy[0].weekly_retention == "P13W"
+          - output.long_term_retention_policy[0].week_of_year == 13
 
-- name: Assert the sql managed datebase deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Get the sql managed instance database short term retention policy facts
+      azure_rm_sqlmidbshorttermretentionpolicy_info:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        policy_name: default
+      register: output
 
-- name: Delete sql managed instance
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group }}"
-    name: "{{ random_postfix }}"
-    state: absent
+    - name: Assert the sql managed datebase short term retention policy facts
+      ansible.builtin.assert:
+        that:
+          - output.short_term_retention_policy[0].name == 'default'
+          - output.short_term_retention_policy[0].retention_days == 7
+
+    - name: Update the sql managed short term retetion
+      azure_rm_sqlmidbshorttermretentionpolicy:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        policy_name: default
+        retention_days: 10
+      register: output
+
+    - name: Assert the sql managed datebase short term retention policy updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get the sql managed instance database short term retention policy facts
+      azure_rm_sqlmidbshorttermretentionpolicy_info:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        policy_name: default
+      register: output
+
+    - name: Assert the sql managed datebase short term retention policy facts
+      ansible.builtin.assert:
+        that:
+          - output.short_term_retention_policy[0].name == 'default'
+          - output.short_term_retention_policy[0].retention_days == 10
+
+    - name: Delete the sql managed database
+      azure_rm_sqlmidatabase:
+        resource_group: "{{ resource_group }}"
+        managed_instance_name: "{{ random_postfix }}"
+        database_name: "database{{ random_postfix }}"
+        state: absent
+      register: output
+
+    - name: Assert the sql managed datebase deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete sql managed instance
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group }}"
+        name: "{{ random_postfix }}"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

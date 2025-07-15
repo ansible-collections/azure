@@ -1,298 +1,311 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
-  run_once: true
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create mysql flexible server (Checkmode test)
-  azure_rm_mysqlflexibleserver:
-    resource_group: "{{ resource_group }}"
-    name: mysqlflexible{{ rpfx }}
-    sku:
-      name: Standard_D2ds_v4
-      tier: GeneralPurpose
-    administrator_login: azureuser
-    administrator_login_password: Fred@0329
-    location: northeurope
-    version: 5.7
-    storage:
-      storage_size_gb: 128
-      iops: 684
-      auto_grow: Enabled
-    high_availability:
-      mode: ZoneRedundant
-      standby_availability_zone: 3
-    backup:
-      backup_retention_days: 6
-      geo_redundant_backup: Disabled
-    availability_zone: 1
-    tags:
-      key2: value2
-  check_mode: true
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+      run_once: true
 
-- name: Create mysql flexible server
-  azure_rm_mysqlflexibleserver:
-    resource_group: "{{ resource_group }}"
-    name: mysqlflexible{{ rpfx }}
-    sku:
-      name: Standard_D2ds_v4
-      tier: GeneralPurpose
-    administrator_login: azureuser
-    administrator_login_password: Fred@0329
-    location: northeurope
-    version: 5.7
-    storage:
-      storage_size_gb: 128
-      iops: 684
-      auto_grow: Enabled
-    high_availability:
-      mode: ZoneRedundant
-      standby_availability_zone: 3
-    backup:
-      backup_retention_days: 6
-      geo_redundant_backup: Disabled
-    availability_zone: 1
-    tags:
-      key2: value2
-  register: output
+    - name: Create mysql flexible server (Checkmode test)
+      azure_rm_mysqlflexibleserver:
+        resource_group: "{{ resource_group }}"
+        name: mysqlflexible{{ rpfx }}
+        sku:
+          name: Standard_D2ds_v4
+          tier: GeneralPurpose
+        administrator_login: azureuser
+        administrator_login_password: Fred@0329
+        location: northeurope
+        version: 5.7
+        storage:
+          storage_size_gb: 128
+          iops: 684
+          auto_grow: Enabled
+        high_availability:
+          mode: ZoneRedundant
+          standby_availability_zone: 3
+        backup:
+          backup_retention_days: 6
+          geo_redundant_backup: Disabled
+        availability_zone: 1
+        tags:
+          key2: value2
+      check_mode: true
 
-- name: Assert the resource is created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create mysql flexible server
+      azure_rm_mysqlflexibleserver:
+        resource_group: "{{ resource_group }}"
+        name: mysqlflexible{{ rpfx }}
+        sku:
+          name: Standard_D2ds_v4
+          tier: GeneralPurpose
+        administrator_login: azureuser
+        administrator_login_password: Fred@0329
+        location: northeurope
+        version: 5.7
+        storage:
+          storage_size_gb: 128
+          iops: 684
+          auto_grow: Enabled
+        high_availability:
+          mode: ZoneRedundant
+          standby_availability_zone: 3
+        backup:
+          backup_retention_days: 6
+          geo_redundant_backup: Disabled
+        availability_zone: 1
+        tags:
+          key2: value2
+      register: output
 
-- name: Create mysql flexible server again(Idempotent Test)
-  azure_rm_mysqlflexibleserver:
-    resource_group: "{{ resource_group }}"
-    name: mysqlflexible{{ rpfx }}
-    sku:
-      name: Standard_D2ds_v4
-      tier: GeneralPurpose
-    administrator_login: azureuser
-    administrator_login_password: Fred@0329
-    location: northeurope
-    version: 5.7
-    storage:
-      storage_size_gb: 128
-      iops: 684
-      auto_grow: Enabled
-    high_availability:
-      mode: ZoneRedundant
-      standby_availability_zone: 3
-    backup:
-      backup_retention_days: 6
-      geo_redundant_backup: Disabled
-    availability_zone: 1
-    tags:
-      key2: value2
-  register: output
+    - name: Assert the resource is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource is no changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create mysql flexible server again(Idempotent Test)
+      azure_rm_mysqlflexibleserver:
+        resource_group: "{{ resource_group }}"
+        name: mysqlflexible{{ rpfx }}
+        sku:
+          name: Standard_D2ds_v4
+          tier: GeneralPurpose
+        administrator_login: azureuser
+        administrator_login_password: Fred@0329
+        location: northeurope
+        version: 5.7
+        storage:
+          storage_size_gb: 128
+          iops: 684
+          auto_grow: Enabled
+        high_availability:
+          mode: ZoneRedundant
+          standby_availability_zone: 3
+        backup:
+          backup_retention_days: 6
+          geo_redundant_backup: Disabled
+        availability_zone: 1
+        tags:
+          key2: value2
+      register: output
 
-- name: Create mysql flexible server again(Idempotent Test)
-  azure_rm_mysqlflexibleserver:
-    resource_group: "{{ resource_group }}"
-    name: mysqlflexible{{ rpfx }}
-    sku:
-      name: Standard_D2ds_v4
-      tier: GeneralPurpose
-    administrator_login: azureuser
-    administrator_login_password: Fred@0329
-    location: northeurope
-    version: 5.7
-    storage:
-      storage_size_gb: 128
-      iops: 684
-      auto_grow: Enabled
-    high_availability:
-      mode: ZoneRedundant
-      standby_availability_zone: 3
-    backup:
-      backup_retention_days: 7
-      geo_redundant_backup: Disabled
-    availability_zone: 1
-    tags:
-      key1: value1
-  register: output
+    - name: Assert the resource is no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the resource is updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create mysql flexible server again(Idempotent Test)
+      azure_rm_mysqlflexibleserver:
+        resource_group: "{{ resource_group }}"
+        name: mysqlflexible{{ rpfx }}
+        sku:
+          name: Standard_D2ds_v4
+          tier: GeneralPurpose
+        administrator_login: azureuser
+        administrator_login_password: Fred@0329
+        location: northeurope
+        version: 5.7
+        storage:
+          storage_size_gb: 128
+          iops: 684
+          auto_grow: Enabled
+        high_availability:
+          mode: ZoneRedundant
+          standby_availability_zone: 3
+        backup:
+          backup_retention_days: 7
+          geo_redundant_backup: Disabled
+        availability_zone: 1
+        tags:
+          key1: value1
+      register: output
 
-- name: Gather facts mysql flexible Server -- by name
-  azure_rm_mysqlflexibleserver_info:
-    resource_group: "{{ resource_group }}"
-    name: mysqlflexible{{ rpfx }}
-  register: output
+    - name: Assert the resource is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource facts
-  ansible.builtin.assert:
-    that:
-      - output.servers[0].backup.backup_retention_days == 7
-      - output.servers[0].backup.geo_redundant_backup == 'Disabled'
-      - output.servers[0].availability_zone == "1"
-      - output.servers[0].tags | length == 2
+    - name: Gather facts mysql flexible Server -- by name
+      azure_rm_mysqlflexibleserver_info:
+        resource_group: "{{ resource_group }}"
+        name: mysqlflexible{{ rpfx }}
+      register: output
 
-- name: Create a MySQL flexible database
-  azure_rm_mysqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: database{{ rpfx }}
-    charset: UTF8
-    collation: utf8_general_ci
-  register: output
+    - name: Assert the resource facts
+      ansible.builtin.assert:
+        that:
+          - output.servers[0].backup.backup_retention_days == 7
+          - output.servers[0].backup.geo_redundant_backup == 'Disabled'
+          - output.servers[0].availability_zone == "1"
+          - output.servers[0].tags | length == 2
 
-- name: Assert the database is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a MySQL flexible database
+      azure_rm_mysqlflexibledatabase:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: database{{ rpfx }}
+        charset: UTF8
+        collation: utf8_general_ci
+      register: output
 
-- name: Create a MySQL flexible database again(Idempotent Test)
-  azure_rm_mysqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: database{{ rpfx }}
-    charset: UTF8
-    collation: utf8_general_ci
-  register: output
+    - name: Assert the database is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the database no change
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a MySQL flexible database again(Idempotent Test)
+      azure_rm_mysqlflexibledatabase:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: database{{ rpfx }}
+        charset: UTF8
+        collation: utf8_general_ci
+      register: output
 
-- name: Get the MySQL flexible database facts
-  azure_rm_mysqlflexibledatabase_info:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: database{{ rpfx }}
-  register: output
+    - name: Assert the database no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the database facts
-  ansible.builtin.assert:
-    that:
-      - output.databases[0].collation == 'utf8_general_ci'
-      - output.databases[0].charset == 'utf8'
+    - name: Get the MySQL flexible database facts
+      azure_rm_mysqlflexibledatabase_info:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: database{{ rpfx }}
+      register: output
 
-- name: Create a MySQL flexible firewall rule
-  azure_rm_mysqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: rule{{ rpfx }}
-    start_ip_address: 10.0.0.10
-    end_ip_address: 10.0.0.20
-  register: output
+    - name: Assert the database facts
+      ansible.builtin.assert:
+        that:
+          - output.databases[0].collation == 'utf8_general_ci'
+          - output.databases[0].charset == 'utf8'
 
-- name: Assert the firewall rule is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a MySQL flexible firewall rule
+      azure_rm_mysqlflexiblefirewallrule:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: rule{{ rpfx }}
+        start_ip_address: 10.0.0.10
+        end_ip_address: 10.0.0.20
+      register: output
 
-- name: Create a MySQL flexible firewall rule again(Idempotent Test)
-  azure_rm_mysqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: rule{{ rpfx }}
-    start_ip_address: 10.0.0.10
-    end_ip_address: 10.0.0.20
-  register: output
+    - name: Assert the firewall rule is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the firewall rule no change
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a MySQL flexible firewall rule again(Idempotent Test)
+      azure_rm_mysqlflexiblefirewallrule:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: rule{{ rpfx }}
+        start_ip_address: 10.0.0.10
+        end_ip_address: 10.0.0.20
+      register: output
 
-- name: Create a MySQL flexible firewall rule again(Update Test)
-  azure_rm_mysqlflexiblefirewallrule:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: rule{{ rpfx }}
-    start_ip_address: 10.0.0.15
-    end_ip_address: 10.0.0.25
-  register: output
+    - name: Assert the firewall rule no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the firewall rule is well updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a MySQL flexible firewall rule again(Update Test)
+      azure_rm_mysqlflexiblefirewallrule:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: rule{{ rpfx }}
+        start_ip_address: 10.0.0.15
+        end_ip_address: 10.0.0.25
+      register: output
 
-- name: Get the MySQL flexible firewall rule facts
-  azure_rm_mysqlflexiblefirewallrule_info:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: rule{{ rpfx }}
-  register: output
+    - name: Assert the firewall rule is well updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the firewall rule facts
-  ansible.builtin.assert:
-    that:
-      - output.rules[0].start_ip_address == '10.0.0.15'
-      - output.rules[0].end_ip_address == '10.0.0.25'
+    - name: Get the MySQL flexible firewall rule facts
+      azure_rm_mysqlflexiblefirewallrule_info:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: rule{{ rpfx }}
+      register: output
 
-- name: Get the MySQL flexible configuration facts by name
-  azure_rm_mysqlflexibleconfiguration_info:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: wait_timeout
-  register: output
+    - name: Assert the firewall rule facts
+      ansible.builtin.assert:
+        that:
+          - output.rules[0].start_ip_address == '10.0.0.15'
+          - output.rules[0].end_ip_address == '10.0.0.25'
 
-- name: Assert the configuration facts
-  ansible.builtin.assert:
-    that:
-      - output.settings[0].source == 'system-default'
-      - output.settings[0].name == 'wait_timeout'
+    - name: Get the MySQL flexible configuration facts by name
+      azure_rm_mysqlflexibleconfiguration_info:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: wait_timeout
+      register: output
 
-- name: Update the MySQL flexible configuration
-  azure_rm_mysqlflexibleconfiguration:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: wait_timeout
-    value: 28800
-    source: user-override
-  register: output
+    - name: Assert the configuration facts
+      ansible.builtin.assert:
+        that:
+          - output.settings[0].source == 'system-default'
+          - output.settings[0].name == 'wait_timeout'
 
-- name: Assert the MySQL configuration is updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the MySQL flexible configuration
+      azure_rm_mysqlflexibleconfiguration:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: wait_timeout
+        value: 28800
+        source: user-override
+      register: output
 
-- name: Get the MySQL flexible configuration by name
-  azure_rm_mysqlflexibleconfiguration_info:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: wait_timeout
-  register: output
+    - name: Assert the MySQL configuration is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the firewall rule facts
-  ansible.builtin.assert:
-    that:
-      - output.settings[0].source == 'user-override'
-      - output.settings[0].name == 'wait_timeout'
+    - name: Get the MySQL flexible configuration by name
+      azure_rm_mysqlflexibleconfiguration_info:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: wait_timeout
+      register: output
 
-- name: Delete the MySQL flexible database
-  azure_rm_mysqlflexibledatabase:
-    resource_group: "{{ resource_group }}"
-    server_name: mysqlflexible{{ rpfx }}
-    name: database{{ rpfx }}
-    state: absent
-  register: output
+    - name: Assert the firewall rule facts
+      ansible.builtin.assert:
+        that:
+          - output.settings[0].source == 'user-override'
+          - output.settings[0].name == 'wait_timeout'
 
-- name: Assert the database deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the MySQL flexible database
+      azure_rm_mysqlflexibledatabase:
+        resource_group: "{{ resource_group }}"
+        server_name: mysqlflexible{{ rpfx }}
+        name: database{{ rpfx }}
+        state: absent
+      register: output
 
-- name: Delete the mysql flexible server
-  azure_rm_mysqlflexibleserver:
-    resource_group: "{{ resource_group }}"
-    name: mysqlflexible{{ rpfx }}
-    state: absent
-  register: output
+    - name: Assert the database deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the flexible server deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the mysql flexible server
+      azure_rm_mysqlflexibleserver:
+        resource_group: "{{ resource_group }}"
+        name: mysqlflexible{{ rpfx }}
+        state: absent
+      register: output
+
+    - name: Assert the flexible server deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

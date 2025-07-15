@@ -1,369 +1,382 @@
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}"
-  register: __rg_info
+    location: eastus
 
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    location: "{{ __rg_info.resourcegroups.0.location }}"
-  run_once: true
+- name: For test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}"
+      register: __rg_info
 
-- name: Create identities array
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+      run_once: true
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'servicebus'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
-    - '3'
+    - name: Create identities array
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
 
-- name: Create a namespace
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    tags:
-      key1: value1
-  register: output
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'servicebus'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+        - '3'
 
-- name: Assert the namespace created
-  ansible.builtin.assert:
-    that:
-      - output.id
-      - output is changed
-      - output.tags
+    - name: Create a namespace
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        tags:
+          key1: value1
+      register: output
 
-- name: Create a namespace (idempontent)
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-  register: output
+    - name: Assert the namespace created
+      ansible.builtin.assert:
+        that:
+          - output.id
+          - output is changed
+          - output.tags
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a namespace (idempontent)
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+      register: output
 
-- name: Update namespace - ManagedIdentity SystemAssigned
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    identity:
-      type: SystemAssigned
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert SystemAssigned
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.identity.type == "SystemAssigned"
+    - name: Update namespace - ManagedIdentity SystemAssigned
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        identity:
+          type: SystemAssigned
+      register: output
 
-- name: Gather facts
-  azure_rm_servicebus_info:
-    name: "ns{{ rpfx }}"
-    type: namespace
-    resource_group: "{{ resource_group }}"
-  register: facts
+    - name: Assert SystemAssigned
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.identity.type == "SystemAssigned"
 
-- name: Debug
-  ansible.builtin.debug:
-    var: facts
+    - name: Gather facts
+      azure_rm_servicebus_info:
+        name: "ns{{ rpfx }}"
+        type: namespace
+        resource_group: "{{ resource_group }}"
+      register: facts
 
-- name: Update namespace - ManagedIdentity UserAssigned
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: Debug
+      ansible.builtin.debug:
+        var: facts
 
-- name: Assert UserAssigned
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.identity.type == "UserAssigned"
-      - output.identity.user_assigned_identities | length == 1
-      - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: Update namespace - ManagedIdentity UserAssigned
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Update namespace - ManagedIdentity UserAssigned Append
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-  register: output
+    - name: Assert UserAssigned
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.identity.type == "UserAssigned"
+          - output.identity.user_assigned_identities | length == 1
+          - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: Assert UserAssigned
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.identity.type == "UserAssigned"
-      - output.identity.user_assigned_identities | length == 2
-      - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
-      - output.identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Update namespace - ManagedIdentity UserAssigned Append
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+      register: output
 
-- name: Update namespace - ManagedIdentity UserAssigned Append false
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[2] }}"
-        append: false
-  register: output
+    - name: Assert UserAssigned
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.identity.type == "UserAssigned"
+          - output.identity.user_assigned_identities | length == 2
+          - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
+          - output.identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Assert UserAssigned
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.identity.type == "UserAssigned"
-      - output.identity.user_assigned_identities | length == 1
-      - output.identity.user_assigned_identities[managed_identity_ids[2]] is defined
+    - name: Update namespace - ManagedIdentity UserAssigned Append false
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[2] }}"
+            append: false
+      register: output
 
-- name: Create a secondary namespace
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}02"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    minimum_tls_version: '1.1'
-    zone_redundant: false
-    disable_local_auth: true
-    public_network_access: Disabled
-    premium_messaging_partitions: 1
-    tags:
-      key1: value1
-  register: output
+    - name: Assert UserAssigned
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.identity.type == "UserAssigned"
+          - output.identity.user_assigned_identities | length == 1
+          - output.identity.user_assigned_identities[managed_identity_ids[2]] is defined
 
-- name: Assert the service bus created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a secondary namespace
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}02"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        minimum_tls_version: '1.1'
+        zone_redundant: false
+        disable_local_auth: true
+        public_network_access: Disabled
+        premium_messaging_partitions: 1
+        tags:
+          key1: value1
+      register: output
 
-- name: Update the secondary namespace
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}02"
-    resource_group: "{{ resource_group }}"
-    sku: premium
-    minimum_tls_version: '1.2'
-    zone_redundant: false
-    disable_local_auth: false
-    public_network_access: Enabled
-    premium_messaging_partitions: 1
-    tags:
-      key1: value1
-  register: output
+    - name: Assert the service bus created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the service bus udpated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the secondary namespace
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}02"
+        resource_group: "{{ resource_group }}"
+        sku: premium
+        minimum_tls_version: '1.2'
+        zone_redundant: false
+        disable_local_auth: false
+        public_network_access: Enabled
+        premium_messaging_partitions: 1
+        tags:
+          key1: value1
+      register: output
 
-- name: Gather the namespace facts
-  azure_rm_servicebus_info:
-    name: "ns{{ rpfx }}"
-    type: namespace
-    resource_group: "{{ resource_group }}"
-  register: facts
+    - name: Assert the service bus udpated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the facts
-  ansible.builtin.assert:
-    that:
-      - facts.servicebuses[0].disable_local_auth is false
-      # The default value of zone_redundant is True and cannot be set
-      # - facts.servicebuses[0].zone_redundant is false
-      - facts.servicebuses[0].minimum_tls_version == '1.2'
-      - facts.servicebuses[0].public_network_access == 'Enabled'
-      - facts.servicebuses[0].premium_messaging_partitions == 1
+    - name: Gather the namespace facts
+      azure_rm_servicebus_info:
+        name: "ns{{ rpfx }}"
+        type: namespace
+        resource_group: "{{ resource_group }}"
+      register: facts
 
-- name: Create a queue
-  azure_rm_servicebusqueue:
-    name: "queue{{ rpfx }}"
-    namespace: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    max_message_size_in_kb: 2048
-    max_size_in_mb: 2048
-  register: queue
+    - name: Assert the facts
+      ansible.builtin.assert:
+        that:
+          - facts.servicebuses[0].disable_local_auth is false
+          # The default value of zone_redundant is True and cannot be set
+          # - facts.servicebuses[0].zone_redundant is false
+          - facts.servicebuses[0].minimum_tls_version == '1.2'
+          - facts.servicebuses[0].public_network_access == 'Enabled'
+          - facts.servicebuses[0].premium_messaging_partitions == 1
 
-- name: Assert the queue created
-  ansible.builtin.assert:
-    that:
-      - queue.id
-      - queue is changed
+    - name: Create a queue
+      azure_rm_servicebusqueue:
+        name: "queue{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        max_message_size_in_kb: 2048
+        max_size_in_mb: 2048
+      register: queue
 
-- name: Create a topic (check mode)
-  azure_rm_servicebustopic:
-    name: "topic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    duplicate_detection_time_in_seconds: 600
-    max_message_size_in_kb: 2048
-    max_size_in_mb: 2048
-  check_mode: true
-  register: output
+    - name: Assert the queue created
+      ansible.builtin.assert:
+        that:
+          - queue.id
+          - queue is changed
 
-- name: Assert the check mode
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a topic (check mode)
+      azure_rm_servicebustopic:
+        name: "topic{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        duplicate_detection_time_in_seconds: 600
+        max_message_size_in_kb: 2048
+        max_size_in_mb: 2048
+      check_mode: true
+      register: output
 
-- name: Create a topic
-  azure_rm_servicebustopic:
-    name: "topic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    duplicate_detection_time_in_seconds: 600
-    max_message_size_in_kb: 2048
-    max_size_in_mb: 2048
-  register: output
+    - name: Assert the check mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the topic created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.id
-      - "'subscription_count' not in output"
+    - name: Create a topic
+      azure_rm_servicebustopic:
+        name: "topic{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        duplicate_detection_time_in_seconds: 600
+        max_message_size_in_kb: 2048
+        max_size_in_mb: 2048
+      register: output
 
-- name: Create a topic (idempontent)
-  azure_rm_servicebustopic:
-    name: "topic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    duplicate_detection_time_in_seconds: 600
-    max_message_size_in_kb: 2048
-    max_size_in_mb: 2048
-  register: output
+    - name: Assert the topic created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id
+          - "'subscription_count' not in output"
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a topic (idempontent)
+      azure_rm_servicebustopic:
+        name: "topic{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        duplicate_detection_time_in_seconds: 600
+        max_message_size_in_kb: 2048
+        max_size_in_mb: 2048
+      register: output
 
-- name: Create test policy
-  azure_rm_servicebussaspolicy:
-    name: testpolicy
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    topic: "topic{{ rpfx }}"
-    rights: manage
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Create a subscription
-  azure_rm_servicebustopicsubscription:
-    name: "subs{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    topic: "topic{{ rpfx }}"
-  register: subs
+    - name: Create test policy
+      azure_rm_servicebussaspolicy:
+        name: testpolicy
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+        rights: manage
 
-- name: Assert the subscription created
-  ansible.builtin.assert:
-    that:
-      - subs.id
-      - subs is changed
+    - name: Create a subscription
+      azure_rm_servicebustopicsubscription:
+        name: "subs{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+      register: subs
 
-- name: Retrive topic
-  azure_rm_servicebus_info:
-    type: topic
-    name: "topic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    show_sas_policies: true
-  register: facts
+    - name: Assert the subscription created
+      ansible.builtin.assert:
+        that:
+          - subs.id
+          - subs is changed
 
-- name: Assert the topic facts
-  ansible.builtin.assert:
-    that:
-      - "facts.servicebuses | length == 1"
-      - facts.servicebuses[0].id == output.id
-      - facts.servicebuses[0].subscription_count == 1
-      - facts.servicebuses[0].sas_policies.testpolicy
-      - facts.servicebuses[0].sas_policies.testpolicy.rights == 'manage'
+    - name: Retrive topic
+      azure_rm_servicebus_info:
+        type: topic
+        name: "topic{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        show_sas_policies: true
+      register: facts
 
-- name: Delete subscription
-  azure_rm_servicebustopicsubscription:
-    name: "subs{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    topic: "topic{{ rpfx }}"
-    state: absent
+    - name: Assert the topic facts
+      ansible.builtin.assert:
+        that:
+          - "facts.servicebuses | length == 1"
+          - facts.servicebuses[0].id == output.id
+          - facts.servicebuses[0].subscription_count == 1
+          - facts.servicebuses[0].sas_policies.testpolicy
+          - facts.servicebuses[0].sas_policies.testpolicy.rights == 'manage'
 
-- name: Retrive topic
-  azure_rm_servicebus_info:
-    type: topic
-    name: "topic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    show_sas_policies: true
-  register: facts
+    - name: Delete subscription
+      azure_rm_servicebustopicsubscription:
+        name: "subs{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+        state: absent
 
-- name: Assert the topic facts
-  ansible.builtin.assert:
-    that:
-      - facts.servicebuses[0].subscription_count == 0
-      - "facts.servicebuses | length == 1"
+    - name: Retrive topic
+      azure_rm_servicebus_info:
+        type: topic
+        name: "topic{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        show_sas_policies: true
+      register: facts
 
-- name: Delete topic
-  azure_rm_servicebustopic:
-    name: "topic{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    state: absent
+    - name: Assert the topic facts
+      ansible.builtin.assert:
+        that:
+          - facts.servicebuses[0].subscription_count == 0
+          - "facts.servicebuses | length == 1"
 
-- name: Retrive topic
-  azure_rm_servicebus_info:
-    name: "topic{{ rpfx }}"
-    type: topic
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    show_sas_policies: true
-  register: facts
+    - name: Delete topic
+      azure_rm_servicebustopic:
+        name: "topic{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        state: absent
 
-- name: Assert the topic facts
-  ansible.builtin.assert:
-    that:
-      - "facts.servicebuses | length == 0"
+    - name: Retrive topic
+      azure_rm_servicebus_info:
+        name: "topic{{ rpfx }}"
+        type: topic
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        show_sas_policies: true
+      register: facts
 
-- name: Delete queue
-  azure_rm_servicebusqueue:
-    name: "queue{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    namespace: "ns{{ rpfx }}"
-    state: absent
+    - name: Assert the topic facts
+      ansible.builtin.assert:
+        that:
+          - "facts.servicebuses | length == 0"
 
-- name: Delete namespace
-  azure_rm_servicebus:
-    name: "ns{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Delete queue
+      azure_rm_servicebusqueue:
+        name: "queue{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        namespace: "ns{{ rpfx }}"
+        state: absent
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'servicebus'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
-    - '3'
+    - name: Delete namespace
+      azure_rm_servicebus:
+        name: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: absent
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'servicebus'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+        - '3'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

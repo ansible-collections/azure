@@ -1,101 +1,114 @@
-- name: Create firewall policy name
-  ansible.builtin.set_fact:
-    policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create firewall policy
-  azure_rm_firewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ policy_name }}"
-    threat_intel_mode: alert
-    threat_intel_whitelist:
-      ip_addresses:
-        - 10.0.0.1
-        - 10.0.0.2
-      fqdns:
-        - "*.microsoft.com"
-        - "*.azure.com"
-    state: present
-  register: results
+- name: For test
+  block:
+    - name: Create firewall policy name
+      ansible.builtin.set_fact:
+        policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Assert that firewall policy is created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create firewall policy
+      azure_rm_firewallpolicy:
+        resource_group: "{{ resource_group }}"
+        name: "{{ policy_name }}"
+        threat_intel_mode: alert
+        threat_intel_whitelist:
+          ip_addresses:
+            - 10.0.0.1
+            - 10.0.0.2
+          fqdns:
+            - "*.microsoft.com"
+            - "*.azure.com"
+        state: present
+      register: results
 
-- name: Create a firewall policy again (Idempotent test)
-  azure_rm_firewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ policy_name }}"
-    threat_intel_mode: alert
-    threat_intel_whitelist:
-      ip_addresses:
-        - 10.0.0.1
-        - 10.0.0.2
-      fqdns:
-        - "*.microsoft.com"
-        - "*.azure.com"
-    state: present
-  register: results
+    - name: Assert that firewall policy is created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Create a firewall policy again (Idempotent test)
+      azure_rm_firewallpolicy:
+        resource_group: "{{ resource_group }}"
+        name: "{{ policy_name }}"
+        threat_intel_mode: alert
+        threat_intel_whitelist:
+          ip_addresses:
+            - 10.0.0.1
+            - 10.0.0.2
+          fqdns:
+            - "*.microsoft.com"
+            - "*.azure.com"
+        state: present
+      register: results
 
-- name: Update a firewall policy
-  azure_rm_firewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ policy_name }}"
-    threat_intel_mode: deny
-    threat_intel_whitelist:
-      ip_addresses:
-        - 10.0.0.1
-      append_ip_addresses: false
-      fqdns:
-        - "*.microsoft.com"
-      append_fqdns: false
-    state: present
-    tags:
-      key1: "value1"
-  register: results
+    - name: Assert that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Assert that firewall policy is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Update a firewall policy
+      azure_rm_firewallpolicy:
+        resource_group: "{{ resource_group }}"
+        name: "{{ policy_name }}"
+        threat_intel_mode: deny
+        threat_intel_whitelist:
+          ip_addresses:
+            - 10.0.0.1
+          append_ip_addresses: false
+          fqdns:
+            - "*.microsoft.com"
+          append_fqdns: false
+        state: present
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Get firewall policy facts
-  azure_rm_firewallpolicy_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ policy_name }}"
-  register: results
+    - name: Assert that firewall policy is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the firewall policy facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.firewallpolicies[0].id != None
-      - results.firewallpolicies[0].name == "{{ policy_name }}"
-      - results.firewallpolicies[0].threat_intel_mode == "Deny"
-      - results.firewallpolicies[0].threat_intel_whitelist.ip_addresses == ["10.0.0.1"]
-      - results.firewallpolicies[0].threat_intel_whitelist.fqdns == ["*.microsoft.com"]
-      - results.firewallpolicies[0].tags | length > 0
+    - name: Get firewall policy facts
+      azure_rm_firewallpolicy_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ policy_name }}"
+      register: results
 
-- name: Delete the firewall policy
-  azure_rm_firewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ policy_name }}"
-    state: absent
-  register: results
+    - name: Assert the firewall policy facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.firewallpolicies[0].id != None
+          - results.firewallpolicies[0].name == "{{ policy_name }}"
+          - results.firewallpolicies[0].threat_intel_mode == "Deny"
+          - results.firewallpolicies[0].threat_intel_whitelist.ip_addresses == ["10.0.0.1"]
+          - results.firewallpolicies[0].threat_intel_whitelist.fqdns == ["*.microsoft.com"]
+          - results.firewallpolicies[0].tags | length > 0
 
-- name: Assert that firewall policy is deleted
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Delete the firewall policy
+      azure_rm_firewallpolicy:
+        resource_group: "{{ resource_group }}"
+        name: "{{ policy_name }}"
+        state: absent
+      register: results
 
-- name: Delete firewall policy again (Idempotent test)
-  azure_rm_firewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ policy_name }}"
-    state: absent
-  register: results
+    - name: Assert that firewall policy is deleted
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Asset that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Delete firewall policy again (Idempotent test)
+      azure_rm_firewallpolicy:
+        resource_group: "{{ resource_group }}"
+        name: "{{ policy_name }}"
+        state: absent
+      register: results
+
+    - name: Asset that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

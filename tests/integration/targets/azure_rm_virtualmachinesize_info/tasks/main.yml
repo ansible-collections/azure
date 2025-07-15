@@ -1,22 +1,35 @@
-- name: Set location
-  ansible.builtin.set_fact:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
     location: eastus
 
-- name: Get specific size information for a specific location
-  azure_rm_virtualmachinesize_info:
-    location: "{{ location }}"
-    name: Standard_A1_v2
-  register: output
+- name: For test
+  block:
+    - name: Set location
+      ansible.builtin.set_fact:
+        location: eastus
 
-- name: Assert the virtuam machine size
-  ansible.builtin.assert:
-    that: output['sizes'] | length == 1
+    - name: Get specific size information for a specific location
+      azure_rm_virtualmachinesize_info:
+        location: "{{ location }}"
+        name: Standard_A1_v2
+      register: output
 
-- name: Get available sizes for a specific location
-  azure_rm_virtualmachinesize_info:
-    location: "{{ location }}"
-  register: output
+    - name: Assert the virtuam machine size
+      ansible.builtin.assert:
+        that: output['sizes'] | length == 1
 
-- name: Assert the virtualmachine size
-  ansible.builtin.assert:
-    that: output['sizes'] | length > 0
+    - name: Get available sizes for a specific location
+      azure_rm_virtualmachinesize_info:
+        location: "{{ location }}"
+      register: output
+
+    - name: Assert the virtualmachine size
+      ansible.builtin.assert:
+        that: output['sizes'] | length > 0
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

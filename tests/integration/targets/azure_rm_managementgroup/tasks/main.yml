@@ -1,35 +1,48 @@
-- name: Get list of all managementgroups
-  azure_rm_managementgroup_info:
-  register: az_all_managementgroups
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Get a managementgroup by id
-  azure_rm_managementgroup_info:
-    id: "{{ az_all_managementgroups.management_groups[0].id }}"
-    recurse: true
-    flatten: true
-    children: true
-  register: az_recursive_managementgroups
+- name: For test
+  block:
+    - name: Get list of all managementgroups
+      azure_rm_managementgroup_info:
+      register: az_all_managementgroups
 
-- name: Get a managementgroup by name
-  azure_rm_managementgroup_info:
-    name: "{{ az_all_managementgroups.management_groups[0].name }}"
-    recurse: true
-    flatten: true
+    - name: Get a managementgroup by id
+      azure_rm_managementgroup_info:
+        id: "{{ az_all_managementgroups.management_groups[0].id }}"
+        recurse: true
+        flatten: true
+        children: true
+      register: az_recursive_managementgroups
 
-- name: Test invalid name id combo
-  azure_rm_managementgroup_info:
-    name: "{{ az_all_managementgroups.management_groups[0].name }}"
-    id: "{{ az_all_managementgroups.management_groups[0].id }}"
-  register: invalid_name
-  ignore_errors: true
+    - name: Get a managementgroup by name
+      azure_rm_managementgroup_info:
+        name: "{{ az_all_managementgroups.management_groups[0].name }}"
+        recurse: true
+        flatten: true
 
-- name: Validate expected states
-  ansible.builtin.assert:
-    that:
-      - invalid_name['failed']
+    - name: Test invalid name id combo
+      azure_rm_managementgroup_info:
+        name: "{{ az_all_managementgroups.management_groups[0].name }}"
+        id: "{{ az_all_managementgroups.management_groups[0].id }}"
+      register: invalid_name
+      ignore_errors: true
 
-- name: Validate expected attributes
-  ansible.builtin.assert:
-    that:
-      - "{{ item.id is defined }}"
-  loop: "{{ az_recursive_managementgroups.management_groups + az_recursive_managementgroups.subscriptions }}"
+    - name: Validate expected states
+      ansible.builtin.assert:
+        that:
+          - invalid_name['failed']
+
+    - name: Validate expected attributes
+      ansible.builtin.assert:
+        that:
+          - "{{ item.id is defined }}"
+      loop: "{{ az_recursive_managementgroups.management_groups + az_recursive_managementgroups.subscriptions }}"
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

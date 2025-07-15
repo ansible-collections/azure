@@ -1,617 +1,630 @@
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}"
-  register: __rg_info
+    location: eastus
 
-- name: Set varialbles
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-    noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
-    location: westus2
+- name: For test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}"
+      register: __rg_info
 
-- name: Create User Managed Identity
-  azure_rm_resource:
-    resource_group: "{{ resource_group }}"
-    provider: ManagedIdentity
-    resource_type: userAssignedIdentities
-    resource_name: "{{ item }}"
-    api_version: "2023-01-31"
-    body:
-      location: "{{ location }}"
-    state: present
-  loop:
-    - "ansible-test-aks-identity"
-    - "ansible-test-aks-identity-2"
+    - name: Set varialbles
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
+        location: westus2
 
-- name: Set identities IDs to test. Identities ansible-test-aks-identity and ansible-test-aks-identity-2 have to be created previously
-  ansible.builtin.set_fact:
-    user_identity: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity"
-    user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity-2"
+    - name: Create User Managed Identity
+      azure_rm_resource:
+        resource_group: "{{ resource_group }}"
+        provider: ManagedIdentity
+        resource_type: userAssignedIdentities
+        resource_name: "{{ item }}"
+        api_version: "2023-01-31"
+        body:
+          location: "{{ location }}"
+        state: present
+      loop:
+        - "ansible-test-aks-identity"
+        - "ansible-test-aks-identity-2"
 
-- name: Include aks tasks
-  ansible.builtin.include_tasks: minimal-cluster.yml
+    - name: Set identities IDs to test. Identities ansible-test-aks-identity and ansible-test-aks-identity-2 have to be created previously
+      ansible.builtin.set_fact:
+        user_identity: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity"
+        user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity-2"
 
-- name: Find available k8s version
-  azure_rm_aksversion_info:
-    location: "{{ location }}"
-  register: versions
+    - name: Include aks tasks
+      ansible.builtin.include_tasks: minimal-cluster.yml
 
-- name: Create an AKS instance (check mode)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        node_labels: {"release":"stable"}
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  check_mode: true
+    - name: Find available k8s version
+      azure_rm_aksversion_info:
+        location: "{{ location }}"
+      register: versions
 
-- name: Check there is no AKS created
-  azure_rm_aks_info:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Create an AKS instance (check mode)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            node_labels: {"release":"stable"}
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      check_mode: true
 
-- name: Check there is no AKS created
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 0"
+    - name: Check there is no AKS created
+      azure_rm_aks_info:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: fact
 
-- name: Create an AKS instance
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        node_labels: {"release":"stable"}
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
+    - name: Check there is no AKS created
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 0"
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.provisioning_state == 'Succeeded'
+    - name: Create an AKS instance
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            node_labels: {"release":"stable"}
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 1"
-      - fact.aks[0].id == output.id
-      - fact.aks[0].agent_pool_profiles[0].availability_zones == ["3"]
-      - fact.aks[0].agent_pool_profiles[0].mode == "System"
-      - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: fact
 
-- name: Update an AKS instance node_labels
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        node_labels: {"release":"stable", "environment":"dev"}
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].id == output.id
+          - fact.aks[0].agent_pool_profiles[0].availability_zones == ["3"]
+          - fact.aks[0].agent_pool_profiles[0].mode == "System"
+          - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
 
-- name: Assert the AKS instance is well update
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update an AKS instance node_labels
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            node_labels: {"release":"stable", "environment":"dev"}
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Assert the AKS instance is well update
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 1"
-      - fact.aks[0].id == output.id
-      - fact.aks[0].agent_pool_profiles[0].node_labels | length == 2
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: fact
 
-- name: Get AKS upgrade versions
-  azure_rm_aksupgrade_info:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: upgrades
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].id == output.id
+          - fact.aks[0].agent_pool_profiles[0].node_labels | length == 2
 
-- name: Assert available control-plane versions for upgrade
-  ansible.builtin.assert:
-    that:
-      - "upgrades.azure_aks_upgrades.control_plane_profile.kubernetes_version == versions.azure_aks_versions[0]"
-      - "upgrades.azure_aks_upgrades.control_plane_profile.upgrades | length > 0"
+    - name: Get AKS upgrade versions
+      azure_rm_aksupgrade_info:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: upgrades
 
-- name: Create an AKS instance (idempotent)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
+    - name: Assert available control-plane versions for upgrade
+      ansible.builtin.assert:
+        that:
+          - "upgrades.azure_aks_upgrades.control_plane_profile.kubernetes_version == versions.azure_aks_versions[0]"
+          - "upgrades.azure_aks_upgrades.control_plane_profile.upgrades | length > 0"
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create an AKS instance (idempotent)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
 
-- name: Get available version
-  azure_rm_aksversion_info:
-    location: "{{ location }}"
-    version: "{{ versions.azure_aks_versions[0] }}"
-  register: version1
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Upgrade the AKS instance with addon
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    addon:
-      http_application_routing:
-        enabled: false
-    network_profile:
-      network_plugin: azure
-      load_balancer_sku: standard
-    enable_rbac: true
-  register: output
+    - name: Get available version
+      azure_rm_aksversion_info:
+        location: "{{ location }}"
+        version: "{{ versions.azure_aks_versions[0] }}"
+      register: version1
 
-- name: Assert the AKS instance is upgraded
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.kubernetes_version == version1.azure_aks_versions[0]
-      - output.addon.httpApplicationRouting.enabled ==  False
-      - output.agent_pool_profiles[0].count == 1
-      - output.network_profile.network_plugin == 'azure'
+    - name: Upgrade the AKS instance with addon
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        addon:
+          http_application_routing:
+            enabled: false
+        network_profile:
+          network_plugin: azure
+          load_balancer_sku: standard
+        enable_rbac: true
+      register: output
 
-- name: Upgrade the AKS instance with addon (idempontent)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    addon:
-      http_application_routing:
-        enabled: false
-    network_profile:
-      network_plugin: azure
-      load_balancer_sku: standard
-    enable_rbac: true
-  register: output
+    - name: Assert the AKS instance is upgraded
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.kubernetes_version == version1.azure_aks_versions[0]
+          - output.addon.httpApplicationRouting.enabled ==  False
+          - output.agent_pool_profiles[0].count == 1
+          - output.network_profile.network_plugin == 'azure'
 
-- name: Assert the aks idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Upgrade the AKS instance with addon (idempontent)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        addon:
+          http_application_routing:
+            enabled: false
+        network_profile:
+          network_plugin: azure
+          load_balancer_sku: standard
+        enable_rbac: true
+      register: output
 
-- name: Upgrade the AKS instance with agent pool profiles
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        enable_auto_scaling: true
-        max_count: 6
-        min_count: 1
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
-  ignore_errors: true
+    - name: Assert the aks idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.provisioning_state == 'Succeeded'
-  ignore_errors: true
-  register: ignore_errors_register
+    - name: Upgrade the AKS instance with agent pool profiles
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
+      ignore_errors: true
 
-- name: Upgrade the AKS instance with agent pool profiles (idempontent)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        enable_auto_scaling: true
-        max_count: 6
-        min_count: 1
-        max_pods: 42
-        availability_zones:
-          - 3
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
+      ignore_errors: true
+      register: ignore_errors_register
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Upgrade the AKS instance with agent pool profiles (idempontent)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 3
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
 
-- name: Upgrade the AKS instance with multiple agent pool profiles
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        enable_auto_scaling: true
-        max_count: 6
-        min_count: 1
-        max_pods: 42
-        availability_zones:
-          - 3
-      - name: default2
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: User
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
-  ignore_errors: true
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - "output.agent_pool_profiles | length == 2"
-      - output.provisioning_state == 'Succeeded'
-      - output.agent_pool_profiles[1].mode == 'User'
-  ignore_errors: true
-  register: ignore_errors_register
+    - name: Upgrade the AKS instance with multiple agent pool profiles
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 3
+          - name: default2
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: User
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
+      ignore_errors: true
 
-- name: Upgrade the AKS instance with multiple agent pool profiles (idempontent)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        enable_auto_scaling: true
-        max_count: 6
-        min_count: 1
-        max_pods: 42
-        availability_zones:
-          - 3
-      - name: default2
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: User
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - "output.agent_pool_profiles | length == 2"
+          - output.provisioning_state == 'Succeeded'
+          - output.agent_pool_profiles[1].mode == 'User'
+      ignore_errors: true
+      register: ignore_errors_register
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Upgrade the AKS instance with multiple agent pool profiles (idempontent)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 3
+          - name: default2
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: User
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
 
-- name: Update the default2 agent_pool mode from User to System
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-        enable_auto_scaling: true
-        max_count: 6
-        min_count: 1
-        max_pods: 42
-        availability_zones:
-          - 3
-      - name: default2
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  ignore_errors: true
-  register: output
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - "output.agent_pool_profiles | length == 2"
-      - output.provisioning_state == 'Succeeded'
-      - output.agent_pool_profiles[1].mode == 'System'
-  ignore_errors: true
-  register: ignore_errors_register
+    - name: Update the default2 agent_pool mode from User to System
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 3
+          - name: default2
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      ignore_errors: true
+      register: output
 
-- name: Update the default2 agent_pool mode from User to System (idempontent)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    location: "{{ location }}"
-    dns_prefix: "aks{{ rpfx }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    disable_local_accounts: true
-    kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
-    service_principal:
-      client_id: "{{ azure_client_id }}"
-      client_secret: "{{ azure_secret }}"
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        enable_auto_scaling: true
-        max_count: 6
-        min_count: 1
-        max_pods: 42
-        availability_zones:
-          - 3
-      - name: default2
-        count: 1
-        vm_size: Standard_B2s
-        type: VirtualMachineScaleSets
-        mode: System
-    node_resource_group: "node{{ noderpfx }}"
-    enable_rbac: true
-    network_profile:
-      load_balancer_sku: standard
-  register: output
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - "output.agent_pool_profiles | length == 2"
+          - output.provisioning_state == 'Succeeded'
+          - output.agent_pool_profiles[1].mode == 'System'
+      ignore_errors: true
+      register: ignore_errors_register
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    show_kubeconfig: user
-  register: fact
+    - name: Update the default2 agent_pool mode from User to System (idempontent)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 3
+          - name: default2
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: output
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 1"
-      - fact.aks[0].kube_config == output.kube_config
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        show_kubeconfig: user
+      register: fact
 
-- name: Delete the AKS instance
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].kube_config == output.kube_config
 
-- name: Assert the AKS instance is well deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the AKS instance
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: absent
+      register: output
 
-- name: Delete the AKS instance (idempotent)
-  azure_rm_aks:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: output
+    - name: Assert the AKS instance is well deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Delete the AKS instance (idempotent)
+      azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: absent
+      register: output
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "aks{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert fact returns empty
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 0"
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: fact
 
-- name: Destroy User Managed Identity
-  azure_rm_resource:
-    resource_group: "{{ resource_group }}"
-    provider: ManagedIdentity
-    resource_type: userAssignedIdentities
-    resource_name: "{{ item }}"
-    api_version: "2023-01-31"
-    state: absent
-  loop:
-    - "ansible-test-aks-identity"
-    - "ansible-test-aks-identity-2"
+    - name: Assert fact returns empty
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 0"
+
+    - name: Destroy User Managed Identity
+      azure_rm_resource:
+        resource_group: "{{ resource_group }}"
+        provider: ManagedIdentity
+        resource_type: userAssignedIdentities
+        resource_name: "{{ item }}"
+        api_version: "2023-01-31"
+        state: absent
+      loop:
+        - "ansible-test-aks-identity"
+        - "ansible-test-aks-identity-2"
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

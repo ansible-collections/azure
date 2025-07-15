@@ -1,77 +1,90 @@
-- name: Create proximity placement group name
-  ansible.builtin.set_fact:
-    group_name: "ppg{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-
-- name: Create a proximity placement group
-  azure_rm_proximityplacementgroup:
-    resource_group: "{{ resource_group }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
     location: eastus
-    name: "{{ group_name }}"
-    state: present
-  register: results
 
-- name: Assert that placement group is created
-  ansible.builtin.assert:
-    that: results is changed
+- name: For test
+  block:
+    - name: Create proximity placement group name
+      ansible.builtin.set_fact:
+        group_name: "ppg{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Create a proximity placement group again (Idempotent test)
-  azure_rm_proximityplacementgroup:
-    resource_group: "{{ resource_group }}"
-    location: eastus
-    name: "{{ group_name }}"
-    state: present
-  register: results
+    - name: Create a proximity placement group
+      azure_rm_proximityplacementgroup:
+        resource_group: "{{ resource_group }}"
+        location: eastus
+        name: "{{ group_name }}"
+        state: present
+      register: results
 
-- name: Assert that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that placement group is created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Update a proximity placement group
-  azure_rm_proximityplacementgroup:
-    resource_group: "{{ resource_group }}"
-    location: eastus
-    name: "{{ group_name }}"
-    tags:
-      key1: "value1"
-    state: present
-  register: results
+    - name: Create a proximity placement group again (Idempotent test)
+      azure_rm_proximityplacementgroup:
+        resource_group: "{{ resource_group }}"
+        location: eastus
+        name: "{{ group_name }}"
+        state: present
+      register: results
 
-- name: Assert that placement group is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Get proximity placement group facts
-  azure_rm_proximityplacementgroup_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-  register: results
+    - name: Update a proximity placement group
+      azure_rm_proximityplacementgroup:
+        resource_group: "{{ resource_group }}"
+        location: eastus
+        name: "{{ group_name }}"
+        tags:
+          key1: "value1"
+        state: present
+      register: results
 
-- name: Assert the proximity placement facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.proximityplacementgroups[0].name == "{{ group_name }}"
-      - results.proximityplacementgroups[0].location == "eastus"
-      - results.proximityplacementgroups[0].proximity_placement_group_type == "Standard"
+    - name: Assert that placement group is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete proximity placement group
-  azure_rm_proximityplacementgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    state: absent
-  register: results
+    - name: Get proximity placement group facts
+      azure_rm_proximityplacementgroup_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+      register: results
 
-- name: Assert that placement group is deleted
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert the proximity placement facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.proximityplacementgroups[0].name == "{{ group_name }}"
+          - results.proximityplacementgroups[0].location == "eastus"
+          - results.proximityplacementgroups[0].proximity_placement_group_type == "Standard"
 
-- name: Delete proximity placement group again (Idempotent test)
-  azure_rm_proximityplacementgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    state: absent
-  register: results
+    - name: Delete proximity placement group
+      azure_rm_proximityplacementgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        state: absent
+      register: results
 
-- name: Asset that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that placement group is deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete proximity placement group again (Idempotent test)
+      azure_rm_proximityplacementgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        state: absent
+      register: results
+
+    - name: Asset that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

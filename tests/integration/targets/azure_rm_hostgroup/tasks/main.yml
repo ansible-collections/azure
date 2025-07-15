@@ -1,88 +1,101 @@
-- name: Create host group name
-  ansible.builtin.set_fact:
-    group_name: "hostgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-
-- name: Create a host group
-  azure_rm_hostgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
     location: eastus
-    zones:
-      - "1"
-    platform_fault_domain_count: 1
-    state: present
-  register: results
 
-- name: Assert that host group is created
-  ansible.builtin.assert:
-    that: results is changed
+- name: For test
+  block:
+    - name: Create host group name
+      ansible.builtin.set_fact:
+        group_name: "hostgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Create a host group again (Idempotent test)
-  azure_rm_hostgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    location: eastus
-    zones:
-      - "1"
-    platform_fault_domain_count: 1
-    state: present
-  register: results
+    - name: Create a host group
+      azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        location: eastus
+        zones:
+          - "1"
+        platform_fault_domain_count: 1
+        state: present
+      register: results
 
-- name: Assert that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that host group is created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Update a host group
-  azure_rm_hostgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    location: eastus
-    zones:
-      - "1"
-    platform_fault_domain_count: 1
-    state: present
-    tags:
-      key1: "value1"
-  register: results
+    - name: Create a host group again (Idempotent test)
+      azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        location: eastus
+        zones:
+          - "1"
+        platform_fault_domain_count: 1
+        state: present
+      register: results
 
-- name: Assert that host group is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Get host group facts
-  azure_rm_hostgroup_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-  register: results
+    - name: Update a host group
+      azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        location: eastus
+        zones:
+          - "1"
+        platform_fault_domain_count: 1
+        state: present
+        tags:
+          key1: "value1"
+      register: results
 
-- name: Assert the host group facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.hostgroups[0].name == "{{ group_name }}"
-      - results.hostgroups[0].location == "eastus"
-      - results.hostgroups[0].platform_fault_domain_count == 1
-      - results.hostgroups[0].zones == ["1"]
-      - results.hostgroups[0].tags | length > 0
+    - name: Assert that host group is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete host group
-  azure_rm_hostgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    state: absent
-  register: results
+    - name: Get host group facts
+      azure_rm_hostgroup_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+      register: results
 
-- name: Assert that host group is deleted
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert the host group facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.hostgroups[0].name == "{{ group_name }}"
+          - results.hostgroups[0].location == "eastus"
+          - results.hostgroups[0].platform_fault_domain_count == 1
+          - results.hostgroups[0].zones == ["1"]
+          - results.hostgroups[0].tags | length > 0
 
-- name: Delete host group again (Idempotent test)
-  azure_rm_hostgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    state: absent
-  register: results
+    - name: Delete host group
+      azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        state: absent
+      register: results
 
-- name: Asset that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that host group is deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete host group again (Idempotent test)
+      azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ group_name }}"
+        state: absent
+      register: results
+
+    - name: Asset that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

@@ -1,24 +1,37 @@
-- name: Get list of all subscriptions
-  azure_rm_subscription_info:
-    all: true
-  register: az_all_subscriptions
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Get a subscription by id
-  azure_rm_subscription_info:
-    id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
+- name: For test
+  block:
+    - name: Get list of all subscriptions
+      azure_rm_subscription_info:
+        all: true
+      register: az_all_subscriptions
 
-- name: Get a subscription by name
-  azure_rm_subscription_info:
-    name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
+    - name: Get a subscription by id
+      azure_rm_subscription_info:
+        id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
 
-- name: Test invalid name id combo
-  azure_rm_subscription_info:
-    name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
-    id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
-  register: invalid_name
-  ignore_errors: true
+    - name: Get a subscription by name
+      azure_rm_subscription_info:
+        name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
 
-- name: Assert task failed
-  ansible.builtin.assert:
-    that:
-      - "invalid_name['failed'] == True"
+    - name: Test invalid name id combo
+      azure_rm_subscription_info:
+        name: "{{ az_all_subscriptions.subscriptions[0].display_name }}"
+        id: "{{ az_all_subscriptions.subscriptions[0].subscription_id }}"
+      register: invalid_name
+      ignore_errors: true
+
+    - name: Assert task failed
+      ansible.builtin.assert:
+        that:
+          - "invalid_name['failed'] == True"
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

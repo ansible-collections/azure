@@ -1,124 +1,137 @@
-- name: Create random express route
-  ansible.builtin.set_fact:
-    express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
-
-- name: Create Express route (check mode)
-  azure_rm_expressroute:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
     location: eastus
-    name: "{{ express_route }}"
-    resource_group: "{{ resource_group }}"
-    allow_classic_operations: true
-    global_reach_enabled: false
-    tags:
-      a: b
-    authorizations:
-      - name: authorization_test
-    service_provider_properties:
-      service_provider_name: Coresite
-      peering_location: Denver
-      bandwidth_in_mbps: 1000
-    sku:
-      tier: standard
-      family: metereddata
-  register: results
-  check_mode: true
 
-- name: Assert the excpress route check mode result
-  ansible.builtin.assert:
-    that: results is changed
+- name: For test
+  block:
+    - name: Create random express route
+      ansible.builtin.set_fact:
+        express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
+    - name: Create Express route (check mode)
+      azure_rm_expressroute:
+        location: eastus
+        name: "{{ express_route }}"
+        resource_group: "{{ resource_group }}"
+        allow_classic_operations: true
+        global_reach_enabled: false
+        tags:
+          a: b
+        authorizations:
+          - name: authorization_test
+        service_provider_properties:
+          service_provider_name: Coresite
+          peering_location: Denver
+          bandwidth_in_mbps: 1000
+        sku:
+          tier: standard
+          family: metereddata
+      register: results
+      check_mode: true
 
-- name: Create Express route
-  azure_rm_expressroute:
-    location: eastus
-    name: "{{ express_route }}"
-    resource_group: "{{ resource_group }}"
-    allow_classic_operations: true
-    global_reach_enabled: false
-    tags:
-      a: b
-    authorizations:
-      - name: authorization_test
-    service_provider_properties:
-      service_provider_name: Coresite
-      peering_location: Denver
-      bandwidth_in_mbps: 1000
-    sku:
-      tier: standard
-      family: metereddata
-  register: results
-
-- name: Assert the express route created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert the excpress route check mode result
+      ansible.builtin.assert:
+        that: results is changed
 
 
-- name: Update Express route
-  azure_rm_expressroute:
-    location: eastus
-    name: "{{ express_route }}"
-    resource_group: "{{ resource_group }}"
-    allow_classic_operations: true
-    global_reach_enabled: false
-    tags:
-      test: modified
-    authorizations:
-      - name: authorization_test
-    service_provider_properties:
-      service_provider_name: Coresite
-      peering_location: Denver
-      bandwidth_in_mbps: 1000
-    sku:
-      tier: standard
-      family: metereddata
-  register: results
+    - name: Create Express route
+      azure_rm_expressroute:
+        location: eastus
+        name: "{{ express_route }}"
+        resource_group: "{{ resource_group }}"
+        allow_classic_operations: true
+        global_reach_enabled: false
+        tags:
+          a: b
+        authorizations:
+          - name: authorization_test
+        service_provider_properties:
+          service_provider_name: Coresite
+          peering_location: Denver
+          bandwidth_in_mbps: 1000
+        sku:
+          tier: standard
+          family: metereddata
+      register: results
 
-- name: Assert the express route updated
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Assert the express route created
+      ansible.builtin.assert:
+        that: results is changed
 
 
-- name: Retrieve Express Route
-  azure_rm_expressroute_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ express_route }}"
-  register: results
+    - name: Update Express route
+      azure_rm_expressroute:
+        location: eastus
+        name: "{{ express_route }}"
+        resource_group: "{{ resource_group }}"
+        allow_classic_operations: true
+        global_reach_enabled: false
+        tags:
+          test: modified
+        authorizations:
+          - name: authorization_test
+        service_provider_properties:
+          service_provider_name: Coresite
+          peering_location: Denver
+          bandwidth_in_mbps: 1000
+        sku:
+          tier: standard
+          family: metereddata
+      register: results
 
-- name: Assert that facts module returned result
-  ansible.builtin.assert:
-    that:
-      - results.expressroute[0].tags.test == 'modified'
-      - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
+    - name: Assert the express route updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Test idempotent
-  azure_rm_expressroute:
-    name: "{{ express_route }}"
-    resource_group: "{{ resource_group }}"
-  register: results
 
-- name: Assert the idempotent
-  ansible.builtin.assert:
-    that:
-      - results is not changed
+    - name: Retrieve Express Route
+      azure_rm_expressroute_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ express_route }}"
+      register: results
 
-#
-# azure_rm_expressroute cleanup
-#
-- name: Delete Express Route
-  azure_rm_expressroute:
-    resource_group: "{{ resource_group }}"
-    name: "{{ express_route }}"
-    state: absent
+    - name: Assert that facts module returned result
+      ansible.builtin.assert:
+        that:
+          - results.expressroute[0].tags.test == 'modified'
+          - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
 
-- name: Delete Express Route (idempotent)
-  azure_rm_expressroute:
-    resource_group: "{{ resource_group }}"
-    name: "{{ express_route }}"
-    state: absent
-  register: results
+    - name: Test idempotent
+      azure_rm_expressroute:
+        name: "{{ express_route }}"
+        resource_group: "{{ resource_group }}"
+      register: results
 
-- name: Assert the express route deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert the idempotent
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    #
+    # azure_rm_expressroute cleanup
+    #
+    - name: Delete Express Route
+      azure_rm_expressroute:
+        resource_group: "{{ resource_group }}"
+        name: "{{ express_route }}"
+        state: absent
+
+    - name: Delete Express Route (idempotent)
+      azure_rm_expressroute:
+        resource_group: "{{ resource_group }}"
+        name: "{{ express_route }}"
+        state: absent
+      register: results
+
+    - name: Assert the express route deleted
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

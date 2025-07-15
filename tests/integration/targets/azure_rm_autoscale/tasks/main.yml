@@ -1,237 +1,250 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    name_rpfx: "scale{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: testVnet
-    address_prefixes: "10.0.0.0/16"
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        name_rpfx: "scale{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
 
-- name: Add subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: testSubnet
-    address_prefix: "10.0.1.0/24"
-    virtual_network: testVnet
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: testVnet
+        address_prefixes: "10.0.0.0/16"
 
-- name: Create VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_B1ms
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: 2
-    virtual_network_name: testVnet
-    subnet_name: testSubnet
-    upgrade_policy: Manual
-    tier: Standard
-    managed_disk_type: Standard_LRS
-    os_disk_caching: ReadWrite
-    orchestration_mode: Uniform
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: testSubnet
+        address_prefix: "10.0.1.0/24"
+        virtual_network: testVnet
+
+    - name: Create VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_B1ms
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 2
+        virtual_network_name: testVnet
+        subnet_name: testSubnet
+        upgrade_policy: Manual
+        tier: Standard
         managed_disk_type: Standard_LRS
-  register: vmss
+        os_disk_caching: ReadWrite
+        orchestration_mode: Uniform
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+      register: vmss
 
-- name: Create auto scaling (check mode)
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    target: "{{ vmss.ansible_facts.azure_vmss.id }}"
-    enabled: true
-    profiles:
-      - count: '1'
-        recurrence_days:
-          - Monday
-        name: Auto created scale condition
-        recurrence_timezone: China Standard Time
-        recurrence_mins:
-          - '0'
-        min_count: '1'
-        max_count: '1'
-        recurrence_frequency: Week
-        recurrence_hours:
-          - '18'
-  check_mode: true
-  register: output
+    - name: Create auto scaling (check mode)
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        target: "{{ vmss.ansible_facts.azure_vmss.id }}"
+        enabled: true
+        profiles:
+          - count: '1'
+            recurrence_days:
+              - Monday
+            name: Auto created scale condition
+            recurrence_timezone: China Standard Time
+            recurrence_mins:
+              - '0'
+            min_count: '1'
+            max_count: '1'
+            recurrence_frequency: Week
+            recurrence_hours:
+              - '18'
+      check_mode: true
+      register: output
 
-- name: Assert check mode facts
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert check mode facts
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create auto scaling
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    target:
-      name: "testVMSS{{ rpfx }}"
-      types: "virtualMachineScaleSets"
-      namespace: "Microsoft.Compute"
-    enabled: true
-    profiles:
-      - count: '1'
-        recurrence_days:
-          - Monday
-        name: Auto created scale condition
-        recurrence_timezone: China Standard Time
-        recurrence_mins:
-          - '0'
-        min_count: '1'
-        max_count: '1'
-        recurrence_frequency: Week
-        recurrence_hours:
-          - '18'
-  register: output
+    - name: Create auto scaling
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        target:
+          name: "testVMSS{{ rpfx }}"
+          types: "virtualMachineScaleSets"
+          namespace: "Microsoft.Compute"
+        enabled: true
+        profiles:
+          - count: '1'
+            recurrence_days:
+              - Monday
+            name: Auto created scale condition
+            recurrence_timezone: China Standard Time
+            recurrence_mins:
+              - '0'
+            min_count: '1'
+            max_count: '1'
+            recurrence_frequency: Week
+            recurrence_hours:
+              - '18'
+      register: output
 
-- name: Assert the auto scale created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.id
+    - name: Assert the auto scale created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id
 
-- name: Create auto scaling (idemponent)
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    target: "{{ vmss.ansible_facts.azure_vmss.id }}"
-    enabled: true
-    profiles:
-      - count: '1'
-        recurrence_days:
-          - Monday
-        name: Auto created scale condition
-        recurrence_timezone: China Standard Time
-        recurrence_mins:
-          - '0'
-        min_count: '1'
-        max_count: '1'
-        recurrence_frequency: Week
-        recurrence_hours:
-          - '18'
-  register: output
+    - name: Create auto scaling (idemponent)
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        target: "{{ vmss.ansible_facts.azure_vmss.id }}"
+        enabled: true
+        profiles:
+          - count: '1'
+            recurrence_days:
+              - Monday
+            name: Auto created scale condition
+            recurrence_timezone: China Standard Time
+            recurrence_mins:
+              - '0'
+            min_count: '1'
+            max_count: '1'
+            recurrence_frequency: Week
+            recurrence_hours:
+              - '18'
+      register: output
 
-- name: Assert the auto scale idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.id
+    - name: Assert the auto scale idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.id
 
-- name: Update auto scaling
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    target: "{{ vmss.ansible_facts.azure_vmss.id }}"
-    enabled: true
-    profiles:
-      - count: '1'
-        recurrence_days:
-          - Monday
-        name: Auto created scale condition 0
-        rules:
-          - time_aggregation: Average
-            time_window: 10
-            direction: Increase
-            metric_name: Percentage CPU
-            metric_resource_uri: "{{ vmss.ansible_facts.azure_vmss.id }}"
-            value: '1'
-            threshold: 70
-            cooldown: 5
-            time_grain: 1
-            statistic: Average
-            operator: GreaterThan
-            type: ChangeCount
-            metric_namespace: Fredtest
-            divide_per_instance: true
-            dimensions:
-              - dimension_name: AppName
-                operator: Equals
-                values:
-                  - App1
-                  - App2
-        max_count: '1'
-        recurrence_mins:
-          - '0'
-        min_count: '1'
-        recurrence_timezone: China Standard Time
-        recurrence_frequency: Week
-        recurrence_hours:
-          - '6'
-  register: output
+    - name: Update auto scaling
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        target: "{{ vmss.ansible_facts.azure_vmss.id }}"
+        enabled: true
+        profiles:
+          - count: '1'
+            recurrence_days:
+              - Monday
+            name: Auto created scale condition 0
+            rules:
+              - time_aggregation: Average
+                time_window: 10
+                direction: Increase
+                metric_name: Percentage CPU
+                metric_resource_uri: "{{ vmss.ansible_facts.azure_vmss.id }}"
+                value: '1'
+                threshold: 70
+                cooldown: 5
+                time_grain: 1
+                statistic: Average
+                operator: GreaterThan
+                type: ChangeCount
+                metric_namespace: Fredtest
+                divide_per_instance: true
+                dimensions:
+                  - dimension_name: AppName
+                    operator: Equals
+                    values:
+                      - App1
+                      - App2
+            max_count: '1'
+            recurrence_mins:
+              - '0'
+            min_count: '1'
+            recurrence_timezone: China Standard Time
+            recurrence_frequency: Week
+            recurrence_hours:
+              - '6'
+      register: output
 
-- name: Assert the auto scale created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.profiles[0].rules[0].metric_resource_uri == vmss.ansible_facts.azure_vmss.id
+    - name: Assert the auto scale created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.profiles[0].rules[0].metric_resource_uri == vmss.ansible_facts.azure_vmss.id
 
-- name: Delete auto scaling (check mode)
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    state: absent
-  check_mode: true
-  register: output
+    - name: Delete auto scaling (check mode)
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        state: absent
+      check_mode: true
+      register: output
 
-- name: Assert the auto scaling deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the auto scaling deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete auto scaling
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    state: absent
-  register: output
+    - name: Delete auto scaling
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        state: absent
+      register: output
 
-- name: Assert the auto scaling deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the auto scaling deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete auto scaling (idemponetent)
-  azure_rm_autoscale:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    state: absent
-  register: output
+    - name: Delete auto scaling (idemponetent)
+      azure_rm_autoscale:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        state: absent
+      register: output
 
-- name: Assert the auto scaling deleted idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Assert the auto scaling deleted idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Clean VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    vm_size: Standard_DS1_v2
-    name: testVMSS{{ rpfx }}
-    state: absent
+    - name: Clean VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}"
+        vm_size: Standard_DS1_v2
+        name: testVMSS{{ rpfx }}
+        state: absent
 
-- name: Clean subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: testSubnet
-    virtual_network: testVnet
-    state: absent
+    - name: Clean subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        name: testSubnet
+        virtual_network: testVnet
+        state: absent
 
-- name: Clean virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: testVnet
-    state: absent
+    - name: Clean virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: testVnet
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

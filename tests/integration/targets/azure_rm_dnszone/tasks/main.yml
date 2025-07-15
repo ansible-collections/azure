@@ -1,305 +1,318 @@
-- name: Create random domain name
-  ansible.builtin.set_fact:
-    domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create a DNS zone (check mode)
-  azure_rm_dnszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-  register: results
-  check_mode: true
+- name: For test
+  block:
+    - name: Create random domain name
+      ansible.builtin.set_fact:
+        domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
-- name: Assert the dns zone created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create a DNS zone (check mode)
+      azure_rm_dnszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+      register: results
+      check_mode: true
 
-- name: Create a DNS zone
-  azure_rm_dnszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-  register: results
+    - name: Assert the dns zone created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the dns zone created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create a DNS zone
+      azure_rm_dnszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+      register: results
 
-- name: Update DNS zone with tags
-  azure_rm_dnszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    tags:
-      test: modified
-  register: results
+    - name: Assert the dns zone created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the dns zone updated
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update DNS zone with tags
+      azure_rm_dnszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+        tags:
+          test: modified
+      register: results
 
-- name: Retrieve DNS Zone Facts
-  azure_rm_dnszone_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-  register: zones
+    - name: Assert the dns zone updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert that facts module returned result
-  ansible.builtin.assert:
-    that:
-      - zones.dnszones[0].tags.test == 'modified'
-      - zones.dnszones[0].type == 'public'
+    - name: Retrieve DNS Zone Facts
+      azure_rm_dnszone_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+      register: zones
 
-- name: Test idempotent
-  azure_rm_dnszone:
-    name: "{{ domain_name }}.com"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert that facts module returned result
+      ansible.builtin.assert:
+        that:
+          - zones.dnszones[0].tags.test == 'modified'
+          - zones.dnszones[0].type == 'public'
 
-- name: Assert idempotent test result
-  ansible.builtin.assert:
-    that:
-      - results is not changed
+    - name: Test idempotent
+      azure_rm_dnszone:
+        name: "{{ domain_name }}.com"
+        resource_group: "{{ resource_group }}"
+      register: results
 
-#
-# azure_rm_dnsrecordset test
-#
+    - name: Assert idempotent test result
+      ansible.builtin.assert:
+        that:
+          - results is not changed
 
-- name: Create "A" record set with multiple records
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    records:
-      - entry: 192.168.100.101
-      - entry: 192.168.100.102
-      - entry: 192.168.100.103
-  register: results
+    #
+    # azure_rm_dnsrecordset test
+    #
 
-- name: Assert that A record set was created
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - 'results.state.a_records | length == 3'
+    - name: Create "A" record set with multiple records
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        records:
+          - entry: 192.168.100.101
+          - entry: 192.168.100.102
+          - entry: 192.168.100.103
+      register: results
 
-- name: Re-run "A" record with same values
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    records:
-      - entry: 192.168.100.101
-      - entry: 192.168.100.102
-      - entry: 192.168.100.103
-  register: results
+    - name: Assert that A record set was created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - 'results.state.a_records | length == 3'
 
-- name: Assert that A record set was not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Re-run "A" record with same values
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        records:
+          - entry: 192.168.100.101
+          - entry: 192.168.100.102
+          - entry: 192.168.100.103
+      register: results
 
-- name: Update "A" record set with additional record
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    record_mode: append
-    records:
-      - entry: 192.168.100.104
-  register: results
+    - name: Assert that A record set was not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Assert that new record was appended
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - 'results.state.a_records | length == 4'
+    - name: Update "A" record set with additional record
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        record_mode: append
+        records:
+          - entry: 192.168.100.104
+      register: results
 
-- name: Re-update "A" record set with additional record
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    record_mode: append
-    records:
-      - entry: 192.168.100.104
-  register: results
+    - name: Assert that new record was appended
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - 'results.state.a_records | length == 4'
 
-- name: Assert that A record set was not changed
-  ansible.builtin.assert:
-    that:
-      - results is not changed
+    - name: Re-update "A" record set with additional record
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        record_mode: append
+        records:
+          - entry: 192.168.100.104
+      register: results
 
-- name: Remove 1 record from record set
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    records:
-      - entry: 192.168.100.101
-      - entry: 192.168.100.102
-      - entry: 192.168.100.103
-  register: results
+    - name: Assert that A record set was not changed
+      ansible.builtin.assert:
+        that:
+          - results is not changed
 
-- name: Assert that record was deleted
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - 'results.state.a_records | length == 3'
+    - name: Remove 1 record from record set
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        records:
+          - entry: 192.168.100.101
+          - entry: 192.168.100.102
+          - entry: 192.168.100.103
+      register: results
 
-- name: Check_mode test
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    records:
-      - entry: 192.168.100.105
-  check_mode: true
-  register: results
+    - name: Assert that record was deleted
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - 'results.state.a_records | length == 3'
 
-- name: Assert that check_mode returns new state
-  ansible.builtin.assert:
-    that:
-      - results is changed
+    - name: Check_mode test
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        records:
+          - entry: 192.168.100.105
+      check_mode: true
+      register: results
 
-# FUTURE: add facts module calls to ensure that we really didn't touch anything
+    - name: Assert that check_mode returns new state
+      ansible.builtin.assert:
+        that:
+          - results is changed
 
-- name: Create SRV records in a new record set
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: "_sip._tcp.{{ domain_name }}.com"
-    zone_name: "{{ domain_name }}.com"
-    time_to_live: 7200
-    record_type: SRV
-    records:
-      - entry: sip.{{ domain_name }}.com
-        priority: 20
-        weight: 10
-        port: 5060
-  register: results
+    # FUTURE: add facts module calls to ensure that we really didn't touch anything
 
-- name: Assert that SRV record set was created
-  ansible.builtin.assert:
-    that:
-      - results is changed
+    - name: Create SRV records in a new record set
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: "_sip._tcp.{{ domain_name }}.com"
+        zone_name: "{{ domain_name }}.com"
+        time_to_live: 7200
+        record_type: SRV
+        records:
+          - entry: sip.{{ domain_name }}.com
+            priority: 20
+            weight: 10
+            port: 5060
+      register: results
 
-- name: Create TXT records in a new record set
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: "_txt.{{ domain_name }}.com"
-    zone_name: "{{ domain_name }}.com"
-    record_type: TXT
-    records:
-      - entry: "v=spf1 a -all"
-      - entry: "foo"
-      - entry:
-          - "bar"
-          - "baz"
-  register: results
+    - name: Assert that SRV record set was created
+      ansible.builtin.assert:
+        that:
+          - results is changed
 
-- name: Cssert that TXT record set was created
-  ansible.builtin.assert:
-    that:
-      - results is changed
+    - name: Create TXT records in a new record set
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: "_txt.{{ domain_name }}.com"
+        zone_name: "{{ domain_name }}.com"
+        record_type: TXT
+        records:
+          - entry: "v=spf1 a -all"
+          - entry: "foo"
+          - entry:
+              - "bar"
+              - "baz"
+      register: results
 
-#
-# azure_rm_dnsrecordset_info
-#
+    - name: Cssert that TXT record set was created
+      ansible.builtin.assert:
+        that:
+          - results is changed
 
-- name: Retrieve DNS Record Set Facts for single Record Set
-  azure_rm_dnsrecordset_info:
-    resource_group: "{{ resource_group }}"
-    zone_name: "{{ domain_name }}.com"
-    relative_name: www
-    record_type: A
-  register: results
+    #
+    # azure_rm_dnsrecordset_info
+    #
 
-- name: Assert that facts module returned result for single Record Set
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-#     - azure_dnsrecordset[0].name == 'www'
-      - results.dnsrecordsets[0].relative_name == 'www'
-      - 'results.dnsrecordsets[0].records | length == 3'
-      - results.dnsrecordsets[0].record_type == 'A'
+    - name: Retrieve DNS Record Set Facts for single Record Set
+      azure_rm_dnsrecordset_info:
+        resource_group: "{{ resource_group }}"
+        zone_name: "{{ domain_name }}.com"
+        relative_name: www
+        record_type: A
+      register: results
 
-- name: Retrieve DNS Record Set Facts for all Record Sets
-  azure_rm_dnsrecordset_info:
-    resource_group: "{{ resource_group }}"
-    zone_name: "{{ domain_name }}.com"
-  register: facts
+    - name: Assert that facts module returned result for single Record Set
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+    #     - azure_dnsrecordset[0].name == 'www'
+          - results.dnsrecordsets[0].relative_name == 'www'
+          - 'results.dnsrecordsets[0].records | length == 3'
+          - results.dnsrecordsets[0].record_type == 'A'
 
-- name: Assert that facts module returned result for all Record Sets
-  ansible.builtin.assert:
-    that:
-      - facts is not changed
-#     - facts.ansible_facts.azure_dnsrecordset[0].name == '@'
-#     - facts.ansible_facts.azure_dnsrecordset[1].name == '@'
-#     - facts.ansible_facts.azure_dnsrecordset[4].name == 'www'
+    - name: Retrieve DNS Record Set Facts for all Record Sets
+      azure_rm_dnsrecordset_info:
+        resource_group: "{{ resource_group }}"
+        zone_name: "{{ domain_name }}.com"
+      register: facts
 
-#
-# azure_rm_dnsrecordset cleanup
-#
-- name: Delete all record sets  except for @
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: "{{ item.relative_name }}"
-    zone_name: "{{ domain_name }}.com"
-    record_type: "{{ item.record_type }}"
-    state: absent
-  with_items: "{{ facts.dnsrecordsets }}"
-  when:
-    - item.relative_name != '@'
-  register: results
+    - name: Assert that facts module returned result for all Record Sets
+      ansible.builtin.assert:
+        that:
+          - facts is not changed
+    #     - facts.ansible_facts.azure_dnsrecordset[0].name == '@'
+    #     - facts.ansible_facts.azure_dnsrecordset[1].name == '@'
+    #     - facts.ansible_facts.azure_dnsrecordset[4].name == 'www'
 
-- name: Assert that record set deleted
-  ansible.builtin.assert:
-    that: results is changed
+    #
+    # azure_rm_dnsrecordset cleanup
+    #
+    - name: Delete all record sets  except for @
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: "{{ item.relative_name }}"
+        zone_name: "{{ domain_name }}.com"
+        record_type: "{{ item.record_type }}"
+        state: absent
+      with_items: "{{ facts.dnsrecordsets }}"
+      when:
+        - item.relative_name != '@'
+      register: results
 
-- name: Retrieve DNS Record Set Facts for all Record Sets
-  azure_rm_dnsrecordset_info:
-    resource_group: "{{ resource_group }}"
-    zone_name: "{{ domain_name }}.com"
-  register: facts
+    - name: Assert that record set deleted
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert all record set deleted
-  ansible.builtin.assert:
-    that:
-      - item.relative_name == '@'
-  with_items: "{{ facts.dnsrecordsets }}"
+    - name: Retrieve DNS Record Set Facts for all Record Sets
+      azure_rm_dnsrecordset_info:
+        resource_group: "{{ resource_group }}"
+        zone_name: "{{ domain_name }}.com"
+      register: facts
 
-- name: Re-run record set absent(Idempotent test)
-  azure_rm_dnsrecordset:
-    resource_group: "{{ resource_group }}"
-    relative_name: www
-    zone_name: "{{ domain_name }}.com"
-    record_type: A
-    state: absent
-  register: results
+    - name: Assert all record set deleted
+      ansible.builtin.assert:
+        that:
+          - item.relative_name == '@'
+      with_items: "{{ facts.dnsrecordsets }}"
 
-- name: Assert the dns recored deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Re-run record set absent(Idempotent test)
+      azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}"
+        relative_name: www
+        zone_name: "{{ domain_name }}.com"
+        record_type: A
+        state: absent
+      register: results
 
-#
-# azure_rm_dnszone cleanup
-#
-- name: Delete DNS zone
-  azure_rm_dnszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    state: absent
+    - name: Assert the dns recored deleted
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Delete DNS zone (idempotent)
-  azure_rm_dnszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    state: absent
-  register: results
+    #
+    # azure_rm_dnszone cleanup
+    #
+    - name: Delete DNS zone
+      azure_rm_dnszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+        state: absent
 
-- name: Assert the dns zone deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Delete DNS zone (idempotent)
+      azure_rm_dnszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+        state: absent
+      register: results
+
+    - name: Assert the dns zone deleted
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

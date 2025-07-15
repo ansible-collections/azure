@@ -1,234 +1,247 @@
-- name: Create storage account name
-  ansible.builtin.set_fact:
-    storage_account: "sb{{ resource_group | hash('md5') | truncate(21, True, '') }}"
-    test1_file: "./targets/azure_rm_storageblob/files/Ratings.png"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}"
-    account_type: Standard_LRS
-  register: az_storageaccount
+- name: For test
+  block:
+    - name: Create storage account name
+      ansible.builtin.set_fact:
+        storage_account: "sb{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+        test1_file: "./targets/azure_rm_storageblob/files/Ratings.png"
 
-- name: Create container
-  azure_rm_storageblob:
-    # auth_mode: login
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
+    - name: Create storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ storage_account }}"
+        account_type: Standard_LRS
+      register: az_storageaccount
 
-- name: Lookup service principal object id
-  ansible.builtin.set_fact:
-    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
-                   azure_client_id=azure_client_id,
-                   azure_secret=azure_secret,
-                   azure_tenant=azure_tenant) }}"
-  register: spn_facts
+    - name: Create container
+      azure_rm_storageblob:
+        # auth_mode: login
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
 
-# - name: Create role assignment by scope (Storage Blob Data Contributor)
-#   azure_rm_roleassignment:
-#     scope: "{{ az_storageaccount.state.id }}/blobServices/default/containers/my-blobs"
-#     assignee_object_id: "{{ spn_facts.ansible_facts.object_id }}"
-#     role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+    - name: Lookup service principal object id
+      ansible.builtin.set_fact:
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=azure_tenant) }}"
+      register: spn_facts
 
-- name: Pause for 300 seconds
-  ansible.builtin.command: sleep 300
-  changed_when: true
+    # - name: Create role assignment by scope (Storage Blob Data Contributor)
+    #   azure_rm_roleassignment:
+    #     scope: "{{ az_storageaccount.state.id }}/blobServices/default/containers/my-blobs"
+    #     assignee_object_id: "{{ spn_facts.ansible_facts.object_id }}"
+    #     role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe"
 
-- name: Force upload blob
-  azure_rm_storageblob:
-    # auth_mode: login
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    blob: 'Ratings.png'
-    src: '{{ test1_file }}'
-    content_type: image/png
-    tags:
-      val1: foo
-      val2: bar
-    force: true
+    - name: Pause for 300 seconds
+      ansible.builtin.command: sleep 300
+      changed_when: true
 
-- name: Upload blob idempotence
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    blob: 'Ratings.png'
-    src: '{{ test1_file }}'
-    content_type: image/png
-    tags:
-      val1: foo
-      val2: bar
-  register: upload_facts
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: upload_facts is not changed
+    - name: Force upload blob
+      azure_rm_storageblob:
+        # auth_mode: login
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        blob: 'Ratings.png'
+        src: '{{ test1_file }}'
+        content_type: image/png
+        tags:
+          val1: foo
+          val2: bar
+        force: true
 
-- name: Download file idempotence
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    blob: 'Ratings.png'
-    dest: '{{ test1_file }}'
-  register: download_results
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: download_results is not changed
+    - name: Upload blob idempotence
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        blob: 'Ratings.png'
+        src: '{{ test1_file }}'
+        content_type: image/png
+        tags:
+          val1: foo
+          val2: bar
+      register: upload_facts
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: upload_facts is not changed
 
-- name: Delete file
-  ansible.builtin.file:
-    path: "/tmp/Ratings.png"
-    state: absent
+    - name: Download file idempotence
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        blob: 'Ratings.png'
+        dest: '{{ test1_file }}'
+      register: download_results
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: download_results is not changed
 
-- name: Download file
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    blob: 'Ratings.png'
-    dest: '/tmp/Ratings.png'
-  register: download_results
-- name: Assert download file
-  ansible.builtin.assert:
-    that: download_results is changed
+    - name: Delete file
+      ansible.builtin.file:
+        path: "/tmp/Ratings.png"
+        state: absent
 
-- name: Find file
-  ansible.builtin.find:
-    paths: '/tmp'
-    patterns: "Ratings.png"
-  register: find_results
-- name: Assert matched the file
-  ansible.builtin.assert:
-    that: "find_results['matched'] == 1"
+    - name: Download file
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        blob: 'Ratings.png'
+        dest: '/tmp/Ratings.png'
+      register: download_results
+    - name: Assert download file
+      ansible.builtin.assert:
+        that: download_results is changed
 
-- name: Create storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}2"
-    account_type: Standard_LRS
-    public_network_access: Enabled
-    kind: StorageV2
+    - name: Find file
+      ansible.builtin.find:
+        paths: '/tmp'
+        patterns: "Ratings.png"
+      register: find_results
+    - name: Assert matched the file
+      ansible.builtin.assert:
+        that: "find_results['matched'] == 1"
 
-- name: Create container
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}2"
-    container_name: my-blobs
+    - name: Create storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ storage_account }}2"
+        account_type: Standard_LRS
+        public_network_access: Enabled
+        kind: StorageV2
 
-- name: Force upload blob with I(standard_blob_tier=Hot)
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}2"
-    container_name: my-blobs
-    blob: 'Ratings.png'
-    src: '{{ test1_file }}'
-    content_type: image/png
-    standard_blob_tier: Hot
-    force: true
-  register: output
+    - name: Create container
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
 
-- name: Assert the blob created
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Force upload blob with I(standard_blob_tier=Hot)
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob: 'Ratings.png'
+        src: '{{ test1_file }}'
+        content_type: image/png
+        standard_blob_tier: Hot
+        force: true
+      register: output
 
-- name: Update the blob with I(standard_blob_tier=Cool)
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}2"
-    container_name: my-blobs
-    blob: 'Ratings.png'
-    src: '{{ test1_file }}'
-    content_type: image/png
-    standard_blob_tier: Cool
-  register: output
+    - name: Assert the blob created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the blob updated
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Update the blob with I(standard_blob_tier=Cool)
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob: 'Ratings.png'
+        src: '{{ test1_file }}'
+        content_type: image/png
+        standard_blob_tier: Cool
+      register: output
 
-- name: Get the blob facts
-  azure_rm_storageblob_info:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}2"
-    container_name: my-blobs
-    blob_name: 'Ratings.png'
-  register: output
+    - name: Assert the blob updated
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the blob facts
-  ansible.builtin.assert:
-    that:
-      - output.blob.name == 'Ratings.png'
-      - output.blob.standard_blob_tier == 'Cool'
+    - name: Get the blob facts
+      azure_rm_storageblob_info:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob_name: 'Ratings.png'
+      register: output
 
-- name: Do not delete container that has blobs
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    state: absent
-  register: output
-- name: Assert no blobs
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Assert the blob facts
+      ansible.builtin.assert:
+        that:
+          - output.blob.name == 'Ratings.png'
+          - output.blob.standard_blob_tier == 'Cool'
 
-- name: Delete blob object
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    blob: "Ratings.png"
-    state: absent
-  register: output
-- name: Assert the blob deleted
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Do not delete container that has blobs
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        state: absent
+      register: output
+    - name: Assert no blobs
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Delete container
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    container_name: my-blobs
-    state: absent
-  register: output
-- name: Assert delete the container
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Delete blob object
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        blob: "Ratings.png"
+        state: absent
+      register: output
+    - name: Assert the blob deleted
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Delete storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}"
-    state: absent
+    - name: Delete container
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        state: absent
+      register: output
+    - name: Assert delete the container
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Delete blob object
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}2"
-    container_name: my-blobs
-    blob: "Ratings.png"
-    state: absent
-  register: output
+    - name: Delete storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ storage_account }}"
+        state: absent
 
-- name: Assert the blob deleted
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Delete blob object
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob: "Ratings.png"
+        state: absent
+      register: output
 
-- name: Delete container
-  azure_rm_storageblob:
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}2"
-    container_name: my-blobs
-    state: absent
-  register: output
+    - name: Assert the blob deleted
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert delete the container
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Delete container
+      azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        state: absent
+      register: output
 
-- name: Delete storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}2"
-    state: absent
+    - name: Assert delete the container
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Delete storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ storage_account }}2"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

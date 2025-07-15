@@ -1,914 +1,927 @@
-- name: Prepare facts
-  ansible.builtin.set_fact:
-    resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
-
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group_datalake }}"
-  register: __rg_info
-
-- name: Fix resource prefix
-  ansible.builtin.set_fact:
-    linux_app_plan_resource_group: "{{ resource_group_third }}"
-    win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}winapp"
-    linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}linuxapp"
-    win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
-    linux_plan_name: "{{ (resource_group_secondary | replace('-', 'x'))[-8:] }}linplan"
-    slot1_name: "stage1"
-
-- name: Set location and managed_identity_ids
-  ansible.builtin.set_fact:
-    location: westus2
-    managed_identity_ids: []
-
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'webapp'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ __rg_info.resourcegroups.0.location }}"
-  with_items:
-    - '1'
-    - '2'
-
-- name: Create a windows web app with non-exist app service plan
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}1"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}"
-      is_linux: false
-      sku: B1
-
-- name: Create a windows web app with existing app service plan
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}2"
-    plan: "{{ win_plan_name }}"
-  register: output
-
-- name: Stop the web app
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}2"
-    plan: "{{ win_plan_name }}"
-    app_state: stopped
-  register: output
-
-- name: Assert output changed
-  ansible.builtin.assert:
-    that:
-      output is changed
-
-- name: Get the web app
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}2"
-  register: stopped
-
-- name: Assert web app is stopped
-  ansible.builtin.assert:
-    that:
-      - stopped.webapps[0].app_state == "Stopped"
-
-- name: Create a windows web app with existing app service plan, try to update some root level params
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}3"
-    plan: "{{ win_plan_name }}"
-    https_only: true
-    tags:
-      testwebapptag: test
-  register: output
-
-- name: Get web app with resource group and tag
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}3"
-    tags:
-      - testwebapptag
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps | length == 1
-
-- name: Create a win web app with java run time specific
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}4"
-    plan: "{{ win_plan_name }}"
-    frameworks:
-      - name: "java"
-        version: "17"
-        settings:
-          java_container: "Tomcat"
-          java_container_version: "8.0"
-    app_settings:
-      testkey: "testvalue"
-  register: output
-
-- name: Assert web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Get web app with name
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}4"
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps | length == 1
-      - output.webapps[0].app_settings | length == 1
-      - output.webapps[0].frameworks | length > 1  # there's default frameworks eg net_framework
-
-- name: Update app settings and framework
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}4"
-    plan: "{{ win_plan_name }}"
-    frameworks:
-      - name: "java"
-        version: "17"
-        settings:
-          java_container: "Tomcat"
-          java_container_version: "8.5"
-    app_settings:
-      testkey2: "testvalue2"
-  register: output
-
-- name: Assert the web app was updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Get web app with name
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}4"
-  register: output
-
-- name: Assert updating
-  ansible.builtin.assert:
-    that:
-      - output.webapps[0].app_settings | length == 2
-      - output.webapps[0].app_settings['testkey'] == 'testvalue'
-      - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
-
-- name: Get web app with return publishing profile
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}4"
-    return_publish_profile: true
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps | length == 1
-      - output.webapps[0].publishing_username != ""
-      - output.webapps[0].publishing_password != ""
-
-- name: Purge all existing app settings
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}4"
-    plan: "{{ win_plan_name }}"
-    purge_app_settings: true
-  register: output
-
-- name: Assert the web app was updated
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a win web app with python run time and php run time
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}5"
-    plan: "{{ win_plan_name }}"
-    frameworks:
-      - name: "python"
-        version: "2.7"
-      - name: node
-        version: "6.6"
-      - name: "php"
-        version: "7.0"
-  register: output
-
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a docker web app with some app settings
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}6"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-      is_linux: true
-      sku: B1
-      number_of_workers: 1
-    container_settings:
-      name: "ansible/ansible:ubuntu1404"
-  register: output
-
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a docker web app with private acr registry
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}7"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    container_settings:
-      name: "ansible/ansible:ubuntu1404"
-      registry_server_url: test.io
-      registry_server_user: user
-      registry_server_password: password
-  register: output
-
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a linux web app with nodejs framework
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}8"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    frameworks:
-      - name: node
-        version: "18"
-  register: output
-
-- name: Should be idempotent with linux web app created
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}8"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    frameworks:
-      - name: node
-        version: "18"
-  register: output
-
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
-
-- name: Update nodejs framework
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}8"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    frameworks:
-      - name: node
-        version: "20"
-  register: output
-
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a linux web app with deployment source github
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}10"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    deployment_source:
-      url: "https://github.com/test/test"
-      branch: master
-    scm_type: GitHub
-  register: output
-
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Assert error that java is mutually exclusive with frameworks
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}11"
-    plan: "{{ win_plan_name }}"
-    frameworks:
-      - name: "python"
-        version: "3.11"
-      - name: "java"
-        version: "17"
-  register: fail_win_java_version_mutual_exclusive
-  failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
-
-- name: Assert error when linux web app, only can specify one framework
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ linux_plan_name }}12"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    frameworks:
-      - name: "python"
-        version: "3.11"
-      - name: "node"
-        version: "18"
-  register: fail_linux_one_framework_only
-  failed_when: fail_linux_one_framework_only.msg != "Can specify one framework only for Linux web app."
-
-- name: Create a linux web app with java tomcat container
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}13"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_plan_name }}"
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-  register: output
-
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Get facts with publish profile
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}13"
-  no_log: true
-  register: facts
-
-- name: Assert publish profile returned
-  ansible.builtin.assert:
-    that:
-      - facts.webapps[0].ftp_publish_url != ''
-
-- name: Create a web app with various site config params
-  azure_rm_webapp:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-siteconfig"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_app_name }}-siteconfig-plan"
-      is_linux: true
-      sku: B1
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-    client_affinity_enabled: false
-    https_only: true
-    always_on: true
-    min_tls_version: "1.2"
-    ftps_state: "Disabled"
-  register: output
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a web app with various site config params - idempotent
-  azure_rm_webapp:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-siteconfig"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_app_name }}-siteconfig-plan"
-      is_linux: true
-      sku: B1
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-    client_affinity_enabled: false
-    https_only: true
-    always_on: true
-    min_tls_version: "1.2"
-    ftps_state: "Disabled"
-  register: output
-- name: Assert the web app not changed
-  ansible.builtin.assert:
-    that: output is not changed
-
-- name: Get facts for site config params
-  azure_rm_webapp_info:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-siteconfig"
-  register: facts
-- name: Assert site config params meet expectations
-  ansible.builtin.assert:
-    that:
-      - facts.webapps[0].always_on
-      - facts.webapps[0].min_tls_version == '1.2'
-      - facts.webapps[0].ftps_state == 'Disabled'
-      - not facts.webapps[0].http20_enabled
-
-- name: Update web app with various site config params - single change
-  azure_rm_webapp:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-siteconfig"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_app_name }}-siteconfig-plan"
-      is_linux: true
-      sku: B1
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-    client_affinity_enabled: false
-    https_only: true
-    always_on: true
-    min_tls_version: "1.2"
-    ftps_state: "FtpsOnly"
-  register: output
-- name: Assert the web app was updated
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Get facts for site config params
-  azure_rm_webapp_info:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-siteconfig"
-  register: facts
-- name: Assert site config params meet expectations
-  ansible.builtin.assert:
-    that:
-      - facts.webapps[0].always_on
-      - facts.webapps[0].min_tls_version == '1.2'
-      - facts.webapps[0].ftps_state == 'FtpsOnly'
-      - not facts.webapps[0].http20_enabled
-
-- name: Create a web app with HTTP 2.0
-  azure_rm_webapp:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-http20"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_app_name }}-http20-plan"
-      is_linux: true
-      sku: B1
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-    client_affinity_enabled: false
-    https_only: true
-    always_on: true
-    min_tls_version: "1.2"
-    ftps_state: "Disabled"
-    http20_enabled: true
-  register: output
-- name: Assert the web app was created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create a web app with HTTP 2.0 - idempotent
-  azure_rm_webapp:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-http20"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_app_name }}-http20-plan"
-      is_linux: true
-      sku: B1
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-    client_affinity_enabled: false
-    https_only: true
-    always_on: true
-    min_tls_version: "1.2"
-    ftps_state: "Disabled"
-    http20_enabled: true
-  register: output
-- name: Assert the web app not changed
-  ansible.builtin.assert:
-    that: output is not changed
-
-- name: Get facts for HTTP 2.0 appp
-  azure_rm_webapp_info:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-http20"
-  register: facts
-- name: Assert site config params meet expectations
-  ansible.builtin.assert:
-    that:
-      - facts.webapps[0].always_on
-      - facts.webapps[0].min_tls_version == '1.2'
-      - facts.webapps[0].ftps_state == 'Disabled'
-      - facts.webapps[0].http20_enabled
-
-- name: Update web app to disable HTTP 2.0
-  azure_rm_webapp:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-http20"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ linux_app_plan_resource_group }}"
-      name: "{{ linux_app_name }}-http20-plan"
-      is_linux: true
-      sku: B1
-    frameworks:
-      - name: java
-        version: "8"
-        settings:
-          java_container: "tomcat"
-          java_container_version: "8.5"
-    client_affinity_enabled: false
-    https_only: true
-    always_on: true
-    min_tls_version: "1.2"
-    ftps_state: "Disabled"
-    http20_enabled: false
-  register: output
-- name: Assert the web app was updated
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Get facts for HTTP 2.0 appp
-  azure_rm_webapp_info:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_app_name }}-http20"
-  register: facts
-- name: Assert site config params meet expectations
-  ansible.builtin.assert:
-    that:
-      - facts.webapps[0].always_on
-      - facts.webapps[0].min_tls_version == '1.2'
-      - facts.webapps[0].ftps_state == 'Disabled'
-      - not facts.webapps[0].http20_enabled
-
-- name: Create a windows web app with site_auth_settings
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-auth"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}-auth"
-      is_linux: false
-      sku: B1
-    site_auth_settings:
-      client_id: "{{ azure_client_id }}"
-      default_provider: 'MicrosoftAccount'
-      runtime_version: '-2'
-      token_refresh_extension_hours: 90
-      unauthenticated_client_action: 'RedirectToLoginPage'
-      client_secret: "{{ azure_secret }}"
-      token_store_enabled: true
-      is_auth_from_file: false
-      enabled: false
-  register: output
-
-- name: Assert the web app is well created
-  ansible.builtin.assert:
-    that:
-      output is changed
-
-- name: Update the web app with site_auth_settings
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-auth"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}-auth"
-      is_linux: false
-      sku: B1
-    site_auth_settings:
-      client_id: "{{ azure_client_id }}"
-      default_provider: 'MicrosoftAccount'
-      runtime_version: '-3'
-      token_refresh_extension_hours: 100
-      unauthenticated_client_action: 'RedirectToLoginPage'
-      client_secret: "{{ azure_secret }}"
-      token_store_enabled: false
-      is_auth_from_file: false
-      enabled: true
-  register: output
-
-- name: Assert the web app is well updated
-  ansible.builtin.assert:
-    that:
-      output is changed
-
-- name: Get the web app facts
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-auth"
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps[0].site_auth_settings.enabled is true
-      - output.webapps[0].site_auth_settings.is_auth_from_file == 'false'
-      - output.webapps[0].site_auth_settings.runtime_version == '-3'
-      - output.webapps[0].site_auth_settings.token_refresh_extension_hours == 100.0
-      - output.webapps[0].site_auth_settings.token_store_enabled is false
-      - output.webapps[0].site_auth_settings.unauthenticated_client_action == 'RedirectToLoginPage'
-
-- name: Create a windows web app with UserAssigned Identity
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}-identity"
-      is_linux: false
-      sku: B1
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
-
-- name: Assert the web app is well updated
-  ansible.builtin.assert:
-    that:
-      output is changed
-
-- name: Get the web app facts
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps[0].identity.type == 'UserAssigned'
-      - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
-
-- name: Update web app with SystemAssigned and UserAssigned Identity
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}-identity"
-      is_linux: false
-      sku: B1
-    identity:
-      type: "SystemAssigned, UserAssigned"
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-  register: output
-
-- name: Assert the web app is well updated
-  ansible.builtin.assert:
-    that:
-      output is changed
-
-- name: Get the web app facts
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps[0].identity.type == 'SystemAssigned, UserAssigned'
-      - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
-      - managed_identity_ids[1] in output.webapps[0].identity.user_assigned_identities
-
-- name: Update web app with SystemAssigned and UserAssigned Identity - idempotent
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}-identity"
-      is_linux: false
-      sku: B1
-    identity:
-      type: "SystemAssigned, UserAssigned"
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-  register: output
-
-- name: Assert the web app is not updated
-  ansible.builtin.assert:
-    that:
-      output is not changed
-
-- name: Get the web app facts
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps[0].identity.type == 'SystemAssigned, UserAssigned'
-      - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
-      - managed_identity_ids[1] in output.webapps[0].identity.user_assigned_identities
-
-- name: Update web app with SystemAssigned
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: "{{ win_plan_name }}-identity"
-      is_linux: false
-      sku: B1
-    identity:
-      type: "SystemAssigned"
-  register: output
-
-- name: Assert the web app is well updated
-  ansible.builtin.assert:
-    that:
-      output is changed
-
-- name: Get the web app facts
-  azure_rm_webapp_info:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ win_app_name }}-identity"
-  register: output
-
-- name: Assert the web app facts
-  ansible.builtin.assert:
-    that:
-      - output.webapps[0].identity.type == 'SystemAssigned'
-      - '"user_assigned_identities" not in output.webapps[0].identity'
-
-- name: Update app service plan I(sku=P0v3)
-  azure_rm_appserviceplan:
-    resource_group: "{{ linux_app_plan_resource_group }}"
-    name: "{{ linux_plan_name }}"
-    sku: P0v3
-    is_linux: false
-    number_of_workers: 1
-
-- name: Create a webapp slot (Check mode)
-  azure_rm_webappslot:
-    resource_group: "{{ resource_group_datalake }}"
-    webapp_name: "{{ win_app_name }}13"
-    name: "{{ slot1_name }}"
-    location: "{{ location }}"
-    configuration_source: "{{ win_app_name }}13"
-    app_settings:
-      testkey: testvalue
-  check_mode: true
-  register: output
-
-- name: Assert slot check mode creation
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Create a webapp slot
-  azure_rm_webappslot:
-    resource_group: "{{ resource_group_datalake }}"
-    webapp_name: "{{ win_app_name }}13"
-    name: "{{ slot1_name }}"
-    location: "{{ location }}"
-    configuration_source: "{{ win_app_name }}13"
-    app_settings:
-      testkey: testvalueslot
-  register: output
-
-- name: Assert slot creation
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Update webapp slot (idempotence)
-  azure_rm_webappslot:
-    resource_group: "{{ resource_group_datalake }}"
-    webapp_name: "{{ win_app_name }}13"
-    location: "{{ location }}"
-    name: "{{ slot1_name }}"
-    app_settings:
-      testkey: testvalueslot
-  register: output
-
-- name: Assert idempotence
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-
-- name: Update webapp slot
-  azure_rm_webappslot:
-    resource_group: "{{ resource_group_datalake }}"
-    webapp_name: "{{ win_app_name }}13"
-    location: "{{ location }}"
-    name: "{{ slot1_name }}"
-    frameworks:
-      - name: "node"
-        version: "10.1"
-    app_settings:
-      testkey: testvalue2
-  register: output
-
-- name: Assert updating
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Swap webapp slot
-  azure_rm_webappslot:
-    resource_group: "{{ resource_group_datalake }}"
-    webapp_name: "{{ win_app_name }}13"
-    location: "{{ location }}"
-    name: "{{ slot1_name }}"
-    swap:
-      action: swap
-  register: output
-
-- name: Assert swap
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Stop webapp slot
-  azure_rm_webappslot:
-    resource_group: "{{ resource_group_datalake }}"
-    location: "{{ location }}"
-    webapp_name: "{{ win_app_name }}13"
-    name: "{{ slot1_name }}"
-    app_state: stopped
-  register: output
-
-- name: Assert stopped
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Delete the webapp resource
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: "{{ item }}"
-    state: absent
-  with_items:
-    - "{{ win_app_name }}1"
-    - "{{ win_app_name }}3"
-    - "{{ win_app_name }}4"
-    - "{{ win_app_name }}5"
-    - "{{ win_app_name }}6"
-    - "{{ win_app_name }}7"
-    - "{{ win_app_name }}8"
-    - "{{ win_app_name }}10"
-    - "{{ linux_app_name }}-siteconfig"
-    - "{{ linux_app_name }}-http20"
-    - "{{ win_app_name }}-auth"
-    - "{{ win_app_name }}-identity"
-
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'webapp'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
+
+- name: For test
+  block:
+    - name: Prepare facts
+      ansible.builtin.set_fact:
+        resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group_datalake }}"
+      register: __rg_info
+
+    - name: Fix resource prefix
+      ansible.builtin.set_fact:
+        linux_app_plan_resource_group: "{{ resource_group_third }}"
+        win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}winapp"
+        linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}linuxapp"
+        win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
+        linux_plan_name: "{{ (resource_group_secondary | replace('-', 'x'))[-8:] }}linplan"
+        slot1_name: "stage1"
+
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: westus2
+        managed_identity_ids: []
+
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'webapp'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ __rg_info.resourcegroups.0.location }}"
+      with_items:
+        - '1'
+        - '2'
+
+    - name: Create a windows web app with non-exist app service plan
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}1"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}"
+          is_linux: false
+          sku: B1
+
+    - name: Create a windows web app with existing app service plan
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}2"
+        plan: "{{ win_plan_name }}"
+      register: output
+
+    - name: Stop the web app
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}2"
+        plan: "{{ win_plan_name }}"
+        app_state: stopped
+      register: output
+
+    - name: Assert output changed
+      ansible.builtin.assert:
+        that:
+          output is changed
+
+    - name: Get the web app
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}2"
+      register: stopped
+
+    - name: Assert web app is stopped
+      ansible.builtin.assert:
+        that:
+          - stopped.webapps[0].app_state == "Stopped"
+
+    - name: Create a windows web app with existing app service plan, try to update some root level params
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}3"
+        plan: "{{ win_plan_name }}"
+        https_only: true
+        tags:
+          testwebapptag: test
+      register: output
+
+    - name: Get web app with resource group and tag
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}3"
+        tags:
+          - testwebapptag
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps | length == 1
+
+    - name: Create a win web app with java run time specific
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}4"
+        plan: "{{ win_plan_name }}"
+        frameworks:
+          - name: "java"
+            version: "17"
+            settings:
+              java_container: "Tomcat"
+              java_container_version: "8.0"
+        app_settings:
+          testkey: "testvalue"
+      register: output
+
+    - name: Assert web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Get web app with name
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}4"
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps | length == 1
+          - output.webapps[0].app_settings | length == 1
+          - output.webapps[0].frameworks | length > 1  # there's default frameworks eg net_framework
+
+    - name: Update app settings and framework
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}4"
+        plan: "{{ win_plan_name }}"
+        frameworks:
+          - name: "java"
+            version: "17"
+            settings:
+              java_container: "Tomcat"
+              java_container_version: "8.5"
+        app_settings:
+          testkey2: "testvalue2"
+      register: output
+
+    - name: Assert the web app was updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get web app with name
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}4"
+      register: output
+
+    - name: Assert updating
+      ansible.builtin.assert:
+        that:
+          - output.webapps[0].app_settings | length == 2
+          - output.webapps[0].app_settings['testkey'] == 'testvalue'
+          - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
+
+    - name: Get web app with return publishing profile
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}4"
+        return_publish_profile: true
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps | length == 1
+          - output.webapps[0].publishing_username != ""
+          - output.webapps[0].publishing_password != ""
+
+    - name: Purge all existing app settings
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}4"
+        plan: "{{ win_plan_name }}"
+        purge_app_settings: true
+      register: output
+
+    - name: Assert the web app was updated
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a win web app with python run time and php run time
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}5"
+        plan: "{{ win_plan_name }}"
+        frameworks:
+          - name: "python"
+            version: "2.7"
+          - name: node
+            version: "6.6"
+          - name: "php"
+            version: "7.0"
+      register: output
+
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a docker web app with some app settings
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}6"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+          is_linux: true
+          sku: B1
+          number_of_workers: 1
+        container_settings:
+          name: "ansible/ansible:ubuntu1404"
+      register: output
+
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a docker web app with private acr registry
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}7"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        container_settings:
+          name: "ansible/ansible:ubuntu1404"
+          registry_server_url: test.io
+          registry_server_user: user
+          registry_server_password: password
+      register: output
+
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a linux web app with nodejs framework
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}8"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        frameworks:
+          - name: node
+            version: "18"
+      register: output
+
+    - name: Should be idempotent with linux web app created
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}8"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        frameworks:
+          - name: node
+            version: "18"
+      register: output
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
+
+    - name: Update nodejs framework
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}8"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        frameworks:
+          - name: node
+            version: "20"
+      register: output
+
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a linux web app with deployment source github
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}10"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        deployment_source:
+          url: "https://github.com/test/test"
+          branch: master
+        scm_type: GitHub
+      register: output
+
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Assert error that java is mutually exclusive with frameworks
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}11"
+        plan: "{{ win_plan_name }}"
+        frameworks:
+          - name: "python"
+            version: "3.11"
+          - name: "java"
+            version: "17"
+      register: fail_win_java_version_mutual_exclusive
+      failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
+
+    - name: Assert error when linux web app, only can specify one framework
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ linux_plan_name }}12"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        frameworks:
+          - name: "python"
+            version: "3.11"
+          - name: "node"
+            version: "18"
+      register: fail_linux_one_framework_only
+      failed_when: fail_linux_one_framework_only.msg != "Can specify one framework only for Linux web app."
+
+    - name: Create a linux web app with java tomcat container
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}13"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_plan_name }}"
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+      register: output
+
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Get facts with publish profile
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}13"
+      no_log: true
+      register: facts
+
+    - name: Assert publish profile returned
+      ansible.builtin.assert:
+        that:
+          - facts.webapps[0].ftp_publish_url != ''
+
+    - name: Create a web app with various site config params
+      azure_rm_webapp:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-siteconfig"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_app_name }}-siteconfig-plan"
+          is_linux: true
+          sku: B1
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+        client_affinity_enabled: false
+        https_only: true
+        always_on: true
+        min_tls_version: "1.2"
+        ftps_state: "Disabled"
+      register: output
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a web app with various site config params - idempotent
+      azure_rm_webapp:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-siteconfig"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_app_name }}-siteconfig-plan"
+          is_linux: true
+          sku: B1
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+        client_affinity_enabled: false
+        https_only: true
+        always_on: true
+        min_tls_version: "1.2"
+        ftps_state: "Disabled"
+      register: output
+    - name: Assert the web app not changed
+      ansible.builtin.assert:
+        that: output is not changed
+
+    - name: Get facts for site config params
+      azure_rm_webapp_info:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-siteconfig"
+      register: facts
+    - name: Assert site config params meet expectations
+      ansible.builtin.assert:
+        that:
+          - facts.webapps[0].always_on
+          - facts.webapps[0].min_tls_version == '1.2'
+          - facts.webapps[0].ftps_state == 'Disabled'
+          - not facts.webapps[0].http20_enabled
+
+    - name: Update web app with various site config params - single change
+      azure_rm_webapp:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-siteconfig"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_app_name }}-siteconfig-plan"
+          is_linux: true
+          sku: B1
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+        client_affinity_enabled: false
+        https_only: true
+        always_on: true
+        min_tls_version: "1.2"
+        ftps_state: "FtpsOnly"
+      register: output
+    - name: Assert the web app was updated
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Get facts for site config params
+      azure_rm_webapp_info:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-siteconfig"
+      register: facts
+    - name: Assert site config params meet expectations
+      ansible.builtin.assert:
+        that:
+          - facts.webapps[0].always_on
+          - facts.webapps[0].min_tls_version == '1.2'
+          - facts.webapps[0].ftps_state == 'FtpsOnly'
+          - not facts.webapps[0].http20_enabled
+
+    - name: Create a web app with HTTP 2.0
+      azure_rm_webapp:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-http20"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_app_name }}-http20-plan"
+          is_linux: true
+          sku: B1
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+        client_affinity_enabled: false
+        https_only: true
+        always_on: true
+        min_tls_version: "1.2"
+        ftps_state: "Disabled"
+        http20_enabled: true
+      register: output
+    - name: Assert the web app was created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Create a web app with HTTP 2.0 - idempotent
+      azure_rm_webapp:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-http20"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_app_name }}-http20-plan"
+          is_linux: true
+          sku: B1
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+        client_affinity_enabled: false
+        https_only: true
+        always_on: true
+        min_tls_version: "1.2"
+        ftps_state: "Disabled"
+        http20_enabled: true
+      register: output
+    - name: Assert the web app not changed
+      ansible.builtin.assert:
+        that: output is not changed
+
+    - name: Get facts for HTTP 2.0 appp
+      azure_rm_webapp_info:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-http20"
+      register: facts
+    - name: Assert site config params meet expectations
+      ansible.builtin.assert:
+        that:
+          - facts.webapps[0].always_on
+          - facts.webapps[0].min_tls_version == '1.2'
+          - facts.webapps[0].ftps_state == 'Disabled'
+          - facts.webapps[0].http20_enabled
+
+    - name: Update web app to disable HTTP 2.0
+      azure_rm_webapp:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-http20"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ linux_app_plan_resource_group }}"
+          name: "{{ linux_app_name }}-http20-plan"
+          is_linux: true
+          sku: B1
+        frameworks:
+          - name: java
+            version: "8"
+            settings:
+              java_container: "tomcat"
+              java_container_version: "8.5"
+        client_affinity_enabled: false
+        https_only: true
+        always_on: true
+        min_tls_version: "1.2"
+        ftps_state: "Disabled"
+        http20_enabled: false
+      register: output
+    - name: Assert the web app was updated
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Get facts for HTTP 2.0 appp
+      azure_rm_webapp_info:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_app_name }}-http20"
+      register: facts
+    - name: Assert site config params meet expectations
+      ansible.builtin.assert:
+        that:
+          - facts.webapps[0].always_on
+          - facts.webapps[0].min_tls_version == '1.2'
+          - facts.webapps[0].ftps_state == 'Disabled'
+          - not facts.webapps[0].http20_enabled
+
+    - name: Create a windows web app with site_auth_settings
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-auth"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}-auth"
+          is_linux: false
+          sku: B1
+        site_auth_settings:
+          client_id: "{{ azure_client_id }}"
+          default_provider: 'MicrosoftAccount'
+          runtime_version: '-2'
+          token_refresh_extension_hours: 90
+          unauthenticated_client_action: 'RedirectToLoginPage'
+          client_secret: "{{ azure_secret }}"
+          token_store_enabled: true
+          is_auth_from_file: false
+          enabled: false
+      register: output
+
+    - name: Assert the web app is well created
+      ansible.builtin.assert:
+        that:
+          output is changed
+
+    - name: Update the web app with site_auth_settings
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-auth"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}-auth"
+          is_linux: false
+          sku: B1
+        site_auth_settings:
+          client_id: "{{ azure_client_id }}"
+          default_provider: 'MicrosoftAccount'
+          runtime_version: '-3'
+          token_refresh_extension_hours: 100
+          unauthenticated_client_action: 'RedirectToLoginPage'
+          client_secret: "{{ azure_secret }}"
+          token_store_enabled: false
+          is_auth_from_file: false
+          enabled: true
+      register: output
+
+    - name: Assert the web app is well updated
+      ansible.builtin.assert:
+        that:
+          output is changed
+
+    - name: Get the web app facts
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-auth"
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps[0].site_auth_settings.enabled is true
+          - output.webapps[0].site_auth_settings.is_auth_from_file == 'false'
+          - output.webapps[0].site_auth_settings.runtime_version == '-3'
+          - output.webapps[0].site_auth_settings.token_refresh_extension_hours == 100.0
+          - output.webapps[0].site_auth_settings.token_store_enabled is false
+          - output.webapps[0].site_auth_settings.unauthenticated_client_action == 'RedirectToLoginPage'
+
+    - name: Create a windows web app with UserAssigned Identity
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}-identity"
+          is_linux: false
+          sku: B1
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
+
+    - name: Assert the web app is well updated
+      ansible.builtin.assert:
+        that:
+          output is changed
+
+    - name: Get the web app facts
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps[0].identity.type == 'UserAssigned'
+          - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
+
+    - name: Update web app with SystemAssigned and UserAssigned Identity
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}-identity"
+          is_linux: false
+          sku: B1
+        identity:
+          type: "SystemAssigned, UserAssigned"
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+      register: output
+
+    - name: Assert the web app is well updated
+      ansible.builtin.assert:
+        that:
+          output is changed
+
+    - name: Get the web app facts
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps[0].identity.type == 'SystemAssigned, UserAssigned'
+          - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
+          - managed_identity_ids[1] in output.webapps[0].identity.user_assigned_identities
+
+    - name: Update web app with SystemAssigned and UserAssigned Identity - idempotent
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}-identity"
+          is_linux: false
+          sku: B1
+        identity:
+          type: "SystemAssigned, UserAssigned"
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+      register: output
+
+    - name: Assert the web app is not updated
+      ansible.builtin.assert:
+        that:
+          output is not changed
+
+    - name: Get the web app facts
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps[0].identity.type == 'SystemAssigned, UserAssigned'
+          - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
+          - managed_identity_ids[1] in output.webapps[0].identity.user_assigned_identities
+
+    - name: Update web app with SystemAssigned
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: "{{ win_plan_name }}-identity"
+          is_linux: false
+          sku: B1
+        identity:
+          type: "SystemAssigned"
+      register: output
+
+    - name: Assert the web app is well updated
+      ansible.builtin.assert:
+        that:
+          output is changed
+
+    - name: Get the web app facts
+      azure_rm_webapp_info:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ win_app_name }}-identity"
+      register: output
+
+    - name: Assert the web app facts
+      ansible.builtin.assert:
+        that:
+          - output.webapps[0].identity.type == 'SystemAssigned'
+          - '"user_assigned_identities" not in output.webapps[0].identity'
+
+    - name: Update app service plan I(sku=P0v3)
+      azure_rm_appserviceplan:
+        resource_group: "{{ linux_app_plan_resource_group }}"
+        name: "{{ linux_plan_name }}"
+        sku: P0v3
+        is_linux: false
+        number_of_workers: 1
+
+    - name: Create a webapp slot (Check mode)
+      azure_rm_webappslot:
+        resource_group: "{{ resource_group_datalake }}"
+        webapp_name: "{{ win_app_name }}13"
+        name: "{{ slot1_name }}"
+        location: "{{ location }}"
+        configuration_source: "{{ win_app_name }}13"
+        app_settings:
+          testkey: testvalue
+      check_mode: true
+      register: output
+
+    - name: Assert slot check mode creation
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a webapp slot
+      azure_rm_webappslot:
+        resource_group: "{{ resource_group_datalake }}"
+        webapp_name: "{{ win_app_name }}13"
+        name: "{{ slot1_name }}"
+        location: "{{ location }}"
+        configuration_source: "{{ win_app_name }}13"
+        app_settings:
+          testkey: testvalueslot
+      register: output
+
+    - name: Assert slot creation
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update webapp slot (idempotence)
+      azure_rm_webappslot:
+        resource_group: "{{ resource_group_datalake }}"
+        webapp_name: "{{ win_app_name }}13"
+        location: "{{ location }}"
+        name: "{{ slot1_name }}"
+        app_settings:
+          testkey: testvalueslot
+      register: output
+
+    - name: Assert idempotence
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update webapp slot
+      azure_rm_webappslot:
+        resource_group: "{{ resource_group_datalake }}"
+        webapp_name: "{{ win_app_name }}13"
+        location: "{{ location }}"
+        name: "{{ slot1_name }}"
+        frameworks:
+          - name: "node"
+            version: "10.1"
+        app_settings:
+          testkey: testvalue2
+      register: output
+
+    - name: Assert updating
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Swap webapp slot
+      azure_rm_webappslot:
+        resource_group: "{{ resource_group_datalake }}"
+        webapp_name: "{{ win_app_name }}13"
+        location: "{{ location }}"
+        name: "{{ slot1_name }}"
+        swap:
+          action: swap
+      register: output
+
+    - name: Assert swap
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Stop webapp slot
+      azure_rm_webappslot:
+        resource_group: "{{ resource_group_datalake }}"
+        location: "{{ location }}"
+        webapp_name: "{{ win_app_name }}13"
+        name: "{{ slot1_name }}"
+        app_state: stopped
+      register: output
+
+    - name: Assert stopped
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the webapp resource
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ win_app_name }}1"
+        - "{{ win_app_name }}3"
+        - "{{ win_app_name }}4"
+        - "{{ win_app_name }}5"
+        - "{{ win_app_name }}6"
+        - "{{ win_app_name }}7"
+        - "{{ win_app_name }}8"
+        - "{{ win_app_name }}10"
+        - "{{ linux_app_name }}-siteconfig"
+        - "{{ linux_app_name }}-http20"
+        - "{{ win_app_name }}-auth"
+        - "{{ win_app_name }}-identity"
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'webapp'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

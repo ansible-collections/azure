@@ -1,259 +1,272 @@
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group_third }}"
-  register: __rg_info
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Prepare random number and set location based on resource group
-  ansible.builtin.set_fact:
-    random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group_third | hash('md5') | truncate(7, True, '') }}"
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=25) }}"
-    location: "{{ __rg_info.resourcegroups.0.location }}"
+- name: For test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group_third }}"
+      register: __rg_info
 
-- name: Delete sql managed instance
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    state: absent
+    - name: Prepare random number and set location based on resource group
+      ansible.builtin.set_fact:
+        random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group_third | hash('md5') | truncate(7, True, '') }}"
+        password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=25) }}"
+        location: "{{ __rg_info.resourcegroups.0.location }}"
 
-- name: Create identity and policy ids arrays
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
+    - name: Delete sql managed instance
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        state: absent
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'sqlmanagedinstance'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Create identity and policy ids arrays
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    name: "{{ random_postfix }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-      - fdda:e69b:1587:495e::/64
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.3
-    resource_group: "{{ resource_group_third }}"
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'sqlmanagedinstance'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
 
-- name: Create a route table
-  azure_rm_routetable:
-    name: "{{ random_postfix }}"
-    resource_group: "{{ resource_group_third }}"
-    tags:
-      purpose: testing
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        name: "{{ random_postfix }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+          - fdda:e69b:1587:495e::/64
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.3
+        resource_group: "{{ resource_group_third }}"
 
-- name: Create security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    purge_rules: true
-    rules:
-      - name: DenySSH
-        protocol: Tcp
-        destination_port_range: 22
-        access: Deny
-        priority: 100
-        direction: Inbound
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
+    - name: Create a route table
+      azure_rm_routetable:
+        name: "{{ random_postfix }}"
+        resource_group: "{{ resource_group_third }}"
+        tags:
+          purpose: testing
 
-- name: Add the subnet back
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: "{{ random_postfix }}"
-    resource_group: "{{ resource_group_third }}"
-    address_prefix_cidr: "10.1.0.0/24"
-    security_group:
-      resource_gorup: "{{ resource_group_third }}"
-      name: "{{ random_postfix }}"
-    route_table:
-      name: "{{ random_postfix }}"
-      resource_group: "{{ resource_group_third }}"
-    delegations:
-      - name: 'mysqlinstance'
-        serviceName: "Microsoft.Sql/managedInstances"
-  register: subnet_output
+    - name: Create security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        purge_rules: true
+        rules:
+          - name: DenySSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Deny
+            priority: 100
+            direction: Inbound
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
 
-- name: Create sql managed instance (Checkmode test)
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-    primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 8
-    administrator_login: azureuser
-    administrator_login_password: "{{ password }}"
-    storage_size_in_gb: 256
-    v_cores: 8
-    tags:
-      key0: value0
-  check_mode: true
-  register: output
+    - name: Add the subnet back
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: "{{ random_postfix }}"
+        resource_group: "{{ resource_group_third }}"
+        address_prefix_cidr: "10.1.0.0/24"
+        security_group:
+          resource_gorup: "{{ resource_group_third }}"
+          name: "{{ random_postfix }}"
+        route_table:
+          name: "{{ random_postfix }}"
+          resource_group: "{{ resource_group_third }}"
+        delegations:
+          - name: 'mysqlinstance'
+            serviceName: "Microsoft.Sql/managedInstances"
+      register: subnet_output
 
-- name: Assert the resource instance is not exist
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create sql managed instance (Checkmode test)
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        subnet_id: "{{ subnet_output.state.id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
+        sku:
+          name: GP_Gen5
+          tier: GeneralPurpose
+          family: Gen5
+          capacity: 8
+        administrator_login: azureuser
+        administrator_login_password: "{{ password }}"
+        storage_size_in_gb: 256
+        v_cores: 8
+        tags:
+          key0: value0
+      check_mode: true
+      register: output
 
-- name: Create sql managed instance
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-    primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 8
-    administrator_login: azureuser
-    administrator_login_password: "{{ password }}"
-    storage_size_in_gb: 256
-    v_cores: 8
-    tags:
-      key0: value0
-  register: output
+    - name: Assert the resource instance is not exist
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create sql managed instance
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        subnet_id: "{{ subnet_output.state.id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
+        sku:
+          name: GP_Gen5
+          tier: GeneralPurpose
+          family: Gen5
+          capacity: 8
+        administrator_login: azureuser
+        administrator_login_password: "{{ password }}"
+        storage_size_in_gb: 256
+        v_cores: 8
+        tags:
+          key0: value0
+      register: output
 
-- name: Wait for sql managed instance provisioning to complete
-  azure_rm_sqlmanagedinstance_info:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-  register: facts
-  until: facts.sql_managed_instance[0]['state'] == 'Ready'
-  retries: 60
-  delay: 60
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create sql managed instance (Idempotent test)
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-    primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 8
-    administrator_login: azureuser
-    storage_size_in_gb: 256
-    v_cores: 8
-    tags:
-      key0: value0
-  register: output
+    - name: Wait for sql managed instance provisioning to complete
+      azure_rm_sqlmanagedinstance_info:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+      register: facts
+      until: facts.sql_managed_instance[0]['state'] == 'Ready'
+      retries: 60
+      delay: 60
 
-- name: Assert the resource instance no changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create sql managed instance (Idempotent test)
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        subnet_id: "{{ subnet_output.state.id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
+        sku:
+          name: GP_Gen5
+          tier: GeneralPurpose
+          family: Gen5
+          capacity: 8
+        administrator_login: azureuser
+        storage_size_in_gb: 256
+        v_cores: 8
+        tags:
+          key0: value0
+      register: output
 
-- name: Upgrade sql managed instance with tags
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    subnet_id: "{{ subnet_output.state.id }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-    primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
-    sku:
-      name: GP_Gen5
-      tier: GeneralPurpose
-      family: Gen5
-      capacity: 8
-    administrator_login: azureuser
-    administrator_login_password: "{{ password }}"
-    storage_size_in_gb: 256
-    v_cores: 8
-    tags:
-      key0: value0
-      key1: value1
-  register: output
+    - name: Assert the resource instance no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the resource instance is update
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Upgrade sql managed instance with tags
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        subnet_id: "{{ subnet_output.state.id }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        primary_user_assigned_identity_id: "{{ managed_identity_ids[0] }}"
+        sku:
+          name: GP_Gen5
+          tier: GeneralPurpose
+          family: Gen5
+          capacity: 8
+        administrator_login: azureuser
+        administrator_login_password: "{{ password }}"
+        storage_size_in_gb: 256
+        v_cores: 8
+        tags:
+          key0: value0
+          key1: value1
+      register: output
 
-- name: Get SQL managed instance by name
-  azure_rm_sqlmanagedinstance_info:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-  register: output
+    - name: Assert the resource instance is update
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output.sql_managed_instance[0].tags | length == 1
-      - output.sql_managed_instance[0].storage_size_in_gb == 256
-      - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
-      - output.sql_managed_instance[0].identity.type == 'UserAssigned'
-      - output.sql_managed_instance[0].identity.user_assigned_identities | length == 1
-      - output.sql_managed_instance[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: Get SQL managed instance by name
+      azure_rm_sqlmanagedinstance_info:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+      register: output
 
-- name: Wait for sql managed instance provisioning to complete
-  azure_rm_sqlmanagedinstance_info:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-  register: facts
-  until: facts.sql_managed_instance[0]['state'] == 'Ready'
-  retries: 60
-  delay: 60
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output.sql_managed_instance[0].tags | length == 1
+          - output.sql_managed_instance[0].storage_size_in_gb == 256
+          - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
+          - output.sql_managed_instance[0].identity.type == 'UserAssigned'
+          - output.sql_managed_instance[0].identity.user_assigned_identities | length == 1
+          - output.sql_managed_instance[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: Delete sql managed instance
-  azure_rm_sqlmanagedinstance:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ random_postfix }}"
-    state: absent
+    - name: Wait for sql managed instance provisioning to complete
+      azure_rm_sqlmanagedinstance_info:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+      register: facts
+      until: facts.sql_managed_instance[0]['state'] == 'Ready'
+      retries: 60
+      delay: 60
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: managedidentity.yml
-  vars:
-    managed_identity_test_unique: 'sqlmanagedinstance'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Delete sql managed instance
+      azure_rm_sqlmanagedinstance:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ random_postfix }}"
+        state: absent
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: managedidentity.yml
+      vars:
+        managed_identity_test_unique: 'sqlmanagedinstance'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

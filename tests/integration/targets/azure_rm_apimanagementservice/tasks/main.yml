@@ -1,58 +1,71 @@
-- name: Fix resource prefix
-  ansible.builtin.set_fact:
-    name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: To create api management service
-  azure_rm_apimanagementservice:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    publisher_email: user@example.com
-    publisher_name: Username
-    sku_name: Developer
-    sku_capacity: 1
-  register: output
+- name: For test
+  block:
+    - name: Fix resource prefix
+      ansible.builtin.set_fact:
+        name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output is not failed
+    - name: To create api management service
+      azure_rm_apimanagementservice:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        publisher_email: user@example.com
+        publisher_name: Username
+        sku_name: Developer
+        sku_capacity: 1
+      register: output
 
-- name: Recreate api management service idempotent test
-  azure_rm_apimanagementservice:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    publisher_email: user@example.com
-    publisher_name: Username
-    sku_name: Developer
-    sku_capacity: 1
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output is not failed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output is not failed
+    - name: Recreate api management service idempotent test
+      azure_rm_apimanagementservice:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        publisher_email: user@example.com
+        publisher_name: Username
+        sku_name: Developer
+        sku_capacity: 1
+      register: output
 
-- name: Get api management service information
-  azure_rm_apimanagementservice_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output is not failed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output.api_management_service.name == "{{ name_rpfx }}"
+    - name: Get api management service information
+      azure_rm_apimanagementservice_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+      register: output
 
-- name: To delete an api management service
-  azure_rm_apimanagementservice:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    state: absent
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output.api_management_service.name == "{{ name_rpfx }}"
 
-- name: Assert the changes
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: To delete an api management service
+      azure_rm_apimanagementservice:
+        resource_group: "{{ resource_group }}"
+        name: "{{ name_rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the changes
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

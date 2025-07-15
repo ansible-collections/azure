@@ -1,324 +1,337 @@
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group_third }}"
-  register: __rg_info
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Fix resource prefix
-  ansible.builtin.set_fact:
-    fixed_resource_prefix: "fa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+- name: For test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group_third }}"
+      register: __rg_info
 
-- name: Fix resource prefix
-  ansible.builtin.set_fact:
-    funcapp_name_basic: "fa{{ fixed_resource_prefix }}basic"
-    funcapp_name_container: "fa{{ fixed_resource_prefix }}container"
-    funcapp_name_params: "fa{{ fixed_resource_prefix }}params"
-    storage_account_name: "sa{{ fixed_resource_prefix }}"
-    plan_name: "ap{{ fixed_resource_prefix }}"
-    location: "{{ __rg_info.resourcegroups.0.location }}"
+    - name: Fix resource prefix
+      ansible.builtin.set_fact:
+        fixed_resource_prefix: "fa{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
-- name: Create identities array
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
+    - name: Fix resource prefix
+      ansible.builtin.set_fact:
+        funcapp_name_basic: "fa{{ fixed_resource_prefix }}basic"
+        funcapp_name_container: "fa{{ fixed_resource_prefix }}container"
+        funcapp_name_params: "fa{{ fixed_resource_prefix }}params"
+        storage_account_name: "sa{{ fixed_resource_prefix }}"
+        plan_name: "ap{{ fixed_resource_prefix }}"
+        location: "{{ __rg_info.resourcegroups.0.location }}"
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'functionapp'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Create identities array
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
 
-- name: Create storage account for function apps
-  azure_rm_storageaccount:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ storage_account_name }}"
-    account_type: Standard_LRS
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'functionapp'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
 
-- name: Create basic function app
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_basic }}"
-    location: "{{ location }}"
-    storage_account: "{{ storage_account_name }}"
-    identity:
-      type: SystemAssigned
-  register: output
+    - name: Create storage account for function apps
+      azure_rm_storageaccount:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ storage_account_name }}"
+        account_type: Standard_LRS
 
-- name: Assert the function was created
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Create basic function app
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_basic }}"
+        location: "{{ location }}"
+        storage_account: "{{ storage_account_name }}"
+        identity:
+          type: SystemAssigned
+      register: output
 
-- name: Create basic function app (idempotent)
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_basic }}"
-    location: "{{ location }}"
-    storage_account: "{{ storage_account_name }}"
-    identity:
-      type: SystemAssigned
-  register: output
+    - name: Assert the function was created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the function was not changed
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Create basic function app (idempotent)
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_basic }}"
+        location: "{{ location }}"
+        storage_account: "{{ storage_account_name }}"
+        identity:
+          type: SystemAssigned
+      register: output
 
-- name: List facts for function
-  azure_rm_functionapp_info:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_basic }}"
-  register: results
+    - name: Assert the function was not changed
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert the facts were retrieved
-  ansible.builtin.assert:
-    that:
-      - results.ansible_info.azure_functionapps|length == 1
-      - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
-      - results.ansible_info.azure_functionapps[0].identity.type == 'SystemAssigned'
+    - name: List facts for function
+      azure_rm_functionapp_info:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_basic }}"
+      register: results
 
-- name: Update basic function app identity
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_basic }}"
-    location: "{{ location }}"
-    storage_account: "{{ storage_account_name }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: Assert the facts were retrieved
+      ansible.builtin.assert:
+        that:
+          - results.ansible_info.azure_functionapps|length == 1
+          - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
+          - results.ansible_info.azure_functionapps[0].identity.type == 'SystemAssigned'
 
-- name: List facts for function
-  azure_rm_functionapp_info:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_basic }}"
-  register: results
+    - name: Update basic function app identity
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_basic }}"
+        location: "{{ location }}"
+        storage_account: "{{ storage_account_name }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Assert the facts were retrieved after update
-  ansible.builtin.assert:
-    that:
-      - results.ansible_info.azure_functionapps|length == 1
-      - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
-      - results.ansible_info.azure_functionapps[0].identity.type == 'UserAssigned'
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities | length == 1
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: List facts for function
+      azure_rm_functionapp_info:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_basic }}"
+      register: results
 
-- name: Append basic function app identity
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_basic }}"
-    location: "{{ location }}"
-    storage_account: "{{ storage_account_name }}"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-        append: true
-  register: output
+    - name: Assert the facts were retrieved after update
+      ansible.builtin.assert:
+        that:
+          - results.ansible_info.azure_functionapps|length == 1
+          - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
+          - results.ansible_info.azure_functionapps[0].identity.type == 'UserAssigned'
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities | length == 1
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: List facts for function
-  azure_rm_functionapp_info:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_basic }}"
-  register: results
+    - name: Append basic function app identity
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_basic }}"
+        location: "{{ location }}"
+        storage_account: "{{ storage_account_name }}"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+            append: true
+      register: output
 
-- name: Assert the facts were retrieved after append
-  ansible.builtin.assert:
-    that:
-      - results.ansible_info.azure_functionapps|length == 1
-      - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
-      - results.ansible_info.azure_functionapps[0].identity.type == 'UserAssigned'
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities | length == 2
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: List facts for function
+      azure_rm_functionapp_info:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_basic }}"
+      register: results
 
-- name: Replace basic function app identity and type
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_basic }}"
-    location: "{{ location }}"
-    storage_account: "{{ storage_account_name }}"
-    identity:
-      type: SystemAssigned, UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-        append: false
-  register: output
+    - name: Assert the facts were retrieved after append
+      ansible.builtin.assert:
+        that:
+          - results.ansible_info.azure_functionapps|length == 1
+          - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
+          - results.ansible_info.azure_functionapps[0].identity.type == 'UserAssigned'
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities | length == 2
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: List facts for function
-  azure_rm_functionapp_info:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_basic }}"
-  register: results
+    - name: Replace basic function app identity and type
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_basic }}"
+        location: "{{ location }}"
+        storage_account: "{{ storage_account_name }}"
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+            append: false
+      register: output
 
-- name: Assert the facts were retrieved after replace
-  ansible.builtin.assert:
-    that:
-      - results.ansible_info.azure_functionapps|length == 1
-      - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
-      - results.ansible_info.azure_functionapps[0].identity.type == 'SystemAssigned, UserAssigned'
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities | length == 1
-      - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: List facts for function
+      azure_rm_functionapp_info:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_basic }}"
+      register: results
 
-- name: Delete basic function app
-  azure_rm_functionapp:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_basic }}"
-    state: absent
-  register: output
+    - name: Assert the facts were retrieved after replace
+      ansible.builtin.assert:
+        that:
+          - results.ansible_info.azure_functionapps|length == 1
+          - results.ansible_info.azure_functionapps[0].name == "{{ funcapp_name_basic }}"
+          - results.ansible_info.azure_functionapps[0].identity.type == 'SystemAssigned, UserAssigned'
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities | length == 1
+          - results.ansible_info.azure_functionapps[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Assert the function was deleted
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Delete basic function app
+      azure_rm_functionapp:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_basic }}"
+        state: absent
+      register: output
 
-- name: Create a function with app settings
-  azure_rm_functionapp:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_params }}"
-    storage_account: "{{ storage_account_name }}"
-    location: "{{ location }}"
-    app_settings:
-      hello: world
-      things: more stuff
-      FUNCTIONS_EXTENSION_VERSION: "~2"
-    identity:
-      type: SystemAssigned
-  register: output
+    - name: Assert the function was deleted
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the function with app settings was created
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Create a function with app settings
+      azure_rm_functionapp:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_params }}"
+        storage_account: "{{ storage_account_name }}"
+        location: "{{ location }}"
+        app_settings:
+          hello: world
+          things: more stuff
+          FUNCTIONS_EXTENSION_VERSION: "~2"
+        identity:
+          type: SystemAssigned
+      register: output
 
-- name: Change app settings
-  azure_rm_functionapp:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_params }}"
-    storage_account: "{{ storage_account_name }}"
-    location: "{{ location }}"
-    app_settings:
-      hello: world
-      things: more stuff
-      FUNCTIONS_EXTENSION_VERSION: "~2"
-      another: one
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: Assert the function with app settings was created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the function was changed
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Change app settings
+      azure_rm_functionapp:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_params }}"
+        storage_account: "{{ storage_account_name }}"
+        location: "{{ location }}"
+        app_settings:
+          hello: world
+          things: more stuff
+          FUNCTIONS_EXTENSION_VERSION: "~2"
+          another: one
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Append identity app settings
-  azure_rm_functionapp:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_params }}"
-    storage_account: "{{ storage_account_name }}"
-    location: "{{ location }}"
-    app_settings:
-      hello: world
-      things: more stuff
-      FUNCTIONS_EXTENSION_VERSION: "~2"
-      another: one
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-        append: true
-  register: output
+    - name: Assert the function was changed
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the function was changed
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Append identity app settings
+      azure_rm_functionapp:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_params }}"
+        storage_account: "{{ storage_account_name }}"
+        location: "{{ location }}"
+        app_settings:
+          hello: world
+          things: more stuff
+          FUNCTIONS_EXTENSION_VERSION: "~2"
+          another: one
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+            append: true
+      register: output
 
-- name: Delete the function app
-  azure_rm_functionapp:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_params }}"
-    state: absent
-  register: output
+    - name: Assert the function was changed
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the function was deleted
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Delete the function app
+      azure_rm_functionapp:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_params }}"
+        state: absent
+      register: output
 
-- name: Create a linux app service plan
-  azure_rm_appserviceplan:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ plan_name }}"
-    location: "{{ location }}"
-    sku: B1
-    is_linux: true
-    number_of_workers: 1
+    - name: Assert the function was deleted
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: "Create azure function app {{ function_app }}"
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_container }}"
-    storage_account: "{{ storage_account_name }}"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ resource_group_third }}"
-      name: "{{ plan_name }}"
-    container_settings:
-      name: httpd
-    app_settings:
-      FUNCTIONS_EXTENSION_VERSION: "~2"
-    identity:
-      type: SystemAssigned
-  register: output
+    - name: Create a linux app service plan
+      azure_rm_appserviceplan:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ plan_name }}"
+        location: "{{ location }}"
+        sku: B1
+        is_linux: true
+        number_of_workers: 1
 
-- name: "Update azure function app {{ function_app }}"
-  azure_rm_functionapp:
-    resource_group: "{{ resource_group_third }}"
-    name: "{{ funcapp_name_container }}"
-    storage_account: "{{ storage_account_name }}"
-    location: "{{ location }}"
-    plan:
-      resource_group: "{{ resource_group_third }}"
-      name: "{{ plan_name }}"
-    container_settings:
-      name: httpd
-    app_settings:
-      FUNCTIONS_EXTENSION_VERSION: "~2"
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: "Create azure function app {{ function_app }}"
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_container }}"
+        storage_account: "{{ storage_account_name }}"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ resource_group_third }}"
+          name: "{{ plan_name }}"
+        container_settings:
+          name: httpd
+        app_settings:
+          FUNCTIONS_EXTENSION_VERSION: "~2"
+        identity:
+          type: SystemAssigned
+      register: output
 
-- name: Assert the function was changed
-  ansible.builtin.assert:
-    that: output is changed
+    - name: "Update azure function app {{ function_app }}"
+      azure_rm_functionapp:
+        resource_group: "{{ resource_group_third }}"
+        name: "{{ funcapp_name_container }}"
+        storage_account: "{{ storage_account_name }}"
+        location: "{{ location }}"
+        plan:
+          resource_group: "{{ resource_group_third }}"
+          name: "{{ plan_name }}"
+        container_settings:
+          name: httpd
+        app_settings:
+          FUNCTIONS_EXTENSION_VERSION: "~2"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Delete the function app
-  azure_rm_functionapp:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ funcapp_name_container }}"
-    state: absent
+    - name: Assert the function was changed
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Delete storage account
-  azure_rm_storageaccount:
-    resource_group: '{{ resource_group_third }}'
-    name: "{{ storage_account_name }}"
-    state: absent
+    - name: Delete the function app
+      azure_rm_functionapp:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ funcapp_name_container }}"
+        state: absent
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'functionapp'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Delete storage account
+      azure_rm_storageaccount:
+        resource_group: '{{ resource_group_third }}'
+        name: "{{ storage_account_name }}"
+        state: absent
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'functionapp'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

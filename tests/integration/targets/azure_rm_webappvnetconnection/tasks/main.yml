@@ -1,135 +1,148 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create a virtual network
-  azure_rm_virtualnetwork:
-    name: vnet{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.2
-- name: Create a subnet
-  azure_rm_subnet:
-    name: subnet{{ rpfx }}
-    virtual_network_name: vnet{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    address_prefix_cidr: 10.1.0.0/24
-    delegations:
-      - name: 'mydeleg'
-        serviceName: 'Microsoft.Web/serverFarms'
-  register: subnet_output
-- name: Create a web app
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: webapp{{ rpfx }}
-    plan:
-      resource_group: "{{ resource_group_datalake }}"
-      name: webappplan{{ rpfx }}
-      is_linux: false
-      sku: B1
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
 
-- name: "Create webapp vnetconnection - check mode"
-  azure_rm_webappvnetconnection:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    vnet_name: vnet{{ rpfx }}
-    subnet: subnet{{ rpfx }}
-  check_mode: true
-  register: output
-- name: Assert the resource is well created
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Create a virtual network
+      azure_rm_virtualnetwork:
+        name: vnet{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.2
+    - name: Create a subnet
+      azure_rm_subnet:
+        name: subnet{{ rpfx }}
+        virtual_network_name: vnet{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        address_prefix_cidr: 10.1.0.0/24
+        delegations:
+          - name: 'mydeleg'
+            serviceName: 'Microsoft.Web/serverFarms'
+      register: subnet_output
+    - name: Create a web app
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: webapp{{ rpfx }}
+        plan:
+          resource_group: "{{ resource_group_datalake }}"
+          name: webappplan{{ rpfx }}
+          is_linux: false
+          sku: B1
 
-- name: "Check webapp vnetconnection facts 1"
-  azure_rm_webappvnetconnection_info:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-  register: output
-- name: Assert the resource has no connections
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.connection | length == 0
+    - name: "Create webapp vnetconnection - check mode"
+      azure_rm_webappvnetconnection:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        vnet_name: vnet{{ rpfx }}
+        subnet: subnet{{ rpfx }}
+      check_mode: true
+      register: output
+    - name: Assert the resource is well created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: "Create webapp vnetconnection"
-  azure_rm_webappvnetconnection:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    vnet_name: vnet{{ rpfx }}
-    subnet: subnet{{ rpfx }}
-  register: output
-- name: Assert the resource is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.connection.vnet_name == 'vnet{{ rpfx }}'
-      - output.connection.subnet_name == 'subnet{{ rpfx }}'
-      - output.connection.vnet_resource_group == '{{ resource_group_datalake }}'
+    - name: "Check webapp vnetconnection facts 1"
+      azure_rm_webappvnetconnection_info:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+      register: output
+    - name: Assert the resource has no connections
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.connection | length == 0
 
-- name: "Check webapp vnetconnection facts 2"
-  azure_rm_webappvnetconnection_info:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-  register: output
-- name: Assert the connection exists
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.connection.vnet_name == 'vnet{{ rpfx }}'
-      - output.connection.subnet_name == 'subnet{{ rpfx }}'
-      - output.connection.vnet_resource_group == '{{ resource_group_datalake }}'
+    - name: "Create webapp vnetconnection"
+      azure_rm_webappvnetconnection:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        vnet_name: vnet{{ rpfx }}
+        subnet: subnet{{ rpfx }}
+      register: output
+    - name: Assert the resource is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.connection.vnet_name == 'vnet{{ rpfx }}'
+          - output.connection.subnet_name == 'subnet{{ rpfx }}'
+          - output.connection.vnet_resource_group == '{{ resource_group_datalake }}'
 
-- name: "Create webapp vnetconnection - idempotent"
-  azure_rm_webappvnetconnection:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    vnet_name: vnet{{ rpfx }}
-    subnet: subnet{{ rpfx }}
-  register: output
-- name: Assert the resource is not changed
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: "Check webapp vnetconnection facts 2"
+      azure_rm_webappvnetconnection_info:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+      register: output
+    - name: Assert the connection exists
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.connection.vnet_name == 'vnet{{ rpfx }}'
+          - output.connection.subnet_name == 'subnet{{ rpfx }}'
+          - output.connection.vnet_resource_group == '{{ resource_group_datalake }}'
 
-- name: "Delete webapp vnetconnection"
-  azure_rm_webappvnetconnection:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    state: "absent"
-  register: output
-- name: Assert the connection is deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.connection | length == 0
+    - name: "Create webapp vnetconnection - idempotent"
+      azure_rm_webappvnetconnection:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        vnet_name: vnet{{ rpfx }}
+        subnet: subnet{{ rpfx }}
+      register: output
+    - name: Assert the resource is not changed
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: "Check webapp vnetconnection facts 3"
-  azure_rm_webappvnetconnection_info:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-  register: output
-- name: Assert the resource has no connections
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.connection | length == 0
+    - name: "Delete webapp vnetconnection"
+      azure_rm_webappvnetconnection:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        state: "absent"
+      register: output
+    - name: Assert the connection is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.connection | length == 0
 
-- name: "Delete webapp vnetconnection - idempotent"
-  azure_rm_webappvnetconnection:
-    name: webapp{{ rpfx }}
-    resource_group: "{{ resource_group_datalake }}"
-    state: "absent"
-  register: output
-- name: Assert the resource is not changed
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: "Check webapp vnetconnection facts 3"
+      azure_rm_webappvnetconnection_info:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+      register: output
+    - name: Assert the resource has no connections
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.connection | length == 0
 
-- name: Delete the web app
-  azure_rm_webapp:
-    resource_group: "{{ resource_group_datalake }}"
-    name: webapp{{ rpfx }}
-    state: absent
+    - name: "Delete webapp vnetconnection - idempotent"
+      azure_rm_webappvnetconnection:
+        name: webapp{{ rpfx }}
+        resource_group: "{{ resource_group_datalake }}"
+        state: "absent"
+      register: output
+    - name: Assert the resource is not changed
+      ansible.builtin.assert:
+        that: output is not changed
+
+    - name: Delete the web app
+      azure_rm_webapp:
+        resource_group: "{{ resource_group_datalake }}"
+        name: webapp{{ rpfx }}
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

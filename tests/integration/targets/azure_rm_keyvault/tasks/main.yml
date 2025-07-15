@@ -1,478 +1,104 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    tenant_id: "{{ azure_tenant }}"
-  run_once: true
-
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}"
-  register: __rg_info
+    location: eastus
 
-- name: Set location and managed_identity_ids
-  ansible.builtin.set_fact:
-    location: "eastus2"
-    # location: "{{ __rg_info.resourcegroups.0.location }}"
-    managed_identity_ids: []
-
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'hsmKeyVault'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-
-- name: Lookup service principal object id
-  ansible.builtin.set_fact:
-    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
-                   azure_client_id=azure_client_id,
-                   azure_secret=azure_secret,
-                   azure_tenant=tenant_id) }}"
-  register: object_id_facts
-
-- name: Create instance of Key Vault -- check mode
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    enabled_for_deployment: true
-    vault_tenant: "{{ tenant_id }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ object_id }}"
-        keys:
-          - get
-          - list
-          - update
-          - create
-          - import
-          - delete
-          - recover
-          - backup
-          - restore
-        secrets:
-          - get
-          - list
-          - set
-          - delete
-          - recover
-          - backup
-          - restore
-  check_mode: true
-  register: output
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Create instance of Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    enabled_for_deployment: true
-    vault_tenant: "{{ tenant_id }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ object_id }}"
-        secrets:
-          - get
-          - list
-          - set
-          - delete
-          - recover
-          - backup
-          - restore
-  register: output
-
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Create instance of Key Vault again
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    enabled_for_deployment: true
-    vault_tenant: "{{ tenant_id }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ object_id }}"
-        secrets:
-          - get
-          - list
-          - set
-          - delete
-          - recover
-          - backup
-          - restore
-  register: output
-- name: Assert the state has not changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-
-- name: Update existing Key Vault (add a rule and tags)
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    enabled_for_deployment: true
-    vault_tenant: "{{ tenant_id }}"
-    soft_delete_retention_in_days: 7
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ object_id }}"
-        keys:
-          - get
-          - list
-          - update
-          - create
-          - import
-          - delete
-          - recover
-          - backup
-          - restore
-        secrets:
-          - get
-          - list
-          - set
-          - delete
-          - recover
-          - backup
-          - restore
-    tags:
-      aaa: bbb
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Get key vault facts
-  azure_rm_keyvault_info:
-    resource_group: "{{ resource_group }}"
-    name: "vault{{ rpfx }}"
-  register: facts
-
-- name: Assert the facts are properly set
-  ansible.builtin.assert:
-    that:
-      - facts['keyvaults'] | length == 1
-      - facts['keyvaults'][0]['vault_uri'] != None
-      - facts['keyvaults'][0]['name'] != None
-      - facts['keyvaults'][0]['access_policies'] != None
-      - facts['keyvaults'][0]['sku'] != None
-      - facts['keyvaults'][0]['id'] != None
-      - facts['keyvaults'][0]['enable_soft_delete'] == true
-      - facts['keyvaults'][0]['soft_delete_retention_in_days'] == 7
-
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    name: vnet{{ rpfx }}
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.3
-    resource_group: "{{ resource_group }}"
-
-- name: Create network security group
-  azure_rm_securitygroup:
-    name: secgroup{{ rpfx }}
-    resource_group: "{{ resource_group }}"
-
-- name: Create the subnet
-  azure_rm_subnet:
-    name: subnet{{ rpfx }}
-    virtual_network_name: vnet{{ rpfx }}
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    security_group: secgroup{{ rpfx }}
-    private_endpoint_network_policies: Enabled
-    private_link_service_network_policies: Enabled
-    service_endpoints:
-      - service: Microsoft.KeyVault
-        locations:
-          - eastus
-  register: subnet_output
-
-- name: Create a secodary instance of Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}-sec"
-    enabled_for_deployment: false
-    vault_tenant: "{{ tenant_id }}"
-    soft_delete_retention_in_days: 7
-    public_network_access: "Disabled"
-    network_acls:
-      bypass: None
-      default_action: Allow
-      ip_rules:
-        - value: 124.56.78.91
-      virtual_network_rules:
-        - id: "{{ subnet_output.state.id }}"
-          ignore_missing_vnet_service_endpoint: true
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ object_id }}"
-        secrets:
-          - get
-          - list
-          - set
-          - delete
-          - recover
-          - backup
-          - restore
-  register: output
-
-- name: Assert the keyvault created
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Update instance of Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}-sec"
-    enabled_for_deployment: false
-    vault_tenant: "{{ tenant_id }}"
-    soft_delete_retention_in_days: 7
-    public_network_access: "Enabled"
-    network_acls:
-      bypass: AzureServices
-      default_action: Deny
-      ip_rules:
-        - value: 124.56.78.91
-        - value: 124.56.78.92
-        - value: 124.56.78.93
-      virtual_network_rules:
-        - id: "{{ subnet_output.state.id }}"
-          ignore_missing_vnet_service_endpoint: true
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ tenant_id }}"
-        object_id: "{{ object_id }}"
-        secrets:
-          - get
-          - list
-          - set
-          - delete
-          - recover
-          - backup
-          - restore
-  register: output
-
-- name: Assert the keyvault Updated
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Get key vault facts
-  azure_rm_keyvault_info:
-    resource_group: "{{ resource_group }}"
-    name: "vault{{ rpfx }}-sec"
-  register: facts
-
-- name: Assert the facts are properly set
-  ansible.builtin.assert:
-    that:
-      - facts['keyvaults'][0]['public_network_access'] == 'Enabled'
-      - facts['keyvaults'][0]['network_acls']['bypass'] == 'AzureServices'
-      - facts['keyvaults'][0]['network_acls']['default_action'] == 'Deny'
-      - facts['keyvaults'][0]['network_acls']['ip_rules'] | length == 3
-      - facts['keyvaults'][0]['network_acls']['virtual_network_rules'] | length == 1
-
-- name: Delete the secondary Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}-sec"
-    state: absent
-#
-# azure_rm_keyvaultkey tests
-#
-
-- name: Create a keyvault key
+- name: For test
   block:
-    - name: Create a keyvault key
-      azure_rm_keyvaultkey:
-        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-        key_name: testkey
-        tags:
-          testing: test
-          delete: on-exit
-      register: output
-    - name: Assert the keyvault key created
-      ansible.builtin.assert:
-        that: output is changed
-  rescue:
-    - name: Delete the keyvault key
-      azure_rm_keyvaultkey:
-        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-        state: absent
-        key_name: testkey
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        tenant_id: "{{ azure_tenant }}"
+      run_once: true
 
-- name: Get key current version
-  azure_rm_keyvaultkey_info:
-    vault_uri: https://vault{{ rpfx }}.vault.azure.net
-    name: testkey
-  register: facts
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}"
+      register: __rg_info
 
-- name: Assert key facts
-  ansible.builtin.assert:
-    that:
-      - facts['keys'] | length == 1
-      - facts['keys'][0]['kid'] != ''
-      - facts['keys'][0]['permitted_operations'] | length > 0
-      - facts['keys'][0]['type'] != ''
-      - facts['keys'][0]['version'] != ''
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: "eastus2"
+        # location: "{{ __rg_info.resourcegroups.0.location }}"
+        managed_identity_ids: []
 
-- name: Delete a kevyault key
-  azure_rm_keyvaultkey:
-    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-    state: absent
-    key_name: testkey
-  register: output
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'hsmKeyVault'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
 
-- name: Assert the keyvault deleted
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Lookup service principal object id
+      ansible.builtin.set_fact:
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=tenant_id) }}"
+      register: object_id_facts
 
-#
-# azure_rm_keyvaultsecret tests
-#
-- name: Create a keyvault secret
-  block:
-    - name: Create a keyvault secret
-      azure_rm_keyvaultsecret:
-        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-        secret_name: testsecret
-        secret_value: 'mysecret'
-        tags:
-          testing: test
-          delete: on-exit
-      register: output
-    - name: Assert the keyvault secret created
-      ansible.builtin.assert:
-        that: output is changed
-  rescue:
-    - name: Delete the keyvault secret
-      azure_rm_keyvaultsecret:
-        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-        state: absent
-        secret_name: testsecret
-
-- name: Delete a keyvault secret
-  azure_rm_keyvaultsecret:
-    keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
-    state: absent
-    secret_name: testsecret
-  register: output
-
-- name: Assert the keyvault secret deleted
-  ansible.builtin.assert:
-    that: output is changed
-
-#
-# azure_rm_keyvault finalize & clean up
-#
-
-- name: Delete instance of Key Vault -- check mode
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    state: absent
-  check_mode: true
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Delete instance of Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    state: absent
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Delete unexisting instance of Key Vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "vault{{ rpfx }}"
-    state: absent
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-
-#
-# azure_rm_keyvault hsm setup and test
-#
-
-- name: HSM vault setup and test
-  tags: [never]
-  block:
-    - name: Create instance of HSM -- check mode
+    - name: Create instance of Key Vault -- check mode
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
-        tenant_id: "{{ tenant_id }}"
-        administrators:
-          - "{{ object_id }}"
-        identity:
-          type: UserAssigned
-          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        vault_name: "vault{{ rpfx }}"
+        enabled_for_deployment: true
+        vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
-          name: Standard_B1
-          family: B
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ object_id }}"
+            keys:
+              - get
+              - list
+              - update
+              - create
+              - import
+              - delete
+              - recover
+              - backup
+              - restore
+            secrets:
+              - get
+              - list
+              - set
+              - delete
+              - recover
+              - backup
+              - restore
       check_mode: true
       register: output
-
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
         that:
           - output is changed
 
-    - name: Create instance of HSM
+    - name: Create instance of Key Vault
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
-        tenant_id: "{{ tenant_id }}"
-        administrators:
-          - "{{ object_id }}"
-        identity:
-          type: UserAssigned
-          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        vault_name: "vault{{ rpfx }}"
+        enabled_for_deployment: true
+        vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
-          name: Standard_B1
-          family: B
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ object_id }}"
+            secrets:
+              - get
+              - list
+              - set
+              - delete
+              - recover
+              - backup
+              - restore
       register: output
 
     - name: Assert the resource instance is well created
@@ -480,140 +106,527 @@
         that:
           - output is changed
 
-    - name: Create instance of HSM again
+    - name: Create instance of Key Vault again
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
-        tenant_id: "{{ tenant_id }}"
-        administrators:
-          - "{{ object_id }}"
-        identity:
-          type: UserAssigned
-          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        vault_name: "vault{{ rpfx }}"
+        enabled_for_deployment: true
+        vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
-          name: Standard_B1
-          family: B
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ object_id }}"
+            secrets:
+              - get
+              - list
+              - set
+              - delete
+              - recover
+              - backup
+              - restore
       register: output
-
     - name: Assert the state has not changed
       ansible.builtin.assert:
         that:
           - output is not changed
 
-    - name: Update existing HSM (add tags)
+    - name: Update existing Key Vault (add a rule and tags)
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
-        tenant_id: "{{ tenant_id }}"
-        administrators:
-          - "{{ object_id }}"
-        identity:
-          type: UserAssigned
-          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        vault_name: "vault{{ rpfx }}"
+        enabled_for_deployment: true
+        vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
-          name: Standard_B1
-          family: B
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ object_id }}"
+            keys:
+              - get
+              - list
+              - update
+              - create
+              - import
+              - delete
+              - recover
+              - backup
+              - restore
+            secrets:
+              - get
+              - list
+              - set
+              - delete
+              - recover
+              - backup
+              - restore
         tags:
           aaa: bbb
       register: output
-
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
           - output is changed
 
-    - name: Get hsm facts
+    - name: Get key vault facts
       azure_rm_keyvault_info:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
+        name: "vault{{ rpfx }}"
       register: facts
 
     - name: Assert the facts are properly set
       ansible.builtin.assert:
         that:
-          - facts['hsms'] | length == 1
-          - facts['hsms'][0]['hsm_uri'] != None
-          - facts['hsms'][0]['name'] != None
-          - facts['hsms'][0]['sku'] != None
-          - facts['hsms'][0]['id'] != None
-          - facts['hsms'][0]['enable_soft_delete'] == true
-          - facts['hsms'][0]['soft_delete_retention_in_days'] == 7
+          - facts['keyvaults'] | length == 1
+          - facts['keyvaults'][0]['vault_uri'] != None
+          - facts['keyvaults'][0]['name'] != None
+          - facts['keyvaults'][0]['access_policies'] != None
+          - facts['keyvaults'][0]['sku'] != None
+          - facts['keyvaults'][0]['id'] != None
+          - facts['keyvaults'][0]['enable_soft_delete'] == true
+          - facts['keyvaults'][0]['soft_delete_retention_in_days'] == 7
 
-    - name: Download the security domain file
-      azure_rm_keyvaultsecuritydomain:
-        keyvault_uri: https://hsm{{ rpfx }}.managedhsm.azure.net
-        sd_quorum: 2
-        sd_wrapping_keys:
-          - "{{ lookup('file', 'cert_0.cer') }}"
-          - "{{ lookup('file', 'cert_1.cer') }}"
-          - "{{ lookup('file', 'cert_2.cer') }}"
-        action: download
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        name: vnet{{ rpfx }}
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.3
+        resource_group: "{{ resource_group }}"
+
+    - name: Create network security group
+      azure_rm_securitygroup:
+        name: secgroup{{ rpfx }}
+        resource_group: "{{ resource_group }}"
+
+    - name: Create the subnet
+      azure_rm_subnet:
+        name: subnet{{ rpfx }}
+        virtual_network_name: vnet{{ rpfx }}
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: "10.1.0.0/16"
+        security_group: secgroup{{ rpfx }}
+        private_endpoint_network_policies: Enabled
+        private_link_service_network_policies: Enabled
+        service_endpoints:
+          - service: Microsoft.KeyVault
+            locations:
+              - eastus
+      register: subnet_output
+
+    - name: Create a secodary instance of Key Vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        vault_name: "vault{{ rpfx }}-sec"
+        enabled_for_deployment: false
+        vault_tenant: "{{ tenant_id }}"
+        soft_delete_retention_in_days: 7
+        public_network_access: "Disabled"
+        network_acls:
+          bypass: None
+          default_action: Allow
+          ip_rules:
+            - value: 124.56.78.91
+          virtual_network_rules:
+            - id: "{{ subnet_output.state.id }}"
+              ignore_missing_vnet_service_endpoint: true
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ object_id }}"
+            secrets:
+              - get
+              - list
+              - set
+              - delete
+              - recover
+              - backup
+              - restore
       register: output
 
-    - name: Save the security domain file
-      ansible.builtin.debug:
-        var: output["security_domain"]
+    - name: Assert the keyvault created
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Update instance of Key Vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        vault_name: "vault{{ rpfx }}-sec"
+        enabled_for_deployment: false
+        vault_tenant: "{{ tenant_id }}"
+        soft_delete_retention_in_days: 7
+        public_network_access: "Enabled"
+        network_acls:
+          bypass: AzureServices
+          default_action: Deny
+          ip_rules:
+            - value: 124.56.78.91
+            - value: 124.56.78.92
+            - value: 124.56.78.93
+          virtual_network_rules:
+            - id: "{{ subnet_output.state.id }}"
+              ignore_missing_vnet_service_endpoint: true
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ object_id }}"
+            secrets:
+              - get
+              - list
+              - set
+              - delete
+              - recover
+              - backup
+              - restore
+      register: output
+
+    - name: Assert the keyvault Updated
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Get key vault facts
+      azure_rm_keyvault_info:
+        resource_group: "{{ resource_group }}"
+        name: "vault{{ rpfx }}-sec"
+      register: facts
+
+    - name: Assert the facts are properly set
+      ansible.builtin.assert:
+        that:
+          - facts['keyvaults'][0]['public_network_access'] == 'Enabled'
+          - facts['keyvaults'][0]['network_acls']['bypass'] == 'AzureServices'
+          - facts['keyvaults'][0]['network_acls']['default_action'] == 'Deny'
+          - facts['keyvaults'][0]['network_acls']['ip_rules'] | length == 3
+          - facts['keyvaults'][0]['network_acls']['virtual_network_rules'] | length == 1
+
+    - name: Delete the secondary Key Vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        vault_name: "vault{{ rpfx }}-sec"
+        state: absent
+    #
+    # azure_rm_keyvaultkey tests
+    #
+
+    - name: Create a keyvault key
+      block:
+        - name: Create a keyvault key
+          azure_rm_keyvaultkey:
+            keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+            key_name: testkey
+            tags:
+              testing: test
+              delete: on-exit
+          register: output
+        - name: Assert the keyvault key created
+          ansible.builtin.assert:
+            that: output is changed
+      rescue:
+        - name: Delete the keyvault key
+          azure_rm_keyvaultkey:
+            keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+            state: absent
+            key_name: testkey
+
+    - name: Get key current version
+      azure_rm_keyvaultkey_info:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: testkey
+      register: facts
+
+    - name: Assert key facts
+      ansible.builtin.assert:
+        that:
+          - facts['keys'] | length == 1
+          - facts['keys'][0]['kid'] != ''
+          - facts['keys'][0]['permitted_operations'] | length > 0
+          - facts['keys'][0]['type'] != ''
+          - facts['keys'][0]['version'] != ''
+
+    - name: Delete a kevyault key
+      azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        key_name: testkey
+      register: output
+
+    - name: Assert the keyvault deleted
+      ansible.builtin.assert:
+        that: output is changed
+
+    #
+    # azure_rm_keyvaultsecret tests
+    #
+    - name: Create a keyvault secret
+      block:
+        - name: Create a keyvault secret
+          azure_rm_keyvaultsecret:
+            keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+            secret_name: testsecret
+            secret_value: 'mysecret'
+            tags:
+              testing: test
+              delete: on-exit
+          register: output
+        - name: Assert the keyvault secret created
+          ansible.builtin.assert:
+            that: output is changed
+      rescue:
+        - name: Delete the keyvault secret
+          azure_rm_keyvaultsecret:
+            keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+            state: absent
+            secret_name: testsecret
+
+    - name: Delete a keyvault secret
+      azure_rm_keyvaultsecret:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        state: absent
+        secret_name: testsecret
+      register: output
+
+    - name: Assert the keyvault secret deleted
+      ansible.builtin.assert:
+        that: output is changed
 
     #
     # azure_rm_keyvault finalize & clean up
     #
 
-    - name: Delete instance of HSM -- check mode
+    - name: Delete instance of Key Vault -- check mode
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
+        vault_name: "vault{{ rpfx }}"
         state: absent
       check_mode: true
       register: output
-
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
           - output is changed
 
-    - name: Delete instance of HSM
+    - name: Delete instance of Key Vault
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
+        vault_name: "vault{{ rpfx }}"
         state: absent
       register: output
-
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
           - output is changed
 
-    - name: Delete unexisting instance of HSM
+    - name: Delete unexisting instance of Key Vault
       azure_rm_keyvault:
         resource_group: "{{ resource_group }}"
-        hsm_name: "hsm{{ rpfx }}"
+        vault_name: "vault{{ rpfx }}"
         state: absent
       register: output
-
     - name: Assert the state has changed
       ansible.builtin.assert:
         that:
           - output is not changed
 
-- name: Purge the deleted vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "{{ item }}"
-    is_purge_deleted: true
-    state: absent
-  loop:
-    - "vault{{ rpfx }}"
-    - "vault{{ rpfx }}-sec"
+    #
+    # azure_rm_keyvault hsm setup and test
+    #
+
+    - name: HSM vault setup and test
+      tags: [never]
+      block:
+        - name: Create instance of HSM -- check mode
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            tenant_id: "{{ tenant_id }}"
+            administrators:
+              - "{{ object_id }}"
+            identity:
+              type: UserAssigned
+              user_assigned_identity: "{{ managed_identity_ids[0] }}"
+            soft_delete_retention_in_days: 7
+            sku:
+              name: Standard_B1
+              family: B
+          check_mode: true
+          register: output
+
+        - name: Assert the resource instance is well created
+          ansible.builtin.assert:
+            that:
+              - output is changed
+
+        - name: Create instance of HSM
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            tenant_id: "{{ tenant_id }}"
+            administrators:
+              - "{{ object_id }}"
+            identity:
+              type: UserAssigned
+              user_assigned_identity: "{{ managed_identity_ids[0] }}"
+            soft_delete_retention_in_days: 7
+            sku:
+              name: Standard_B1
+              family: B
+          register: output
+
+        - name: Assert the resource instance is well created
+          ansible.builtin.assert:
+            that:
+              - output is changed
+
+        - name: Create instance of HSM again
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            tenant_id: "{{ tenant_id }}"
+            administrators:
+              - "{{ object_id }}"
+            identity:
+              type: UserAssigned
+              user_assigned_identity: "{{ managed_identity_ids[0] }}"
+            soft_delete_retention_in_days: 7
+            sku:
+              name: Standard_B1
+              family: B
+          register: output
+
+        - name: Assert the state has not changed
+          ansible.builtin.assert:
+            that:
+              - output is not changed
+
+        - name: Update existing HSM (add tags)
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            tenant_id: "{{ tenant_id }}"
+            administrators:
+              - "{{ object_id }}"
+            identity:
+              type: UserAssigned
+              user_assigned_identity: "{{ managed_identity_ids[0] }}"
+            soft_delete_retention_in_days: 7
+            sku:
+              name: Standard_B1
+              family: B
+            tags:
+              aaa: bbb
+          register: output
+
+        - name: Assert the state has changed
+          ansible.builtin.assert:
+            that:
+              - output is changed
+
+        - name: Get hsm facts
+          azure_rm_keyvault_info:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+          register: facts
+
+        - name: Assert the facts are properly set
+          ansible.builtin.assert:
+            that:
+              - facts['hsms'] | length == 1
+              - facts['hsms'][0]['hsm_uri'] != None
+              - facts['hsms'][0]['name'] != None
+              - facts['hsms'][0]['sku'] != None
+              - facts['hsms'][0]['id'] != None
+              - facts['hsms'][0]['enable_soft_delete'] == true
+              - facts['hsms'][0]['soft_delete_retention_in_days'] == 7
+
+        - name: Download the security domain file
+          azure_rm_keyvaultsecuritydomain:
+            keyvault_uri: https://hsm{{ rpfx }}.managedhsm.azure.net
+            sd_quorum: 2
+            sd_wrapping_keys:
+              - "{{ lookup('file', 'cert_0.cer') }}"
+              - "{{ lookup('file', 'cert_1.cer') }}"
+              - "{{ lookup('file', 'cert_2.cer') }}"
+            action: download
+          register: output
+
+        - name: Save the security domain file
+          ansible.builtin.debug:
+            var: output["security_domain"]
+
+        #
+        # azure_rm_keyvault finalize & clean up
+        #
+
+        - name: Delete instance of HSM -- check mode
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            state: absent
+          check_mode: true
+          register: output
+
+        - name: Assert the state has changed
+          ansible.builtin.assert:
+            that:
+              - output is changed
+
+        - name: Delete instance of HSM
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            state: absent
+          register: output
+
+        - name: Assert the state has changed
+          ansible.builtin.assert:
+            that:
+              - output is changed
+
+        - name: Delete unexisting instance of HSM
+          azure_rm_keyvault:
+            resource_group: "{{ resource_group }}"
+            hsm_name: "hsm{{ rpfx }}"
+            state: absent
+          register: output
+
+        - name: Assert the state has changed
+          ansible.builtin.assert:
+            that:
+              - output is not changed
+
+    - name: Purge the deleted vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}"
+        vault_name: "{{ item }}"
+        is_purge_deleted: true
+        state: absent
+      loop:
+        - "vault{{ rpfx }}"
+        - "vault{{ rpfx }}-sec"
 
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'hsmKeyVault'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'hsmKeyVault'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

@@ -1,507 +1,520 @@
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}"
-  register: __rg_info
+    location: eastus
 
-- name: Set location based on resource group
-  ansible.builtin.set_fact:
-    location: "{{ __rg_info.resourcegroups.0.location }}"
+- name: For test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}"
+      register: __rg_info
 
-- name: Set secondary location if not already defined
-  ansible.builtin.set_fact:
-    location_secondary: westus
-  when: location_secondary is undefined
+    - name: Set location based on resource group
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
 
-- name: Create identities array
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
+    - name: Set secondary location if not already defined
+      ansible.builtin.set_fact:
+        location_secondary: westus
+      when: location_secondary is undefined
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'cosmosdbaccount'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
-    - '3'
+    - name: Create identities array
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
 
-- name: Set default user identities options
-  ansible.builtin.set_fact:
-    default_identity_1: 'UserAssignedIdentity={{ managed_identity_ids[0] }}'
-    default_identity_2: 'UserAssignedIdentity={{ managed_identity_ids[1] }}'
-    default_identity_3: 'UserAssignedIdentity={{ managed_identity_ids[2] }}'
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'cosmosdbaccount'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+        - '3'
 
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    dbname: "cosmos-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    db2name: "cosmos2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    vnname: "vn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    subnetname: "subnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    free_tier_supported: false  # https://github.com/ansible-collections/azure/pull/675#discussion_r843584406
-  run_once: true
+    - name: Set default user identities options
+      ansible.builtin.set_fact:
+        default_identity_1: 'UserAssignedIdentity={{ managed_identity_ids[0] }}'
+        default_identity_2: 'UserAssignedIdentity={{ managed_identity_ids[1] }}'
+        default_identity_3: 'UserAssignedIdentity={{ managed_identity_ids[2] }}'
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vnname }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.3
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        dbname: "cosmos-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        db2name: "cosmos2-{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        vnname: "vn{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        subnetname: "subnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        free_tier_supported: false  # https://github.com/ansible-collections/azure/pull/675#discussion_r843584406
+      run_once: true
 
-- name: Add subnet
-  azure_rm_subnet:
-    name: "{{ subnetname }}"
-    virtual_network_name: "{{ vnname }}"
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/24"
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vnname }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.3
 
-- name: Create instance of Database Account -- check mode
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    location: "{{ location }}"
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-    database_account_offer_type: Standard
-  check_mode: true
-  register: output
+    - name: Add subnet
+      azure_rm_subnet:
+        name: "{{ subnetname }}"
+        virtual_network_name: "{{ vnname }}"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: "10.1.0.0/24"
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create instance of Database Account -- check mode
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        location: "{{ location }}"
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+        database_account_offer_type: Standard
+      check_mode: true
+      register: output
 
-- name: Create instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    location: "{{ location }}"
-    kind: global_document_db
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-      - name: "{{ location_secondary }}"
-        failover_priority: 1
-    database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: true
-    virtual_network_rules:
-      - subnet:
-          resource_group: "{{ resource_group }}"
-          virtual_network_name: "{{ vnname }}"
-          subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: true
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-    default_identity: '{{ default_identity_1 }}'
-  register: output
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        location: "{{ location }}"
+        kind: global_document_db
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+          - name: "{{ location_secondary }}"
+            failover_priority: 1
+        database_account_offer_type: Standard
+        is_virtual_network_filter_enabled: true
+        virtual_network_rules:
+          - subnet:
+              resource_group: "{{ resource_group }}"
+              virtual_network_name: "{{ vnname }}"
+              subnet_name: "{{ subnetname }}"
+            ignore_missing_v_net_service_endpoint: true
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        default_identity: '{{ default_identity_1 }}'
+      register: output
 
-- name: Create again instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    location: "{{ location }}"
-    kind: global_document_db
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-      - name: "{{ location_secondary }}"
-        failover_priority: 1
-    database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: true
-    virtual_network_rules:
-      - subnet:
-          resource_group: "{{ resource_group }}"
-          virtual_network_name: "{{ vnname }}"
-          subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: true
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-    default_identity: '{{ default_identity_1 }}'
-  register: output
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the state has not changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create again instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        location: "{{ location }}"
+        kind: global_document_db
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+          - name: "{{ location_secondary }}"
+            failover_priority: 1
+        database_account_offer_type: Standard
+        is_virtual_network_filter_enabled: true
+        virtual_network_rules:
+          - subnet:
+              resource_group: "{{ resource_group }}"
+              virtual_network_name: "{{ vnname }}"
+              subnet_name: "{{ subnetname }}"
+            ignore_missing_v_net_service_endpoint: true
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        default_identity: '{{ default_identity_1 }}'
+      register: output
 
-- name: Pause for 600 seconds
-  ansible.builtin.command: sleep 600
-  changed_when: true
+    - name: Assert the state has not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Create again instance of Database Account -- change something
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    location: "{{ location }}"
-    kind: global_document_db
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-      - name: "{{ location_secondary }}"
-        failover_priority: 1
-    database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: true
-    virtual_network_rules:
-      - subnet:
-          resource_group: "{{ resource_group }}"
-          virtual_network_name: "{{ vnname }}"
-          subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: true
-    enable_automatic_failover: true
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-    default_identity: '{{ default_identity_1 }}'
-  register: output
+    - name: Pause for 600 seconds
+      ansible.builtin.command: sleep 600
+      changed_when: true
 
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create again instance of Database Account -- change something
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        location: "{{ location }}"
+        kind: global_document_db
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+          - name: "{{ location_secondary }}"
+            failover_priority: 1
+        database_account_offer_type: Standard
+        is_virtual_network_filter_enabled: true
+        virtual_network_rules:
+          - subnet:
+              resource_group: "{{ resource_group }}"
+              virtual_network_name: "{{ vnname }}"
+              subnet_name: "{{ subnetname }}"
+            ignore_missing_v_net_service_endpoint: true
+        enable_automatic_failover: true
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+        default_identity: '{{ default_identity_1 }}'
+      register: output
 
-- name: Create second instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group_secondary }}"
-    name: "{{ db2name }}"
-    location: "{{ location }}"
-    kind: global_document_db
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-      - name: "{{ location_secondary }}"
-        failover_priority: 1
-    database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: true
-    virtual_network_rules:
-      - subnet:
-          resource_group: "{{ resource_group }}"
-          virtual_network_name: "{{ vnname }}"
-          subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: true
-    identity:
-      type: SystemAssigned, UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[1] }}"
-    default_identity: '{{ default_identity_1 }}'
-  register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create second instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group_secondary }}"
+        name: "{{ db2name }}"
+        location: "{{ location }}"
+        kind: global_document_db
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+          - name: "{{ location_secondary }}"
+            failover_priority: 1
+        database_account_offer_type: Standard
+        is_virtual_network_filter_enabled: true
+        virtual_network_rules:
+          - subnet:
+              resource_group: "{{ resource_group }}"
+              virtual_network_name: "{{ vnname }}"
+              subnet_name: "{{ subnetname }}"
+            ignore_missing_v_net_service_endpoint: true
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        default_identity: '{{ default_identity_1 }}'
+      register: output
 
-- name: Update second instance of Database Account - replace user-identity
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group_secondary }}"
-    name: "{{ db2name }}"
-    location: "{{ location }}"
-    kind: global_document_db
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-      - name: "{{ location_secondary }}"
-        failover_priority: 1
-    database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: true
-    virtual_network_rules:
-      - subnet:
-          resource_group: "{{ resource_group }}"
-          virtual_network_name: "{{ vnname }}"
-          subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: true
-    identity:
-      type: SystemAssigned, UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[2] }}"
-        append: false
-    default_identity: '{{ default_identity_1 }}'
-  register: output
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update second instance of Database Account - replace user-identity
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group_secondary }}"
+        name: "{{ db2name }}"
+        location: "{{ location }}"
+        kind: global_document_db
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+          - name: "{{ location_secondary }}"
+            failover_priority: 1
+        database_account_offer_type: Standard
+        is_virtual_network_filter_enabled: true
+        virtual_network_rules:
+          - subnet:
+              resource_group: "{{ resource_group }}"
+              virtual_network_name: "{{ vnname }}"
+              subnet_name: "{{ subnetname }}"
+            ignore_missing_v_net_service_endpoint: true
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[2] }}"
+            append: false
+        default_identity: '{{ default_identity_1 }}'
+      register: output
 
-- name: Get facts of single account
-  azure_rm_cosmosdbaccount_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-  register: output
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.accounts | length == 1
-      - output.accounts[0]['id'] != None
-      - output.accounts[0]['resource_group'] == resource_group
-      - output.accounts[0]['name'] == dbname
-      - output.accounts[0]['location'] == location
-      - output.accounts[0]['kind'] != None
-      - output.accounts[0]['consistency_policy'] != None
-      - output.accounts[0]['failover_policies'] != None
-      - output.accounts[0]['read_locations'] != None
-      - output.accounts[0]['write_locations'] != None
-      - output.accounts[0]['database_account_offer_type'] != None
-      - output.accounts[0]['ip_range_filter'] != None
-      - output.accounts[0]['ip_rules'] != None
-      - output.accounts[0]['is_virtual_network_filter_enabled'] != None
-      - output.accounts[0]['enable_automatic_failover'] != None
-      - output.accounts[0]['enable_cassandra'] != None
-      - output.accounts[0]['enable_table'] != None
-      - output.accounts[0]['enable_gremlin'] != None
-      - output.accounts[0]['virtual_network_rules'] != None
-      - output.accounts[0]['enable_multiple_write_locations'] != None
-      - output.accounts[0]['document_endpoint'] != None
-      - output.accounts[0]['provisioning_state'] != None
-      - output.accounts[0]['tags'] != None
-      - output.accounts[0]['enable_free_tier'] == false
-      - output.accounts[0]['public_network_access'] == 'Enabled'
-      - output.accounts[0]['identity']['type'] == 'UserAssigned'
-      - output.accounts[0]['identity']['user_assigned_identities'] | length == 2
-      - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[0]] is defined
-      - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[1]] is defined
-      - output.accounts[0]['default_identity'] == default_identity_1
+    - name: Get facts of single account
+      azure_rm_cosmosdbaccount_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+      register: output
 
-- name: Get facts of second account
-  azure_rm_cosmosdbaccount_info:
-    resource_group: "{{ resource_group_secondary }}"
-    name: "{{ db2name }}"
-  register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.accounts | length == 1
+          - output.accounts[0]['id'] != None
+          - output.accounts[0]['resource_group'] == resource_group
+          - output.accounts[0]['name'] == dbname
+          - output.accounts[0]['location'] == location
+          - output.accounts[0]['kind'] != None
+          - output.accounts[0]['consistency_policy'] != None
+          - output.accounts[0]['failover_policies'] != None
+          - output.accounts[0]['read_locations'] != None
+          - output.accounts[0]['write_locations'] != None
+          - output.accounts[0]['database_account_offer_type'] != None
+          - output.accounts[0]['ip_range_filter'] != None
+          - output.accounts[0]['ip_rules'] != None
+          - output.accounts[0]['is_virtual_network_filter_enabled'] != None
+          - output.accounts[0]['enable_automatic_failover'] != None
+          - output.accounts[0]['enable_cassandra'] != None
+          - output.accounts[0]['enable_table'] != None
+          - output.accounts[0]['enable_gremlin'] != None
+          - output.accounts[0]['virtual_network_rules'] != None
+          - output.accounts[0]['enable_multiple_write_locations'] != None
+          - output.accounts[0]['document_endpoint'] != None
+          - output.accounts[0]['provisioning_state'] != None
+          - output.accounts[0]['tags'] != None
+          - output.accounts[0]['enable_free_tier'] == false
+          - output.accounts[0]['public_network_access'] == 'Enabled'
+          - output.accounts[0]['identity']['type'] == 'UserAssigned'
+          - output.accounts[0]['identity']['user_assigned_identities'] | length == 2
+          - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[0]] is defined
+          - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[1]] is defined
+          - output.accounts[0]['default_identity'] == default_identity_1
 
-- name: Assert identity is as expected
-  ansible.builtin.assert:
-    that:
-      - output.accounts[0]['identity']['type'] == 'SystemAssigned,UserAssigned'
-      - output.accounts[0]['identity']['user_assigned_identities'] | length == 2
-      - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[0]] is defined
-      - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[2]] is defined
-      - output.accounts[0]['default_identity'] == default_identity_1
+    - name: Get facts of second account
+      azure_rm_cosmosdbaccount_info:
+        resource_group: "{{ resource_group_secondary }}"
+        name: "{{ db2name }}"
+      register: output
 
-- name: Get facts with keys
-  azure_rm_cosmosdbaccount_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    retrieve_keys: all
-  register: output
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.accounts[0]['primary_master_key'] != None
-      - output.accounts[0]['secondary_master_key'] != None
-      - output.accounts[0]['primary_readonly_master_key'] != None
-      - output.accounts[0]['secondary_readonly_master_key'] != None
+    - name: Assert identity is as expected
+      ansible.builtin.assert:
+        that:
+          - output.accounts[0]['identity']['type'] == 'SystemAssigned,UserAssigned'
+          - output.accounts[0]['identity']['user_assigned_identities'] | length == 2
+          - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[0]] is defined
+          - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[2]] is defined
+          - output.accounts[0]['default_identity'] == default_identity_1
 
-- name: Get facts with readonly keys
-  azure_rm_cosmosdbaccount_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    retrieve_keys: readonly
-    retrieve_connection_strings: true
-  register: output
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - "'primary_master_key' not in output.accounts[0]"
-      - "'secondary_master_key' not in output.accounts[0]"
-      - output.accounts[0]['primary_readonly_master_key'] != None
-      - output.accounts[0]['secondary_readonly_master_key'] != None
-      - output.accounts[0]['connection_strings'] | length > 0
+    - name: Get facts with keys
+      azure_rm_cosmosdbaccount_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        retrieve_keys: all
+      register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.accounts[0]['primary_master_key'] != None
+          - output.accounts[0]['secondary_master_key'] != None
+          - output.accounts[0]['primary_readonly_master_key'] != None
+          - output.accounts[0]['secondary_readonly_master_key'] != None
 
-- name: List accounts by resource group
-  azure_rm_cosmosdbaccount_info:
-    resource_group: "{{ resource_group }}"
-  register: output
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.accounts | length == 1
-      - output.accounts[0]['id'] != None
-      - output.accounts[0]['resource_group'] == resource_group
-      - output.accounts[0]['name'] == dbname
-      - output.accounts[0]['location'] == location
-      - output.accounts[0]['kind'] != None
-      - output.accounts[0]['consistency_policy'] != None
-      - output.accounts[0]['failover_policies'] != None
-      - output.accounts[0]['read_locations'] != None
-      - output.accounts[0]['write_locations'] != None
-      - output.accounts[0]['database_account_offer_type'] != None
-      - output.accounts[0]['ip_range_filter'] != None
-      - output.accounts[0]['ip_rules'] != None
-      - output.accounts[0]['is_virtual_network_filter_enabled'] != None
-      - output.accounts[0]['enable_automatic_failover'] != None
-      - output.accounts[0]['enable_cassandra'] != None
-      - output.accounts[0]['enable_table'] != None
-      - output.accounts[0]['enable_gremlin'] != None
-      - output.accounts[0]['virtual_network_rules'] != None
-      - output.accounts[0]['enable_multiple_write_locations'] != None
-      - output.accounts[0]['document_endpoint'] != None
-      - output.accounts[0]['provisioning_state'] != None
-      - output.accounts[0]['tags'] != None
-      - output.accounts[0]['enable_free_tier'] == false
-      - output.accounts[0]['public_network_access'] == 'Enabled'
-      - output.accounts[0]['identity']['type'] == 'UserAssigned'
-      - output.accounts[0]['identity']['user_assigned_identities'] | length == 2
-      - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[0]] is defined
-      - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[1]] is defined
-      - output.accounts[0]['default_identity'] == default_identity_1
+    - name: Get facts with readonly keys
+      azure_rm_cosmosdbaccount_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        retrieve_keys: readonly
+        retrieve_connection_strings: true
+      register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - "'primary_master_key' not in output.accounts[0]"
+          - "'secondary_master_key' not in output.accounts[0]"
+          - output.accounts[0]['primary_readonly_master_key'] != None
+          - output.accounts[0]['secondary_readonly_master_key'] != None
+          - output.accounts[0]['connection_strings'] | length > 0
 
-- name: List all accounts
-  azure_rm_cosmosdbaccount_info:
-  register: output
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.accounts | length >= 2
-      - dbname in (output.accounts | map(attribute='name'))
-      - db2name in (output.accounts | map(attribute='name'))
+    - name: List accounts by resource group
+      azure_rm_cosmosdbaccount_info:
+        resource_group: "{{ resource_group }}"
+      register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.accounts | length == 1
+          - output.accounts[0]['id'] != None
+          - output.accounts[0]['resource_group'] == resource_group
+          - output.accounts[0]['name'] == dbname
+          - output.accounts[0]['location'] == location
+          - output.accounts[0]['kind'] != None
+          - output.accounts[0]['consistency_policy'] != None
+          - output.accounts[0]['failover_policies'] != None
+          - output.accounts[0]['read_locations'] != None
+          - output.accounts[0]['write_locations'] != None
+          - output.accounts[0]['database_account_offer_type'] != None
+          - output.accounts[0]['ip_range_filter'] != None
+          - output.accounts[0]['ip_rules'] != None
+          - output.accounts[0]['is_virtual_network_filter_enabled'] != None
+          - output.accounts[0]['enable_automatic_failover'] != None
+          - output.accounts[0]['enable_cassandra'] != None
+          - output.accounts[0]['enable_table'] != None
+          - output.accounts[0]['enable_gremlin'] != None
+          - output.accounts[0]['virtual_network_rules'] != None
+          - output.accounts[0]['enable_multiple_write_locations'] != None
+          - output.accounts[0]['document_endpoint'] != None
+          - output.accounts[0]['provisioning_state'] != None
+          - output.accounts[0]['tags'] != None
+          - output.accounts[0]['enable_free_tier'] == false
+          - output.accounts[0]['public_network_access'] == 'Enabled'
+          - output.accounts[0]['identity']['type'] == 'UserAssigned'
+          - output.accounts[0]['identity']['user_assigned_identities'] | length == 2
+          - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[0]] is defined
+          - output.accounts[0]['identity']['user_assigned_identities'][managed_identity_ids[1]] is defined
+          - output.accounts[0]['default_identity'] == default_identity_1
 
-- name: Create 4.0 Mongo free-tier instance with public networking disabled
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}-free4"
-    location: "{{ location }}"
-    kind: mongo_db
-    mongo_version: "4.0"
-    enable_free_tier: "{{ free_tier_supported }}"
-    public_network_access: "Disabled"
-    ip_rules:
-      - "1.1.1.1"
-      - "2.2.2.2/28"
-    geo_rep_locations:
-      - name: "{{ location }}"
-        failover_priority: 0
-      - name: "{{ location_secondary }}"
-        failover_priority: 1
-    database_account_offer_type: Standard
-    is_virtual_network_filter_enabled: true
-    virtual_network_rules:
-      - subnet:
-          resource_group: "{{ resource_group }}"
-          virtual_network_name: "{{ vnname }}"
-          subnet_name: "{{ subnetname }}"
-        ignore_missing_v_net_service_endpoint: true
-    enable_automatic_failover: true
-  register: output
-- name: Assert resource created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: List all accounts
+      azure_rm_cosmosdbaccount_info:
+      register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.accounts | length >= 2
+          - dbname in (output.accounts | map(attribute='name'))
+          - db2name in (output.accounts | map(attribute='name'))
 
-- name: Get facts for free tier account
-  azure_rm_cosmosdbaccount_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}-free4"
-  register: output
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output.accounts[0]['mongo_version'] == '4.0'
-      - output.accounts[0]['enable_free_tier'] == free_tier_supported
-      - output.accounts[0]['public_network_access'] == 'Disabled'
-      - output.accounts[0]['ip_range_filter'] == '1.1.1.1,2.2.2.2/28'
-      - (output.accounts[0]['ip_rules'] | length) == 2
-      - output.accounts[0]['ip_rules'][0] == '1.1.1.1'
-      - output.accounts[0]['ip_rules'][1] == '2.2.2.2/28'
+    - name: Create 4.0 Mongo free-tier instance with public networking disabled
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}-free4"
+        location: "{{ location }}"
+        kind: mongo_db
+        mongo_version: "4.0"
+        enable_free_tier: "{{ free_tier_supported }}"
+        public_network_access: "Disabled"
+        ip_rules:
+          - "1.1.1.1"
+          - "2.2.2.2/28"
+        geo_rep_locations:
+          - name: "{{ location }}"
+            failover_priority: 0
+          - name: "{{ location_secondary }}"
+            failover_priority: 1
+        database_account_offer_type: Standard
+        is_virtual_network_filter_enabled: true
+        virtual_network_rules:
+          - subnet:
+              resource_group: "{{ resource_group }}"
+              virtual_network_name: "{{ vnname }}"
+              subnet_name: "{{ subnetname }}"
+            ignore_missing_v_net_service_endpoint: true
+        enable_automatic_failover: true
+      register: output
+    - name: Assert resource created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete instance of Database Account -- check mode
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    state: absent
-  check_mode: true
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Get facts for free tier account
+      azure_rm_cosmosdbaccount_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}-free4"
+      register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output.accounts[0]['mongo_version'] == '4.0'
+          - output.accounts[0]['enable_free_tier'] == free_tier_supported
+          - output.accounts[0]['public_network_access'] == 'Disabled'
+          - output.accounts[0]['ip_range_filter'] == '1.1.1.1,2.2.2.2/28'
+          - (output.accounts[0]['ip_rules'] | length) == 2
+          - output.accounts[0]['ip_rules'][0] == '1.1.1.1'
+          - output.accounts[0]['ip_rules'][1] == '2.2.2.2/28'
 
-- name: Delete instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    state: absent
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete instance of Database Account -- check mode
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        state: absent
+      check_mode: true
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete unexisting instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}"
-    state: absent
-  register: output
-- name: Assert the state has not changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Delete instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        state: absent
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete second instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group_secondary }}"
-    name: "{{ db2name }}"
-    state: absent
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete unexisting instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}"
+        state: absent
+      register: output
+    - name: Assert the state has not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Delete free tier instance of Database Account
-  azure_rm_cosmosdbaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dbname }}-free4"
-    state: absent
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete second instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group_secondary }}"
+        name: "{{ db2name }}"
+        state: absent
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Clean up virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vnname }}"
-    state: absent
+    - name: Delete free tier instance of Database Account
+      azure_rm_cosmosdbaccount:
+        resource_group: "{{ resource_group }}"
+        name: "{{ dbname }}-free4"
+        state: absent
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'cosmosdbaccount'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
-    - '3'
+    - name: Clean up virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vnname }}"
+        state: absent
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'cosmosdbaccount'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+        - '3'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

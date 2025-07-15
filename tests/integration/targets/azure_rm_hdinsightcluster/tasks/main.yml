@@ -1,321 +1,334 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
-  run_once: true
-
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}"
-  register: __rg_info
+    location: eastus
 
-- name: Set location based on resource group
-  ansible.builtin.set_fact:
-    location: "{{ __rg_info.resourcegroups.0.location }}"
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+      run_once: true
 
-- name: Create identity and policy ids arrays
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
-    access_policies_object_ids: []
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}"
+      register: __rg_info
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: managedidentity.yml
-  vars:
-    managed_identity_test_unique: 'hdinsightcluster'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Set location based on resource group
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
 
-- name: Create storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "storage{{ rpfx }}"
-    account_type: Standard_LRS
-    location: eastus2
+    - name: Create identity and policy ids arrays
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
+        access_policies_object_ids: []
 
-- name: Sample for Azure REST API - StorageAccounts_ListKeys
-  azure_rm_resource:
-    api_version: '2018-07-01'
-    method: POST
-    resource_group: "{{ resource_group }}"
-    provider: storage
-    resource_type: storageaccounts
-    resource_name: "storage{{ rpfx }}"
-    subresource:
-      - type: listkeys
-  register: storage_output
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: managedidentity.yml
+      vars:
+        managed_identity_test_unique: 'hdinsightcluster'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
 
-- name: Print the storage account keys
-  ansible.builtin.debug:
-    var: storage_output
+    - name: Create storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}"
+        name: "storage{{ rpfx }}"
+        account_type: Standard_LRS
+        location: eastus2
 
-- name: Create instance of Cluster -- check mode
-  azure_rm_hdinsightcluster:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-    location: eastus2
-    cluster_version: 5.0
-    os_type: linux
-    tier: standard
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[1] }}"
-    cluster_definition:
-      kind: spark
-      gateway_rest_username: http-user
-      gateway_rest_password: "{{ password }}"
-    storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net
-        is_default: true
-        container: "cluster{{ rpfx }}"
-        key: "{{ storage_output['response']['keys'][0]['value'] }}"
-    compute_profile_roles:
-      - name: headnode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: workernode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: zookeepernode
-        target_instance_count: 3
-        vm_size: Medium
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-  check_mode: true
-  register: output
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Sample for Azure REST API - StorageAccounts_ListKeys
+      azure_rm_resource:
+        api_version: '2018-07-01'
+        method: POST
+        resource_group: "{{ resource_group }}"
+        provider: storage
+        resource_type: storageaccounts
+        resource_name: "storage{{ rpfx }}"
+        subresource:
+          - type: listkeys
+      register: storage_output
 
-- name: Create instance of Cluster
-  azure_rm_hdinsightcluster:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-    location: eastus2
-    cluster_version: 5.0
-    os_type: linux
-    tier: standard
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[1] }}"
-    cluster_definition:
-      kind: spark
-      gateway_rest_username: http-user
-      gateway_rest_password: "{{ password }}"
-    storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net
-        is_default: true
-        container: "cluster{{ rpfx }}"
-        key: "{{ storage_output['response']['keys'][0]['value'] }}"
-    compute_profile_roles:
-      - name: headnode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: workernode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: zookeepernode
-        target_instance_count: 3
-        vm_size: Medium
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-  register: output
+    - name: Print the storage account keys
+      ansible.builtin.debug:
+        var: storage_output
 
-- name: Assert the resource instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create instance of Cluster -- check mode
+      azure_rm_hdinsightcluster:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+        location: eastus2
+        cluster_version: 5.0
+        os_type: linux
+        tier: standard
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        cluster_definition:
+          kind: spark
+          gateway_rest_username: http-user
+          gateway_rest_password: "{{ password }}"
+        storage_accounts:
+          - name: storage{{ rpfx }}.blob.core.windows.net
+            is_default: true
+            container: "cluster{{ rpfx }}"
+            key: "{{ storage_output['response']['keys'][0]['value'] }}"
+        compute_profile_roles:
+          - name: headnode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: workernode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: zookeepernode
+            target_instance_count: 3
+            vm_size: Medium
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+      check_mode: true
+      register: output
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Wait for instance of Cluster provisioning to complete
-  azure_rm_hdinsightcluster_info:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-  register: facts
-  until: facts.clusters[0]['cluster_state'] == 'Running'
-  retries: 40
-  delay: 60
+    - name: Create instance of Cluster
+      azure_rm_hdinsightcluster:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+        location: eastus2
+        cluster_version: 5.0
+        os_type: linux
+        tier: standard
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        cluster_definition:
+          kind: spark
+          gateway_rest_username: http-user
+          gateway_rest_password: "{{ password }}"
+        storage_accounts:
+          - name: storage{{ rpfx }}.blob.core.windows.net
+            is_default: true
+            container: "cluster{{ rpfx }}"
+            key: "{{ storage_output['response']['keys'][0]['value'] }}"
+        compute_profile_roles:
+          - name: headnode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: workernode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: zookeepernode
+            target_instance_count: 3
+            vm_size: Medium
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+      register: output
 
-- name: Create again instance of Cluster -- idempotent
-  azure_rm_hdinsightcluster:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-    location: eastus2
-    cluster_version: 5.0
-    os_type: linux
-    tier: standard
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[1] }}"
-    cluster_definition:
-      kind: spark
-      gateway_rest_username: http-user
-      gateway_rest_password: "{{ password }}"
-    storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net
-        is_default: true
-        container: "cluster{{ rpfx }}"
-        key: "{{ storage_output['response']['keys'][0]['value'] }}"
-    compute_profile_roles:
-      - name: headnode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: workernode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: zookeepernode
-        target_instance_count: 3
-        vm_size: Medium
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-  register: output
-- name: Assert the state has not changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create again instance of Cluster -- resize and add tags
-  azure_rm_hdinsightcluster:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-    location: eastus2
-    cluster_version: 5.0
-    os_type: linux
-    tier: standard
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[1] }}"
-    cluster_definition:
-      kind: spark
-      gateway_rest_username: http-user
-      gateway_rest_password: "{{ password }}"
-    storage_accounts:
-      - name: storage{{ rpfx }}.blob.core.windows.net
-        is_default: true
-        container: "cluster{{ rpfx }}"
-        key: "{{ storage_output['response']['keys'][0]['value'] }}"
-    compute_profile_roles:
-      - name: headnode
-        target_instance_count: 1
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: workernode
-        target_instance_count: 2
-        vm_size: Standard_D3
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-      - name: zookeepernode
-        target_instance_count: 3
-        vm_size: Medium
-        linux_profile:
-          username: sshuser
-          password: "{{ password }}"
-    tags:
-      aaa: bbb
-  register: output
-- name: Print the cluster creating result
-  ansible.builtin.debug:
-    var: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Wait for instance of Cluster provisioning to complete
+      azure_rm_hdinsightcluster_info:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+      register: facts
+      until: facts.clusters[0]['cluster_state'] == 'Running'
+      retries: 40
+      delay: 60
 
-- name: Get facts of Cluster
-  azure_rm_hdinsightcluster_info:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-  register: output
+    - name: Create again instance of Cluster -- idempotent
+      azure_rm_hdinsightcluster:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+        location: eastus2
+        cluster_version: 5.0
+        os_type: linux
+        tier: standard
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        cluster_definition:
+          kind: spark
+          gateway_rest_username: http-user
+          gateway_rest_password: "{{ password }}"
+        storage_accounts:
+          - name: storage{{ rpfx }}.blob.core.windows.net
+            is_default: true
+            container: "cluster{{ rpfx }}"
+            key: "{{ storage_output['response']['keys'][0]['value'] }}"
+        compute_profile_roles:
+          - name: headnode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: workernode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: zookeepernode
+            target_instance_count: 3
+            vm_size: Medium
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+      register: output
+    - name: Assert the state has not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.clusters[0]['id'] != None
-      - output.clusters[0]['resource_group'] != None
-      - output.clusters[0]['name'] != None
-      - output.clusters[0]['location'] != None
-      - output.clusters[0]['cluster_version'] != None
-      - output.clusters[0]['os_type'] != None
-      - output.clusters[0]['tier'] != None
-      - output.clusters[0]['cluster_definition'] != None
-      - output.clusters[0]['compute_profile_roles'] != None
-      - output.clusters[0]['connectivity_endpoints'] != None
-      - output.clusters[0]['identity'] != None
-      - output.clusters[0]['identity']['type'] == 'UserAssigned'
-      - output.clusters[0]['identity']['user_assigned_identities'] | length == 2
-      - managed_identity_ids[0] | lower in output.clusters[0].identity.user_assigned_identities
-      - managed_identity_ids[1] | lower in output.clusters[0].identity.user_assigned_identities
+    - name: Create again instance of Cluster -- resize and add tags
+      azure_rm_hdinsightcluster:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+        location: eastus2
+        cluster_version: 5.0
+        os_type: linux
+        tier: standard
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        cluster_definition:
+          kind: spark
+          gateway_rest_username: http-user
+          gateway_rest_password: "{{ password }}"
+        storage_accounts:
+          - name: storage{{ rpfx }}.blob.core.windows.net
+            is_default: true
+            container: "cluster{{ rpfx }}"
+            key: "{{ storage_output['response']['keys'][0]['value'] }}"
+        compute_profile_roles:
+          - name: headnode
+            target_instance_count: 1
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: workernode
+            target_instance_count: 2
+            vm_size: Standard_D3
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+          - name: zookeepernode
+            target_instance_count: 3
+            vm_size: Medium
+            linux_profile:
+              username: sshuser
+              password: "{{ password }}"
+        tags:
+          aaa: bbb
+      register: output
+    - name: Print the cluster creating result
+      ansible.builtin.debug:
+        var: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete instance of Cluster -- check mode
-  azure_rm_hdinsightcluster:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-    state: absent
-  check_mode: true
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Get facts of Cluster
+      azure_rm_hdinsightcluster_info:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+      register: output
 
-- name: Delete instance of Cluster
-  azure_rm_hdinsightcluster:
-    resource_group: "{{ resource_group }}"
-    name: "cluster{{ rpfx }}"
-    state: absent
-  register: output
-- name: Assert the state has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.clusters[0]['id'] != None
+          - output.clusters[0]['resource_group'] != None
+          - output.clusters[0]['name'] != None
+          - output.clusters[0]['location'] != None
+          - output.clusters[0]['cluster_version'] != None
+          - output.clusters[0]['os_type'] != None
+          - output.clusters[0]['tier'] != None
+          - output.clusters[0]['cluster_definition'] != None
+          - output.clusters[0]['compute_profile_roles'] != None
+          - output.clusters[0]['connectivity_endpoints'] != None
+          - output.clusters[0]['identity'] != None
+          - output.clusters[0]['identity']['type'] == 'UserAssigned'
+          - output.clusters[0]['identity']['user_assigned_identities'] | length == 2
+          - managed_identity_ids[0] | lower in output.clusters[0].identity.user_assigned_identities
+          - managed_identity_ids[1] | lower in output.clusters[0].identity.user_assigned_identities
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: managedidentity.yml
-  vars:
-    managed_identity_test_unique: 'hdinsightcluster'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Delete instance of Cluster -- check mode
+      azure_rm_hdinsightcluster:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+        state: absent
+      check_mode: true
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete instance of Cluster
+      azure_rm_hdinsightcluster:
+        resource_group: "{{ resource_group }}"
+        name: "cluster{{ rpfx }}"
+        state: absent
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: managedidentity.yml
+      vars:
+        managed_identity_test_unique: 'hdinsightcluster'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

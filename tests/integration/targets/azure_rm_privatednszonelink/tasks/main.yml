@@ -1,228 +1,241 @@
-- name: Create virtual network link name
-  ansible.builtin.set_fact:
-    link_name: "link{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: Create random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
+- name: For test
+  block:
+    - name: Create virtual network link name
+      ansible.builtin.set_fact:
+        link_name: "link{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Create random domain name
-  ansible.builtin.set_fact:
-    domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+    - name: Create random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
 
-- name: Create a Private DNS zone
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    state: present
+    - name: Create random domain name
+      ansible.builtin.set_fact:
+        domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
-- name: Create a virtual network
-  azure_rm_virtualnetwork:
-    name: "vnet{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.2
+    - name: Create a Private DNS zone
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+        state: present
 
-- name: Create a subnet
-  azure_rm_subnet:
-    name: "subnet{{ rpfx }}"
-    virtual_network_name: "vnet{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: 10.1.0.0/24
+    - name: Create a virtual network
+      azure_rm_virtualnetwork:
+        name: "vnet{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.2
 
-- name: Create a virtual network link
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}"
-    zone_name: "{{ domain_name }}.com"
-    virtual_network: "vnet{{ rpfx }}"
-    state: present
-  register: results
+    - name: Create a subnet
+      azure_rm_subnet:
+        name: "subnet{{ rpfx }}"
+        virtual_network_name: "vnet{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: 10.1.0.0/24
 
-- name: Assert that virtual network link is created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create a virtual network link
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}"
+        zone_name: "{{ domain_name }}.com"
+        virtual_network: "vnet{{ rpfx }}"
+        state: present
+      register: results
 
-- name: Create a virtual network link (Idempotent test)
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}"
-    zone_name: "{{ domain_name }}.com"
-    virtual_network: "vnet{{ rpfx }}"
-    state: present
-  register: results
+    - name: Assert that virtual network link is created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Create a virtual network link (Idempotent test)
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}"
+        zone_name: "{{ domain_name }}.com"
+        virtual_network: "vnet{{ rpfx }}"
+        state: present
+      register: results
 
-- name: Update a virtual network link
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}"
-    zone_name: "{{ domain_name }}.com"
-    registration_enabled: true
-    virtual_network: "vnet{{ rpfx }}"
-    state: present
-  register: results
+    - name: Assert that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Assert that virtual network link is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Update a virtual network link
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}"
+        zone_name: "{{ domain_name }}.com"
+        registration_enabled: true
+        virtual_network: "vnet{{ rpfx }}"
+        state: present
+      register: results
 
-- name: Get virtual network link
-  azure_rm_privatednszonelink_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}"
-    zone_name: "{{ domain_name }}.com"
-  register: results
+    - name: Assert that virtual network link is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the virtual network link facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.virtualnetworklinks[0].name == "{{ link_name }}"
-      - results.virtualnetworklinks[0].registration_enabled == true
-      - results.virtualnetworklinks[0].provisioning_state == "Succeeded"
+    - name: Get virtual network link
+      azure_rm_privatednszonelink_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}"
+        zone_name: "{{ domain_name }}.com"
+      register: results
 
-- name: Create the secondary Private DNS zone
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: privatelink.postgres.database.azure.com
-    state: present
+    - name: Assert the virtual network link facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.virtualnetworklinks[0].name == "{{ link_name }}"
+          - results.virtualnetworklinks[0].registration_enabled == true
+          - results.virtualnetworklinks[0].provisioning_state == "Succeeded"
 
-- name: Create the secondary virtual network
-  azure_rm_virtualnetwork:
-    name: "vnet{{ rpfx }}-secondary"
-    resource_group: "{{ resource_group }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.2
+    - name: Create the secondary Private DNS zone
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}"
+        name: privatelink.postgres.database.azure.com
+        state: present
 
-- name: Create the secondary subnet
-  azure_rm_subnet:
-    name: "subnet{{ rpfx }}-secondary"
-    virtual_network_name: "vnet{{ rpfx }}-secondary"
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: 10.1.0.0/24
+    - name: Create the secondary virtual network
+      azure_rm_virtualnetwork:
+        name: "vnet{{ rpfx }}-secondary"
+        resource_group: "{{ resource_group }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.2
 
-- name: Create a virtual network link with resolution_policy
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}-secondary"
-    zone_name: privatelink.postgres.database.azure.com
-    virtual_network: "vnet{{ rpfx }}-secondary"
-    resolution_policy: NxDomainRedirect
-    state: present
-  register: output
+    - name: Create the secondary subnet
+      azure_rm_subnet:
+        name: "subnet{{ rpfx }}-secondary"
+        virtual_network_name: "vnet{{ rpfx }}-secondary"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: 10.1.0.0/24
 
-- name: Assert create successfully
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a virtual network link with resolution_policy
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}-secondary"
+        zone_name: privatelink.postgres.database.azure.com
+        virtual_network: "vnet{{ rpfx }}-secondary"
+        resolution_policy: NxDomainRedirect
+        state: present
+      register: output
 
-- name: Create a new virtual network link(Idempotent test)
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}-secondary"
-    zone_name: privatelink.postgres.database.azure.com
-    virtual_network: "vnet{{ rpfx }}-secondary"
-    resolution_policy: NxDomainRedirect
-    state: present
-  register: output
+    - name: Assert create successfully
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert idempotent successfully
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a new virtual network link(Idempotent test)
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}-secondary"
+        zone_name: privatelink.postgres.database.azure.com
+        virtual_network: "vnet{{ rpfx }}-secondary"
+        resolution_policy: NxDomainRedirect
+        state: present
+      register: output
 
-- name: Update resolution_policy to Default
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}-secondary"
-    zone_name: privatelink.postgres.database.azure.com
-    virtual_network: "vnet{{ rpfx }}-secondary"
-    resolution_policy: Default
-    state: present
-  register: output
+    - name: Assert idempotent successfully
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert update successfully
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update resolution_policy to Default
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}-secondary"
+        zone_name: privatelink.postgres.database.azure.com
+        virtual_network: "vnet{{ rpfx }}-secondary"
+        resolution_policy: Default
+        state: present
+      register: output
 
-- name: Get the secondary virtual network link facts
-  azure_rm_privatednszonelink_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}-secondary"
-    zone_name: privatelink.postgres.database.azure.com
-  register: facts
+    - name: Assert update successfully
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the secondary virtual netowrk link facts
-  ansible.builtin.assert:
-    that:
-      - facts.virtualnetworklinks[0].resolution_policy == 'Default'
-      - facts.virtualnetworklinks[0].provisioning_state == "Succeeded"
+    - name: Get the secondary virtual network link facts
+      azure_rm_privatednszonelink_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}-secondary"
+        zone_name: privatelink.postgres.database.azure.com
+      register: facts
 
-- name: Delete virtual network link
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}"
-    zone_name: "{{ domain_name }}.com"
-    state: absent
-  register: results
+    - name: Assert the secondary virtual netowrk link facts
+      ansible.builtin.assert:
+        that:
+          - facts.virtualnetworklinks[0].resolution_policy == 'Default'
+          - facts.virtualnetworklinks[0].provisioning_state == "Succeeded"
 
-- name: Assert that virtual network link is deleted
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Delete virtual network link
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}"
+        zone_name: "{{ domain_name }}.com"
+        state: absent
+      register: results
 
-- name: Delete virtual network link (Idempotent test)
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}"
-    zone_name: "{{ domain_name }}.com"
-    state: absent
-  register: results
+    - name: Assert that virtual network link is deleted
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Asset that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Delete virtual network link (Idempotent test)
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}"
+        zone_name: "{{ domain_name }}.com"
+        state: absent
+      register: results
 
-- name: Delete virtual network
-  azure_rm_virtualnetwork:
-    name: "vnet{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Asset that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Delete the secondary private dns zone link
-  azure_rm_privatednszonelink:
-    resource_group: "{{ resource_group }}"
-    name: "{{ link_name }}-secondary"
-    zone_name: privatelink.postgres.database.azure.com
-    state: absent
+    - name: Delete virtual network
+      azure_rm_virtualnetwork:
+        name: "vnet{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: absent
 
-- name: Delete the secondary virtual network
-  azure_rm_virtualnetwork:
-    name: "vnet{{ rpfx }}-secondary"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Delete the secondary private dns zone link
+      azure_rm_privatednszonelink:
+        resource_group: "{{ resource_group }}"
+        name: "{{ link_name }}-secondary"
+        zone_name: privatelink.postgres.database.azure.com
+        state: absent
 
-- name: Delete private DNS zone
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    state: absent
+    - name: Delete the secondary virtual network
+      azure_rm_virtualnetwork:
+        name: "vnet{{ rpfx }}-secondary"
+        resource_group: "{{ resource_group }}"
+        state: absent
 
-- name: Delete the secondary Private DNS zone
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: privatelink.postgres.database.azure.com
-    state: absent
+    - name: Delete private DNS zone
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}"
+        name: "{{ domain_name }}.com"
+        state: absent
+
+    - name: Delete the secondary Private DNS zone
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}"
+        name: privatelink.postgres.database.azure.com
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent

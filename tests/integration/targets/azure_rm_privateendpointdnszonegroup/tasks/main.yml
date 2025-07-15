@@ -1,269 +1,282 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
-  run_once: true
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}"
+    location: eastus
 
-- name: "Create virtual network"
-  azure_rm_virtualnetwork:
-    name: "vnet-{{ rpfx }}"
-    address_prefixes_cidr:
-      - "10.1.0.0/16"
-    resource_group: "{{ resource_group }}"
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+      run_once: true
 
-- name: "Create the subnet"
-  azure_rm_subnet:
-    name: "subnet-{{ rpfx }}"
-    virtual_network_name: "vnet-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    private_endpoint_network_policies: Disabled
-    private_link_service_network_policies: Disabled
-  register: subnet_output
+    - name: "Create virtual network"
+      azure_rm_virtualnetwork:
+        name: "vnet-{{ rpfx }}"
+        address_prefixes_cidr:
+          - "10.1.0.0/16"
+        resource_group: "{{ resource_group }}"
 
-- name: "Create instance of PostgreSQL Flexible Server"
-  azure_rm_postgresqlflexibleserver:
-    resource_group: "{{ resource_group }}"
-    name: "postgresqlsrv-{{ rpfx }}"
-    sku:
-      name: Standard_B1ms
-      tier: Burstable
-    administrator_login: azureuser
-    administrator_login_password: "{{ password }}"
-    version: 12
-    storage:
-      storage_size_gb: 128
-    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
-    backup:
-      backup_retention_days: 7
-      geo_redundant_backup: Disabled
-    network:
-      public_network_access: Disabled
-    maintenance_window:
-      custom_window: Enabled
-      start_hour: 8
-      start_minute: 4
-      day_of_week: 3
-    availability_zone: 2
-    create_mode: Create
-  register: post_output
+    - name: "Create the subnet"
+      azure_rm_subnet:
+        name: "subnet-{{ rpfx }}"
+        virtual_network_name: "vnet-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: "10.1.0.0/16"
+        private_endpoint_network_policies: Disabled
+        private_link_service_network_policies: Disabled
+      register: subnet_output
 
-- name: Create zone group for non-existant private endpoint
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "does-not-exist-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  ignore_errors: true
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output.msg is match("Could not load the private endpoint", ignorecase=True)
+    - name: "Create instance of PostgreSQL Flexible Server"
+      azure_rm_postgresqlflexibleserver:
+        resource_group: "{{ resource_group }}"
+        name: "postgresqlsrv-{{ rpfx }}"
+        sku:
+          name: Standard_B1ms
+          tier: Burstable
+        administrator_login: azureuser
+        administrator_login_password: "{{ password }}"
+        version: 12
+        storage:
+          storage_size_gb: 128
+        fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+        backup:
+          backup_retention_days: 7
+          geo_redundant_backup: Disabled
+        network:
+          public_network_access: Disabled
+        maintenance_window:
+          custom_window: Enabled
+          start_hour: 8
+          start_minute: 4
+          day_of_week: 3
+        availability_zone: 2
+        create_mode: Create
+      register: post_output
 
-- name: Create private endpoint
-  azure_rm_privateendpoint:
-    name: privateendpoint-{{ rpfx }}
-    resource_group: "{{ resource_group }}"
-    private_link_service_connections:
-      - name: "postgres-link"
-        private_link_service_id: "{{ post_output.state.id }}"
-        group_ids:
-          - "postgresqlServer"
-    subnet:
-      id: "{{ subnet_output.state.id }}"
+    - name: Create zone group for non-existant private endpoint
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "does-not-exist-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      ignore_errors: true
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output.msg is match("Could not load the private endpoint", ignorecase=True)
 
-- name: Create private DNS zone for postgres
-  azure_rm_privatednszone:
-    name: "privatelink.postgres.database.azure.com"
-    resource_group: "{{ resource_group }}"
+    - name: Create private endpoint
+      azure_rm_privateendpoint:
+        name: privateendpoint-{{ rpfx }}
+        resource_group: "{{ resource_group }}"
+        private_link_service_connections:
+          - name: "postgres-link"
+            private_link_service_id: "{{ post_output.state.id }}"
+            group_ids:
+              - "postgresqlServer"
+        subnet:
+          id: "{{ subnet_output.state.id }}"
 
-- name: Create virtual network link
-  azure_rm_privatednszonelink:
-    name: "private-link-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    zone_name: "privatelink.postgres.database.azure.com"
-    virtual_network: "vnet-{{ rpfx }}"
+    - name: Create private DNS zone for postgres
+      azure_rm_privatednszone:
+        name: "privatelink.postgres.database.azure.com"
+        resource_group: "{{ resource_group }}"
 
-- name: Get zone groups for private endpoint
-  azure_rm_privateendpointdnszonegroup_info:
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.groups | length == 0
+    - name: Create virtual network link
+      azure_rm_privatednszonelink:
+        name: "private-link-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        zone_name: "privatelink.postgres.database.azure.com"
+        virtual_network: "vnet-{{ rpfx }}"
 
-- name: Create zone group for private endpoint - check mode
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    private_dns_zone_configs:
-      - name: "default"
-        private_dns_zone: "privatelink.postgres.database.azure.com"
-  register: output
-  check_mode: true
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Get zone groups for private endpoint
+      azure_rm_privateendpointdnszonegroup_info:
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.groups | length == 0
 
-- name: Create zone group for private endpoint
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    private_dns_zone_configs:
-      - name: "default"
-        private_dns_zone: "privatelink.postgres.database.azure.com"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.id
-      - output.state.name == 'zone-group-{{ rpfx }}'
-      - output.state.provisioning_state == 'Succeeded'
-      - output.state.private_dns_zone_configs | length == 1
-      - output.state.private_dns_zone_configs[0].name == 'default'
-      - output.state.private_dns_zone_configs[0].private_dns_zone_id
-      - output.state.private_dns_zone_configs[0].record_sets | length == 1
-      - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
-      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
-      - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
-      - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
-      - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-      - output.state.private_dns_zone_configs[0].record_sets[0].ttl
+    - name: Create zone group for private endpoint - check mode
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        private_dns_zone_configs:
+          - name: "default"
+            private_dns_zone: "privatelink.postgres.database.azure.com"
+      register: output
+      check_mode: true
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create zone group for private endpoint - idempotent
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    private_dns_zone_configs:
-      - name: "default"
-        private_dns_zone: "privatelink.postgres.database.azure.com"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create zone group for private endpoint
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        private_dns_zone_configs:
+          - name: "default"
+            private_dns_zone: "privatelink.postgres.database.azure.com"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.id
+          - output.state.name == 'zone-group-{{ rpfx }}'
+          - output.state.provisioning_state == 'Succeeded'
+          - output.state.private_dns_zone_configs | length == 1
+          - output.state.private_dns_zone_configs[0].name == 'default'
+          - output.state.private_dns_zone_configs[0].private_dns_zone_id
+          - output.state.private_dns_zone_configs[0].record_sets | length == 1
+          - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
+          - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
+          - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
+          - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
+          - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
+          - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
+          - output.state.private_dns_zone_configs[0].record_sets[0].ttl
 
-- name: Get specific zone group for private endpoint
-  azure_rm_privateendpointdnszonegroup_info:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.groups | length == 1
-      - output.groups[0].id
-      - output.groups[0].name == 'zone-group-{{ rpfx }}'
-      - output.groups[0].provisioning_state == 'Succeeded'
-      - output.groups[0].private_dns_zone_configs | length == 1
-      - output.groups[0].private_dns_zone_configs[0].name == 'default'
-      - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id
-      - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
+    - name: Create zone group for private endpoint - idempotent
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        private_dns_zone_configs:
+          - name: "default"
+            private_dns_zone: "privatelink.postgres.database.azure.com"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Get all zone groups for private endpoint
-  azure_rm_privateendpointdnszonegroup_info:
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.groups | length == 1
-      - output.groups[0].id
-      - output.groups[0].name == 'zone-group-{{ rpfx }}'
-      - output.groups[0].provisioning_state == 'Succeeded'
-      - output.groups[0].private_dns_zone_configs | length == 1
-      - output.groups[0].private_dns_zone_configs[0].name == 'default'
-      - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id
-      - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-      - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
+    - name: Get specific zone group for private endpoint
+      azure_rm_privateendpointdnszonegroup_info:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.groups | length == 1
+          - output.groups[0].id
+          - output.groups[0].name == 'zone-group-{{ rpfx }}'
+          - output.groups[0].provisioning_state == 'Succeeded'
+          - output.groups[0].private_dns_zone_configs | length == 1
+          - output.groups[0].private_dns_zone_configs[0].name == 'default'
+          - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id
+          - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
 
-- name: Update zone group for private endpoint
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    private_dns_zone_configs:
-      - name: "default-updated"
-        private_dns_zone: "privatelink.postgres.database.azure.com"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.id
-      - output.state.name == 'zone-group-{{ rpfx }}'
-      - output.state.provisioning_state == 'Succeeded'
-      - output.state.private_dns_zone_configs | length == 1
-      - output.state.private_dns_zone_configs[0].name == 'default-updated'
-      - output.state.private_dns_zone_configs[0].private_dns_zone_id
-      - output.state.private_dns_zone_configs[0].record_sets | length == 1
-      - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
-      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
-      - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
-      - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
-      - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
-      - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-      - output.state.private_dns_zone_configs[0].record_sets[0].ttl
+    - name: Get all zone groups for private endpoint
+      azure_rm_privateendpointdnszonegroup_info:
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.groups | length == 1
+          - output.groups[0].id
+          - output.groups[0].name == 'zone-group-{{ rpfx }}'
+          - output.groups[0].provisioning_state == 'Succeeded'
+          - output.groups[0].private_dns_zone_configs | length == 1
+          - output.groups[0].private_dns_zone_configs[0].name == 'default'
+          - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id
+          - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
 
-- name: Delete zone group for private endpoint - check mode
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: "absent"
-  register: output
-  check_mode: true
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update zone group for private endpoint
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        private_dns_zone_configs:
+          - name: "default-updated"
+            private_dns_zone: "privatelink.postgres.database.azure.com"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.id
+          - output.state.name == 'zone-group-{{ rpfx }}'
+          - output.state.provisioning_state == 'Succeeded'
+          - output.state.private_dns_zone_configs | length == 1
+          - output.state.private_dns_zone_configs[0].name == 'default-updated'
+          - output.state.private_dns_zone_configs[0].private_dns_zone_id
+          - output.state.private_dns_zone_configs[0].record_sets | length == 1
+          - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
+          - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
+          - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses[0] is match('10.1.*')
+          - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
+          - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
+          - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
+          - output.state.private_dns_zone_configs[0].record_sets[0].ttl
 
-- name: Delete zone group for private endpoint
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: "absent"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete zone group for private endpoint - check mode
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: "absent"
+      register: output
+      check_mode: true
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete non-existant zone group for private endpoint
-  azure_rm_privateendpointdnszonegroup:
-    name: "zone-group-{{ rpfx }}"
-    private_endpoint: "privateendpoint-{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: "absent"
-  register: output
-- name: Assert results match expectations
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Delete zone group for private endpoint
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: "absent"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete non-existant zone group for private endpoint
+      azure_rm_privateendpointdnszonegroup:
+        name: "zone-group-{{ rpfx }}"
+        private_endpoint: "privateendpoint-{{ rpfx }}"
+        resource_group: "{{ resource_group }}"
+        state: "absent"
+      register: output
+    - name: Assert results match expectations
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        force_delete_nonempty: true
+        state: absent
