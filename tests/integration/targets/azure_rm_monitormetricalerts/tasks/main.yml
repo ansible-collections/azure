@@ -1,0 +1,634 @@
+- name: Block for monitor activity log alert test
+  block:
+    - name: Prepare variables
+      ansible.builtin.set_fact:
+        # Random string
+        random_string: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        action_group_mail: user@example.com
+      run_once: true
+
+    # ------ prerequisite resources, existing resource group, new action group ------
+    - name: Create a new resource group for monitor activity log alert test
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-metricalert"
+        location: eastus
+      register: resource_group_output
+
+    - name: Create action group
+      azure.azcollection.azure_rm_monitoractiongroups:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "actiongroup-{{ random_string }}"
+        state: present
+        enabled: true
+        location: Global
+        email_receivers:
+          - email_address: "{{ action_group_mail }}"
+            name: "sendmailto{{ action_group_mail | split('@') | first }}"
+            use_common_alert_schema: true
+        group_short_name: AGShortNamed
+      register: action_group_output
+
+    - name: Create Azure Recovery Service vault
+      azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "backup-{{ random_string }}"
+        location: "{{ resource_group_output.state.location }}"
+        state: present
+        identity:
+          type: SystemAssigned
+      register: recovery_services_vault_output
+
+    # ------ tests ------
+
+    - name: Create metric alert (check mode)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-creationtags-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ recovery_services_vault_output.response.id }}"
+        target_resource_type: Microsoft.RecoveryServices/vaults
+        evaluation_frequency: PT1H
+        window_size: P1D
+        severity: 2
+        criteria:
+          all_of:
+            - criterion_type: StaticThresholdCriterion
+              dimensions:
+                - name: dataSourceURL
+                  operator: Include
+                  values:
+                    - '*'
+                - name: healthStatus
+                  operator: Exclude
+                  values:
+                    - Healthy
+              metric_name: BackupHealthEvent
+              metric_namespace: Microsoft.RecoveryServices/vaults
+              name: Metric1
+              operator: GreaterThan
+              skip_metric_validation: false
+              threshold: 0.0
+              time_aggregation: Count
+          odata_type: Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria
+        actions:
+          - action_group_id: "{{ action_group_output.actiongroup.id }}"
+        tags:
+          CreationTag1: CreationTagValue1
+      check_mode: true
+      register: output
+
+    - name: Assert that metric alert has been created (check mode)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create metric alert (no tags)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ recovery_services_vault_output.response.id }}"
+        target_resource_type: Microsoft.RecoveryServices/vaults
+        evaluation_frequency: PT1H
+        window_size: P1D
+        severity: 2
+        criteria:
+          all_of:
+            - criterion_type: StaticThresholdCriterion
+              dimensions:
+                - name: dataSourceURL
+                  operator: Include
+                  values:
+                    - '*'
+                - name: healthStatus
+                  operator: Exclude
+                  values:
+                    - Healthy
+              metric_name: BackupHealthEvent
+              metric_namespace: Microsoft.RecoveryServices/vaults
+              name: Metric1
+              operator: GreaterThan
+              skip_metric_validation: false
+              threshold: 0.0
+              time_aggregation: Count
+          odata_type: Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria
+        actions:
+          - action_group_id: "{{ action_group_output.actiongroup.id }}"
+      register: output
+
+    - name: Assert that metric alert has been created (no tags)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          - output.metricalert.tags is not defined
+
+    - name: Create metric alert (no tags, idempotency check)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ recovery_services_vault_output.response.id }}"
+        target_resource_type: Microsoft.RecoveryServices/vaults
+        evaluation_frequency: PT1H
+        window_size: P1D
+        severity: 2
+        criteria:
+          all_of:
+            - criterion_type: StaticThresholdCriterion
+              dimensions:
+                - name: dataSourceURL
+                  operator: Include
+                  values:
+                    - '*'
+                - name: healthStatus
+                  operator: Exclude
+                  values:
+                    - Healthy
+              metric_name: BackupHealthEvent
+              metric_namespace: Microsoft.RecoveryServices/vaults
+              name: Metric1
+              operator: GreaterThan
+              skip_metric_validation: false
+              threshold: 0.0
+              time_aggregation: Count
+          odata_type: Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria
+        actions:
+          - action_group_id: "{{ action_group_output.actiongroup.id }}"
+      register: output
+
+    - name: Assert that metric alert has not changed during idempotency check (no tags)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          - output.metricalert.tags is not defined
+
+    - name: Create metric alert (creation tags)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-creationtags-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ recovery_services_vault_output.response.id }}"
+        target_resource_type: Microsoft.RecoveryServices/vaults
+        evaluation_frequency: PT1H
+        window_size: P1D
+        severity: 2
+        criteria:
+          all_of:
+            - criterion_type: StaticThresholdCriterion
+              dimensions:
+                - name: dataSourceURL
+                  operator: Include
+                  values:
+                    - '*'
+                - name: healthStatus
+                  operator: Exclude
+                  values:
+                    - Healthy
+              metric_name: BackupHealthEvent
+              metric_namespace: Microsoft.RecoveryServices/vaults
+              name: Metric1
+              operator: GreaterThan
+              skip_metric_validation: false
+              threshold: 0.0
+              time_aggregation: Count
+          odata_type: Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria
+        actions:
+          - action_group_id: "{{ action_group_output.actiongroup.id }}"
+        tags:
+          CreationTag1: CreationTagValue1
+      register: output
+
+    - name: Assert that metric alert has been created (creation tags)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.metricalert.tags.CreationTag1 == 'CreationTagValue1'
+
+    - name: Create metric alert (creation tags, idempotency check)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-creationtags-{{ random_string }}"
+        location: Global
+        enabled: true
+        scopes:
+          - "{{ recovery_services_vault_output.response.id }}"
+        target_resource_type: Microsoft.RecoveryServices/vaults
+        evaluation_frequency: PT1H
+        window_size: P1D
+        severity: 2
+        criteria:
+          all_of:
+            - criterion_type: StaticThresholdCriterion
+              dimensions:
+                - name: dataSourceURL
+                  operator: Include
+                  values:
+                    - '*'
+                - name: healthStatus
+                  operator: Exclude
+                  values:
+                    - Healthy
+              metric_name: BackupHealthEvent
+              metric_namespace: Microsoft.RecoveryServices/vaults
+              name: Metric1
+              operator: GreaterThan
+              skip_metric_validation: false
+              threshold: 0.0
+              time_aggregation: Count
+          odata_type: Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria
+        actions:
+          - action_group_id: "{{ action_group_output.actiongroup.id }}"
+        tags:
+          CreationTag1: CreationTagValue1
+      register: output
+
+    - name: Assert that metric alert has not changed during idempotency check (creation tags)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.metricalert.tags.CreationTag1 == 'CreationTagValue1'
+
+    - name: Add tag to existing metric alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that metric alert has been changed (add tag)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.metricalert.tags.TestTag1 == 'TestValue1'
+
+    - name: Add tag to existing metric alert (idempontency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that metric alert has been changed (add tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.metricalert.tags.TestTag1 == 'TestValue1'
+
+    - name: Add tag to existing metric alert (append)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that metric alert has been changed (add tag)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.metricalert.tags.TestTag1 == 'TestValue1'
+          - output.metricalert.tags.TestTag2 == 'TestValue2'
+
+    - name: Add tag to existing metric alert (append, idempotency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that metric alert has been changed (add tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.metricalert.tags.TestTag1 == 'TestValue1'
+          - output.metricalert.tags.TestTag2 == 'TestValue2'
+
+    - name: Replace tag on existing metric alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        append_tags: false
+        tags:
+          TestTag3: TestValue3
+      register: output
+
+    - name: Assert that metric alert tag has been changed (replace tags)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.metricalert.tags.TestTag1 is not defined
+          - output.metricalert.tags.TestTag2 is not defined
+          - output.metricalert.tags.TestTag3 == 'TestValue3'
+
+    - name: Replace tag on existing metric alert (idempontency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        append_tags: false
+        tags:
+          TestTag3: TestValue3
+      register: output
+
+    - name: Assert that metric alert tag has been changed (replace tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.metricalert.tags.TestTag1 is not defined
+          - output.metricalert.tags.TestTag2 is not defined
+          - output.metricalert.tags.TestTag3 == 'TestValue3'
+
+    - name: Remove tags on existing metric alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        append_tags: false
+      register: output
+
+    - name: Assert that metric alert has been changed (remove tags)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          # - output.metricalert.tags is not defined
+          - output.metricalert.tags | length == 0
+
+    - name: Remove tags on existing metric alert (idempotency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: present
+        append_tags: false
+      register: output
+
+    - name: Assert that metric alert has been changed (remove tags, idempotency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          # - output.metricalert.tags is not defined
+          - output.metricalert.tags | length == 0
+
+    - name: Get information about a metric alert
+      azure.azcollection.azure_rm_monitormetricalerts_info:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+      register: output
+
+    - name: Assert that metric alert list is properly filled
+      ansible.builtin.assert:
+        that:
+          - output.metricalerts | length == 1
+
+    - name: List all metric alerts (resource group level)
+      azure.azcollection.azure_rm_monitormetricalerts_info:
+        resource_group: "{{ resource_group }}-metricalert"
+      register: output
+
+    - name: Assert that metric alert list includes created metric alert (resource group level)
+      ansible.builtin.assert:
+        that:
+          - ('metricalert-' + random_string) in (output.metricalerts | map(attribute='name') | list)
+
+    - name: List all metric alerts (subscription level)
+      azure.azcollection.azure_rm_monitormetricalerts_info:
+      register: output
+
+    - name: Assert that metric alert list includes created metric alert (subscription level)
+      ansible.builtin.assert:
+        that:
+          - ('metricalert-' + random_string) in (output.metricalerts | map(attribute='name') | list)
+
+    - name: Create metric alert, test VM metrics, test default Location global on create
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        enabled: true
+        scopes:
+          - "{{ resource_group_output.state.id }}"
+        target_resource_region: "{{ resource_group_output.state.location }}"
+        target_resource_type: Microsoft.Compute/virtualMachines
+        evaluation_frequency: PT30M
+        window_size: PT30M
+        severity: 2
+        criteria:
+          all_of:
+            - criterion_type: StaticThresholdCriterion
+              metric_name: Percentage CPU
+              metric_namespace: Microsoft.Compute/virtualMachines
+              name: Metric1
+              operator: GreaterThan
+              skip_metric_validation: false
+              threshold: 95.0
+              time_aggregation: Average
+          odata_type: Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria
+        description: Average CPU utilization above threshold
+        actions:
+          - action_group_id: "{{ action_group_output.actiongroup.id }}"
+      register: output
+
+    - name: Assert that metric alert has been created with default location Global
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.metricalert.location == 'Global'
+
+    - name: Change severity of alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        severity: 3
+      register: output
+
+    - name: Assert that metric alert has changed severity
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.metricalert.severity == 3
+
+    - name: Change severity of alert (idempontency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        severity: 3
+      register: output
+
+    - name: Assert that metric alert has changed severity (idempontency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.metricalert.severity == 3
+
+    - name: Change enabled state of alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        enabled: false
+      register: output
+
+    - name: Assert that metric alert has changed enabled state
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - not output.metricalert.enabled
+
+    - name: Change enabled state of alert (idempontency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        enabled: false
+      register: output
+
+    - name: Assert that metric alert has changed enabled state (idempontency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - not output.metricalert.enabled
+
+    - name: Change auto mitigate state of alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        auto_mitigate: false
+      register: output
+
+    - name: Assert that metric alert has changed auto mitigate state
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - not output.metricalert.auto_mitigate
+
+    - name: Change auto mitigate state of alert (idempontency)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-vmmetrics-{{ random_string }}"
+        auto_mitigate: false
+      register: output
+
+    - name: Assert that metric alert has changed auto mitigate state (idempontency)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - not output.metricalert.auto_mitigate
+
+
+    # ------ teardown ------
+
+    - name: Delete metric alert (check mode)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert that metric alert has been deleted (check mode)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete metric alert
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that metric alert has been deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete metric alert (idempontency check)
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that metric alert has been deleted (idempotency check)
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete other created metric alerts
+      azure.azcollection.azure_rm_monitormetricalerts:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "metricalert-vmmetrics-{{ random_string }}"
+        - "metricalert-creationtags-{{ random_string }}"
+
+    - name: Delete action group
+      azure.azcollection.azure_rm_monitoractiongroups:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "actiongroup-{{ random_string }}"
+        state: absent
+
+    - name: Delete Azure Recovery Service vault
+      azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "backup-{{ random_string }}"
+        location: "{{ resource_group_output.state.location }}"
+        state: absent
+
+    # # ------ safety checks, ensure everything is gone ------
+
+    - name: Make sure delection succeeded
+      azure.azcollection.azure_rm_monitormetricalerts_info:
+        resource_group: "{{ resource_group }}-metricalert"
+        name: "metricalert-{{ random_string }}"
+      register: output
+
+    - name: Assert that metric alert is no longer found
+      ansible.builtin.assert:
+        that:
+          - output.metricalerts | length == 0
+
+    - name: List all metric alerts after deletion (resource group level)
+      azure.azcollection.azure_rm_monitormetricalerts_info:
+        resource_group: "{{ resource_group }}-metricalert"
+      register: output
+
+    - name: Assert that metric alert list no longer includes created metric alert (resource group level)
+      ansible.builtin.assert:
+        that:
+          - ('metricalert-' + random_string) not in (output.metricalerts | map(attribute='name') | list)
+
+    - name: List all metric alerts after deletion (subscription level)
+      azure.azcollection.azure_rm_monitormetricalerts_info:
+      register: output
+
+    - name: Assert that metric alert list no longer includes created metric alert (subscription level)
+      ansible.builtin.assert:
+        that:
+          - ('metricalert-' + random_string) not in (output.metricalerts | map(attribute='name') | list)
+
+  always:
+    - name: Force delete the log alert resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-metricalert"
+        force_delete_nonempty: true
+        state: absent
