@@ -57,3 +57,4 @@ azure-mgmt-resourcegraph
 pandas
 oras
 netaddr
+azure-servicebus
