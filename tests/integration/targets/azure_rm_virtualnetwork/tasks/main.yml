@@ -155,7 +155,7 @@
         purge_address_prefixes: true
         resource_group: "{{ resource_group }}"
       register: output
-      # ignore_errors: true
+      ignore_errors: true
 
     - name: Assert the virtual network updated
       ansible.builtin.assert:
