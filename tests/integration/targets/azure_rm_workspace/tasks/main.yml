@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for workspace test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-workspace"
     location: eastus
 
-- name: For test
+- name: For workspace test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
     - name: Create workspace (check mode)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         retention_in_days: 40
       check_mode: true
       register: output
@@ -25,7 +25,7 @@
     - name: Get workspace
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
       register: facts
 
     - name: Assert the workspace facts
@@ -36,7 +36,7 @@
     - name: Create workspace
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         retention_in_days: 40
       register: output
 
@@ -50,7 +50,7 @@
     - name: Create workspace (idempontent)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         retention_in_days: 40
       register: output
 
@@ -62,7 +62,7 @@
     - name: Get workspace
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
       register: facts
 
     - name: Assert the loganalytics workspace facts
@@ -78,7 +78,7 @@
     - name: Update intelligence pack
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         intelligence_packs: "{{ pack }}"
       register: intelligence
 
@@ -90,7 +90,7 @@
     - name: Remove workspace (check mode)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         state: absent
       check_mode: true
       register: output
@@ -103,7 +103,7 @@
     - name: Get workspace
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
       register: facts
 
     - name: Assert the loganalystics workspace facts
@@ -114,7 +114,7 @@
     - name: Remove workspace
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         state: absent
       register: output
 
@@ -126,7 +126,7 @@
     - name: Get workspace
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
       register: facts
 
     - name: Assert the loganalystics workspace facts
@@ -137,7 +137,7 @@
     - name: Remove workspace (idempontent)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-workspace"
         state: absent
       register: output
 
@@ -148,6 +148,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-workspace"
         force_delete_nonempty: true
         state: absent
