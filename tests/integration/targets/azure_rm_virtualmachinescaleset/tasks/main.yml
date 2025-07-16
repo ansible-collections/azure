@@ -1,12 +1,10 @@
 - name: Create a new resource group for VMSS test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-{{ item['name'] }}"
-    location: "{{ item['location'] }}"
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
   loop:
-    - name: vmss01
-      location: eastus
-    - name: vmss02
-    - location: eastus2
+    - vmss01
+    - vmss02
 
 - name: For virtual machine scale set test
   block:

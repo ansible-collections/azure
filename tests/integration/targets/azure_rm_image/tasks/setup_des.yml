@@ -13,7 +13,7 @@
 
 - name: Create a key vault
   azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     vault_name: "{{ vault_name }}"
     enabled_for_disk_encryption: true
     enable_purge_protection: true
@@ -55,7 +55,7 @@
 
 - name: Create disk encryption set
   azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     name: "{{ des_name }}"
     source_vault: "{{ vault_name }}"
     key_url: "{{ key_url }}"
@@ -64,7 +64,7 @@
 
 - name: Grant DES access to key vault
   azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     vault_name: "{{ vault_name }}"
     enabled_for_disk_encryption: true
     enable_purge_protection: true

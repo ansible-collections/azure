@@ -1,12 +1,10 @@
 - name: Create a new resource group for openshift cluster test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-{{ item['name'] }}"
-    location: "{{ item['location'] }}"
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
   loop:
-    - name: openshiftmanagedcluster01
-      location: eastus
-    - name: openshiftmanagedcluster02
-      location: eastus2
+    - openshiftmanagedcluster01
+    - openshiftmanagedcluster02
 
 - name: For openshift cluster test
   block:

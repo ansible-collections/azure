@@ -1,12 +1,10 @@
 - name: Create a new resource group for virtual network peering test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-{{ item['name'] }}"
-    location: "{{ item['location'] }}"
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
   loop:
-    - name: vnetpeer01
-      location: eastus
-    - name: vnetpeer02
-      location: eastus2
+    - vnetpeer01
+    - vnetpeer02
 
 - name: For virtual network peering test
   block:

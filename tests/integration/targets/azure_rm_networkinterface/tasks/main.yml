@@ -1,12 +1,10 @@
 - name: Create a new resource group for network interface test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-{{ item['name'] }}"
-    location: "{{ item['location'] }}"
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
   loop:
-    - name: nic01
-      location: eastus
-    - name: nic02
-      location: eastus2
+    - nic01
+    - nic02
 
 - name: For network interface test
   block:
