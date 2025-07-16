@@ -32,9 +32,9 @@ all:
       secondary_subnet: 10.42.5.0/28
       nic_list:
         - name: "{{ 'int' ~ uid_short ~ '-1' }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-vm02"
         - name: "{{ 'int' ~ uid_short ~ '-2' }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-vm02"
 
     azure_test_no_nsg:
       network: 10.42.6.0/24

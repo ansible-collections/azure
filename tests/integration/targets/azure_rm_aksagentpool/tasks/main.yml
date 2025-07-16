@@ -1,6 +1,6 @@
 - name: Create a new resource group for AKS agent pool test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-aksagentpool"
+    name: "{{ resource_group }}-akspool"
     location: eastus
 
 - name: For AKS agent pool test
