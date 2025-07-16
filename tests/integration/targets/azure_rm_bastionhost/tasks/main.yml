@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for bastion host test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-bastionhost"
     location: eastus
 
-- name: For test
+- name: For bastion host test
   block:
     - name: Set Bastion host name
       ansible.builtin.set_fact:
@@ -11,12 +11,12 @@
 
     - name: Create resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-bastionhost"
         location: eastus
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "vnet{{ rpfx }}"
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -26,7 +26,7 @@
 
     - name: Create a subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: AzureBastionSubnet
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/26"
@@ -34,20 +34,20 @@
 
     - name: Create public ip
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "pip{{ rpfx }}"
         allocation_method: Static
         sku: Standard
 
     - name: Get public ip ID
       azure_rm_publicipaddress_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "pip{{ rpfx }}"
       register: publicip_output
 
     - name: Create bastion host (checkmode test)
       azure_rm_bastionhost:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "bh{{ rpfx }}"
         ip_configurations:
           - name: testip_configuration
@@ -71,7 +71,7 @@
 
     - name: Create bastion host
       azure_rm_bastionhost:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "bh{{ rpfx }}"
         ip_configurations:
           - name: testip_configuration
@@ -99,7 +99,7 @@
 
     - name: Create bastion host (Idempotent Test)
       azure_rm_bastionhost:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "bh{{ rpfx }}"
         ip_configurations:
           - name: testip_configuration
@@ -132,7 +132,7 @@
 
     - name: Update bastion host
       azure_rm_bastionhost:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "bh{{ rpfx }}"
         ip_configurations:
           - name: testip_configuration
@@ -160,7 +160,7 @@
 
     - name: Get bastion host info
       azure_rm_bastionhost_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "bh{{ rpfx }}"
       register: output
 
@@ -182,7 +182,7 @@
 
     - name: Delete bastion host
       azure_rm_bastionhost:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "bh{{ rpfx }}"
         state: absent
 
@@ -193,12 +193,12 @@
 
     - name: Delete the public ip
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-bastionhost"
         name: "pip{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-bastionhost"
         force_delete_nonempty: true
         state: absent

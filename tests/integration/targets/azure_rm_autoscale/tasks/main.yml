@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for autoscale test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-autoscale"
     location: eastus
 
-- name: For test
+- name: For autoscale test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -13,20 +13,20 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: testVnet
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: testSubnet
         address_prefix: "10.0.1.0/24"
         virtual_network: testVnet
 
     - name: Create VMSS
       azure_rm_virtualmachinescaleset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: testVMSS{{ rpfx }}
         vm_size: Standard_B1ms
         admin_username: testuser
@@ -56,7 +56,7 @@
 
     - name: Create auto scaling (check mode)
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target: "{{ vmss.ansible_facts.azure_vmss.id }}"
         enabled: true
@@ -83,7 +83,7 @@
 
     - name: Create auto scaling
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target:
           name: "testVMSS{{ rpfx }}"
@@ -113,7 +113,7 @@
 
     - name: Create auto scaling (idemponent)
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target: "{{ vmss.ansible_facts.azure_vmss.id }}"
         enabled: true
@@ -140,7 +140,7 @@
 
     - name: Update auto scaling
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target: "{{ vmss.ansible_facts.azure_vmss.id }}"
         enabled: true
@@ -188,7 +188,7 @@
 
     - name: Delete auto scaling (check mode)
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         state: absent
       check_mode: true
@@ -201,7 +201,7 @@
 
     - name: Delete auto scaling
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         state: absent
       register: output
@@ -213,7 +213,7 @@
 
     - name: Delete auto scaling (idemponetent)
       azure_rm_autoscale:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         state: absent
       register: output
@@ -225,26 +225,26 @@
 
     - name: Clean VMSS
       azure_rm_virtualmachinescaleset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         vm_size: Standard_DS1_v2
         name: testVMSS{{ rpfx }}
         state: absent
 
     - name: Clean subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: testSubnet
         virtual_network: testVnet
         state: absent
 
     - name: Clean virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-autoscale"
         name: testVnet
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-autoscale"
         force_delete_nonempty: true
         state: absent

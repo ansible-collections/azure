@@ -1,9 +1,14 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for network interface test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-{{ item['name'] }}"
+    location: "{{ item['location'] }}"
+  loop:
+    - name: nic01
+      location: eastus
+    - name: nic02
+      location:  eastus2
 
-- name: For test
+- name: For network interface test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -15,14 +20,14 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         name: "tn{{ rpfx }}"
         address_prefixes: ["10.10.0.0/16", "fdae:f296:2787::/48"]
       register: vn
 
     - name: Add subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         name: "tn{{ rpfx }}"
         address_prefixes_cidr: ["10.10.0.0/24", "fdae:f296:2787::/64"]
         virtual_network: "tn{{ rpfx }}"
@@ -30,7 +35,7 @@
     - name: Create public IP addresses
       azure_rm_publicipaddress:
         name: '{{ item.name }}'
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-nic01'
         sku: 'standard'
         allocation_method: 'static'
         version: '{{ item.version }}'
@@ -46,7 +51,7 @@
 
     - name: Create load balancer with multiple parameters
       azure_rm_loadbalancer:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-nic01'
         name: "lb{{ rpfx }}"
         sku: 'Standard'
         frontend_ip_configurations:
@@ -91,7 +96,7 @@
 
     - name: Create most simple NIC with virtual_network id (check mode)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -108,13 +113,13 @@
 
     - name: Create most simple NIC with virtual_network resource_group
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
         virtual_network:
           name: "tn{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-nic02"
         subnet_name: "tn{{ rpfx }}"
         create_with_security_group: false
       register: output
@@ -128,7 +133,7 @@
 
     - name: Get fact of the new created NIC
       azure_rm_networkinterface_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
       register: facts
 
@@ -167,7 +172,7 @@
 
     - name: Create most simple NIC (idempotent)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -183,7 +188,7 @@
 
     - name: Update security group (check mode)
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -200,7 +205,7 @@
 
     - name: Update security group
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -217,7 +222,7 @@
 
     - name: Update public ip address (check mode)
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -237,7 +242,7 @@
 
     - name: Update public ip address
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -258,7 +263,7 @@
 
     - name: Update accelerated networking (check mode)
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -276,7 +281,7 @@
 
     - name: Update accelerated networking
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         open_ports:
           - 33
@@ -296,7 +301,7 @@
 
     - name: Update IP forwarding networking (check mode)
       azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         virtual_network: "{{ vn.state.id }}"
         open_ports:
@@ -314,7 +319,7 @@
 
     - name: Update dns server (check mode)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -334,7 +339,7 @@
 
     - name: Update NIC
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -377,7 +382,7 @@
 
     - name: Complicated NIC (idempontent)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         virtual_network: "{{ vn.state.id }}"
         open_ports:
@@ -418,7 +423,7 @@
 
     - name: Get fact of the new created NIC
       azure_rm_networkinterface_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
       register: facts
 
@@ -436,7 +441,7 @@
 
     - name: Remove one dns server
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -480,7 +485,7 @@
 
     - name: Create application security group(check mode)
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
         tags:
           testing: testing
@@ -494,7 +499,7 @@
 
     - name: Create Application security group
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
         tags:
           testing: testing
@@ -508,7 +513,7 @@
 
     - name: Get Application security group
       azure_rm_applicationsecuritygroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
       register: facts
 
@@ -522,7 +527,7 @@
 
     - name: Create application security group (idempotent)
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
         tags:
           testing: testing
@@ -535,7 +540,7 @@
 
     - name: Update application security group
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
         tags:
           testing: testing
@@ -549,13 +554,13 @@
 
     - name: Create Application security group in secondary resource group
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         name: "{{ applicationsecuritygroup_name2 }}"
       register: asg
 
     - name: Create Nic with application security groups
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ nic_name1 }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -577,7 +582,7 @@
 
     - name: Create Nic with application security groups (idempotent)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ nic_name1 }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -601,7 +606,7 @@
 
     - name: Update Nic with application security groups
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ nic_name1 }}"
         virtual_network: "{{ vn.state.id }}"
         subnet_name: "tn{{ rpfx }}"
@@ -622,7 +627,7 @@
 
     - name: Get fact of the new created NIC
       azure_rm_networkinterface_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ nic_name1 }}"
       register: facts
 
@@ -635,21 +640,21 @@
       azure_rm_subnet:
         name: appgw-subnet{{ rpfx }}
         virtual_network_name: tn{{ rpfx }}
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         address_prefix_cidr: 10.10.1.0/24
       register: appgw_subnet_output
 
     - name: Create public IP addresses
       azure_rm_publicipaddress:
         name: my-appgw-pip
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         sku: 'standard'
         allocation_method: 'static'
         version: 'ipv4'
 
     - name: Create application gateway to connect NIC to
       azure_rm_appgateway:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         name: "appgateway{{ rpfx }}"
         sku:
           name: standard_v2
@@ -690,13 +695,13 @@
       azure_rm_subnet:
         name: nic-appgw-subnet{{ rpfx }}
         virtual_network_name: tn{{ rpfx }}
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         address_prefix_cidr: 10.10.2.0/24
 
     - name: "Create NIC attached to application gateway"
       azure_rm_networkinterface:
         name: "appgw-nic{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         virtual_network: "tn{{ rpfx }}"
         subnet_name: "nic-appgw-subnet{{ rpfx }}"
         create_with_security_group: false
@@ -720,7 +725,7 @@
     - name: "Create NIC attached to application gateway - idempotent"
       azure_rm_networkinterface:
         name: "appgw-nic{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         virtual_network: "tn{{ rpfx }}"
         subnet_name: "nic-appgw-subnet{{ rpfx }}"
         create_with_security_group: false
@@ -743,7 +748,7 @@
     - name: Get facts for appgw nic
       azure_rm_networkinterface_info:
         name: "appgw-nic{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
       register: facts
     - name: Assert the NIC facts
       ansible.builtin.assert:
@@ -757,7 +762,7 @@
     - name: "Delete NIC attached to application gateway"
       azure_rm_networkinterface:
         name: "appgw-nic{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         state: absent
       register: output
     - name: Assert the NIC deleted
@@ -768,7 +773,7 @@
     - name: Delete application gateway
       azure_rm_appgateway:
         name: "appgateway{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         state: absent
       register: output
     - name: Assert the application gateway deleted
@@ -778,7 +783,7 @@
 
     - name: Delete the NIC (check mode)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         state: absent
       check_mode: true
@@ -791,7 +796,7 @@
 
     - name: Delete the NIC
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         state: absent
       register: output
@@ -803,7 +808,7 @@
 
     - name: Delete the NIC (idempotent)
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "tn{{ rpfx }}"
         state: absent
       register: output
@@ -815,14 +820,14 @@
 
     - name: Delete load balancer
       azure_rm_loadbalancer:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-nic01'
         name: "lb{{ rpfx }}"
         state: absent
 
     - name: Delete public ip addresses
       azure_rm_publicipaddress:
         name: "{{ item }}"
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-nic01'
         state: absent
       register: output
       loop:
@@ -839,13 +844,13 @@
 
     - name: Delete the NIC
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ nic_name1 }}"
         state: absent
 
     - name: Delete the application security group (check mode)
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
         state: absent
       check_mode: true
@@ -858,7 +863,7 @@
 
     - name: Delete the application security group
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-nic01"
         name: "{{ applicationsecuritygroup_name1 }}"
         state: absent
       register: output
@@ -870,14 +875,14 @@
 
     - name: Delete second application security group
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-nic02"
         name: "{{ applicationsecuritygroup_name2 }}"
         state: absent
       register: output
 
     - name: Delete network security groups
       azure_rm_securitygroup:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-nic01'
         name: '{{ item }}'
         state: 'absent'
       register: output
@@ -893,7 +898,7 @@
 
     - name: Delete virtual network
       azure_rm_virtualnetwork:
-        resource_group: '{{ resource_group_secondary }}'
+        resource_group: '{{ resource_group }}-nic02'
         name: 'tn{{ rpfx }}'
         state: 'absent'
       register: output
@@ -905,6 +910,9 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
+      loop:
+        - nic01
+        - nic02

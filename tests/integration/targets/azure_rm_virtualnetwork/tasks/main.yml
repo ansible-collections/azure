@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for virtual network test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-vnet"
     location: eastus
 
-- name: For test
+- name: For virtual network test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
     - name: Delete virtual network, if it exists
       azure_rm_virtualnetwork:
         name: "{{ vnetname }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
         state: absent
 
     - name: Create virtual network
@@ -25,7 +25,7 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
 
     - name: Update virtual network with dns server
       azure_rm_virtualnetwork:
@@ -41,7 +41,7 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
 
     - name: Assert the virtual network update
@@ -55,14 +55,14 @@
 
     - name: Attach a subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
         name: "{{ vnetname }}"
         virtual_network_name: "{{ vnetname }}"
         address_prefix_cidr: "10.1.0.0/24"
 
     - name: Gather facts by name, tags
       azure_rm_virtualnetwork_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
         name: "{{ vnetname }}"
         list_usage: true
         tags:
@@ -81,7 +81,7 @@
 
     - name: Gather facts by resource group, tags
       azure_rm_virtualnetwork_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
         tags:
           - testing
       register: facts
@@ -113,7 +113,7 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
 
     - name: Assert the virtual network idempotent
@@ -127,7 +127,7 @@
           testing: 'no'
           delete: never
           foo: bar
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
 
     - name: Assert the virtual network updated
@@ -140,7 +140,7 @@
         append_tags: false
         tags:
           testing: 'always'
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
 
     - name: Assert the virtual network updated
@@ -153,7 +153,7 @@
       azure_rm_virtualnetwork:
         name: "{{ vnetname }}"
         purge_address_prefixes: true
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
       ignore_errors: true
 
@@ -166,7 +166,7 @@
         name: "{{ vnetname }}"
         address_prefixes_cidr: 10.1.0.0/16
         purge_address_prefixes: true
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
 
     - name: Assert the virtual network updated
@@ -181,7 +181,7 @@
       azure_rm_virtualnetwork:
         name: "{{ vnetname }}"
         purge_dns_servers: true
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
       register: output
 
     - name: Assert the virtual network DNS server purged
@@ -190,7 +190,7 @@
 
     - name: Gather facts
       azure_rm_virtualnetwork_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
         name: "{{ vnetname }}"
       register: facts
 
@@ -203,11 +203,11 @@
     - name: Delete virtual network
       azure_rm_virtualnetwork:
         name: "{{ vnetname }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnet"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-vnet"
         force_delete_nonempty: true
         state: absent

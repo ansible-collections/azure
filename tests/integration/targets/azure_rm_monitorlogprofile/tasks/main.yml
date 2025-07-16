@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for monitor log profile test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-monitorlogprofile"
     location: eastus
 
-- name: For test
+- name: For monitor log profile test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -15,7 +15,7 @@
     - name: Create Azure storage account
       azure_rm_storageaccount:
         name: '{{ storage_name }}'
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitorlogprofile"
         account_type: Standard_LRS
 
     - name: Create log profile (check mode)
@@ -32,7 +32,7 @@
           enabled: false
           days: 1
         storage_account:
-          resource_group: "{{ resource_group }}"
+          resource_group: "{{ resource_group }}-monitorlogprofile"
           name: "{{ storage_name }}"
       check_mode: true
       register: output
@@ -56,7 +56,7 @@
           enabled: false
           days: 1
         storage_account:
-          resource_group: "{{ resource_group }}"
+          resource_group: "{{ resource_group }}-monitorlogprofile"
           name: "{{ storage_name }}"
       register: output
     - name: Assert create
@@ -79,7 +79,7 @@
           enabled: false
           days: 1
         storage_account:
-          resource_group: "{{ resource_group }}"
+          resource_group: "{{ resource_group }}-monitorlogprofile"
           name: "{{ storage_name }}"
       register: output
     - name: Assert update idempotence
@@ -100,7 +100,7 @@
           enabled: false
           days: 2
         storage_account:
-          resource_group: "{{ resource_group }}"
+          resource_group: "{{ resource_group }}-monitorlogprofile"
           name: "{{ storage_name }}"
       register: output
     - name: Assert update
@@ -141,6 +141,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-monitorlogprofile"
         force_delete_nonempty: true
         state: absent

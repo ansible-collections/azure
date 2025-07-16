@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for cdn profile test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-cdnprofile"
     location: eastus
 
-- name: For test
+- name: For cdn profile test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-cdnprofile"
       register: __rg_info
 
     - name: Set location based on resource group
@@ -37,7 +37,7 @@
 
     - name: Create a CDN profile(check mode)
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
         location: global
@@ -55,7 +55,7 @@
 
     - name: Check there is no CDN profile created
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -66,7 +66,7 @@
 
     - name: Create a CDN profile
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
         location: global
@@ -89,7 +89,7 @@
 
     - name: Gather CDN profile facts
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -105,7 +105,7 @@
 
     - name: Create a CDN profile (idempotent)
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
         location: global
@@ -127,7 +127,7 @@
 
     - name: Update the CDN profile - replace user identity
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
         location: global
@@ -151,7 +151,7 @@
 
     - name: Gather CDN profile facts
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -167,7 +167,7 @@
 
     - name: Update the CDN profile - append user identity
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
         location: global
@@ -190,7 +190,7 @@
 
     - name: Gather CDN profile facts
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -207,7 +207,7 @@
 
     - name: Update the CDN profile - change to SystemAssigned identity
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
         location: global
@@ -227,7 +227,7 @@
 
     - name: Gather CDN profile facts
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -242,14 +242,14 @@
 
     - name: Delete the CDN profile(check mode)
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         state: absent
       check_mode: true
 
     - name: Gather CDN profile facts
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -263,7 +263,7 @@
 
     - name: Create a Azure CDN endpoint(check mode)
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         origins:
@@ -277,7 +277,7 @@
 
     - name: Create a Azure CDN endpoint
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         origins:
@@ -297,7 +297,7 @@
 
     - name: Get facts of a Azure CDN endpoint
       azure_rm_cdnendpoint_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
       register: facts
@@ -316,7 +316,7 @@
 
     - name: Create a Azure CDN endpoint(idempotent)
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         origins:
@@ -335,7 +335,7 @@
 
     - name: Stop a Azure CDN endpoint
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         started: false
@@ -348,7 +348,7 @@
 
     - name: Stop a Azure CDN endpoint(idempotent)
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         started: false
@@ -361,7 +361,7 @@
 
     - name: Start a Azure CDN endpoint
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         started: true
@@ -374,7 +374,7 @@
 
     - name: Update the Azure CDN endpoint
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         origin_path: /test/
@@ -391,7 +391,7 @@
 
     - name: Delete a Azure CDN endpoint(check mode)
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         state: absent
@@ -399,14 +399,14 @@
 
     - name: Delete a Azure CDN endpoint
       azure_rm_cdnendpoint:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         state: absent
 
     - name: Delete the CDN profile
       azure_rm_cdnprofile:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         state: absent
       register: output
@@ -418,7 +418,7 @@
 
     - name: Get CDN profile fact
       azure_rm_cdnprofile_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
 
@@ -440,6 +440,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-cdnprofile"
         force_delete_nonempty: true
         state: absent

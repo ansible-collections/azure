@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for SQL managed database test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-sqlmanageddatabase"
     location: eastus
 
-- name: For test
+- name: For SQL managed database test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -20,18 +20,18 @@
         dns_servers:
           - 127.0.0.1
           - 127.0.0.3
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
 
     - name: Create a route table
       azure_rm_routetable:
         name: "{{ random_postfix }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         tags:
           purpose: testing
 
     - name: Create security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         name: "{{ random_postfix }}"
         tags:
           testing: testing
@@ -57,14 +57,14 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: "{{ random_postfix }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         address_prefix_cidr: "10.1.0.0/24"
         security_group:
-          resource_gorup: "{{ resource_group }}"
+          resource_gorup: "{{ resource_group }}-sqlmanageddatabase"
           name: "{{ random_postfix }}"
         route_table:
           name: "{{ random_postfix }}"
-          resource_group: "{{ resource_group }}"
+          resource_group: "{{ resource_group }}-sqlmanageddatabase"
         delegations:
           - name: 'mysqlinstance'
             serviceName: "Microsoft.Sql/managedInstances"
@@ -72,7 +72,7 @@
 
     - name: Create sql managed instance
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         name: "{{ random_postfix }}"
         subnet_id: "{{ subnet_output.state.id }}"
         identity:
@@ -89,7 +89,7 @@
 
     - name: Create a new sql managed instance database(checkmode test)
       azure_rm_sqlmidatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         collation: SQL_Latin1_General_CP1_CI_AS
@@ -100,7 +100,7 @@
 
     - name: Create a new sql managed instance database
       azure_rm_sqlmidatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         collation: SQL_Latin1_General_CP1_CI_AS
@@ -116,7 +116,7 @@
 
     - name: Create a new sql managed instance database (Idempotent test)
       azure_rm_sqlmidatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         collation: SQL_Latin1_General_CP1_CI_AS
@@ -132,7 +132,7 @@
 
     - name: Update the sql managed instance database tags
       azure_rm_sqlmidatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         collation: SQL_Latin1_General_CP1_CI_AS
@@ -148,7 +148,7 @@
 
     - name: Get the sql managed instance database facts
       azure_rm_sqlmidatabase_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
       register: output
@@ -161,7 +161,7 @@
 
     - name: Get sql managed database long term retention policy by name
       azure_rm_sqlmidblongtermretentionpolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         policy_name: default
@@ -178,7 +178,7 @@
 
     - name: Update the database long term retention policy
       azure_rm_sqlmidblongtermretentionpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         policy_name: default
@@ -195,7 +195,7 @@
 
     - name: Get sql managed database long term retention policy by name
       azure_rm_sqlmidblongtermretentionpolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         policy_name: default
@@ -212,7 +212,7 @@
 
     - name: Get the sql managed instance database short term retention policy facts
       azure_rm_sqlmidbshorttermretentionpolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         policy_name: default
@@ -226,7 +226,7 @@
 
     - name: Update the sql managed short term retetion
       azure_rm_sqlmidbshorttermretentionpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         policy_name: default
@@ -240,7 +240,7 @@
 
     - name: Get the sql managed instance database short term retention policy facts
       azure_rm_sqlmidbshorttermretentionpolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         policy_name: default
@@ -254,7 +254,7 @@
 
     - name: Delete the sql managed database
       azure_rm_sqlmidatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         managed_instance_name: "{{ random_postfix }}"
         database_name: "database{{ random_postfix }}"
         state: absent
@@ -267,12 +267,12 @@
 
     - name: Delete sql managed instance
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sqlmanageddatabase"
         name: "{{ random_postfix }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-sqlmanageddatabase"
         force_delete_nonempty: true
         state: absent

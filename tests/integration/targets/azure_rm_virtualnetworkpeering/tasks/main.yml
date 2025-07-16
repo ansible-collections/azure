@@ -1,9 +1,14 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for virtual network peering test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-{{ item['name'] }}"
+    location: "{{ item['location'] }}"
+  loop:
+    - name: vnetpeer01
+      location: eastus
+    - name: vnetpeer02
+      location: eastus2
 
-- name: For test
+- name: For virtual network peering test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -19,7 +24,7 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
       register: vnet1
 
     - name: Create second virtual network
@@ -27,7 +32,7 @@
         name: "{{ vnetname2 }}"
         address_prefixes_cidr:
           - 10.2.0.0/24
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-vnetpeer02"
       register: vnet2
 
     - name: Assert the second virtual network created
@@ -38,11 +43,11 @@
 
     - name: Create virtual network peering (check mode)
       azure_rm_virtualnetworkpeering:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
         remote_virtual_network:
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-vnetpeer02"
           name: "{{ vnetname2 }}"
         allow_virtual_network_access: false
         allow_forwarded_traffic: true
@@ -55,11 +60,11 @@
 
     - name: Create virtual network peering
       azure_rm_virtualnetworkpeering:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
         remote_virtual_network:
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-vnetpeer02"
           name: "{{ vnetname2 }}"
         allow_virtual_network_access: false
         allow_forwarded_traffic: true
@@ -71,11 +76,11 @@
 
     - name: Update virtual network peering (idempotent)
       azure_rm_virtualnetworkpeering:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
         remote_virtual_network:
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-vnetpeer02"
           name: "{{ vnetname2 }}"
         allow_virtual_network_access: false
         allow_forwarded_traffic: true
@@ -87,11 +92,11 @@
 
     - name: Update virtual network peering
       azure_rm_virtualnetworkpeering:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
         remote_virtual_network:
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-vnetpeer02"
           name: "{{ vnetname2 }}"
         allow_virtual_network_access: true
         allow_forwarded_traffic: false
@@ -103,7 +108,7 @@
 
     - name: Get facts
       azure_rm_virtualnetworkpeering_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
       register: facts
@@ -119,7 +124,7 @@
 
     - name: Delete virtual network peering
       azure_rm_virtualnetworkpeering:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
         state: absent
@@ -128,17 +133,20 @@
     - name: Delete first virtual network
       azure_rm_virtualnetwork:
         name: "{{ vnetname1 }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
         state: absent
 
     - name: Delete virtual network
       azure_rm_virtualnetwork:
         name: "{{ vnetname2 }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-vnetpeer02"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
+      with_items:
+        - vnetpeer01
+        - vnetpeer02

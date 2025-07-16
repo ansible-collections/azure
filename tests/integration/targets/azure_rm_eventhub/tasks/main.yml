@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for event  hub test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-eventhub"
     location: eastus
 
-- name: For test
+- name: For event hub test
   block:
     - name: Create random event hub and namespace
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-eventhub"
       register: __rg_info
 
     - name: Set location and managed_identity_ids
@@ -35,7 +35,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Basic"
       check_mode: true
       register: results
@@ -49,7 +49,7 @@
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Basic"
       check_mode: true
       register: results
@@ -62,7 +62,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Basic"
       register: results
 
@@ -75,7 +75,7 @@
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
       register: results
 
     - name: Assert the event hub created
@@ -86,7 +86,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -102,7 +102,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -119,7 +119,7 @@
     - name: Retrieve Namespace with the SystemAssigned Identity
       azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
       register: results
 
     - name: Assert the facts of the Namespace with the SystemAssigned Identity
@@ -134,7 +134,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -154,7 +154,7 @@
     - name: Retrieve Namespace with the first UserAssigned Identity
       azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
       register: results
 
     - name: Assert the facts of the Namespace with the first UserAssigned Identity
@@ -170,7 +170,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -191,7 +191,7 @@
     - name: Retrieve Namespace with the second UserAssigned Identity
       azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
       register: results
 
     - name: Assert the facts of the Namespace with the second UserAssigned Identity
@@ -207,7 +207,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -227,7 +227,7 @@
     - name: Retrieve Namespace with multiple identities
       azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
       register: results
 
     - name: Assert the facts of the Namespace with multiple identities
@@ -245,7 +245,7 @@
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         message_retention_in_days: 1
         state: present
         tags:
@@ -261,7 +261,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -278,7 +278,7 @@
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         state: absent
 
     - name: Delete Event Hub (idempotent)
@@ -286,7 +286,7 @@
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         state: absent
       register: results
 
@@ -298,7 +298,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         state: absent
 
     - name: Pause for 1 minutes to check namespace deleted
@@ -310,7 +310,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         state: absent
       register: results
 
@@ -322,7 +322,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         sku: "Standard"
         tags:
           test: modified
@@ -343,7 +343,7 @@
     - name: Retrieve Namespace with multiple UserAssigned Identities
       azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
       register: results
 
     - name: Assert the facts of the Namespace with multiple UserAssigned Identities
@@ -360,7 +360,7 @@
       azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-eventhub"
         state: absent
 
     - name: Pause for 1 minutes to check namespace deleted
@@ -385,6 +385,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-eventhub"
         force_delete_nonempty: true
         state: absent

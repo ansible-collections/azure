@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for mysql flexible server test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-mysqlflexibleserver"
     location: eastus
 
-- name: For test
+- name: For mysql flexible server test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
 
     - name: Create mysql flexible server (Checkmode test)
       azure_rm_mysqlflexibleserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         name: mysqlflexible{{ rpfx }}
         sku:
           name: Standard_D2ds_v4
@@ -38,7 +38,7 @@
 
     - name: Create mysql flexible server
       azure_rm_mysqlflexibleserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         name: mysqlflexible{{ rpfx }}
         sku:
           name: Standard_D2ds_v4
@@ -69,7 +69,7 @@
 
     - name: Create mysql flexible server again(Idempotent Test)
       azure_rm_mysqlflexibleserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         name: mysqlflexible{{ rpfx }}
         sku:
           name: Standard_D2ds_v4
@@ -100,7 +100,7 @@
 
     - name: Create mysql flexible server again(Idempotent Test)
       azure_rm_mysqlflexibleserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         name: mysqlflexible{{ rpfx }}
         sku:
           name: Standard_D2ds_v4
@@ -131,7 +131,7 @@
 
     - name: Gather facts mysql flexible Server -- by name
       azure_rm_mysqlflexibleserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         name: mysqlflexible{{ rpfx }}
       register: output
 
@@ -145,7 +145,7 @@
 
     - name: Create a MySQL flexible database
       azure_rm_mysqlflexibledatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: database{{ rpfx }}
         charset: UTF8
@@ -159,7 +159,7 @@
 
     - name: Create a MySQL flexible database again(Idempotent Test)
       azure_rm_mysqlflexibledatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: database{{ rpfx }}
         charset: UTF8
@@ -173,7 +173,7 @@
 
     - name: Get the MySQL flexible database facts
       azure_rm_mysqlflexibledatabase_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: database{{ rpfx }}
       register: output
@@ -186,7 +186,7 @@
 
     - name: Create a MySQL flexible firewall rule
       azure_rm_mysqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: rule{{ rpfx }}
         start_ip_address: 10.0.0.10
@@ -200,7 +200,7 @@
 
     - name: Create a MySQL flexible firewall rule again(Idempotent Test)
       azure_rm_mysqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: rule{{ rpfx }}
         start_ip_address: 10.0.0.10
@@ -214,7 +214,7 @@
 
     - name: Create a MySQL flexible firewall rule again(Update Test)
       azure_rm_mysqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: rule{{ rpfx }}
         start_ip_address: 10.0.0.15
@@ -228,7 +228,7 @@
 
     - name: Get the MySQL flexible firewall rule facts
       azure_rm_mysqlflexiblefirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: rule{{ rpfx }}
       register: output
@@ -241,7 +241,7 @@
 
     - name: Get the MySQL flexible configuration facts by name
       azure_rm_mysqlflexibleconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: wait_timeout
       register: output
@@ -254,7 +254,7 @@
 
     - name: Update the MySQL flexible configuration
       azure_rm_mysqlflexibleconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: wait_timeout
         value: 28800
@@ -268,7 +268,7 @@
 
     - name: Get the MySQL flexible configuration by name
       azure_rm_mysqlflexibleconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: wait_timeout
       register: output
@@ -281,7 +281,7 @@
 
     - name: Delete the MySQL flexible database
       azure_rm_mysqlflexibledatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         server_name: mysqlflexible{{ rpfx }}
         name: database{{ rpfx }}
         state: absent
@@ -294,7 +294,7 @@
 
     - name: Delete the mysql flexible server
       azure_rm_mysqlflexibleserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
         name: mysqlflexible{{ rpfx }}
         state: absent
       register: output
@@ -306,6 +306,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-mysqlflexibleserver"
         force_delete_nonempty: true
         state: absent

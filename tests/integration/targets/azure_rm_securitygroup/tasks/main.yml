@@ -1,7 +1,12 @@
 - name: Create a new resource group for test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-{{ item['name'] }}"
+    location: "{{ item['location'] }}"
+  loop:
+    - name: securitygroup01
+      location: eastus
+    - name: securitygroup02
+      location: eastus2
 
 - name: For test
   block:
@@ -15,7 +20,7 @@
 
     - name: Create security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
           testing: testing
@@ -45,7 +50,7 @@
 
     - name: Gather facts by tags
       azure_rm_securitygroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         tags:
           - testing
           - foo:bar
@@ -63,7 +68,7 @@
 
     - name: Add/Update rules on existing security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         rules:
           - name: AllowSSH
@@ -93,7 +98,7 @@
 
     - name: Gather facts after update
       azure_rm_securitygroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
       register: output
     - name: Assert rules updated
@@ -103,7 +108,7 @@
 
     - name: Test idempotence
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         rules:
           - name: AllowSSH
@@ -131,7 +136,7 @@
 
     - name: Update tags
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
           testing: testing
@@ -147,7 +152,7 @@
 
     - name: Purge tags
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         append_tags: false
         tags:
@@ -162,7 +167,7 @@
 
     - name: Gather facts for one accounts
       azure_rm_securitygroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
       register: output
     - name: Assert resource retrieved
@@ -172,7 +177,7 @@
 
     - name: Gather facts for all accounts
       azure_rm_securitygroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         tags:
           - testing:testing
       register: output_groups
@@ -183,7 +188,7 @@
 
     - name: Create security group with source_address_prefixes
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
           testing: testing
@@ -211,7 +216,7 @@
 
     - name: Create security group with source_address_prefixes(idempotent)
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
           testing: testing
@@ -236,7 +241,7 @@
 
     - name: Add a single one group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
           testing: testing
@@ -261,7 +266,7 @@
     # Use azure_rm_resource module to create with uppercase protocol name
     - name: Create security group with uppercase protocol name
       azure_rm_resource:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         provider: network
         resource_type: networkSecurityGroups
         resource_name: "{{ secgroupname }}"
@@ -283,7 +288,7 @@
 
     - name: Create security group with capitalized protocol name(idempotent)
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         rules:
           - name: Upper_Protocal
@@ -300,7 +305,7 @@
 
     - name: Create Application security group 1
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ asg_name1 }}"
         tags:
           testing: testing
@@ -308,7 +313,7 @@
 
     - name: Create Application security group 2
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-securitygroup02"
         name: "{{ asg_name2 }}"
         tags:
           testing: testing
@@ -316,7 +321,7 @@
 
     - name: Create security group with application security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ sg_name1 }}"
         purge_rules: true
         rules:
@@ -325,7 +330,7 @@
             source_application_security_groups:
               - "{{ asg1.id }}"
             destination_application_security_groups:
-              - resource_group: "{{ resource_group_secondary }}"
+              - resource_group: "{{ resource_group }}-securitygroup02"
                 name: "{{ asg_name2 }}"
             destination_port_range: 22
             access: Allow
@@ -339,7 +344,7 @@
 
     - name: Create security group with application security group - Idempotent
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ sg_name1 }}"
         purge_rules: true
         rules:
@@ -348,7 +353,7 @@
             source_application_security_groups:
               - "{{ asg_name1 }}"
             destination_application_security_groups:
-              - resource_group: "{{ resource_group_secondary }}"
+              - resource_group: "{{ resource_group }}-securitygroup02"
                 name: "{{ asg_name2 }}"
             destination_port_range: 22
             access: Allow
@@ -362,30 +367,33 @@
 
     - name: Delete security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ sg_name1 }}"
         state: absent
 
     - name: Delete security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         state: absent
 
     - name: Clean up Application security group 2
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ asg_name1 }}"
         state: absent
 
     - name: Clean up Application security group 2
       azure_rm_applicationsecuritygroup:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-securitygroup02"
         name: "{{ asg_name2 }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
+      loop:
+        - securitygroup01
+        - securitygroup02

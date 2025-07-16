@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for backup policy test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-backuppolicy"
     location: eastus
 
-- name: For test
+- name: For backup policy test
   block:
     ---
     - name: Set Facts for Tests
@@ -16,7 +16,7 @@
 
     - name: Create Azure Recovery Service vault
       azure.azcollection.azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         name: "{{ vault_name }}"
         location: "{{ location }}"
         state: "present"
@@ -25,7 +25,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Daily"
@@ -39,7 +39,7 @@
       azure.azcollection.azure_rm_backuppolicy_info:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
       register: backup_policy_exists
 
     - name: Assert success on daily backup policy creation
@@ -60,7 +60,7 @@
       azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Daily"
@@ -79,7 +79,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily_enhanced }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         policy_type: V2
         state: present
         backup_management_type: "AzureIaasVM"
@@ -94,7 +94,7 @@
       azure.azcollection.azure_rm_backuppolicy_info:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily_enhanced }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
       register: backup_policy_exists_enhanced
 
     - name: Assert success on daily backup policy creation
@@ -115,7 +115,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Daily"
@@ -135,7 +135,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_weekly }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Weekly"
@@ -159,7 +159,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_weekly }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: present
         backup_management_type: "AzureIaasVM"
         schedule_run_frequency: "Weekly"
@@ -183,7 +183,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: absent
       register: daily_policy_output_delete
 
@@ -196,7 +196,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily_enhanced }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: absent
       register: daily_policy_output_enhanced_delete
 
@@ -209,7 +209,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_weekly }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: absent
       register: weekly_policy_output_delete
 
@@ -222,7 +222,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: absent
       register: daily_policy_output_delete_idempotent
 
@@ -235,7 +235,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily_enhanced }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: absent
       register: daily_policy_output_enhanced_delete_idempotent
 
@@ -248,7 +248,7 @@
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_weekly }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
         state: absent
       register: weekly_policy_output_delete_idempotent
 
@@ -259,6 +259,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-backuppolicy"
         force_delete_nonempty: true
         state: absent

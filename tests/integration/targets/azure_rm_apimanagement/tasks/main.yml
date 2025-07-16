@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for api management test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-apimanagement"
     location: eastus
 
-- name: For test
+- name: For api management test
   block:
     - name: Fix resource prefix
       ansible.builtin.set_fact:
@@ -14,7 +14,7 @@
 
     - name: Create API management service
       azure_rm_apimanagementservice:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         name: "{{ service_name }}"
         publisher_email: user@example.com
         publisher_name: Username
@@ -28,7 +28,7 @@
 
     - name: Create a new API instance
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}"
         description: "testDescription"
@@ -47,7 +47,7 @@
 
     - name: Create a new API instance Idempotent
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}"
         description: "testDescription"
@@ -66,7 +66,7 @@
 
     - name: Update protocols
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}"
         description: "testDescription"
@@ -85,7 +85,7 @@
 
     - name: Create different format api
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}-secondary"
         path: "{{ path }}-secondary"
@@ -103,7 +103,7 @@
 
     - name: Get api information
       azure_rm_apimanagement_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}"
       register: output
@@ -115,7 +115,7 @@
 
     - name: Delete an api
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}"
         state: absent
@@ -128,7 +128,7 @@
 
     - name: Delete an api Idempotent
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}"
         state: absent
@@ -141,13 +141,13 @@
 
     - name: Delete an api
       azure_rm_apimanagement:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagement"
         service_name: "{{ service_name }}"
         api_id: "{{ api_id }}-secondary"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-apimanagement"
         force_delete_nonempty: true
         state: absent

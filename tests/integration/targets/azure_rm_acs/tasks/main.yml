@@ -1,14 +1,14 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for acs test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-acs"
     location: eastus
 
-- name: For test
+- name: For acs test
   block:
     - name: Create an ACS instance - DCOS
       azure_rm_acs:
         name: "acsdcos{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-acs"
         location: eastus
         orchestration_platform: DCOS
         master_profile:
@@ -35,7 +35,7 @@
     - name: Scale the ACS instance from 1 to 2 - DCOS
       azure_rm_acs:
         name: "acsdcos{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-acs"
         location: eastus
         orchestration_platform: DCOS
         master_profile:
@@ -62,7 +62,7 @@
     - name: Delete the DCOS ACS instance - DCOS
       azure_rm_acs:
         name: "acsdcos{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-acs"
         location: eastus
         orchestration_platform: DCOS
         state: absent
@@ -83,7 +83,7 @@
     - name: Create an ACS instance - Swarm
       azure_rm_acs:
         name: "acssw{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-acs"
         location: eastus
         orchestration_platform: Swarm
         master_profile:
@@ -110,7 +110,7 @@
     - name: Scale the ACS instance from 1 to 2 - Swarm
       azure_rm_acs:
         name: "acssw{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-acs"
         location: eastus
         orchestration_platform: Swarm
         master_profile:
@@ -137,7 +137,7 @@
     - name: Delete the ACS instance - Swarm
       azure_rm_acs:
         name: "acssw{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-acs"
         location: eastus
         orchestration_platform: Swarm
         state: absent
@@ -157,6 +157,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-acs"
         force_delete_nonempty: true
         state: absent

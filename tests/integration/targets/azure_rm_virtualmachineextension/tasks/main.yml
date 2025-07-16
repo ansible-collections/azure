@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for virtual machine extension test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-vmextension"
     location: eastus
 
-- name: For test
+- name: For virtual machine extension test
   block:
     - name: Create Random Storage Account Name
       ansible.builtin.set_fact:
@@ -13,27 +13,27 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVnet1
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testSubnet
         address_prefix: "10.0.1.0/24"
         virtual_network: testVnet1
 
     - name: Create public IP address
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testPublicIP
         sku: Standard
         allocation_method: Static
 
     - name: Create Network Security Group that allows SSH
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testNetworkSecurityGroup
         rules:
           - name: SSH
@@ -45,7 +45,7 @@
 
     - name: Create virtual network interface card
       azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testNIC
         open_ports:
           - 33
@@ -59,13 +59,13 @@
 
     - name: Create a storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: "{{ storage_account }}"
         type: Standard_LRS
 
     - name: Create VM
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVM
         vm_size: Standard_DS1_v2
         admin_username: testuser
@@ -89,7 +89,7 @@
 
     - name: Create VM Extension
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVMExtension
         virtual_machine_name: testVM
         publisher: Microsoft.Azure.Extensions
@@ -104,7 +104,7 @@
 
     - name: Query extension
       azure_rm_virtualmachineextension_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVMExtension
         virtual_machine_name: testVM
       register: results
@@ -125,7 +125,7 @@
 
     - name: Create VM Extension (idempotent)
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVMExtension
         virtual_machine_name: testVM
         publisher: Microsoft.Azure.Extensions
@@ -140,7 +140,7 @@
 
     - name: Create VM Extension (force update)
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVMExtension
         virtual_machine_name: testVM
         publisher: Microsoft.Azure.Extensions
@@ -156,7 +156,7 @@
 
     - name: List extensions
       azure_rm_virtualmachineextension_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         virtual_machine_name: testVM
       register: results
     - name: Assert that facts are returned
@@ -176,7 +176,7 @@
 
     - name: Delete VM Extension
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVMExtension
         virtual_machine_name: testVM
         state: absent
@@ -187,7 +187,7 @@
 
     - name: Delete VM Extension (idempotent)
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVMExtension
         virtual_machine_name: testVM
         state: absent
@@ -198,7 +198,7 @@
 
     - name: Create VM Extension to configure python required for VM diagnostic extension
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: python-install
         virtual_machine_name: testVM
         publisher: Microsoft.Azure.Extensions
@@ -213,7 +213,7 @@
 
     - name: Install VM Extension for diagnostics
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: "linux-diagnostics"
         virtual_machine_name: testVM
         publisher: "Microsoft.Azure.Diagnostics"
@@ -229,7 +229,7 @@
 
     - name: Install VM Extension for diagnostics (idempotent)
       azure_rm_virtualmachineextension:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: "linux-diagnostics"
         virtual_machine_name: testVM
         publisher: "Microsoft.Azure.Diagnostics"
@@ -245,7 +245,7 @@
 
     - name: List extensions
       azure_rm_virtualmachineextension_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         virtual_machine_name: testVM
       register: results
     - name: Assert that facts are returned
@@ -258,14 +258,14 @@
 
     - name: Delete VM
       azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVM
         state: absent
         remove_on_absent: ['all']
 
     - name: Delete a storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: "{{ storage_account }}"
         type: Standard_LRS
         state: absent
@@ -273,25 +273,25 @@
 
     - name: Delete Network Security Group that allows SSH
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testNetworkSecurityGroup
         state: absent
 
     - name: Delete virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testVnet1
         state: absent
         address_prefixes: "10.0.0.0/16"
 
     - name: Delete the public IP address
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmextension"
         name: testPublicIP
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-vmextension"
         force_delete_nonempty: true
         state: absent

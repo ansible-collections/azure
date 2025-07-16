@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for deployment test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-deployment"
     location: eastus
 
-- name: For test
+- name: For deployment test
   block:
     - name: Create random dns label
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
 
     - name: Error Create Azure Deploy
       azure_rm_deployment:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-deployment"
         location: "eastus"
         template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
         deployment_name: "{{ dns_label }}"
@@ -30,7 +30,7 @@
 
     - name: Create Azure Deploy
       azure_rm_deployment:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-deployment"
         location: "eastus"
         template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
         deployment_name: "{{ dns_label }}"
@@ -56,7 +56,7 @@
 
     - name: Get Deployment Facts for Resource Group
       azure_rm_deployment_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-deployment"
       register: output
     - name: Print the deployment facts
       ansible.builtin.debug:
@@ -64,7 +64,7 @@
 
     - name: Get Deployment Facts for named deployment
       azure_rm_deployment_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-deployment"
         name: "{{ dns_label }}"
       register: output
     - name: Print the deployment facts
@@ -81,6 +81,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-deployment"
         force_delete_nonempty: true
         state: absent

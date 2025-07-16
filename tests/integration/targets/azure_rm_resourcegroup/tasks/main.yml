@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for resource group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-resource"
     location: eastus
 
-- name: For test
+- name: For resoruce group test
   block:
     - name: Get resource group datalake info
       azure_rm_resourcegroup_info:
-        name: "{{ resource_group_datalake }}"
+        name: "{{ resource_group }}-resource"
         list_resources: true
       register: rg
 
@@ -28,7 +28,7 @@
 
     - name: Get resource group info
       azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-resource"
         list_resources: true
       register: rg
 
@@ -40,7 +40,7 @@
 
     - name: Create resource group (idempontent)
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-resource"
         location: "{{ rg.resourcegroups[0].location }}"
       register: output
 
@@ -51,7 +51,7 @@
 
     - name: Delete resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-resource"
         state: absent
       check_mode: true
       register: output
@@ -63,6 +63,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-resource"
         force_delete_nonempty: true
         state: absent

@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for container registry test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-containerregistry"
     location: eastus
 
-- name: For test
+- name: For container registry test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-containerregistry"
       register: __rg_info
 
     - name: Set location and managed_identity_ids
@@ -29,7 +29,7 @@
     - name: Create an container registry
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: true
         sku: Premium
@@ -54,7 +54,7 @@
     - name: Update the ACR instance sku, tags and admin_user_enabled
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
         sku: Standard
@@ -67,7 +67,7 @@
     - name: Create second container registry (to test facts)
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
         sku: Premium
@@ -88,7 +88,7 @@
 
     - name: Gather facts for single Container Registry
       azure_rm_containerregistry_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
       register: output
 
@@ -107,7 +107,7 @@
 
     - name: Gather facts for all Container Registries in the resource group
       azure_rm_containerregistry_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
       register: output
 
     - name: Assert that facts are returned
@@ -134,7 +134,7 @@
     - name: Update second container registry to test identity
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
         sku: Premium
@@ -157,7 +157,7 @@
     - name: Update second container registry to test appending identity
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
         sku: Premium
@@ -181,7 +181,7 @@
     - name: Update second container registry to test System Identity
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
         sku: Premium
@@ -201,13 +201,13 @@
     - name: Delete first container registry
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         state: absent
 
     - name: Delete second container registry
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         state: absent
 
     - name: Delete user managed identities
@@ -223,6 +223,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-containerregistry"
         force_delete_nonempty: true
         state: absent

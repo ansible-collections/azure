@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for data factory test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-datafactory"
     location: eastus
 
-- name: For test
+- name: For data factory test
   block:
     - name: Create data factory name
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create data factory (Checkmode)
       azure_rm_datafactory:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-datafactory"
         name: "{{ name_rpfx }}"
         public_network_access: Enabled
         tags:
@@ -20,7 +20,7 @@
 
     - name: Create data factory
       azure_rm_datafactory:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-datafactory"
         name: "{{ name_rpfx }}"
         public_network_access: Enabled
         tags:
@@ -34,7 +34,7 @@
 
     - name: Create data factory again (Idempotent test)
       azure_rm_datafactory:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-datafactory"
         name: "{{ name_rpfx }}"
         public_network_access: Enabled
         tags:
@@ -48,7 +48,7 @@
 
     - name: Update data factory
       azure_rm_datafactory:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-datafactory"
         name: "{{ name_rpfx }}"
         public_network_access: Disabled
         tags:
@@ -63,7 +63,7 @@
 
     - name: Get data factory info
       azure_rm_datafactory_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-datafactory"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -75,7 +75,7 @@
 
     - name: Delete data factory
       azure_rm_datafactory:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-datafactory"
         name: "{{ name_rpfx }}"
         state: absent
       register: output
@@ -87,6 +87,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-datafactory"
         force_delete_nonempty: true
         state: absent

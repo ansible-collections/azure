@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for log analystics workspace test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-loganalyticsworkspace"
     location: eastus
 
-- name: For test
+- name: For log analystics workspace test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-loganalyticsworkspace"
       register: __rg_info
 
     - name: Prepare random number
@@ -18,7 +18,7 @@
 
     - name: Create User Managed Identities
       azure_rm_resource:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
         resource_name: "{{ item }}"
@@ -41,7 +41,7 @@
           Backup: true
           Containers: true
         retention_in_days: "{{ retention_days }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         identity:
           type: SystemAssigned
       check_mode: true
@@ -55,7 +55,7 @@
     - name: Get Log Analytics workspace information
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         show_intelligence_packs: true
         show_management_groups: true
         show_shared_keys: true
@@ -74,7 +74,7 @@
           Backup: true
           Containers: true
         retention_in_days: 30
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         tags:
           key1: value1
         identity:
@@ -99,7 +99,7 @@
           Backup: false
           Containers: false
         retention_in_days: "{{ retention_days }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         tags:
           key1: value1
           key2: value2
@@ -120,7 +120,7 @@
     - name: Get Log Analytics workspace information (Show full information)
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         show_intelligence_packs: true
         show_management_groups: true
         show_shared_keys: true
@@ -148,7 +148,7 @@
     - name: Get Log Analytics workspace information (Show default information)
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
 
     - name: Assert the log analytics workspace facts
@@ -166,7 +166,7 @@
     - name: Create Log Analytics workspace (Test Idempotence)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         retention_in_days: "{{ retention_days }}"
       register: log_analytics_workspace_output
 
@@ -178,7 +178,7 @@
     - name: Create data collection rule (check mode)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         location: "{{ location }}"
         kind: Linux
         description: Test for linux data collection rule
@@ -211,7 +211,7 @@
     - name: Create data collection rule (no tags)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         location: "{{ location }}"
         kind: Linux
         description: Test for linux data collection rule
@@ -243,7 +243,7 @@
     - name: Create data collection rule (no tags, idempotency check)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         location: "{{ location }}"
         kind: Linux
         description: Test for linux data collection rule
@@ -275,7 +275,7 @@
     - name: Create data collection rule (creation tags)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-creationtags-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         location: "{{ location }}"
         kind: Linux
         description: Test for linux data collection rule
@@ -310,7 +310,7 @@
     - name: Create data collection rule (creation tags, idempotency check)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-creationtags-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         location: "{{ location }}"
         kind: Linux
         description: Test for linux data collection rule
@@ -345,7 +345,7 @@
     - name: Add tag to data collection rule
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: false
         tags:
           TestTag1: TestValue1
@@ -360,7 +360,7 @@
     - name: Add tag to data collection rule (Idempotency)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: false
         tags:
           TestTag1: TestValue1
@@ -375,7 +375,7 @@
     - name: Add tag to data collection rule (append)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: true
         tags:
           TestTag2: TestValue2
@@ -391,7 +391,7 @@
     - name: Add tag to data collection rule (append, idempotency)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: true
         tags:
           TestTag2: TestValue2
@@ -407,7 +407,7 @@
     - name: Replace tags of data collection rule
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: false
         tags:
           TestTag3: TestValue3
@@ -424,7 +424,7 @@
     - name: Replace tags of data collection rule (idempotency)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: false
         tags:
           TestTag3: TestValue3
@@ -441,7 +441,7 @@
     - name: Remove tags of data collection rule
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: false
       register: output
 
@@ -456,7 +456,7 @@
     - name: Remove tags of data collection rule (idempotency)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         append_tags: false
       register: output
 
@@ -471,7 +471,7 @@
     - name: Use info module to gather information on data collection rule (direct match)
       azure.azcollection.azure_rm_monitordatacollectionrules_info:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: output
 
     - name: Assert that data collection rule is present (direct match)
@@ -481,7 +481,7 @@
 
     - name: Use info module to gather information on data collection rules in resource group (list resource group)
       azure.azcollection.azure_rm_monitordatacollectionrules_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: output
 
     - name: Assert that data collection rule is present (list resource group)
@@ -501,7 +501,7 @@
     - name: Remove data collection rule (Check Mode On)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
       check_mode: true
       register: output
@@ -514,7 +514,7 @@
     - name: Remove data collection rule
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
       register: output
 
@@ -526,7 +526,7 @@
     - name: Remove data collection rule (check if actually removed)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
       register: output
 
@@ -538,7 +538,7 @@
     - name: Use info module to make sure data collection rule is gone (direct match)
       azure.azcollection.azure_rm_monitordatacollectionrules_info:
         name: "{{ name_rpfx }}-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: output
 
     - name: Assert that data collection rule is not present (direct match)
@@ -548,7 +548,7 @@
 
     - name: Use info module to gather information on data collection rules in resource group (list resource group)
       azure.azcollection.azure_rm_monitordatacollectionrules_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: output
 
     - name: Assert that data collection rule is not present (list resource group)
@@ -568,7 +568,7 @@
     - name: Remove data collection rule (creation tags)
       azure.azcollection.azure_rm_monitordatacollectionrules:
         name: "{{ name_rpfx }}-creationtags-DCR"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
       register: output
 
@@ -580,7 +580,7 @@
     - name: Remove Log Analytics workspace (Check Mode On)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
       check_mode: true
       register: output
@@ -593,7 +593,7 @@
     - name: Get Log Analytics workspace information(Check still exists after remove Check Mode On)
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
 
     - name: Assert the log analytics workspace facts
@@ -603,7 +603,7 @@
 
     - name: List the Log Analytics workspace under specific resource group
       azure_rm_loganalyticsworkspace_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         tags:
           - key2
       register: facts
@@ -627,7 +627,7 @@
     - name: Remove Log Analytics workspace
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
         force: true
       register: output
@@ -640,7 +640,7 @@
     - name: Get Log Analytics workspace information
       azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
 
     - name: Assert the log analytics workspace facts
@@ -651,7 +651,7 @@
     - name: Remove Log Analytics workspace (Test Idempotence)
       azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
         force: true
       register: output
@@ -663,7 +663,7 @@
 
     - name: Destroy User Managed Identities
       azure_rm_resource:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
         resource_name: "{{ item }}"
@@ -674,6 +674,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-loganalyticsworkspace"
         force_delete_nonempty: true
         state: absent

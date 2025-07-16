@@ -1,14 +1,14 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for availability set test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-availabilityset"
     location: eastus
 
-- name: For test
+- name: For availability set test
   block:
     - name: Create an availability set with default options - Check Mode
       azure_rm_availabilityset:
         name: myavailabilityset1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         tags:
           tag1: testtag
       register: results
@@ -21,7 +21,7 @@
     - name: Create an availability set with default options
       azure_rm_availabilityset:
         name: myavailabilityset1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         tags:
           tag1: testtag
       register: results
@@ -36,7 +36,7 @@
 
     - name: Create a proximity placement group
       azure_rm_proximityplacementgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         location: eastus
         name: "{{ ppgroup_name }}"
         state: present
@@ -45,7 +45,7 @@
     - name: Create an availability set with advanced options
       azure_rm_availabilityset:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         platform_update_domain_count: 5
         platform_fault_domain_count: 2
         proximity_placement_group: "{{ ppgroup_name }}"
@@ -59,7 +59,7 @@
     - name: Modify availabilty set immutable options - no changes, fail for immutable options
       azure_rm_availabilityset:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         platform_update_domain_count: 2
         platform_fault_domain_count: 2
         proximity_placement_group: "{{ ppgroup_name }}"
@@ -76,7 +76,7 @@
     - name: Modify availabilty set immutable options and set tags - change tags and fail for immutable options
       azure_rm_availabilityset:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         platform_update_domain_count: 2
         platform_fault_domain_count: 2
         proximity_placement_group: "{{ ppgroup_name }}"
@@ -95,7 +95,7 @@
     - name: Modify availabilty set options to update tags
       azure_rm_availabilityset:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         platform_update_domain_count: 5
         platform_fault_domain_count: 2
         proximity_placement_group: "{{ ppgroup_name }}"
@@ -112,7 +112,7 @@
     - name: Create availability set with incorrect fault domain parameter
       azure_rm_availabilityset:
         name: myavailabilityset3
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         platform_update_domain_count: 5
         platform_fault_domain_count: 4
         sku: Aligned
@@ -126,7 +126,7 @@
     - name: Test check_mode
       azure_rm_availabilityset:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         platform_update_domain_count: 5
         platform_fault_domain_count: 2
         proximity_placement_group: "{{ ppgroup_name }}"
@@ -149,7 +149,7 @@
     - name: Get facts for created availability set
       azure_rm_availabilityset_info:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
       register: results
 
     - name: Assert the availabilty set facts
@@ -165,7 +165,7 @@
     - name: Delete an availability set - Check Mode
       azure_rm_availabilityset:
         name: myavailabilityset1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         state: absent
       check_mode: true
       register: results
@@ -177,13 +177,13 @@
     - name: Delete an availability set
       azure_rm_availabilityset:
         name: myavailabilityset1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         state: absent
 
     - name: Delete an availability set already deleted - Check Mode
       azure_rm_availabilityset:
         name: myavailabilityset1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         state: absent
       check_mode: true
       register: results
@@ -195,23 +195,23 @@
     - name: Delete an availability set
       azure_rm_availabilityset:
         name: myavailabilityset2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         state: absent
 
     - name: Delete an availability set
       azure_rm_availabilityset:
         name: myavailabilityset3
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         state: absent
 
     - name: Delete proximity placement group
       azure_rm_proximityplacementgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-availabilityset"
         name: "{{ ppgroup_name }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-availabilityset"
         force_delete_nonempty: true
         state: absent

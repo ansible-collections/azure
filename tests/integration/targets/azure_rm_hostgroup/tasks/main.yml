@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for host group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-hostgroup"
     location: eastus
 
-- name: For test
+- name: For host group test
   block:
     - name: Create host group name
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a host group
       azure_rm_hostgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         location: eastus
         zones:
@@ -26,7 +26,7 @@
 
     - name: Create a host group again (Idempotent test)
       azure_rm_hostgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         location: eastus
         zones:
@@ -41,7 +41,7 @@
 
     - name: Update a host group
       azure_rm_hostgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         location: eastus
         zones:
@@ -58,7 +58,7 @@
 
     - name: Get host group facts
       azure_rm_hostgroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
       register: results
 
@@ -74,7 +74,7 @@
 
     - name: Delete host group
       azure_rm_hostgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         state: absent
       register: results
@@ -85,7 +85,7 @@
 
     - name: Delete host group again (Idempotent test)
       azure_rm_hostgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         state: absent
       register: results
@@ -96,6 +96,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-hostgroup"
         force_delete_nonempty: true
         state: absent

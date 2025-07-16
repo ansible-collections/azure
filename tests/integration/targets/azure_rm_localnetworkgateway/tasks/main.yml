@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for local netowrk gateway test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-localnetworkgateway"
     location: eastus
 
-- name: For test
+- name: For local network gateway test
   block:
     - name: Set Storage Account Names
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a new local network gateway (Check mode)
       azure_rm_localnetworkgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-localnetworkgateway"
         name: "{{ rpfx }}"
         local_network_address_space:
           address_prefixes:
@@ -28,7 +28,7 @@
 
     - name: Create a new local network gateway
       azure_rm_localnetworkgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-localnetworkgateway"
         name: "{{ rpfx }}"
         local_network_address_space:
           address_prefixes:
@@ -51,7 +51,7 @@
 
     - name: Create a new local network gateway(Idempotent test)
       azure_rm_localnetworkgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-localnetworkgateway"
         name: "{{ rpfx }}"
         local_network_address_space:
           address_prefixes:
@@ -73,7 +73,7 @@
 
     - name: Create a new local network gateway(Update test)
       azure_rm_localnetworkgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-localnetworkgateway"
         name: "{{ rpfx }}"
         local_network_address_space:
           address_prefixes:
@@ -95,7 +95,7 @@
 
     - name: Get a new local network gateway
       azure_rm_localnetworkgateway_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-localnetworkgateway"
         name: "{{ rpfx }}"
       register: output
 
@@ -110,7 +110,7 @@
 
     - name: Delete the local network gateway
       azure_rm_localnetworkgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-localnetworkgateway"
         name: "{{ rpfx }}"
         state: absent
       register: output
@@ -122,6 +122,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-localnetworkgateway"
         force_delete_nonempty: true
         state: absent

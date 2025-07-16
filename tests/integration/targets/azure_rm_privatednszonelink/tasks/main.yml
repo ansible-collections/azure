@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for private dns zone link test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-privatednszonelink"
     location: eastus
 
-- name: For test
+- name: For private dns zone link test
   block:
     - name: Create virtual network link name
       ansible.builtin.set_fact:
@@ -20,14 +20,14 @@
 
     - name: Create a Private DNS zone
       azure_rm_privatednszone:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ domain_name }}.com"
         state: present
 
     - name: Create a virtual network
       azure_rm_virtualnetwork:
         name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         address_prefixes_cidr:
           - 10.1.0.0/16
           - 172.100.0.0/16
@@ -39,12 +39,12 @@
       azure_rm_subnet:
         name: "subnet{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         address_prefix_cidr: 10.1.0.0/24
 
     - name: Create a virtual network link
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}"
         zone_name: "{{ domain_name }}.com"
         virtual_network: "vnet{{ rpfx }}"
@@ -57,7 +57,7 @@
 
     - name: Create a virtual network link (Idempotent test)
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}"
         zone_name: "{{ domain_name }}.com"
         virtual_network: "vnet{{ rpfx }}"
@@ -70,7 +70,7 @@
 
     - name: Update a virtual network link
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}"
         zone_name: "{{ domain_name }}.com"
         registration_enabled: true
@@ -84,7 +84,7 @@
 
     - name: Get virtual network link
       azure_rm_privatednszonelink_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}"
         zone_name: "{{ domain_name }}.com"
       register: results
@@ -99,14 +99,14 @@
 
     - name: Create the secondary Private DNS zone
       azure_rm_privatednszone:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: privatelink.postgres.database.azure.com
         state: present
 
     - name: Create the secondary virtual network
       azure_rm_virtualnetwork:
         name: "vnet{{ rpfx }}-secondary"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         address_prefixes_cidr:
           - 10.1.0.0/16
           - 172.100.0.0/16
@@ -118,12 +118,12 @@
       azure_rm_subnet:
         name: "subnet{{ rpfx }}-secondary"
         virtual_network_name: "vnet{{ rpfx }}-secondary"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         address_prefix_cidr: 10.1.0.0/24
 
     - name: Create a virtual network link with resolution_policy
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}-secondary"
         zone_name: privatelink.postgres.database.azure.com
         virtual_network: "vnet{{ rpfx }}-secondary"
@@ -138,7 +138,7 @@
 
     - name: Create a new virtual network link(Idempotent test)
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}-secondary"
         zone_name: privatelink.postgres.database.azure.com
         virtual_network: "vnet{{ rpfx }}-secondary"
@@ -153,7 +153,7 @@
 
     - name: Update resolution_policy to Default
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}-secondary"
         zone_name: privatelink.postgres.database.azure.com
         virtual_network: "vnet{{ rpfx }}-secondary"
@@ -168,7 +168,7 @@
 
     - name: Get the secondary virtual network link facts
       azure_rm_privatednszonelink_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}-secondary"
         zone_name: privatelink.postgres.database.azure.com
       register: facts
@@ -181,7 +181,7 @@
 
     - name: Delete virtual network link
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}"
         zone_name: "{{ domain_name }}.com"
         state: absent
@@ -193,7 +193,7 @@
 
     - name: Delete virtual network link (Idempotent test)
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}"
         zone_name: "{{ domain_name }}.com"
         state: absent
@@ -206,12 +206,12 @@
     - name: Delete virtual network
       azure_rm_virtualnetwork:
         name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         state: absent
 
     - name: Delete the secondary private dns zone link
       azure_rm_privatednszonelink:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ link_name }}-secondary"
         zone_name: privatelink.postgres.database.azure.com
         state: absent
@@ -219,23 +219,23 @@
     - name: Delete the secondary virtual network
       azure_rm_virtualnetwork:
         name: "vnet{{ rpfx }}-secondary"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         state: absent
 
     - name: Delete private DNS zone
       azure_rm_privatednszone:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: "{{ domain_name }}.com"
         state: absent
 
     - name: Delete the secondary Private DNS zone
       azure_rm_privatednszone:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatednszonelink"
         name: privatelink.postgres.database.azure.com
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-privatednszonelink"
         force_delete_nonempty: true
         state: absent

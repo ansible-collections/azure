@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for mariadb server test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-mariadbserver"
     location: eastus
 
-- name: For test
+- name: For mariadb server test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
 
     - name: Create instance of MariaDB Server -- check mode
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -33,7 +33,7 @@
 
     - name: Create instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -53,7 +53,7 @@
 
     - name: Create again instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -73,7 +73,7 @@
 
     - name: Update instance of MariaDB Server, change storage size
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -96,7 +96,7 @@
 
     - name: Gather facts MariaDB Server
       azure_rm_mariadbserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
       register: output
     - name: Assert that storage size is correct
@@ -106,7 +106,7 @@
 
     - name: Create second instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
         sku:
           name: B_Gen5_1
@@ -122,7 +122,7 @@
 
     - name: Create second instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
         sku:
           name: B_Gen5_1
@@ -138,7 +138,7 @@
 
     - name: Gather facts MariaDB Server
       azure_rm_mariadbserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
       register: output
 
@@ -160,7 +160,7 @@
 
     - name: Gather facts MariaDB Server
       azure_rm_mariadbserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
       register: output
     - name: Assert that facts are returned
       ansible.builtin.assert:
@@ -190,7 +190,7 @@
     #
     - name: Create instance of MariaDB Database -- check mode
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
       check_mode: true
@@ -202,7 +202,7 @@
 
     - name: Create instance of MariaDB Database
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         collation: latin1_swedish_ci
@@ -216,7 +216,7 @@
 
     - name: Create again instance of MariaDB Database
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         collation: latin1_swedish_ci
@@ -230,7 +230,7 @@
 
     - name: Try to update database without force_update
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         collation: utf8_general_ci
@@ -244,7 +244,7 @@
 
     - name: Update instance of database using force_update
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         collation: utf8_general_ci
@@ -259,13 +259,13 @@
 
     - name: Create second instance of MariaDB Database
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase2
 
     - name: Gather facts MariaDB Database
       azure_rm_mariadbdatabase_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
       register: output
@@ -281,7 +281,7 @@
 
     - name: Gather facts MariaDB Database
       azure_rm_mariadbdatabase_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
       register: output
     - name: Assert that facts are returned
@@ -299,7 +299,7 @@
 
     - name: Delete instance of MariaDB Database -- check mode
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         state: absent
@@ -312,7 +312,7 @@
 
     - name: Delete instance of MariaDB Database
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         state: absent
@@ -324,7 +324,7 @@
 
     - name: Delete unexisting instance of MariaDB Database
       azure_rm_mariadbdatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
         state: absent
@@ -339,7 +339,7 @@
     #
     - name: Create instance of Firewall Rule -- check mode
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         start_ip_address: 172.28.10.136
@@ -353,7 +353,7 @@
 
     - name: Create instance of Firewall Rule
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         start_ip_address: 172.28.10.136
@@ -366,7 +366,7 @@
 
     - name: Create again instance of Firewall Rule
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         start_ip_address: 172.28.10.136
@@ -379,7 +379,7 @@
 
     - name: Delete instance of Firewall Rule -- check mode
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         state: absent
@@ -392,7 +392,7 @@
 
     - name: Create instance of Firewall Rule -- second
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}second
         start_ip_address: 172.28.10.136
@@ -405,7 +405,7 @@
 
     - name: Gather facts MariaDB Firewall Rule
       azure_rm_mariadbfirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
       register: output
@@ -422,7 +422,7 @@
 
     - name: Gather facts MariaDB Firewall Rule
       azure_rm_mariadbfirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
       register: output
     - name: Assert that facts are returned
@@ -442,7 +442,7 @@
 
     - name: Delete instance of Firewall Rule
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         state: absent
@@ -454,7 +454,7 @@
 
     - name: Delete unexisting instance of Firewall Rule
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         state: absent
@@ -466,14 +466,14 @@
 
     - name: Delete instance of Firewall Rule - second
       azure_rm_mariadbfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}second
         state: absent
 
     - name: Gather facts MariaDB Firewall Rule
       azure_rm_mariadbfirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
       register: output
@@ -488,7 +488,7 @@
     #
     - name: Create instance of Configuration -- check mode
       azure_rm_mariadbconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
         value: "ON"
@@ -501,7 +501,7 @@
 
     - name: Try to delete default configuraion
       azure_rm_mariadbconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
       register: output
@@ -511,7 +511,7 @@
 
     - name: Try to delete default configuraion
       azure_rm_mariadbconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
         state: absent
@@ -523,7 +523,7 @@
 
     - name: Try to change default configuraion
       azure_rm_mariadbconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
         value: "ON"
@@ -535,7 +535,7 @@
 
     - name: Try to change default configuration -- idempotent
       azure_rm_mariadbconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
         value: "ON"
@@ -547,7 +547,7 @@
 
     - name: Try to reset configuration
       azure_rm_mariadbconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
         state: absent
@@ -559,7 +559,7 @@
 
     - name: Try to reset configuration -- idempotent
       azure_rm_mariadbconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
         state: absent
@@ -571,7 +571,7 @@
 
     - name: Gather facts MariaDB Configuration
       azure_rm_mariadbconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
       register: output
@@ -588,7 +588,7 @@
 
     - name: Gather facts MariaDB Configuration
       azure_rm_mariadbconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
       register: output
     - name: Assert that facts are returned
@@ -608,7 +608,7 @@
 
     - name: Delete instance of MariaDB Server -- check mode
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         state: absent
       check_mode: true
@@ -620,7 +620,7 @@
 
     - name: Delete instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         state: absent
       register: output
@@ -631,7 +631,7 @@
 
     - name: Delete unexisting instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         state: absent
       register: output
@@ -642,7 +642,7 @@
 
     - name: Delete second instance of MariaDB Server
       azure_rm_mariadbserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
         state: absent
       async: 400
@@ -650,6 +650,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-mariadbserver"
         force_delete_nonempty: true
         state: absent

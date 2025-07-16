@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for batch account test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-batchaccount"
     location: eastus
 
-- name: For test
+- name: For batch account test
   block:
     ---
     # ----------------------------------------------------------------------------
@@ -26,7 +26,7 @@
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-batchaccount"
       register: __rg_info
 
     - name: Set location based on resource group
@@ -35,7 +35,7 @@
 
     - name: Create Storage Account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ storage_account_name }}"
         location: "{{ location }}"
         account_type: Standard_LRS
@@ -57,7 +57,7 @@
 
     - name: Create Batch Account
       azure_rm_batchaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ batch_account_name }}"
         location: "{{ location }}"
         auto_storage_account:
@@ -81,7 +81,7 @@
 
     - name: Create Batch Account -- idempotent
       azure_rm_batchaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ batch_account_name }}"
         location: "{{ location }}"
         auto_storage_account:
@@ -105,7 +105,7 @@
 
     - name: Update user assigned identity
       azure_rm_batchaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ batch_account_name }}"
         location: "{{ location }}"
         auto_storage_account:
@@ -129,7 +129,7 @@
 
     - name: Get Batch Account facts
       azure_rm_batchaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ batch_account_name }}"
       register: output
 
@@ -144,7 +144,7 @@
 
     - name: Update identity type to SystemAssigned
       azure_rm_batchaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ batch_account_name }}"
         location: "{{ location }}"
         auto_storage_account:
@@ -166,7 +166,7 @@
 
     - name: Create a new batchaccount application (Checkmode test)
       azure_rm_batchaccountapplication:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "app{{ rpfx }}"
         display_name: "Application description"
@@ -175,7 +175,7 @@
 
     - name: Create a new batchaccount application
       azure_rm_batchaccountapplication:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "app{{ rpfx }}"
         display_name: "Application description"
@@ -189,7 +189,7 @@
 
     - name: Create a new batchaccount application again(Idempotent test)
       azure_rm_batchaccountapplication:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "app{{ rpfx }}"
         display_name: "Application description"
@@ -203,7 +203,7 @@
 
     - name: Upgrade the application
       azure_rm_batchaccountapplication:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "app{{ rpfx }}"
         display_name: "Application description 02"
@@ -217,7 +217,7 @@
 
     - name: Get the batchaccount application facts
       azure_rm_batchaccountapplication_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "app{{ rpfx }}"
       register: output
@@ -230,7 +230,7 @@
 
     - name: Create a new batch account application package(Checkmode test)
       azure_rm_batchaccountapplicationpackage:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         application_name: "app{{ rpfx }}"
         name: "package{{ rpfx }}"
@@ -238,7 +238,7 @@
 
     - name: Create a new batch account application package
       azure_rm_batchaccountapplicationpackage:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         application_name: "app{{ rpfx }}"
         name: "package{{ rpfx }}"
@@ -251,7 +251,7 @@
 
     - name: Create a new batch account application package again(Idempotent test)
       azure_rm_batchaccountapplicationpackage:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         application_name: "app{{ rpfx }}"
         name: "package{{ rpfx }}"
@@ -264,7 +264,7 @@
 
     - name: Get the application package facts
       azure_rm_batchaccountapplicationpackage_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         application_name: "app{{ rpfx }}"
         name: "package{{ rpfx }}"
@@ -282,11 +282,11 @@
           - 10.1.0.0/16
           - 172.100.0.0/16
           - fdda:e69b:1587:495e::/64
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
 
     - name: Create a subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "sub{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/24"
@@ -294,7 +294,7 @@
 
     - name: Create a new batch account pool(Checkmode test)
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         deployment_configuration:
@@ -353,7 +353,7 @@
 
     - name: Create a new batch account pool
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         deployment_configuration:
@@ -416,7 +416,7 @@
 
     - name: Create a new batch account pool again(Idempotent test)
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         deployment_configuration:
@@ -479,7 +479,7 @@
 
     - name: Upgrade the batch account pool
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         deployment_configuration:
@@ -542,7 +542,7 @@
 
     - name: Get the batch account pool facts by name
       azure_rm_batchaccountpool_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
       register: output
@@ -560,7 +560,7 @@
 
     - name: Stop resize the batch account pool
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         is_stop_resize: true
@@ -573,7 +573,7 @@
 
     - name: Disable the batch account pool auto_scale
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         is_disable_auto_scale: true
@@ -586,7 +586,7 @@
 
     - name: Delete the batch account pool
       azure_rm_batchaccountpool:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "pool{{ rpfx }}"
         state: absent
@@ -599,7 +599,7 @@
 
     - name: Delete the application package
       azure_rm_batchaccountapplicationpackage:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         application_name: "app{{ rpfx }}"
         name: "package{{ rpfx }}"
@@ -613,7 +613,7 @@
 
     - name: Delete the application
       azure_rm_batchaccountapplication:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         batch_account_name: "{{ batch_account_name }}"
         name: "app{{ rpfx }}"
         state: absent
@@ -625,7 +625,7 @@
 
     - name: Delete Batch Account
       azure_rm_batchaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ batch_account_name }}"
         state: absent
       register: output
@@ -637,7 +637,7 @@
 
     - name: Clean up storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-batchaccount"
         name: "{{ storage_account_name }}"
         state: absent
 
@@ -654,6 +654,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-batchaccount"
         force_delete_nonempty: true
         state: absent

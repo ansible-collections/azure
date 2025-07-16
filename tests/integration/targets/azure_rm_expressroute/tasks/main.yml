@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for express route test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-expressroute"
     location: eastus
 
-- name: For test
+- name: For express route test
   block:
     - name: Create random express route
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
       azure_rm_expressroute:
         location: eastus
         name: "{{ express_route }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
         allow_classic_operations: true
         global_reach_enabled: false
         tags:
@@ -39,7 +39,7 @@
       azure_rm_expressroute:
         location: eastus
         name: "{{ express_route }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
         allow_classic_operations: true
         global_reach_enabled: false
         tags:
@@ -64,7 +64,7 @@
       azure_rm_expressroute:
         location: eastus
         name: "{{ express_route }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
         allow_classic_operations: true
         global_reach_enabled: false
         tags:
@@ -89,7 +89,7 @@
 
     - name: Retrieve Express Route
       azure_rm_expressroute_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
         name: "{{ express_route }}"
       register: results
 
@@ -102,7 +102,7 @@
     - name: Test idempotent
       azure_rm_expressroute:
         name: "{{ express_route }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
       register: results
 
     - name: Assert the idempotent
@@ -115,13 +115,13 @@
     #
     - name: Delete Express Route
       azure_rm_expressroute:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
         name: "{{ express_route }}"
         state: absent
 
     - name: Delete Express Route (idempotent)
       azure_rm_expressroute:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-expressroute"
         name: "{{ express_route }}"
         state: absent
       register: results
@@ -132,6 +132,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-expressroute"
         force_delete_nonempty: true
         state: absent

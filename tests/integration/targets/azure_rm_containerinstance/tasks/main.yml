@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for container instance test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-containerinstance"
     location: eastus
 
-- name: For test
+- name: For container instance test
   block:
     - name: Set Container Instance Names
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-containerinstance"
       register: __rg_info
 
     - name: Set location and managed_identity_ids
@@ -32,7 +32,7 @@
 
     - name: Create sample container instance
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
         ip_address: public
@@ -60,7 +60,7 @@
 
     - name: Create sample container instance -- same parameters
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
         ip_address: public
@@ -83,7 +83,7 @@
 
     - name: Create sample container instance -- force update
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
         ip_address: public
@@ -114,7 +114,7 @@
 
     - name: Create second container instance for testing purposes
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}sec"
         os_type: linux
         ip_address: public
@@ -137,7 +137,7 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "vnet{{ rpfx }}"
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -145,7 +145,7 @@
 
     - name: Create a subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "sub{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/24"
@@ -158,7 +158,7 @@
 
     - name: Create third container instance for subnet_ids
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
         os_type: linux
         ip_address: private
@@ -183,7 +183,7 @@
 
     - name: Gather facts for single Container Instance
       azure_rm_containerinstance_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}sec"
       register: output
 
@@ -207,7 +207,7 @@
 
     - name: Gather facts for all Container Instances in the resource group
       azure_rm_containerinstance_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
       register: output
 
     - name: Assert that facts are returned
@@ -231,7 +231,7 @@
 
     - name: Create sample container instance -- User Identity
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}fourth"
         os_type: linux
         ip_address: public
@@ -255,7 +255,7 @@
 
     - name: Gather facts for single Container Instance
       azure_rm_containerinstance_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}fourth"
       register: output
 
@@ -272,7 +272,7 @@
 
     - name: Remove container instance -- User Identity
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}fourth"
         os_type: linux
         ip_address: public
@@ -297,7 +297,7 @@
 
     - name: Create sample container instance with volume
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
         os_type: linux
         ip_address: public
@@ -339,7 +339,7 @@
 
     - name: Gather facts for Container Instance
       azure_rm_containerinstance_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
       register: output
       ignore_errors: true
@@ -370,7 +370,7 @@
 
     - name: Remove container instance
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
         os_type: linux
         ip_address: public
@@ -399,7 +399,7 @@
 
     - name: Remove container instance
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
         ip_address: public
@@ -423,7 +423,7 @@
 
     - name: Remove container instance
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}sec"
         os_type: linux
         ip_address: public
@@ -441,7 +441,7 @@
 
     - name: Remove container instance again
       azure_rm_containerinstance:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
         ip_address: public
@@ -476,6 +476,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-containerinstance"
         force_delete_nonempty: true
         state: absent

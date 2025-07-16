@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for application firewall policytest
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-applicationfirewallpolicy"
     location: eastus
 
-- name: For test
+- name: For application firewall policy test
   block:
     - name: Set variables
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a new application firewall policy (Checkmode Test)
       azure_rm_applicationfirewallpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
         policy_settings:
@@ -75,7 +75,7 @@
 
     - name: Create a new application firewall policy
       azure_rm_applicationfirewallpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
         policy_settings:
@@ -138,7 +138,7 @@
 
     - name: Create a new application firewall policy (Idempotent Test)
       azure_rm_applicationfirewallpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
         policy_settings:
@@ -201,7 +201,7 @@
 
     - name: Update the new application firewall policy
       azure_rm_applicationfirewallpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
         policy_settings:
@@ -283,7 +283,7 @@
 
     - name: Get the application gateway facts
       azure_rm_applicationfirewallpolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
       register: output
 
@@ -298,7 +298,7 @@
 
     - name: Delete the application firewall policy
       azure_rm_applicationfirewallpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         state: absent
       register: output
@@ -310,6 +310,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-applicationfirewallpolicy"
         force_delete_nonempty: true
         state: absent

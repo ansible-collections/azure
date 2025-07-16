@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for private link service test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-privatelinkservice"
     location: eastus
 
-- name: For test
+- name: For private link service test
   block:
     - name: Set Private Link Service Names
       ansible.builtin.set_fact:
@@ -12,12 +12,12 @@
     - name: Delete the private link service
       azure_rm_privatelinkservice:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         state: absent
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         name: "vnet{{ rpfx }}"
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -25,7 +25,7 @@
 
     - name: Create a subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         name: "sub{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/24"
@@ -35,14 +35,14 @@
 
     - name: Create public ip
       azure_rm_publicipaddress:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-privatelinkservice'
         name: "pip{{ rpfx }}"
         sku: Standard
         allocation_method: Static
 
     - name: Create load balancer with frontend_ip_configurations
       azure_rm_loadbalancer:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-privatelinkservice'
         name: "lb{{ rpfx }}"
         sku: Standard
         frontend_ip_configurations:
@@ -71,7 +71,7 @@
     - name: Create private link service (Check mode test)
       azure_rm_privatelinkservice:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         enable_proxy_protocol: true
         fqdns:
           - 'dns01.com'
@@ -104,7 +104,7 @@
     - name: Create private link service
       azure_rm_privatelinkservice:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         enable_proxy_protocol: true
         fqdns:
           - 'dns01.com'
@@ -136,7 +136,7 @@
     - name: Create private link service (Idempotent test)
       azure_rm_privatelinkservice:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         enable_proxy_protocol: true
         fqdns:
           - 'dns01.com'
@@ -168,7 +168,7 @@
     - name: Update private link service
       azure_rm_privatelinkservice:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         enable_proxy_protocol: false
         fqdns:
           - 'dns03.com'
@@ -201,7 +201,7 @@
     - name: Get private link service info by name
       azure_rm_privatelinkservice_info:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
       register: output
 
     - name: Assert the private link service facts
@@ -214,7 +214,7 @@
     - name: Create private endpoint
       azure_rm_privateendpoint:
         name: "pd{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         private_link_service_connections:
           - name: private_connection_name
             private_link_service_id: "{{ output.link_service[0].id }}"
@@ -225,7 +225,7 @@
     - name: Get private endpoint connection info
       azure_rm_privateendpointconnection_info:
         service_name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
       register: output
 
     - name: Assert the private endpoint connection facts
@@ -239,7 +239,7 @@
       azure_rm_privateendpointconnection:
         name: "{{ output.endpoint_connection[0].name }}"
         service_name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         connection_state:
           status: "Rejected"
           description: "Rejected"
@@ -254,7 +254,7 @@
       azure_rm_privateendpointconnection_info:
         name: "{{ output.state.name }}"
         service_name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
       register: output
 
     - name: Assert the private endpoint connection facts
@@ -268,7 +268,7 @@
       azure_rm_privateendpointconnection:
         name: "{{ output.endpoint_connection[0].name }}"
         service_name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         state: absent
       register: output
 
@@ -279,7 +279,7 @@
     - name: Delete private endpoint
       azure_rm_privateendpoint:
         name: "pd{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         state: absent
 
     - name: Assert the private endpoint deleted
@@ -293,7 +293,7 @@
     - name: Delete private link service
       azure_rm_privatelinkservice:
         name: "lsp{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-privatelinkservice"
         state: absent
       register: output
 
@@ -307,18 +307,18 @@
 
     - name: Delete the load balancer
       azure_rm_loadbalancer:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-privatelinkservice'
         name: "lb{{ rpfx }}"
         state: absent
 
     - name: Delete the public ip
       azure_rm_publicipaddress:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-privatelinkservice'
         name: "pip{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-privatelinkservice"
         force_delete_nonempty: true
         state: absent

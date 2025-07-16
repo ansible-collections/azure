@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for Azure Front Door route test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-afdroute"
     location: eastus
 
-- name: For test
+- name: For Azure Front Door route test
   block:
     - name: Prepare random name for Profile & EndPoint & Origin Group & Origin
       ansible.builtin.set_fact:
@@ -18,7 +18,7 @@
       azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         sku: "standard_azurefrontdoor"
         state: "present"
 
@@ -26,7 +26,7 @@
       azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         enabled_state: "Enabled"
         state: "present"
 
@@ -34,7 +34,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "present"
         health_probe_settings:
           probe_interval_in_seconds: 100
@@ -52,7 +52,7 @@
         name: "{{ origin }}"
         origin_group_name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "present"
         host_name: "10.0.0.1"
         origin_host_header: "10.0.0.1"
@@ -66,7 +66,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "present"
 
     - name: Create Route
@@ -74,7 +74,7 @@
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         enabled_state: "Enabled"
         forwarding_protocol: "HttpsOnly"
         https_redirect: "Disabled"
@@ -100,7 +100,7 @@
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         enabled_state: "Enabled"
         forwarding_protocol: "HttpsOnly"
         https_redirect: "Disabled"
@@ -126,7 +126,7 @@
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
       register: output
 
     - name: Assert the resource has the proper values set
@@ -143,7 +143,7 @@
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         enabled_state: "Disabled"
         forwarding_protocol: "HttpsOnly"
         https_redirect: "Disabled"
@@ -171,7 +171,7 @@
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         enabled_state: "Disabled"
         forwarding_protocol: "HttpsOnly"
         https_redirect: "Disabled"
@@ -199,7 +199,7 @@
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         origin_group: "{{ origin_group }}"
         state: "absent"
       register: output
@@ -216,7 +216,7 @@
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         origin_group: "{{ origin_group }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "absent"
       register: output
 
@@ -230,14 +230,14 @@
         name: "{{ origin }}"
         origin_group_name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "absent"
 
     - name: Delete Origin Group
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "absent"
       register: output
 
@@ -245,14 +245,14 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "absent"
 
     - name: Delete EndPoint
       azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         state: "absent"
       register: output
 
@@ -260,12 +260,12 @@
       azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdroute"
         sku: "standard_azurefrontdoor"
         state: "absent"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-afdroute"
         force_delete_nonempty: true
         state: absent

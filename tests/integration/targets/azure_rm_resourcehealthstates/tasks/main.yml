@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for resource health status test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-resourcehealthstates"
     location: eastus
 
-- name: For test
+- name: For resource health status test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -12,20 +12,20 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-resourcehealthstates"
         name: "vnet{{ rpfx }}"
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
       azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-resourcehealthstates"
         name: "sub{{ rpfx }}"
         address_prefix: "10.0.1.0/24"
         virtual_network: "vnet{{ rpfx }}"
 
     - name: Create a VMSS
       azure_rm_virtualmachinescaleset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-resourcehealthstates"
         name: testVMSS{{ rpfx }}
         vm_size: Standard_A1_v2
         admin_username: testuser
@@ -65,7 +65,7 @@
 
     - name: Get the resource facts by resource grouop
       azure_rm_resourcehealthstates_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-resourcehealthstates"
       register: output
 
     - name: Assert the resource health states
@@ -75,6 +75,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-resourcehealthstates"
         force_delete_nonempty: true
         state: absent

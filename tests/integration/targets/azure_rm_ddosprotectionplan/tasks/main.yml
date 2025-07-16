@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for ddos protection plan test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-ddosprotectionplan"
     location: eastus
 
-- name: For test
+- name: For ddos protection plan test
   block:
     - name: Create random ddos protection plan
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
       azure_rm_ddosprotectionplan:
         location: eastus2
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
       check_mode: true
       register: results
 
@@ -25,7 +25,7 @@
       azure_rm_ddosprotectionplan:
         location: eastus2
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
       register: results
 
     - name: Assert the ddos protection created
@@ -36,7 +36,7 @@
       azure_rm_ddosprotectionplan:
         location: eastus2
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
         tags:
           test: modified
       register: results
@@ -50,7 +50,7 @@
     - name: Retrieve DDoS protection plan
       azure_rm_ddosprotectionplan_info:
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
       register: results
 
     - name: Assert that facts module returned result
@@ -62,7 +62,7 @@
       azure_rm_ddosprotectionplan:
         location: eastus2
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
       register: results
 
     - name: Assert the ddos protection created
@@ -78,14 +78,14 @@
       azure_rm_ddosprotectionplan:
         location: eastus2
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
         state: absent
 
     - name: Delete DDoS protection plan
       azure_rm_ddosprotectionplan:
         location: eastus2
         name: "{{ ddosprotectionplan }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ddosprotectionplan"
         state: absent
       register: results
 
@@ -95,6 +95,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-ddosprotectionplan"
         force_delete_nonempty: true
         state: absent

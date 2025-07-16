@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for container registry tag test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-containerregistrytag"
     location: eastus
 
-- name: For test
+- name: For container registry tag test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
     - name: Create an container registry
       azure_rm_containerregistry:
         name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistrytag"
         location: eastus2
         admin_user_enabled: true
         sku: Standard
@@ -369,11 +369,11 @@
     - name: Delete container registry
       azure_rm_containerregistry:
         name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistrytag"
         state: "absent"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-containerregistrytag"
         force_delete_nonempty: true
         state: absent

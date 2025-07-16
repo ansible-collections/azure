@@ -1,9 +1,14 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for openshift cluster test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-{{ item['name'] }}"
+    location: "{{ item['location'] }}"
+  loop:
+    - name: openshiftmanagedcluster01
+      location: eastus
+    - name: openshiftmanagedcluster02
+      location: eastus2
 
-- name: For test
+- name: For openshift cluster test
   block:
     - name: Set variables
       ansible.builtin.set_fact:
@@ -11,12 +16,12 @@
 
     - name: Get resource group info
       azure_rm_resourcegroup_info:
-        name: "{{ resource_group_secondary }}"
+        name: "{{ resource_group }}-openshiftmanagedcluster02"
       register: rg_output
 
     - name: Get available clusters for a specific resource_group
       azure_rm_openshiftmanagedcluster_info:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
       register: output
 
     - name: Assert the cluster facts
@@ -25,7 +30,7 @@
 
     - name: Get specific cluster information for a specific cluster
       azure_rm_openshiftmanagedcluster_info:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
         name: "{{ cluster_name }}"
       register: output
 
@@ -43,7 +48,7 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
         name: testVnet
         address_prefixes_cidr:
           - 10.151.0.0/16
@@ -53,7 +58,7 @@
       azure_rm_subnet:
         name: master_foobar
         virtual_network_name: testVnet
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
         address_prefix_cidr: 10.151.0.0/24
       register: master_sub_output
 
@@ -61,7 +66,7 @@
       azure_rm_subnet:
         name: worker_foobar
         virtual_network_name: testVnet
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
         address_prefix_cidr: 10.152.0.0/24
       register: worker_sub_output
 
@@ -80,7 +85,7 @@
 
     - name: Create openshift cluster
       azure_rm_openshiftmanagedcluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
         location: "eastus"
         cluster_profile:
@@ -111,7 +116,7 @@
 
     - name: Get available clusters for a specific resource_group
       azure_rm_openshiftmanagedcluster_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
       register: output
 
     - name: Assert the cluster facts
@@ -120,7 +125,7 @@
 
     - name: Get specific cluster information for a specific cluster
       azure_rm_openshiftmanagedcluster_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
       register: output
 
@@ -139,7 +144,7 @@
     - name: Fetch kubeconfig file to register
       azure_rm_openshiftmanagedclusterkubeconfig_info:
         name: "{{ cluster_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
       register: kubeconfig_reg
 
     - name: Assert the kubeconfig file facts
@@ -149,7 +154,7 @@
     - name: Fetch kubeconfig file with specific name
       azure_rm_openshiftmanagedclusterkubeconfig_info:
         name: "{{ cluster_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         path: "/home/testuser/{{ cluster_name }}"
 
     - name: Check for created named kubeconfig file
@@ -166,7 +171,7 @@
     - name: Fetch kubeconfig file with default name (kubeconfig)
       azure_rm_openshiftmanagedclusterkubeconfig_info:
         name: "{{ cluster_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         path: "/home/testuser/"
 
     - name: Check for created default kubeconfig file
@@ -182,7 +187,7 @@
 
     - name: Delete openshift cluster
       azure_rm_openshiftmanagedcluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
         location: "eastus"
         state: absent
@@ -194,6 +199,9 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-openshiftmanagedcluster01"
         force_delete_nonempty: true
         state: absent
+      loop:
+        - openshiftmanagedcluster01
+        - openshiftmanagedcluster02

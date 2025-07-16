@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for notification hub test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-notificationhub"
     location: eastus
 
-- name: For test
+- name: For notification hub test
   block:
     - name: Create random notification hub and namespace
       ansible.builtin.set_fact:
@@ -14,7 +14,7 @@
       azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         sku: "free"
       check_mode: true
       register: results
@@ -28,7 +28,7 @@
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         sku: "free"
       check_mode: true
       register: results
@@ -41,7 +41,7 @@
       azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         sku: "free"
       register: results
 
@@ -54,7 +54,7 @@
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         sku: "free"
       register: results
 
@@ -66,7 +66,7 @@
       azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         tags:
           test: modified
       register: results
@@ -82,7 +82,7 @@
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         tags:
           test: modified
       register: results
@@ -96,7 +96,7 @@
     - name: Retrieve Namespace
       azure_rm_notificationhub_info:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
       register: results
 
     - name: Assert that facts module returned result
@@ -107,7 +107,7 @@
     - name: Test idempotent
       azure_rm_notificationhub:
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
       register: results
 
     - name: Assert the notification hub check mode
@@ -123,7 +123,7 @@
       azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         state: absent
 
     - name: Pause for 3 minutes to make sure delete successfully
@@ -135,7 +135,7 @@
       azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         state: absent
       register: results
 
@@ -148,7 +148,7 @@
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         state: absent
 
     - name: Pause for 3 minutes to make sure delete successfully
@@ -161,7 +161,7 @@
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-notificationhub"
         state: absent
       register: results
 
@@ -171,6 +171,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-notificationhub"
         force_delete_nonempty: true
         state: absent

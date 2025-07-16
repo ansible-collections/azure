@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for network gateway test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-natgw"
     location: eastus
 
-- name: For test
+- name: For network gateway test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -16,7 +16,7 @@
 
     - name: Get resource group info
       azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-natgw"
       register: rg_output
     - name: Store rg location
       ansible.builtin.set_fact:
@@ -25,7 +25,7 @@
 
     - name: Get NAT gateways
       azure_rm_natgateway_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert there are no gateways
       ansible.builtin.assert:
@@ -34,7 +34,7 @@
 
     - name: Create instance of NAT Gateway in check_mode
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
       register: output
       check_mode: true
@@ -45,7 +45,7 @@
 
     - name: Get NAT gateways
       azure_rm_natgateway_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert there are still no gateways
       ansible.builtin.assert:
@@ -54,20 +54,20 @@
 
     - name: Create instance of NAT Gateway
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
       register: natgw_output
     - name: Assert that gateway is well created
       ansible.builtin.assert:
         that:
           - natgw_output is changed
-          - natgw_output.resource_group == "{{ resource_group }}"
+          - natgw_output.resource_group == "{{ resource_group }}-natgw"
           - natgw_output.name == "nat-gateway{{ rpfx }}1"
           - natgw_output.location == "{{ rg_location }}"
     - name: Get NAT gateways
       azure_rm_natgateway_info:
         name: nat-gateway{{ rpfx }}1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert that gateway has the right default parameters
       ansible.builtin.assert:
@@ -76,7 +76,7 @@
 
     - name: Try to update instance of NAT Gateway - no change
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
       register: output
     - name: Assert the resource instance is not changed
@@ -86,7 +86,7 @@
 
     - name: Try to update instance of NAT Gateway - change timeout
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
         idle_timeout_in_minutes: 10
       register: natgw_output
@@ -98,7 +98,7 @@
     - name: Get NAT gateways
       azure_rm_natgateway_info:
         name: nat-gateway{{ rpfx }}1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert that gateway has the right parameters
       ansible.builtin.assert:
@@ -107,7 +107,7 @@
 
     - name: Try to update instance of NAT Gateway - no change as this is the default value
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
         sku:
           name: standard
@@ -121,25 +121,25 @@
     - name: Create public IP for NAT Gateway
       azure_rm_publicipaddress:
         name: "nat-gateway{{ rpfx }}-pip1"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         sku: "standard"
         allocation_method: "static"
     - name: Get public IP for NAT Gateway
       azure_rm_publicipaddress_info:
         name: "nat-gateway{{ rpfx }}-pip1"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: pip_info_output
 
     - name: Create second public IP for NAT Gateway
       azure_rm_publicipaddress:
         name: "nat-gateway{{ rpfx }}-pip2"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         sku: "standard"
         allocation_method: "static"
 
     - name: Try to update instance of NAT Gateway - add public IPs
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
         idle_timeout_in_minutes: 10
         sku:
@@ -155,7 +155,7 @@
     - name: Get NAT gateways
       azure_rm_natgateway_info:
         name: nat-gateway{{ rpfx }}1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert that gateway has the right parameters
       ansible.builtin.assert:
@@ -164,7 +164,7 @@
 
     - name: Try to update instance of NAT Gateway - remove 1 public IPs
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
         idle_timeout_in_minutes: 10
         sku:
@@ -179,7 +179,7 @@
     - name: Get NAT gateways
       azure_rm_natgateway_info:
         name: nat-gateway{{ rpfx }}1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert that gateway has the right parameters
       ansible.builtin.assert:
@@ -189,7 +189,7 @@
     # Note: disassociating first IP address helps avoiding issues when deleting them
     - name: Try to update instance of NAT Gateway - remove last public IPs
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}1
         idle_timeout_in_minutes: 10
         sku:
@@ -202,7 +202,7 @@
     - name: Get NAT gateways
       azure_rm_natgateway_info:
         name: nat-gateway{{ rpfx }}1
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert that gateway has the right parameters
       ansible.builtin.assert:
@@ -222,7 +222,7 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
 
     - name: Create the subnet
       azure_rm_subnet:
@@ -230,12 +230,12 @@
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/24"
         nat_gateway: "{{ natgw_output.gateways[0].id }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
     - name: Get the subnet facts
       azure_rm_subnet_info:
         name: "subnet{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: output
     - name: Assert the NAT Gateway is associated
       ansible.builtin.assert:
@@ -244,7 +244,7 @@
 
     - name: Create instance of NAT Gateway
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}3
       register: natgw_output3
     - name: Update the subnet - Update associated NAT Gateway
@@ -252,13 +252,13 @@
         name: "subnet{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/24"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         nat_gateway: nat-gateway{{ rpfx }}3
     - name: Get the subnet facts
       azure_rm_subnet_info:
         name: "subnet{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: output
     - name: Assert the NAT Gateway is not associated
       ansible.builtin.assert:
@@ -270,12 +270,12 @@
         name: "subnet{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
         address_prefix_cidr: "10.1.0.0/24"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
     - name: Get the subnet facts
       azure_rm_subnet_info:
         name: "subnet{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: output
     - name: Assert the NAT Gateway is not associated
       ansible.builtin.assert:
@@ -285,7 +285,7 @@
     # A resource with the same name cannot be created in another location
     - name: Create a second instance of NAT Gateway - change location and name
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}2
         idle_timeout_in_minutes: 10
         location: eastus
@@ -301,7 +301,7 @@
     - name: Get NAT gateways
       azure_rm_natgateway_info:
         name: nat-gateway{{ rpfx }}2
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert that gateway has the right parameters
       ansible.builtin.assert:
@@ -312,7 +312,7 @@
     #### Final cleanup
     - name: Delete instance of NAT Gateway
       azure_rm_natgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: nat-gateway{{ rpfx }}{{ item }}
         state: absent
       register: output
@@ -326,17 +326,17 @@
         state: absent
         name: subnet{{ rpfx }}
         virtual_network_name: vnet{{ rpfx }}
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
 
     - name: Remove virtual network
       azure_rm_virtualnetwork:
         name: "vnet{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         state: absent
 
     - name: Get NAT gateways
       azure_rm_natgateway_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
       register: natgw_output
     - name: Assert there are no gateways left
       ansible.builtin.assert:
@@ -345,7 +345,7 @@
 
     - name: Delete public IPs for NAT Gateway
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-natgw"
         name: "nat-gateway{{ rpfx }}-pip{{ item }}"
         state: absent
       with_items:
@@ -354,6 +354,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-natgw"
         force_delete_nonempty: true
         state: absent

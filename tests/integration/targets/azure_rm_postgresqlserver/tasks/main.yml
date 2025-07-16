@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for post gresql server test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-postgresqlserver"
     location: eastus
 
-- name: For test
+- name: For post gresql server test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
 
     - name: Create instance of PostgreSQL Server -- check mode
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -32,7 +32,7 @@
 
     - name: Create instance of PostgreSQL Server
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -51,7 +51,7 @@
 
     - name: Create again instance of PostgreSQL Server
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -70,7 +70,7 @@
 
     - name: Update instance of PostgreSQL Server, change storage size
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         sku:
           name: B_Gen5_1
@@ -92,7 +92,7 @@
 
     - name: Gather facts postgresql Server
       azure_rm_postgresqlserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
       register: output
     - name: Assert that storage size is correct
@@ -102,7 +102,7 @@
 
     - name: Create second instance of PostgreSQL Server
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}second
         sku:
           name: B_Gen5_1
@@ -119,7 +119,7 @@
 
     - name: Create second instance of PostgreSQL Server -- add tags
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}second
         sku:
           name: B_Gen5_1
@@ -136,7 +136,7 @@
 
     - name: Gather facts PostgreSQL Server
       azure_rm_postgresqlserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}second
       register: output
 
@@ -159,7 +159,7 @@
 
     - name: Gather facts PostgreSQL Server
       azure_rm_postgresqlserver_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
       register: output
     - name: Assert that facts are returned
       ansible.builtin.assert:
@@ -189,7 +189,7 @@
     #
     - name: Create instance of PostgreSQL Database -- check mode
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         charset: UTF8
@@ -203,7 +203,7 @@
 
     - name: Create instance of PostgreSQL Database
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         charset: UTF8
@@ -217,7 +217,7 @@
 
     - name: Create again instance of PostgreSQL Database
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         charset: UTF8
@@ -231,7 +231,7 @@
 
     - name: Try to update PostgreSQL Database without force_update
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         charset: utf8
@@ -245,7 +245,7 @@
 
     - name: Try to update PostgreSQL Database with force_update
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         charset: utf8
@@ -260,13 +260,13 @@
 
     - name: Create second instance of PostgreSQL Database
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase2
 
     - name: Gather facts PostgreSQL Database
       azure_rm_postgresqldatabase_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
       register: output
@@ -282,7 +282,7 @@
 
     - name: Gather facts PostgreSQL Database
       azure_rm_postgresqldatabase_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
       register: output
     - name: Assert that facts are returned
@@ -300,7 +300,7 @@
 
     - name: Delete instance of PostgreSQL Database -- check mode
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         state: absent
@@ -313,7 +313,7 @@
 
     - name: Delete instance of PostgreSQL Database
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         state: absent
@@ -325,7 +325,7 @@
 
     - name: Delete unexisting instance of PostgreSQL Database
       azure_rm_postgresqldatabase:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: testdatabase
         state: absent
@@ -341,7 +341,7 @@
 
     - name: Create instance of Firewall Rule -- check mode
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         start_ip_address: 172.28.10.136
@@ -355,7 +355,7 @@
 
     - name: Create instance of Firewall Rule
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         start_ip_address: 172.28.10.136
@@ -368,7 +368,7 @@
 
     - name: Create again instance of Firewall Rule
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         start_ip_address: 172.28.10.136
@@ -381,7 +381,7 @@
 
     - name: Create Firewall Rule - second
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}second
         start_ip_address: 172.28.10.136
@@ -389,7 +389,7 @@
 
     - name: Gather facts PostgreSQL Firewall Rule
       azure_rm_postgresqlfirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
       register: output
@@ -406,7 +406,7 @@
 
     - name: Gather facts PostgreSQL Firewall Rule
       azure_rm_postgresqlfirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
       register: output
     - name: Assert that facts are returned
@@ -426,7 +426,7 @@
 
     - name: Delete instance of Firewall Rule -- check mode
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         state: absent
@@ -439,7 +439,7 @@
 
     - name: Delete instance of Firewall Rule
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         state: absent
@@ -451,7 +451,7 @@
 
     - name: Delete unexisting instance of Firewall Rule
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
         state: absent
@@ -463,14 +463,14 @@
 
     - name: Delete instance of Firewall Rule - second
       azure_rm_postgresqlfirewallrule:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}second
         state: absent
 
     - name: Gather facts PostgreSQL Firewall Rule
       azure_rm_postgresqlfirewallrule_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
       register: output
@@ -485,7 +485,7 @@
     #
     - name: Create instance of Configuration -- check mode
       azure_rm_postgresqlconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: deadlock_timeout
         value: 2000
@@ -498,7 +498,7 @@
 
     - name: Try to change default configuration
       azure_rm_postgresqlconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: deadlock_timeout
         value: 2000
@@ -510,7 +510,7 @@
 
     - name: Try to change default configuration -- idempotent
       azure_rm_postgresqlconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: deadlock_timeout
         value: 2000
@@ -522,7 +522,7 @@
 
     - name: Try to reset configuration
       azure_rm_postgresqlconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: deadlock_timeout
         state: absent
@@ -534,7 +534,7 @@
 
     - name: Try to reset configuration -- idempotent
       azure_rm_postgresqlconfiguration:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: deadlock_timeout
         state: absent
@@ -546,7 +546,7 @@
 
     - name: Gather facts PostgreSQL Configuration
       azure_rm_postgresqlconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
         name: deadlock_timeout
       register: output
@@ -563,7 +563,7 @@
 
     - name: Gather facts PostgreSQL Configuration
       azure_rm_postgresqlconfiguration_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         server_name: postgresqlsrv{{ rpfx }}
       register: output
     - name: Assert that facts are returned
@@ -583,7 +583,7 @@
 
     - name: Delete instance of PostgreSQL Server -- check mode
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         state: absent
       check_mode: true
@@ -595,7 +595,7 @@
 
     - name: Delete instance of PostgreSQL Server
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         state: absent
       register: output
@@ -606,7 +606,7 @@
 
     - name: Delete unexisting instance of PostgreSQL Server
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}
         state: absent
       register: output
@@ -617,7 +617,7 @@
 
     - name: Delete second instance of PostgreSQL Server
       azure_rm_postgresqlserver:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-postgresqlserver"
         name: postgresqlsrv{{ rpfx }}second
         state: absent
       async: 400
@@ -625,6 +625,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-postgresqlserver"
         force_delete_nonempty: true
         state: absent

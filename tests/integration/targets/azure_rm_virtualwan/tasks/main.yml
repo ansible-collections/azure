@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for virtual wan test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-virtualwan"
     location: eastus
 
-- name: For test
+- name: For virtual wan test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
 
     - name: Create a VirtualWan
       azure_rm_virtualwan:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
         office365_local_breakout_category: All
         disable_vpn_encryption: true
@@ -28,7 +28,7 @@
 
     - name: Create a VirtualWan again (Idempotent test)
       azure_rm_virtualwan:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
       register: output
 
@@ -39,7 +39,7 @@
 
     - name: Update the VirtualWan
       azure_rm_virtualwan:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-virtualwan"
         office365_local_breakout_category: All
         name: "virtualwan{{ rpfx }}"
         disable_vpn_encryption: false
@@ -55,7 +55,7 @@
 
     - name: Get VirtualWan info
       azure_rm_virtualwan_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
       register: output
 
@@ -67,12 +67,12 @@
 
     - name: Delete the VirtualWan
       azure_rm_virtualwan:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-virtualwan"
         force_delete_nonempty: true
         state: absent

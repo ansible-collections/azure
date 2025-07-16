@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for key vault secret test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-keyvaultsecret"
     location: eastus
 
-- name: For test
+- name: For key vault secret test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -21,7 +21,7 @@
 
     - name: Create instance of Key Vault
       azure_rm_keyvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-keyvaultsecret"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
         vault_tenant: "{{ tenant_id }}"
@@ -108,6 +108,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-keyvaultsecret"
         force_delete_nonempty: true
         state: absent

@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for recovery services vault test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-recoveryservicevault"
     location: eastus
 
-- name: For test
+- name: For recovery services vault test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-recoveryservicevault"
       register: __rg_info
 
     - name: Fix resource prefix and location
@@ -32,7 +32,7 @@
 
     - name: Create Azure Recovery Service vault
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -47,7 +47,7 @@
 
     - name: Create Azure Recovery Service vault (idempotent)
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -62,7 +62,7 @@
 
     - name: Update Azure Recovery Service vault with UserAssigned
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -80,7 +80,7 @@
 
     - name: Update Azure Recovery Service vault with UserAssignd (idempotent)
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -98,7 +98,7 @@
 
     - name: Update Azure Recovery Service vault with UserAssigned X2
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -117,7 +117,7 @@
 
     - name: Update Azure Recovery Service vault with UserAssignd X2 (idempotent)
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -136,7 +136,7 @@
 
     - name: Get Azure Recovery Service Vault Details
       azure_rm_recoveryservicesvault_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -148,7 +148,7 @@
 
     - name: Get Azure Recovery Service Vault Config Details
       azure_rm_recoveryservicesvaultconfig_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         vault_name: "{{ name_rpfx }}"
       register: output
 
@@ -162,7 +162,7 @@
     - name: Turn off Azure Recovery Service Vault Config Soft Delete Settings
       # Note: this may stop working in the future because of https://learn.microsoft.com/en-us/azure/backup/secure-by-default
       azure_rm_recoveryservicesvaultconfig:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         vault_name: "{{ name_rpfx }}"
         properties:
           enhanced_security_state: Disabled
@@ -177,7 +177,7 @@
 
     - name: Change Azure Recovery Service Vault Config Soft Delete Settings to AlwaysON and set retention higher than default
       azure_rm_recoveryservicesvaultconfig:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         vault_name: "{{ name_rpfx }}"
         properties:
           enhanced_security_state: AlwaysON
@@ -194,7 +194,7 @@
 
     - name: Update tags on recovery services vault (append=false)
       azure.azcollection.azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -214,7 +214,7 @@
 
     - name: Check tags on recovery services vault
       azure.azcollection.azure_rm_recoveryservicesvault_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -227,7 +227,7 @@
 
     - name: Update tags on recovery services vault (append=true)
       azure.azcollection.azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -247,7 +247,7 @@
 
     - name: Check tags on recovery services vault
       azure.azcollection.azure_rm_recoveryservicesvault_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -262,7 +262,7 @@
 
     - name: Replace tags on recovery services vault (append=false)
       azure.azcollection.azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -282,7 +282,7 @@
 
     - name: Check tags on recovery services vault
       azure.azcollection.azure_rm_recoveryservicesvault_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -297,7 +297,7 @@
 
     - name: Delete Azure Recovery Service vault
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-recoveryservicevault"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "absent"
@@ -321,6 +321,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-recoveryservicevault"
         force_delete_nonempty: true
         state: absent

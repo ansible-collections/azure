@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for capacity reservation group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-capacityreservationgroup"
     location: eastus
 
-- name: For test
+- name: For capacity reservation grouptest
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a new capacity reservation group(Checkmode test)
       azure_rm_capacityreservationgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-capacityreservationgroup"
         name: "{{ random_postfix }}"
         zones:
           - 1
@@ -22,7 +22,7 @@
 
     - name: Create a new capacity reservation group
       azure_rm_capacityreservationgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-capacityreservationgroup"
         name: "{{ random_postfix }}"
         zones:
           - 1
@@ -38,7 +38,7 @@
 
     - name: Update the capacity reservation group's tag
       azure_rm_capacityreservationgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-capacityreservationgroup"
         name: "{{ random_postfix }}"
         zones:
           - 1
@@ -54,7 +54,7 @@
 
     - name: Recreate the capacity reservation group(idempotent test)
       azure_rm_capacityreservationgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-capacityreservationgroup"
         name: "{{ random_postfix }}"
         zones:
           - 1
@@ -70,7 +70,7 @@
 
     - name: Get capacity reservation group by name
       azure_rm_capacityreservationgroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-capacityreservationgroup"
         name: "{{ random_postfix }}"
       register: output
 
@@ -81,7 +81,7 @@
 
     - name: Delete the capacity reservation group
       azure_rm_capacityreservationgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-capacityreservationgroup"
         name: "{{ random_postfix }}"
         state: absent
       register: output
@@ -93,6 +93,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-capacityreservationgroup"
         force_delete_nonempty: true
         state: absent

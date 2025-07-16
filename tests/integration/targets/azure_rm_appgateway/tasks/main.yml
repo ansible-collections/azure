@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for appgateway test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-appgateway"
     location: eastus
 
-- name: For test
+- name: For appgateway test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-appgateway"
         password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
       register: __rg_info
 
@@ -49,7 +49,7 @@
     - name: Create a virtual network
       azure_rm_virtualnetwork:
         name: vnet{{ rpfx }}
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         address_prefixes_cidr:
           - 10.1.0.0/16
           - 172.100.0.0/16
@@ -61,20 +61,20 @@
       azure_rm_subnet:
         name: subnet{{ rpfx }}
         virtual_network_name: vnet{{ rpfx }}
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         address_prefix_cidr: 10.1.0.0/24
       register: subnet_output
 
     - name: Configure public IP for v2 gateway
       azure_rm_publicipaddress:
         name: "appgateway-v2-{{ rpfx }}-pip"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         sku: "standard"
         allocation_method: "static"
 
     - name: Try to create v2 instance of Application Gateway with rewrite rules
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -232,7 +232,7 @@
 
     - name: Try to create v2 instance of Application Gateway with rewrite rules - no update
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -390,7 +390,7 @@
 
     - name: Try to create v2 instance of Application Gateway with rewrite rules - update rewrite rule
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -551,7 +551,7 @@
 
     - name: Try to create v2 instance of Application Gateway with UserAssigned identity
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -717,7 +717,7 @@
 
     - name: Try to create v2 instance of Application Gateway with no Update
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -883,7 +883,7 @@
 
     - name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -1054,7 +1054,7 @@
 
     - name: Try to create v2 instance of Application Gateway with autoscale configuration and trusted root certificates - no update
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         sku:
           name: standard_v2
@@ -1225,13 +1225,13 @@
     - name: Configure public IP for waf_v2 gateway
       azure_rm_publicipaddress:
         name: "appgateway-waf-v2-{{ rpfx }}-pip"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         sku: "standard"
         allocation_method: "static"
 
     - name: Try to create waf_v2 instance of Application Gateway with waf configuration
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-waf-v2-{{ rpfx }}"
         sku:
           name: waf_v2
@@ -1398,7 +1398,7 @@
 
     - name: Try to create waf_v2 instance of Application Gateway with waf configuration - no update
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-waf-v2-{{ rpfx }}"
         sku:
           name: waf_v2
@@ -1566,13 +1566,13 @@
     - name: Configure public IP for waf policy gateway
       azure_rm_publicipaddress:
         name: "appgateway-waf-policy-{{ rpfx }}-pip"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         sku: "standard"
         allocation_method: "static"
 
     - name: Try to create waf policy instance of Application Gateway
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-waf-policy-{{ rpfx }}"
         sku:
           name: waf_v2
@@ -1734,7 +1734,7 @@
 
     - name: Try to create waf policy instance of Application Gateway - no update
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-waf-policy-{{ rpfx }}"
         sku:
           name: waf_v2
@@ -1896,7 +1896,7 @@
 
     - name: Delete v2 instance of Application Gateway
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
         state: absent
       register: output
@@ -1907,7 +1907,7 @@
 
     - name: Delete waf_v2 instance of Application Gateway
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-waf-v2-{{ rpfx }}"
         state: absent
       register: output
@@ -1918,7 +1918,7 @@
 
     - name: Delete waf policy instance of Application Gateway
       azure_rm_appgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-waf-policy-{{ rpfx }}"
         state: absent
       register: output
@@ -1930,7 +1930,7 @@
     - name: Delete public IP for v2 gateway
       azure_rm_publicipaddress:
         name: "appgateway-v2-{{ rpfx }}-pip"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         state: absent
       register: output
     - name: Assert the state has changed
@@ -1941,7 +1941,7 @@
     - name: Delete public IP for waf v2 gateway
       azure_rm_publicipaddress:
         name: "appgateway-waf-v2-{{ rpfx }}-pip"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         state: absent
       register: output
     - name: Assert the state has changed
@@ -1952,7 +1952,7 @@
     - name: Delete virtual network
       azure_rm_virtualnetwork:
         name: vnet{{ rpfx }}
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         state: absent
 
     - name: Delete user managed identities
@@ -1965,6 +1965,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-appgateway"
         force_delete_nonempty: true
         state: absent

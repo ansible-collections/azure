@@ -1,20 +1,7 @@
-- name: Create a new resource group for test
-  azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
-
-- name: For test
-  block:
-    - name: Prepare random number
-      ansible.builtin.set_fact:
-        password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=15) }}"
-    - name: Excute test_shared.yml
-      ansible.builtin.include_tasks: tasks/test_shared.yml
-    # - name: Excute test_async.yml
-    #  ansible.builtin.include_tasks: tasks/test_async.yml
-  always:
-    - name: Force delete the resource group
-      azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
-        force_delete_nonempty: true
-        state: absent
+- name: Prepare random number
+  ansible.builtin.set_fact:
+    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=15) }}"
+- name: Excute test_shared.yml
+  ansible.builtin.include_tasks: tasks/test_shared.yml
+# - name: Excute test_async.yml
+#  ansible.builtin.include_tasks: tasks/test_async.yml

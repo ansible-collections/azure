@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for storage share test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-storageshare"
     location: eastus
 
-- name: For test
+- name: For storage share test
   block:
     - name: Set storage account name
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         name: "{{ storage_account }}"
         account_type: Standard_LRS
         kind: StorageV2
@@ -28,7 +28,7 @@
     - name: Create share
       azure_rm_storageshare:
         name: "{{ share_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         account_name: "{{ storage_account }}"
         quota: "{{ quota }}"
         metadata: "{{ metadata }}"
@@ -50,7 +50,7 @@
     - name: Run again to check idempotence
       azure_rm_storageshare:
         name: "{{ share_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         account_name: "{{ storage_account }}"
       register: create_result
 
@@ -61,7 +61,7 @@
     - name: Get share details
       azure_rm_storageshare_info:
         name: "{{ share_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         account_name: "{{ storage_account }}"
       register: share_facts
 
@@ -85,7 +85,7 @@
     - name: Update share
       azure_rm_storageshare:
         name: "{{ share_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         account_name: "{{ storage_account }}"
         quota: "{{ quota }}"
         access_tier: "{{ access_tier }}"
@@ -98,7 +98,7 @@
     - name: Get updated details
       azure_rm_storageshare_info:
         name: "{{ share_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         account_name: "{{ storage_account }}"
       register: share_facts
 
@@ -116,7 +116,7 @@
     - name: Delete share
       azure_rm_storageshare:
         name: "{{ share_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         account_name: "{{ storage_account }}"
         state: absent
       register: delete_output
@@ -128,12 +128,12 @@
 
     - name: Delete storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageshare"
         name: "{{ storage_account }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-storageshare"
         force_delete_nonempty: true
         state: absent

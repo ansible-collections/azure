@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for cognitive search test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-cognitivesearch"
     location: eastus
 
-- name: For test
+- name: For cognitive search test
   block:
     - name: Create Azure Search name
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
     - name: Create invalid Azure Search - Hosting Name
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         hosting_mode: highDensity
       register: invalid_hosting_name
       ignore_errors: true
@@ -26,7 +26,7 @@
     - name: Create invalid Azure Search - Partition Count High Density
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         sku: standard3
         hosting_mode: highDensity
         partition_count: 4
@@ -41,7 +41,7 @@
     - name: Create invalid Azure Search - Partition Count
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         partition_count: 7
       register: invalid_partition_count
       ignore_errors: true
@@ -54,7 +54,7 @@
     - name: Create invalid Azure Search - Replica Count
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         sku: standard
         replica_count: 13
       register: invalid_replica_count
@@ -68,7 +68,7 @@
     - name: Create invalid Azure Search - Replica Count SKU basic
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         replica_count: 4
         sku: basic
       register: invalid_replica_count
@@ -82,7 +82,7 @@
     - name: Create basic Azure Search
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
       register: search_info
 
     - name: Assert status Succeeded and results
@@ -104,7 +104,7 @@
     - name: Get info for Azure Search
       azure_rm_cognitivesearch_info:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
       register: search_info_module
 
     - name: Assert status Succeeded and results
@@ -125,7 +125,7 @@
     - name: Update basic Azure Search (Idempotence)
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
       register: search_info
 
     - name: Assert that idempotence is ok
@@ -136,13 +136,13 @@
     - name: Delete Azure Search
       azure_rm_cognitivesearch:
         name: "{{ search_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         state: absent
 
     - name: Create Azure Search not default parameters
       azure_rm_cognitivesearch:
         name: "{{ search_name_secondary }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         hosting_mode: default
         identity: SystemAssigned
         network_rule_set:
@@ -174,7 +174,7 @@
     - name: Update Azure Search not default parameters (Idempotence)
       azure_rm_cognitivesearch:
         name: "{{ search_name_secondary }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         hosting_mode: default
         identity: SystemAssigned
         network_rule_set:
@@ -196,11 +196,11 @@
     - name: Delete Azure Search
       azure_rm_cognitivesearch:
         name: "{{ search_name_secondary }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-cognitivesearch"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-cognitivesearch"
         force_delete_nonempty: true
         state: absent

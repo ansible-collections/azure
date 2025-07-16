@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for monitor action group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-monitoractiongroups"
     location: eastus
 
-- name: For test
+- name: For monitor action group test
   block:
     - name: Prepare variables
       ansible.builtin.set_fact:
@@ -16,7 +16,7 @@
 
     - name: Get information about a non-existant action group
       azure.azcollection.azure_rm_monitoractiongroups_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
       register: output
 
@@ -27,7 +27,7 @@
 
     - name: Create action group (check mode)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         enabled: true
@@ -47,7 +47,7 @@
 
     - name: Create action group (no tags)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         enabled: true
@@ -66,7 +66,7 @@
 
     - name: Create action group (no tags, idempotency check)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         enabled: true
@@ -85,7 +85,7 @@
 
     - name: Create action group (creation tags)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-creationtags-{{ random_string }}"
         state: present
         enabled: true
@@ -107,7 +107,7 @@
 
     - name: Create action group (creation tags, idempotency check)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-creationtags-{{ random_string }}"
         state: present
         enabled: true
@@ -129,7 +129,7 @@
 
     - name: Add tag to existing action group
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         tags:
@@ -144,7 +144,7 @@
 
     - name: Add tag to existing action group (idempontency)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         tags:
@@ -159,7 +159,7 @@
 
     - name: Add tag to existing action group (append)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         append_tags: true
@@ -176,7 +176,7 @@
 
     - name: Add tag to existing action group (append, idempotency)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         append_tags: true
@@ -193,7 +193,7 @@
 
     - name: Replace tag on existing action group
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         append_tags: false
@@ -211,7 +211,7 @@
 
     - name: Replace tag on existing action group (idempontency)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         append_tags: false
@@ -229,7 +229,7 @@
 
     - name: Remove tags on existing action group
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         append_tags: false
@@ -243,7 +243,7 @@
 
     - name: Remove tags on existing action group (idempotency)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: present
         append_tags: false
@@ -257,7 +257,7 @@
 
     - name: Get information about a action group
       azure.azcollection.azure_rm_monitoractiongroups_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
       register: output
 
@@ -268,7 +268,7 @@
 
     - name: List all action groups (resource group level)
       azure.azcollection.azure_rm_monitoractiongroups_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
       register: output
 
     - name: Assert that action group list includes created action group (resource group level)
@@ -289,7 +289,7 @@
 
     - name: Delete action group (check mode)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: absent
       check_mode: true
@@ -302,7 +302,7 @@
 
     - name: Delete action group
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: absent
       register: output
@@ -314,7 +314,7 @@
 
     - name: Delete action group (idempontency check)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
         state: absent
       register: output
@@ -326,7 +326,7 @@
 
     - name: Delete action group (creation tags)
       azure.azcollection.azure_rm_monitoractiongroups:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-creationtags-{{ random_string }}"
         state: absent
       register: output
@@ -340,7 +340,7 @@
 
     - name: Make sure delection succeeded
       azure.azcollection.azure_rm_monitoractiongroups_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
         name: "actiongroup-{{ random_string }}"
       register: output
 
@@ -351,7 +351,7 @@
 
     - name: List all action groups after deletion (resource group level)
       azure.azcollection.azure_rm_monitoractiongroups_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-monitoractiongroups"
       register: output
 
     - name: Assert that action group list no longer includes created action group (resource group level)
@@ -370,6 +370,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-monitoractiongroups"
         force_delete_nonempty: true
         state: absent

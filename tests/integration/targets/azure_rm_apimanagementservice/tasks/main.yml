@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for api management service test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-apimanagementservice"
     location: eastus
 
-- name: For test
+- name: For api management service test
   block:
     - name: Fix resource prefix
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: To create api management service
       azure_rm_apimanagementservice:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
         publisher_email: user@example.com
         publisher_name: Username
@@ -27,7 +27,7 @@
 
     - name: Recreate api management service idempotent test
       azure_rm_apimanagementservice:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
         publisher_email: user@example.com
         publisher_name: Username
@@ -43,7 +43,7 @@
 
     - name: Get api management service information
       azure_rm_apimanagementservice_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -54,7 +54,7 @@
 
     - name: To delete an api management service
       azure_rm_apimanagementservice:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
         state: absent
       register: output
@@ -66,6 +66,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-apimanagementservice"
         force_delete_nonempty: true
         state: absent

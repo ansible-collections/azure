@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for role assignment test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-roleassignemnt"
     location: eastus
 
-- name: For test
+- name: For role assignment test
   block:
     - name: Setup basic facts
       ansible.builtin.set_fact:
@@ -102,7 +102,7 @@
 
     - name: Get resource group info
       azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-roleassignemnt"
       register: az_resource_group
 
     - name: Create role assignment by id
@@ -243,6 +243,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-roleassignemnt"
         force_delete_nonempty: true
         state: absent

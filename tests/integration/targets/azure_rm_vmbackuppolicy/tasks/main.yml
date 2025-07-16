@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for VM backup policy test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-vmbackuppolicy"
     location: eastus
 
-- name: For test
+- name: For VM backup policy test
   block:
     - name: Fix resource prefix
       ansible.builtin.set_fact:
@@ -13,7 +13,7 @@
 
     - name: Create Azure Recovery Service vault
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
         name: "{{ name_rpfx }}"
         location: "{{ location }}"
         state: "present"
@@ -21,7 +21,7 @@
 
     - name: Create VM Backup Policy
       azure_rm_vmbackuppolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
         name: "{{ name_rpfx }}"
         vault_name: "{{ vault.response.name }}"
         state: "present"
@@ -34,7 +34,7 @@
 
     - name: Create VM Backup Policy (idempotent)
       azure_rm_vmbackuppolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
         name: "{{ name_rpfx }}"
         vault_name: "{{ vault.response.name }}"
         state: "present"
@@ -47,7 +47,7 @@
 
     - name: Get VM Backup Policy Details
       azure_rm_vmbackuppolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
         name: "{{ name_rpfx }}"
         vault_name: "{{ vault.response.name }}"
       register: output
@@ -60,7 +60,7 @@
 
     - name: Delete VM Backup Policy
       azure_rm_vmbackuppolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
         name: "{{ name_rpfx }}"
         vault_name: "{{ vault.response.name }}"
         state: "absent"
@@ -73,7 +73,7 @@
 
     - name: Delete Azure Recovery Service vault
       azure_rm_recoveryservicesvault:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
         name: "{{ vault.response.name }}"
         location: "{{ location }}"
         state: "absent"
@@ -86,6 +86,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-vmbackuppolicy"
         force_delete_nonempty: true
         state: absent

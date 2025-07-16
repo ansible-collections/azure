@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for storage blob test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-storageblob"
     location: eastus
 
-- name: For test
+- name: For storage blob test
   block:
     - name: Create storage account name
       ansible.builtin.set_fact:
@@ -12,7 +12,7 @@
 
     - name: Create storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         name: "{{ storage_account }}"
         account_type: Standard_LRS
       register: az_storageaccount
@@ -20,7 +20,7 @@
     - name: Create container
       azure_rm_storageblob:
         # auth_mode: login
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
 
@@ -45,7 +45,7 @@
     - name: Force upload blob
       azure_rm_storageblob:
         # auth_mode: login
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         blob: 'Ratings.png'
@@ -58,7 +58,7 @@
 
     - name: Upload blob idempotence
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         blob: 'Ratings.png'
@@ -74,7 +74,7 @@
 
     - name: Download file idempotence
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         blob: 'Ratings.png'
@@ -91,7 +91,7 @@
 
     - name: Download file
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         blob: 'Ratings.png'
@@ -112,7 +112,7 @@
 
     - name: Create storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         name: "{{ storage_account }}2"
         account_type: Standard_LRS
         public_network_access: Enabled
@@ -120,13 +120,13 @@
 
     - name: Create container
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
 
     - name: Force upload blob with I(standard_blob_tier=Hot)
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
         blob: 'Ratings.png'
@@ -142,7 +142,7 @@
 
     - name: Update the blob with I(standard_blob_tier=Cool)
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
         blob: 'Ratings.png'
@@ -157,7 +157,7 @@
 
     - name: Get the blob facts
       azure_rm_storageblob_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
         blob_name: 'Ratings.png'
@@ -171,7 +171,7 @@
 
     - name: Do not delete container that has blobs
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         state: absent
@@ -182,7 +182,7 @@
 
     - name: Delete blob object
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         blob: "Ratings.png"
@@ -194,7 +194,7 @@
 
     - name: Delete container
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
         state: absent
@@ -205,13 +205,13 @@
 
     - name: Delete storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         name: "{{ storage_account }}"
         state: absent
 
     - name: Delete blob object
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
         blob: "Ratings.png"
@@ -224,7 +224,7 @@
 
     - name: Delete container
       azure_rm_storageblob:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
         state: absent
@@ -236,12 +236,12 @@
 
     - name: Delete storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageblob"
         name: "{{ storage_account }}2"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-storageblob"
         force_delete_nonempty: true
         state: absent

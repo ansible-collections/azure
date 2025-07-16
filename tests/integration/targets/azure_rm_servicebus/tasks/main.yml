@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for service bus test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-servicebus"
     location: eastus
 
-- name: For test
+- name: For service bus test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-servicebus"
       register: __rg_info
 
     - name: Prepare random number
@@ -35,7 +35,7 @@
     - name: Create a namespace
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         tags:
           key1: value1
@@ -51,7 +51,7 @@
     - name: Create a namespace (idempontent)
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
       register: output
 
@@ -63,7 +63,7 @@
     - name: Update namespace - ManagedIdentity SystemAssigned
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         identity:
           type: SystemAssigned
@@ -79,7 +79,7 @@
       azure_rm_servicebus_info:
         name: "ns{{ rpfx }}"
         type: namespace
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
       register: facts
 
     - name: Debug
@@ -89,7 +89,7 @@
     - name: Update namespace - ManagedIdentity UserAssigned
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         identity:
           type: UserAssigned
@@ -109,7 +109,7 @@
     - name: Update namespace - ManagedIdentity UserAssigned Append
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         identity:
           type: UserAssigned
@@ -130,7 +130,7 @@
     - name: Update namespace - ManagedIdentity UserAssigned Append false
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         identity:
           type: UserAssigned
@@ -151,7 +151,7 @@
     - name: Create a secondary namespace
       azure_rm_servicebus:
         name: "ns{{ rpfx }}02"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         minimum_tls_version: '1.1'
         zone_redundant: false
@@ -170,7 +170,7 @@
     - name: Update the secondary namespace
       azure_rm_servicebus:
         name: "ns{{ rpfx }}02"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         sku: premium
         minimum_tls_version: '1.2'
         zone_redundant: false
@@ -190,7 +190,7 @@
       azure_rm_servicebus_info:
         name: "ns{{ rpfx }}"
         type: namespace
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
       register: facts
 
     - name: Assert the facts
@@ -207,7 +207,7 @@
       azure_rm_servicebusqueue:
         name: "queue{{ rpfx }}"
         namespace: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         max_message_size_in_kb: 2048
         max_size_in_mb: 2048
       register: queue
@@ -221,7 +221,7 @@
     - name: Create a topic (check mode)
       azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         duplicate_detection_time_in_seconds: 600
         max_message_size_in_kb: 2048
@@ -237,7 +237,7 @@
     - name: Create a topic
       azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         duplicate_detection_time_in_seconds: 600
         max_message_size_in_kb: 2048
@@ -254,7 +254,7 @@
     - name: Create a topic (idempontent)
       azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         duplicate_detection_time_in_seconds: 600
         max_message_size_in_kb: 2048
@@ -269,7 +269,7 @@
     - name: Create test policy
       azure_rm_servicebussaspolicy:
         name: testpolicy
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         topic: "topic{{ rpfx }}"
         rights: manage
@@ -277,7 +277,7 @@
     - name: Create a subscription
       azure_rm_servicebustopicsubscription:
         name: "subs{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         topic: "topic{{ rpfx }}"
       register: subs
@@ -292,7 +292,7 @@
       azure_rm_servicebus_info:
         type: topic
         name: "topic{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         show_sas_policies: true
       register: facts
@@ -309,7 +309,7 @@
     - name: Delete subscription
       azure_rm_servicebustopicsubscription:
         name: "subs{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         topic: "topic{{ rpfx }}"
         state: absent
@@ -318,7 +318,7 @@
       azure_rm_servicebus_info:
         type: topic
         name: "topic{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         show_sas_policies: true
       register: facts
@@ -332,7 +332,7 @@
     - name: Delete topic
       azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         state: absent
 
@@ -340,7 +340,7 @@
       azure_rm_servicebus_info:
         name: "topic{{ rpfx }}"
         type: topic
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         show_sas_policies: true
       register: facts
@@ -353,14 +353,14 @@
     - name: Delete queue
       azure_rm_servicebusqueue:
         name: "queue{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         state: absent
 
     - name: Delete namespace
       azure_rm_servicebus:
         name: "ns{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-servicebus"
         state: absent
 
     - name: Delete user managed identities
@@ -377,6 +377,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-servicebus"
         force_delete_nonempty: true
         state: absent

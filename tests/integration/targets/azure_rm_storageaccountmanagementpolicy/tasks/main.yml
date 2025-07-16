@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for storage account management policy test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-storagemanagementpolicy"
     location: eastus
 
-- name: For test
+- name: For storage management policy test
   block:
     - name: Set random value
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create storage account with static website disabled
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         name: "st{{ rpfx }}"
         account_type: Standard_LRS
         kind: StorageV2
@@ -20,7 +20,7 @@
 
     - name: Create storage account management policy rule (Check mode test)
       azure_rm_storageaccountmanagementpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         storage_account_name: "st{{ rpfx }}"
         rules:
           - name: olcmtest
@@ -67,7 +67,7 @@
 
     - name: Create storage account management policy rule
       azure_rm_storageaccountmanagementpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         storage_account_name: "st{{ rpfx }}"
         rules:
           - name: olcmtest
@@ -119,7 +119,7 @@
 
     - name: Create storage account management policy rule(Idempotent test)
       azure_rm_storageaccountmanagementpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         storage_account_name: "st{{ rpfx }}"
         rules:
           - name: olcmtest
@@ -171,7 +171,7 @@
 
     - name: Create storage account management policy rule(Updating test)
       azure_rm_storageaccountmanagementpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         storage_account_name: "st{{ rpfx }}"
         rules:
           - name: olcmtest
@@ -223,7 +223,7 @@
 
     - name: Get storage account management policy
       azure_rm_storageaccountmanagementpolicy_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         storage_account_name: "st{{ rpfx }}"
       register: output
 
@@ -238,7 +238,7 @@
 
     - name: Delete the storage account management policy's rule
       azure_rm_storageaccountmanagementpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storagemanagementpolicy"
         storage_account_name: "st{{ rpfx }}"
         state: absent
       register: output
@@ -250,6 +250,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-storagemanagementpolicy"
         force_delete_nonempty: true
         state: absent

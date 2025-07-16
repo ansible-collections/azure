@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for disk access test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-diskaccess"
     location: eastus
 
-- name: For test
+- name: For disk access test
   block:
     - name: Set varialbles
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a new disk access (Checkmode Test)
       azure_rm_diskaccess:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
         tags:
@@ -20,7 +20,7 @@
 
     - name: Create a new disk access
       azure_rm_diskaccess:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
         tags:
@@ -34,7 +34,7 @@
 
     - name: Create a new disk access(Idempotent Test)
       azure_rm_diskaccess:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
         tags:
@@ -48,7 +48,7 @@
 
     - name: Update the disk access
       azure_rm_diskaccess:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
         tags:
@@ -62,7 +62,7 @@
 
     - name: Get the disk access facts
       azure_rm_diskaccess_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
       register: output
 
@@ -73,7 +73,7 @@
 
     - name: Delete the disk access
       azure_rm_diskaccess:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         state: absent
       register: output
@@ -85,6 +85,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-diskaccess"
         force_delete_nonempty: true
         state: absent

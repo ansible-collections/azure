@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for virtual hub connection test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-vnethubconn"
     location: eastus
 
-- name: For test
+- name: For virtual hub connection test
   block:
     - name: Set variables
       ansible.builtin.set_fact:
@@ -15,12 +15,12 @@
         address_prefixes_cidr:
           - 10.1.0.0/16
           - 172.100.0.0/16
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
       register: vnet_output
 
     - name: Create a Virtual Wan
       azure_rm_virtualwan:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         name: "virtualwan{{ rpfx }}"
         office365_local_breakout_category: All
         disable_vpn_encryption: true
@@ -31,7 +31,7 @@
 
     - name: Create a VirtualHub
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         name: "vhub{{ rpfx }}"
         sku: Standard
         address_prefix: 12.0.0.0/16
@@ -45,7 +45,7 @@
 
     - name: Create virtual hub connection
       azure_rm_virtualhubconnection:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         enable_internet_security: true
@@ -79,7 +79,7 @@
 
     - name: Create virtual hub connection (idempotent test)
       azure_rm_virtualhubconnection:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         enable_internet_security: true
@@ -113,7 +113,7 @@
 
     - name: Update virtual hub connection
       azure_rm_virtualhubconnection:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         enable_internet_security: false
@@ -149,7 +149,7 @@
 
     - name: Get virtual hub connection info
       azure_rm_virtualhubconnection_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         virtual_hub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
       register: output
@@ -165,13 +165,13 @@
 
     - name: Delete the virtual hub connection
       azure_rm_virtualhubconnection:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-vnethubconn"
         force_delete_nonempty: true
         state: absent

@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for SSH public key test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-sshpublickey"
     location: eastus
 
-- name: For test
+- name: For SSH public key test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a new SSH Public Key
       azure_rm_sshpublickey:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sshpublickey"
         name: sshpublic{{ rpfx }}
         public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoit3vZKD1Nf6ZZQImq5sRiv0r986/oz+zBezfXPWVKiCgy1TIyX+kGuMNhXcS9rTelXmIo2g3hvw2P/elSilaNkmuDE9otszATeOjPORoIrTcEd2N7vZUpwP7Ekmp+OZ/4ROG4dEuD2PVygmajYvNAayU8Ghdk/sAqLSOJ5FoPa3DO/1JUX81VzFQyfwtcstCsUouIft0GQ0QbSrXEMmtqylU/TstQZdupdWLxaLLRyTb57X43FUWM28lC/HczCPE3TX8gxZAzPTwA7yWp8Mum+QLC7IiKEAMbyVotzbtkcWU6BJd8uOGEQaHbJqoXOhmPKFMdHyhmT43fckS2mh6dSU0z8WiNC/CyCtsavZy0LSXEyPWL1bTDouHePygPXd1sN1GhCtk65tPYncbZavFuI7PcN0yxpjZWATdP79TU5cPYwZl2SZMhtBrR/ll/HLP88CgXIqZ1wsLM+ek76WqHLlhA5UK7KSE8z2qOdnsmH8uTRe4MrqmM9C5VCgjS18= test@test.com"
         tags:
@@ -26,7 +26,7 @@
 
     - name: Create a new SSH Public Key (Idempotent test)
       azure_rm_sshpublickey:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sshpublickey"
         name: sshpublic{{ rpfx }}
         public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoit3vZKD1Nf6ZZQImq5sRiv0r986/oz+zBezfXPWVKiCgy1TIyX+kGuMNhXcS9rTelXmIo2g3hvw2P/elSilaNkmuDE9otszATeOjPORoIrTcEd2N7vZUpwP7Ekmp+OZ/4ROG4dEuD2PVygmajYvNAayU8Ghdk/sAqLSOJ5FoPa3DO/1JUX81VzFQyfwtcstCsUouIft0GQ0QbSrXEMmtqylU/TstQZdupdWLxaLLRyTb57X43FUWM28lC/HczCPE3TX8gxZAzPTwA7yWp8Mum+QLC7IiKEAMbyVotzbtkcWU6BJd8uOGEQaHbJqoXOhmPKFMdHyhmT43fckS2mh6dSU0z8WiNC/CyCtsavZy0LSXEyPWL1bTDouHePygPXd1sN1GhCtk65tPYncbZavFuI7PcN0yxpjZWATdP79TU5cPYwZl2SZMhtBrR/ll/HLP88CgXIqZ1wsLM+ek76WqHLlhA5UK7KSE8z2qOdnsmH8uTRe4MrqmM9C5VCgjS18= test@test.com"
         tags:
@@ -41,7 +41,7 @@
 
     - name: Update SSH Public Key with tags and public key
       azure_rm_sshpublickey:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sshpublickey"
         name: sshpublic{{ rpfx }}
         public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoit3vZKD1Nf6ZZQImq5sRiv0r986/oz+zBezfXPWVKiCgy1TIyX+kGuMNhXcS9rTelXmIo2g3hvw2P/elSilaNkmuDE9otszATeOjPORoIrTcEd2N7vZUpwP7Ekmp+OZ/4ROG4dEuD2PVygmajYvNAayU8Ghdk/sAqLSOJ5FoPa3DO/1JUX81VzFQyfwtcstCsUouIft0GQ0QbSrXEMmtqylU/TstQZdupdWLxaLLRyTb57X43FUWM28lC/HczCPE3TX8gxZAzPTwA7yWp8Mum+QLC7IiKEAMbyVotzbtkcWU6BJd8uOGEQaHbJqoXOhmPKFMdHyhmT43fckS2mh6dSU0z8WiNC/CyCtsavZy0LSXEyPWL1bTDouHePygPXd1sN1GhCtk65tPYncbZavFuI7PcN0yxpjZWATdP79TU5cPYwZl2SZMhtBrR/ll/HLP88CgXIqZ1wsLM+ek76WqHLlhA5UK7KSE8z2qOdnsmH8uTRe4MrqmM9C5VCgjS18= test@test.com"
         tags:
@@ -55,7 +55,7 @@
 
     - name: Get ssh public keys by name
       azure_rm_sshpublickey_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sshpublickey"
         name: sshpublic{{ rpfx }}
       register: output
 
@@ -66,7 +66,7 @@
 
     - name: Delete a new SSH Public Key
       azure_rm_sshpublickey:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-sshpublickey"
         name: sshpublic{{ rpfx }}
         state: absent
       register: output
@@ -78,6 +78,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-sshpublickey"
         force_delete_nonempty: true
         state: absent

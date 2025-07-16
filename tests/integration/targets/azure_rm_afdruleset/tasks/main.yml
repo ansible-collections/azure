@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for Azure Front Door ruleset test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-afdruleset"
     location: eastus
 
-- name: For test
+- name: For Azure Front Door ruleset test
   block:
     - name: Prepare random name for Profile & Ruleset
       ansible.builtin.set_fact:
@@ -15,7 +15,7 @@
       azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         sku: "standard_azurefrontdoor"
         state: "present"
 
@@ -23,7 +23,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "present"
       register: output
 
@@ -37,7 +37,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "present"
       register: output
 
@@ -50,7 +50,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset2 }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "present"
       register: output
 
@@ -63,7 +63,7 @@
     - name: Load info for all Rulesets
       azure_rm_afdruleset_info:
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
       register: output
 
     - name: Assert there are two resources
@@ -76,7 +76,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset2 }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "absent"
       register: output
 
@@ -89,7 +89,7 @@
     - name: Load info for all Rulesets
       azure_rm_afdruleset_info:
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
       register: output
 
     - name: Assert the resource has the proper values set
@@ -103,7 +103,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "absent"
       register: output
 
@@ -116,7 +116,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "absent"
       register: output
 
@@ -128,11 +128,11 @@
     - name: Delete Frontdoor Profile
       azure_rm_cdnprofile:
         name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdruleset"
         state: "absent"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-afdruleset"
         force_delete_nonempty: true
         state: absent

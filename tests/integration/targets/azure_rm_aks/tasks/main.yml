@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for AKS test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-aks"
     location: eastus
 
-- name: For test
+- name: For AKS test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-aks"
       register: __rg_info
 
     - name: Set varialbles
@@ -18,7 +18,7 @@
 
     - name: Create User Managed Identity
       azure_rm_resource:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
         resource_name: "{{ item }}"
@@ -32,8 +32,8 @@
 
     - name: Set identities IDs to test. Identities ansible-test-aks-identity and ansible-test-aks-identity-2 have to be created previously
       ansible.builtin.set_fact:
-        user_identity: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity"
-        user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity-2"
+        user_identity: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-aks/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity"
+        user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-aks/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity-2"
 
     - name: Include aks tasks
       ansible.builtin.include_tasks: minimal-cluster.yml
@@ -46,7 +46,7 @@
     - name: Create an AKS instance (check mode)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -76,7 +76,7 @@
     - name: Check there is no AKS created
       azure_rm_aks_info:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
       register: fact
 
     - name: Check there is no AKS created
@@ -87,7 +87,7 @@
     - name: Create an AKS instance
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -123,7 +123,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
       register: fact
 
     - name: Assert fact returns the created one
@@ -138,7 +138,7 @@
     - name: Update an AKS instance node_labels
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -173,7 +173,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
       register: fact
 
     - name: Assert fact returns the created one
@@ -186,7 +186,7 @@
     - name: Get AKS upgrade versions
       azure_rm_aksupgrade_info:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
       register: upgrades
 
     - name: Assert available control-plane versions for upgrade
@@ -198,7 +198,7 @@
     - name: Create an AKS instance (idempotent)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -237,7 +237,7 @@
     - name: Upgrade the AKS instance with addon
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -278,7 +278,7 @@
     - name: Upgrade the AKS instance with addon (idempontent)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -315,7 +315,7 @@
     - name: Upgrade the AKS instance with agent pool profiles
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -356,7 +356,7 @@
     - name: Upgrade the AKS instance with agent pool profiles (idempontent)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -393,7 +393,7 @@
     - name: Upgrade the AKS instance with multiple agent pool profiles
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -441,7 +441,7 @@
     - name: Upgrade the AKS instance with multiple agent pool profiles (idempontent)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -482,7 +482,7 @@
     - name: Update the default2 agent_pool mode from User to System
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -530,7 +530,7 @@
     - name: Update the default2 agent_pool mode from User to System (idempontent)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -566,7 +566,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         show_kubeconfig: user
       register: fact
 
@@ -579,7 +579,7 @@
     - name: Delete the AKS instance
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         state: absent
       register: output
 
@@ -591,7 +591,7 @@
     - name: Delete the AKS instance (idempotent)
       azure_rm_aks:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         state: absent
       register: output
 
@@ -603,7 +603,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "aks{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
       register: fact
 
     - name: Assert fact returns empty
@@ -613,7 +613,7 @@
 
     - name: Destroy User Managed Identity
       azure_rm_resource:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-aks"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
         resource_name: "{{ item }}"
@@ -625,6 +625,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-aks"
         force_delete_nonempty: true
         state: absent

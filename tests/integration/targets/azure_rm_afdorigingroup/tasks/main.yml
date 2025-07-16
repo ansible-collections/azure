@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for Azure Front Door original group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-afdoriginalgroup"
     location: eastus
 
-- name: For test
+- name: For Azure Front Door original group test
   block:
     - name: Prepare random name for Profile & EndPoint
       ansible.builtin.set_fact:
@@ -15,7 +15,7 @@
       azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         sku: "standard_azurefrontdoor"
         state: "present"
 
@@ -23,7 +23,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         health_probe_settings:
           probe_interval_in_seconds: 100
           probe_path: "/"
@@ -46,7 +46,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         health_probe_settings:
           probe_interval_in_seconds: 100
           probe_path: "/"
@@ -68,7 +68,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group2 }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         health_probe_settings:
           probe_interval_in_seconds: 50
           probe_path: "/api"
@@ -90,7 +90,7 @@
     - name: Load info for all Origin Groups
       azure_rm_afdorigingroup_info:
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
       register: output
 
     - name: Assert there are two resources
@@ -103,7 +103,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group2 }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         state: "absent"
       register: output
 
@@ -117,7 +117,7 @@
       azure_rm_afdorigingroup_info:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
       register: output
 
     - name: Assert the resource has the proper values set
@@ -137,7 +137,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         health_probe_settings:
           probe_interval_in_seconds: 60
           probe_path: "/test"
@@ -159,7 +159,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         health_probe_settings:
           probe_interval_in_seconds: 60
           probe_path: "/test"
@@ -181,7 +181,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         state: "absent"
       register: output
 
@@ -194,7 +194,7 @@
       azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         state: "absent"
       register: output
 
@@ -206,11 +206,11 @@
     - name: Delete Frontdoor Profile
       azure_rm_cdnprofile:
         name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdoriginalgroup"
         state: "absent"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-afdoriginalgroup"
         force_delete_nonempty: true
         state: absent

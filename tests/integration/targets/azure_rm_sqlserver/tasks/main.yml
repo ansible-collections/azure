@@ -1,18 +1,18 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for SQL server test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-sqlserver"
+    location: westus2
 
-- name: For test
+- name: For SQL server test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group_third }}"
+        name: "{{ resource_group }}-sqlserver"
       register: __rg_info
 
     - name: Prepare random number
       ansible.builtin.set_fact:
-        random_postfix: "{{ 1000 | random }}{{ resource_group_third | hash('md5') | truncate(7, True, '') }}"
+        random_postfix: "{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
         tenant_id: "{{ azure_tenant }}"
         run_azuread_tests: false
         azuread_group_name: "Test Security Group"
@@ -35,7 +35,7 @@
 
     - name: Create instance of SQL Server -- check mode
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: mylogin
@@ -50,7 +50,7 @@
 
     - name: Create instance of SQL Server
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: mylogin
@@ -67,7 +67,7 @@
 
     - name: Gather facts SQL Server
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv{{ random_postfix }}"
       register: output
     - name: Assert that SQL Server identity.type == SystemAssigned
@@ -77,7 +77,7 @@
 
     - name: Create again instance of SQL Server
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: mylogin
@@ -92,7 +92,7 @@
 
     - name: Create extended instance of SQL Server
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-extended-{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: mylogin2
@@ -117,7 +117,7 @@
 
     - name: Gather facts SQL Server
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv-extended-{{ random_postfix }}"
       register: output
     - name: Assert that managed_identity_ids[0] in SQL Server
@@ -128,7 +128,7 @@
 
     - name: Create extended instance of SQL Server - idempotent
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-extended-{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: mylogin2
@@ -153,7 +153,7 @@
 
     - name: Update SQL admin password
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-extended-{{ random_postfix }}"
         location: "{{ location }}"
         admin_password: "{{ password }}321!"
@@ -166,7 +166,7 @@
 
     - name: Create instance of SQL Server with Azure AD admin
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-azuread-{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: sqllogin
@@ -188,7 +188,7 @@
 
     - name: Create instance of SQL Server with Azure AD admin - idempotent
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-azuread-{{ random_postfix }}"
         location: "{{ location }}"
         admin_username: sqllogin
@@ -212,7 +212,7 @@
 
     - name: Gather facts SQL Server
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv{{ random_postfix }}"
       register: output
     - name: Assert that facts are returned
@@ -233,7 +233,7 @@
 
     - name: Gather facts for extended SQL Server
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv-extended-{{ random_postfix }}"
       register: output
     - name: Assert that facts are returned
@@ -257,7 +257,7 @@
 
     - name: Gather facts for SQL Server with Azure AD admin
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv-azuread-{{ random_postfix }}"
       register: output
       when: run_azuread_tests | bool
@@ -285,7 +285,7 @@
 
     - name: Gather facts SQL Server - unexisting
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "unexisting"
       register: output
     - name: Assert that facts are returned
@@ -296,7 +296,7 @@
 
     - name: Gather facts SQL Server - list
       azure_rm_sqlserver_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
       register: output
     - name: Assert that facts are returned
       ansible.builtin.assert:
@@ -315,7 +315,7 @@
 
     - name: Create instance of SQL Database -- check mode
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
@@ -328,7 +328,7 @@
 
     - name: Create instance of SQL Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
@@ -344,7 +344,7 @@
 
     - name: Create again instance of SQL Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
@@ -361,7 +361,7 @@
     # test database point in time restore
     - name: Gather facts SQL Database and wait for restore point
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
       register: output
@@ -376,7 +376,7 @@
 
     - name: Create second SQL Database, restoring from the previous Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         create_mode: point_in_time_restore
         restore_point_in_time: "{{ output.databases[0].earliest_restore_date }}"
         source_database_id: "{{ output.databases[0].id }}"
@@ -391,7 +391,7 @@
 
     - name: Delete instance of SQL Database Point in time recovery
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}PITR
         state: absent
@@ -404,14 +404,14 @@
     # test database facter:
     - name: Create second SQL Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}second
         location: "{{ location }}"
 
     - name: Gather facts SQL Database
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
       register: output
@@ -430,7 +430,7 @@
 
     - name: Gather facts SQL Database
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
       register: output
     - name: Assert that facts are returned
@@ -456,7 +456,7 @@
 
     - name: Delete instance of secondary database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}second
         state: absent
@@ -464,7 +464,7 @@
     # clean up databases
     - name: Delete instance of SQL Database -- check mode
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         state: absent
@@ -477,7 +477,7 @@
 
     - name: Delete instance of SQL Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         state: absent
@@ -489,7 +489,7 @@
 
     - name: Delete unexisting instance of SQL Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         state: absent
@@ -502,7 +502,7 @@
     # Test With SKU
     - name: Create SQL Database with sku -- check mode
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
         location: "{{ location }}"
@@ -518,7 +518,7 @@
 
     - name: Create SQL Database with sku
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
         location: "{{ location }}"
@@ -536,7 +536,7 @@
 
     - name: Gather facts SQL Database with good SKU
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
       register: output
@@ -555,7 +555,7 @@
 
     - name: Create again instance of SQL Database with same SKU
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
         location: "{{ location }}"
@@ -573,7 +573,7 @@
 
     - name: Create again instance of SQL Database with New SKU
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
         location: "{{ location }}"
@@ -591,7 +591,7 @@
 
     - name: Gather facts SQL Database with good New SKU
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
       register: output
@@ -610,7 +610,7 @@
 
     - name: Delete instance of SQL Database
       azure_rm_sqldatabase:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
         state: absent
@@ -623,7 +623,7 @@
     # test database facts without databases
     - name: Gather facts SQL Database
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}2
       register: output
@@ -635,7 +635,7 @@
 
     - name: Gather facts SQL Database
       azure_rm_sqldatabase_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
       register: output
     - name: Assert that empty dictionary was returned (one database is there by default)
@@ -648,7 +648,7 @@
 
     - name: Create instance of Firewall Rule -- check mode
       azure_rm_sqlfirewallrule:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv{{ random_postfix }}"
         name: firewallrule{{ random_postfix }}
         start_ip_address: 172.28.10.136
@@ -662,7 +662,7 @@
 
     - name: Create instance of Firewall Rule
       azure_rm_sqlfirewallrule:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv{{ random_postfix }}"
         name: firewallrule{{ random_postfix }}
         start_ip_address: 172.28.10.136
@@ -675,7 +675,7 @@
 
     - name: Create again instance of Firewall Rule
       azure_rm_sqlfirewallrule:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: "sqlsrv{{ random_postfix }}"
         name: firewallrule{{ random_postfix }}
         start_ip_address: 172.28.10.136
@@ -692,7 +692,7 @@
 
     - name: Create Firewall Rule - second
       azure_rm_sqlfirewallrule:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: firewallrule{{ random_postfix }}second
         start_ip_address: 172.28.10.136
@@ -700,7 +700,7 @@
 
     - name: Gather facts SQL Firewall Rule
       azure_rm_sqlfirewallrule_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: firewallrule{{ random_postfix }}
       register: output
@@ -717,7 +717,7 @@
 
     - name: Gather facts SQL Firewall Rule
       azure_rm_sqlfirewallrule_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
       register: output
     - name: Assert that facts are returned
@@ -740,20 +740,20 @@
 
     - name: Delete instance of Firewall Rule
       azure_rm_sqlfirewallrule:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: firewallrule{{ random_postfix }}
         state: absent
     - name: Delete instance of Firewall Rule
       azure_rm_sqlfirewallrule:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: firewallrule{{ random_postfix }}second
         state: absent
 
     - name: Gather facts SQL Firewall Rule
       azure_rm_sqlfirewallrule_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: firewallrule{{ random_postfix }}
       register: output
@@ -767,7 +767,7 @@
 
     - name: Create instance of SQL Elastic Pool -- check mode
       azure_rm_sqlelasticpool:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: EP{{ random_postfix }}
         zone_redundant: false
@@ -782,7 +782,7 @@
 
     - name: Create instance of SQL Elastic Pool
       azure_rm_sqlelasticpool:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: EP{{ random_postfix }}
         zone_redundant: false
@@ -797,7 +797,7 @@
 
     - name: Create instance of SQL Elastic Pool -- Idempotent test
       azure_rm_sqlelasticpool:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: EP{{ random_postfix }}
         zone_redundant: false
@@ -812,7 +812,7 @@
 
     - name: Update instance of SQL Elastic Pool
       azure_rm_sqlelasticpool:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: EP{{ random_postfix }}
         zone_redundant: false
@@ -827,7 +827,7 @@
 
     - name: Gather facts SQL Database
       azure_rm_sqlelasticpool_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: EP{{ random_postfix }}
       register: output
@@ -841,7 +841,7 @@
 
     - name: Delete instance of SQL Elastic Pool
       azure_rm_sqlelasticpool:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         server_name: sqlsrv{{ random_postfix }}
         name: EP{{ random_postfix }}
         state: absent
@@ -856,7 +856,7 @@
 
     - name: Delete instance of SQL Server -- check mode
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv{{ random_postfix }}"
         state: absent
       check_mode: true
@@ -868,7 +868,7 @@
 
     - name: Delete instance of SQL Server
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv{{ random_postfix }}"
         state: absent
       register: output
@@ -879,7 +879,7 @@
 
     - name: Delete unexisting instance of SQL Server
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv{{ random_postfix }}"
         state: absent
       register: output
@@ -890,13 +890,13 @@
 
     - name: Delete extended instance of SQL Server
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-extended-{{ random_postfix }}"
         state: absent
 
     - name: Delete instance of SQL Server with Azure AD admin
       azure_rm_sqlserver:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlserver"
         name: "sqlsrv-azuread-{{ random_postfix }}"
         state: absent
       when: run_azuread_tests | bool
@@ -911,6 +911,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-sqlserver"
         force_delete_nonempty: true
         state: absent

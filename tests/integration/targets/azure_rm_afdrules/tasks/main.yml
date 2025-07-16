@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for Azure Front Door rule test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-afdrule"
     location: eastus
 
-- name: For test
+- name: For Azure Front Door rule test
   block:
     - name: Prepare random name for Profile & EndPoint & Origin Group & Origin
       ansible.builtin.set_fact:
@@ -20,7 +20,7 @@
       azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         sku: "standard_azurefrontdoor"
         state: "present"
 
@@ -28,7 +28,7 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         state: "present"
 
     - name: Create Rule 1
@@ -36,7 +36,7 @@
         name: "{{ rule1 }}"
         rule_set_name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         match_processing_behavior: Continue
         order: 1
         actions:
@@ -70,7 +70,7 @@
         name: "{{ rule1 }}"
         rule_set_name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         match_processing_behavior: Continue
         order: 1
         actions:
@@ -104,7 +104,7 @@
         name: "{{ rule1 }}"
         rule_set_name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
       register: output
 
     - name: Assert the resource has the proper values set
@@ -124,7 +124,7 @@
         name: "{{ rule1 }}"
         rule_set_name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         state: "absent"
       register: output
 
@@ -139,7 +139,7 @@
         name: "{{ rule1 }}"
         rule_set_name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         state: "absent"
       register: output
 
@@ -152,19 +152,19 @@
       azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         state: "absent"
 
     - name: Delete Frontdoor Profile
       azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-afdrule"
         sku: "standard_azurefrontdoor"
         state: "absent"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-afdrule"
         force_delete_nonempty: true
         state: absent

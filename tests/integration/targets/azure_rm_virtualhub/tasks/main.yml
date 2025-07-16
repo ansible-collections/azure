@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for virtual network hub test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-vnethub"
     location: eastus
 
-- name: For test
+- name: For virtual network hub test
   block:
     - name: Set varialbles
       ansible.builtin.set_fact:
@@ -11,14 +11,14 @@
 
     - name: Create a VirtualHub (check mode)
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}"
         sku: Standard
       check_mode: true
 
     - name: Create a VirtualHub
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}"
         sku: Standard
       register: output
@@ -31,7 +31,7 @@
 
     - name: Create a VirtualHub (idempotent)
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}"
         sku: Standard
       register: output
@@ -43,7 +43,7 @@
 
     - name: Get Virtual Hub Info
       azure_rm_virtualhub_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}"
       register: output
 
@@ -55,7 +55,7 @@
 
     - name: Create a VirtualWan
       azure_rm_virtualwan:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "wan-{{ name_rpfx }}"
         disable_vpn_encryption: true
         allow_branch_to_branch_traffic: true
@@ -65,7 +65,7 @@
 
     - name: Create Second VirtualHub
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}-seondary"
         sku: Standard
         address_prefix: 12.0.0.0/16
@@ -85,13 +85,13 @@
 
     - name: Delete Second VirtualHub
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}-seondary"
         state: absent
 
     - name: Delete  virtual hub
       azure_rm_virtualhub:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}"
         state: absent
       register: output
@@ -103,6 +103,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-vnethub"
         force_delete_nonempty: true
         state: absent

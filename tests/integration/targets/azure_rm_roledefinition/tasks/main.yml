@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for role definition test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-roledefinition"
     location: eastus
 
-- name: For test
+- name: For role definition test
   block:
     - name: Fix resource prefix
       ansible.builtin.set_fact:
@@ -15,7 +15,7 @@
     - name: Create a role definition (Check Mode)
       azure_rm_roledefinition:
         name: "{{ my_role_name }}"
-        scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+        scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
         permissions:
           - actions:
               - "Microsoft.Compute/virtualMachines/read"
@@ -26,7 +26,7 @@
             not_data_actions:
               - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
         assignable_scopes:
-          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
       check_mode: true
       register: output
 
@@ -38,7 +38,7 @@
     - name: Create a role definition
       azure_rm_roledefinition:
         name: "{{ my_role_name }}"
-        scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+        scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
         permissions:
           - actions:
               - "Microsoft.Compute/virtualMachines/read"
@@ -49,7 +49,7 @@
             not_data_actions:
               - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
         assignable_scopes:
-          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
       register: output
 
     - name: Assert creating role definition
@@ -62,7 +62,7 @@
     #
     # - name: Get facts by type
     #  azure_rm_roledefinition_info:
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    type: custom
     #  register: facts
     #
@@ -73,7 +73,7 @@
     #
     # - name: Get facts by name
     #  azure_rm_roledefinition_info:
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    role_name: "{{ my_role_name }}"
     #  register: facts
     #  until: facts.roledefinitions | length > 0
@@ -91,7 +91,7 @@
     # - name: Update the role definition (idempotent)
     #  azure_rm_roledefinition:
     #    name: "{{ my_role_name }}"
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    permissions:
     #      - actions:
     #          - "Microsoft.Compute/virtualMachines/read"
@@ -102,7 +102,7 @@
     #        not_data_actions:
     #          - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
     #    assignable_scopes:
-    #          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #          - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #  register: output
     #
     # - name: ansible.builtin.assert output not changed
@@ -114,7 +114,7 @@
     #  azure_rm_roledefinition:
     #    name: "{{ my_role_name }}"
     #    description: "update description"
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    permissions:
     #      - actions:
     #          - "Microsoft.Compute/virtualMachines/read"
@@ -126,7 +126,7 @@
     #        not_data_actions:
     #          - "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
     #    assignable_scopes:
-    #        - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #        - "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #  register: output
     #
     # - name: ansible.builtin.assert output changed
@@ -137,7 +137,7 @@
     # - name: Get role definition facts
     #  azure_rm_roledefinition_info:
     #    role_name: "{{ my_role_name }}"
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    type: custom
     #  register: roledef
     #  until: "{{ roledef.roledefinitions | length > 0 }}"
@@ -152,7 +152,7 @@
     #
     # - name: Create a role assignment (Check Mode)
     #  azure_rm_roleassignment:
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    assignee_object_id: "{{ principal_id }}"
     #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
     #  check_mode: yes
@@ -165,7 +165,7 @@
     #
     # - name: Create a role assignment
     #  azure_rm_roleassignment:
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    assignee_object_id: "{{ principal_id }}"
     #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
     #  register: output
@@ -177,7 +177,7 @@
     #
     # - name: Get facts
     #  azure_rm_roleassignment_info:
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    assignee: "{{ principal_id }}"
     #    role_definition_id: "{{ roledef['roledefinitions'][0]['id'] }}"
     #  register: facts
@@ -197,7 +197,7 @@
     # - name: Delete the role definition (Check Mode)
     #  azure_rm_roledefinition:
     #    name: "{{ my_role_name }}"
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    state: absent
     #  check_mode: yes
     #  register: output
@@ -209,7 +209,7 @@
     # - name: Delete the role definition
     #  azure_rm_roledefinition:
     #    name: "{{ my_role_name }}"
-    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}"
+    #    scope: "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}-roledefinition"
     #    state: absent
     #  register: output
     #
@@ -219,6 +219,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-roledefinition"
         force_delete_nonempty: true
         state: absent

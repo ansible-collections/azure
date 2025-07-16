@@ -1,24 +1,24 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for SQL managed instance test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-sqlmanagedinstance"
+    location: westus2
 
-- name: For test
+- name: For SQL managed instance test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group_third }}"
+        name: "{{ resource_group }}-sqlmanagedinstance"
       register: __rg_info
 
     - name: Prepare random number and set location based on resource group
       ansible.builtin.set_fact:
-        random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group_third | hash('md5') | truncate(7, True, '') }}"
+        random_postfix: "sqlmi{{ 1000 | random }}{{ resource_group | hash('md5') | truncate(7, True, '') }}"
         password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=25) }}"
         location: "{{ __rg_info.resourcegroups.0.location }}"
 
     - name: Delete sql managed instance
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         state: absent
 
@@ -47,18 +47,18 @@
         dns_servers:
           - 127.0.0.1
           - 127.0.0.3
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
 
     - name: Create a route table
       azure_rm_routetable:
         name: "{{ random_postfix }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         tags:
           purpose: testing
 
     - name: Create security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         tags:
           testing: testing
@@ -84,14 +84,14 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: "{{ random_postfix }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         address_prefix_cidr: "10.1.0.0/24"
         security_group:
-          resource_gorup: "{{ resource_group_third }}"
+          resource_gorup: "{{ resource_group }}-sqlmanagedinstance"
           name: "{{ random_postfix }}"
         route_table:
           name: "{{ random_postfix }}"
-          resource_group: "{{ resource_group_third }}"
+          resource_group: "{{ resource_group }}-sqlmanagedinstance"
         delegations:
           - name: 'mysqlinstance'
             serviceName: "Microsoft.Sql/managedInstances"
@@ -99,7 +99,7 @@
 
     - name: Create sql managed instance (Checkmode test)
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         subnet_id: "{{ subnet_output.state.id }}"
         identity:
@@ -129,7 +129,7 @@
 
     - name: Create sql managed instance
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         subnet_id: "{{ subnet_output.state.id }}"
         identity:
@@ -158,7 +158,7 @@
 
     - name: Wait for sql managed instance provisioning to complete
       azure_rm_sqlmanagedinstance_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
       register: facts
       until: facts.sql_managed_instance[0]['state'] == 'Ready'
@@ -167,7 +167,7 @@
 
     - name: Create sql managed instance (Idempotent test)
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         subnet_id: "{{ subnet_output.state.id }}"
         identity:
@@ -195,7 +195,7 @@
 
     - name: Upgrade sql managed instance with tags
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         subnet_id: "{{ subnet_output.state.id }}"
         identity:
@@ -225,7 +225,7 @@
 
     - name: Get SQL managed instance by name
       azure_rm_sqlmanagedinstance_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
       register: output
 
@@ -241,7 +241,7 @@
 
     - name: Wait for sql managed instance provisioning to complete
       azure_rm_sqlmanagedinstance_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
       register: facts
       until: facts.sql_managed_instance[0]['state'] == 'Ready'
@@ -250,7 +250,7 @@
 
     - name: Delete sql managed instance
       azure_rm_sqlmanagedinstance:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         state: absent
 
@@ -267,6 +267,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-sqlmanagedinstance"
         force_delete_nonempty: true
         state: absent

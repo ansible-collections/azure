@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for VPN site test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-vpnsite"
     location: eastus
 
-- name: For test
+- name: For VPN site test
   block:
     - name: Create vpn site name
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a VpnSite
       azure_rm_vpnsite:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         ip_address: 10.0.0.0
         is_security_site: true
@@ -39,7 +39,7 @@
 
     - name: Create the VpnSite without change (Idempotent test)
       azure_rm_vpnsite:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         ip_address: 10.0.0.0
         is_security_site: true
@@ -67,7 +67,7 @@
 
     - name: Update the VpnSite's device properties
       azure_rm_vpnsite:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         ip_address: 10.0.0.0
         is_security_site: true
@@ -95,7 +95,7 @@
 
     - name: Get the VpnSite info
       azure_rm_vpnsite_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
       register: output
 
@@ -108,12 +108,12 @@
 
     - name: Delete the VpnSite
       azure_rm_vpnsite:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-vpnsite"
         force_delete_nonempty: true
         state: absent

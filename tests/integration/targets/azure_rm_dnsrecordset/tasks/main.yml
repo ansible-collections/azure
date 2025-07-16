@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for dns recordset test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-dnsrecoerdset"
     location: eastus
 
-- name: For test
+- name: For dns recordset test
   block:
     - name: Create random domain name
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create a DNS zone
       azure_rm_dnszone:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}.com"
         state: present
       register: results
@@ -22,7 +22,7 @@
 
     - name: Create public ip
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}"
         allocation_method: Static
         sku: Standard
@@ -31,7 +31,7 @@
 
     - name: Create "A" record with target_resource
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: wwwa
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -45,7 +45,7 @@
 
     - name: Create "A" record set with multiple records
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -61,7 +61,7 @@
 
     - name: Re-run "A" record with same values
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -77,7 +77,7 @@
 
     - name: Update "A" record set with additional record
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -93,7 +93,7 @@
 
     - name: Re-update "A" record set with additional record
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -109,7 +109,7 @@
 
     - name: Remove 1 record from record set
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -126,7 +126,7 @@
 
     - name: Check_mode test
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -144,7 +144,7 @@
 
     - name: Delete a record set
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -157,7 +157,7 @@
 
     - name: Re-run record set absent(idempotence test)
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
         record_type: A
@@ -170,7 +170,7 @@
 
     - name: Create SRV records in a new record set
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: "_sip._tcp.{{ domain_name }}.com"
         zone_name: "{{ domain_name }}.com"
         time_to_live: 7200
@@ -190,7 +190,7 @@
 
     - name: Create TXT records in a new record set
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: "_txt.{{ domain_name }}.com"
         zone_name: "{{ domain_name }}.com"
         record_type: TXT
@@ -210,7 +210,7 @@
 
     - name: Update SOA record
       azure_rm_dnsrecordset:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: "@"
         zone_name: "{{ domain_name }}.com"
         record_type: SOA
@@ -232,18 +232,18 @@
 
     - name: Delete DNS zone
       azure_rm_dnszone:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}.com"
         state: absent
 
     - name: Delete the public ip
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-dnsrecoerdset"
         force_delete_nonempty: true
         state: absent

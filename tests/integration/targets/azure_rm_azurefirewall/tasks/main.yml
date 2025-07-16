@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for azure firewall test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-azurefirewall"
     location: eastus
 
-- name: For test
+- name: For azure firewall test
   block:
     - name: Fix resource prefix
       ansible.builtin.set_fact:
@@ -24,18 +24,18 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-azurefirewall"
 
     - name: Create subnet
       azure_rm_subnet:
         name: "{{ subnet_name }}"
         virtual_network_name: "{{ virtual_network_name }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-azurefirewall"
         address_prefix_cidr: "10.1.0.0/24"
 
     - name: Create public IP address
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-azurefirewall"
         allocation_method: Static
         name: "{{ public_ipaddress_name }}"
         sku: Standard
@@ -47,7 +47,7 @@
 
     - name: Create Azure Firewall
       azure_rm_azurefirewall:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
         # tags:
         #   key1: value1
@@ -120,7 +120,7 @@
 
     - name: Create Azure Firewall -- idempotent
       azure_rm_azurefirewall:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
         application_rule_collections:
           - priority: 110
@@ -191,7 +191,7 @@
 
     - name: Create Azure Firewall -- change something
       azure_rm_azurefirewall:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
         application_rule_collections:
           - priority: 110
@@ -259,7 +259,7 @@
 
     - name: Get info of the Azure Firewall
       azure_rm_azurefirewall_info:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
       register: output
 
@@ -278,7 +278,7 @@
 
     - name: Delete Azure Firewall
       azure_rm_azurefirewall:
-        resource_group: '{{ resource_group }}'
+        resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
         state: absent
       register: output
@@ -290,12 +290,12 @@
 
     - name: Delete the public IP address
       azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-azurefirewall"
         name: "{{ public_ipaddress_name }}"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-azurefirewall"
         force_delete_nonempty: true
         state: absent

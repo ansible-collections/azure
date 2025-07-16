@@ -1,9 +1,9 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for IP group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-ipgroup"
     location: eastus
 
-- name: For test
+- name: For IP group test
   block:
     - name: Create IP group name
       ansible.builtin.set_fact:
@@ -11,7 +11,7 @@
 
     - name: Create IP group (check mode)
       azure_rm_ipgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
         ip_addresses:
@@ -25,7 +25,7 @@
 
     - name: Create IP group
       azure_rm_ipgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
         ip_addresses:
@@ -43,7 +43,7 @@
 
     - name: Create same IP group again (Idempotent test)
       azure_rm_ipgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
         ip_addresses:
@@ -61,7 +61,7 @@
 
     - name: Update IP group
       azure_rm_ipgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
         ip_addresses:
@@ -76,7 +76,7 @@
 
     - name: Get IP group facts
       azure_rm_ipgroup_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
       register: results
 
@@ -93,7 +93,7 @@
 
     - name: Delete IP group
       azure_rm_ipgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         state: absent
       register: results
@@ -104,7 +104,7 @@
 
     - name: Delete IP group again (Idempotent test)
       azure_rm_ipgroup:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         state: absent
       register: results
@@ -115,6 +115,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-ipgroup"
         force_delete_nonempty: true
         state: absent

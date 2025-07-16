@@ -1,18 +1,18 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for app service plan test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-appserviceplan"
     location: eastus
 
-- name: For test
+- name: For app service plan test
   block:
     - name: Prepare facts
       ansible.builtin.set_fact:
-        resource_prefix: "{{ resource_group_secondary | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        resource_prefix: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
       run_once: true
 
     - name: Prepare facts
       ansible.builtin.set_fact:
-        linux_plan_resource_group: "{{ resource_group_secondary }}"
+        linux_plan_resource_group: "{{ resource_group }}-appserviceplan"
         win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
         linux_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}linplan"
       run_once: true
@@ -20,7 +20,7 @@
     - name: Create a windows plan
       azure_rm_appserviceplan:
         name: "{{ win_plan_name }}1"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appserviceplan"
         sku: B1
       register: output
 
@@ -73,7 +73,7 @@
     - name: Update a windows plan sku
       azure_rm_appserviceplan:
         name: "{{ win_plan_name }}1"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appserviceplan"
         sku: B2
       register: output
 
@@ -124,6 +124,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-appserviceplan"
         force_delete_nonempty: true
         state: absent

@@ -1,7 +1,7 @@
 - name: Create a new resource group for test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-publicipprefix"
+    location: westus2
 
 - name: For test
   block:
@@ -11,7 +11,7 @@
 
     - name: Create public ip prefix (Check mode)
       azure_rm_publicipprefix:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
           - 1
@@ -26,7 +26,7 @@
 
     - name: Create public ip prefix
       azure_rm_publicipprefix:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
           - 1
@@ -46,7 +46,7 @@
 
     - name: Create public ip prefix (Idempotent test)
       azure_rm_publicipprefix:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
           - 1
@@ -66,7 +66,7 @@
 
     - name: Update public ip prefix (Update tags)
       azure_rm_publicipprefix:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
           - 1
@@ -86,7 +86,7 @@
 
     - name: Gather facts for a public ip prefix
       azure_rm_publicipprefix_info:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
       register: output
 
@@ -98,7 +98,7 @@
 
     - name: Delete the public IP prefix
       azure_rm_publicipprefix:
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         state: absent
       register: output
@@ -110,6 +110,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-publicipprefix"
         force_delete_nonempty: true
         state: absent

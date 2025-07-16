@@ -1,20 +1,20 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for automation account test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+    name: "{{ resource_group }}-automationaccount"
+    location: westus2
 
-- name: For test
+- name: For automation account test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
-        rpfx: "{{ resource_group_third | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-        name_rpfx: "account{{ resource_group_third | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        name_rpfx: "account{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
       run_once: true
 
     - name: Create automation account
       azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
       check_mode: true
       register: output
 
@@ -26,7 +26,7 @@
     - name: Create automation account
       azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
       register: output
 
     - name: Assert the account created
@@ -38,7 +38,7 @@
     - name: Create automation account
       azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
       register: output
 
     - name: Assert the account already created
@@ -49,7 +49,7 @@
     - name: Get automation account
       azure_rm_automationaccount_info:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
         list_statistics: true
         list_usages: true
         list_keys: true
@@ -67,7 +67,7 @@
     - name: Delete account
       azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
         state: absent
       check_mode: true
       register: output
@@ -80,7 +80,7 @@
     - name: Delete account
       azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
         state: absent
       register: output
 
@@ -92,7 +92,7 @@
     - name: Delete account
       azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
-        resource_group: "{{ resource_group_third }}"
+        resource_group: "{{ resource_group }}-automationaccount"
         state: absent
       register: output
 
@@ -103,6 +103,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-automationaccount"
         force_delete_nonempty: true
         state: absent

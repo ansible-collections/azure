@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for tags test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-tags"
     location: eastus
 
-- name: For test
+- name: For tags test
   block:
     - name: Gather Resource Group info
       azure_rm_resourcegroup_info:
-        name: "{{ resource_group_secondary }}"
+        name: "{{ resource_group }}-tags"
       register: __rg_info
 
     - name: List all the flags under the scope

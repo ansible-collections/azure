@@ -1,13 +1,13 @@
-- name: Create a new resource group for test
+- name: Create a new resource group for storage account test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
+    name: "{{ resource_group }}-storageaccount"
     location: eastus
 
-- name: For test
+- name: For storage account test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-storageaccount"
       register: __rg_info
 
     - name: Set location based on resource group and Storage Account Names
@@ -33,7 +33,7 @@
 
     - name: Test invalid account name
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "invalid_char$"
         account_type: Standard_LRS
       register: output
@@ -46,7 +46,7 @@
 
     - name: Delete storage accounts to prepare fresh deployment
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ item }}"
         state: absent
         force_delete_nonempty: true
@@ -63,7 +63,7 @@
 
     - name: Create new storage account with defaults (omitted parameters)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}"
         account_type: Standard_LRS
       register: defaults_output
@@ -80,7 +80,7 @@
 
     - name: Create storage account with static website disabled
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}01"
         account_type: Standard_LRS
         kind: StorageV2
@@ -98,7 +98,7 @@
 
     - name: Create storage account with static website disabled (idempotency test)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}01"
         account_type: Standard_LRS
         kind: StorageV2
@@ -112,7 +112,7 @@
 
     - name: Enable storage account static website
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}01"
         account_type: Standard_LRS
         kind: StorageV2
@@ -130,7 +130,7 @@
 
     - name: Configure additional storage account static website properties
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}01"
         account_type: Standard_LRS
         kind: StorageV2
@@ -150,7 +150,7 @@
 
     - name: Configure additional storage account static website properties (idempotency test)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}01"
         account_type: Standard_LRS
         kind: StorageV2
@@ -166,7 +166,7 @@
 
     - name: Create new storage account with Hierarchical Namespace enabled
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}06"
         account_type: Standard_LRS
         large_file_shares_state: Enabled
@@ -181,7 +181,7 @@
 
     - name: Gather facts of storage account
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}06"
       register: output
     - name: Assert the storage account facts
@@ -193,7 +193,7 @@
 
     - name: Create new storage account with immutable_storage_with_versioning
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}08"
         account_type: Standard_GRS
         kind: StorageV2
@@ -212,7 +212,7 @@
 
     - name: Create new storage account with immutable_storage_with_versioning(Idempotent test)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}08"
         account_type: Standard_GRS
         kind: StorageV2
@@ -231,7 +231,7 @@
 
     - name: Update the storage account with immutable_storage_with_versioning
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}08"
         account_type: Standard_GRS
         kind: StorageV2
@@ -250,7 +250,7 @@
 
     - name: Gather facts of storage account
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}08"
       register: output
 
@@ -263,7 +263,7 @@
 
     - name: Create storage account with static website enabled
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
         account_type: Standard_LRS
         kind: StorageV2
@@ -288,7 +288,7 @@
 
     - name: Create storage account with static website enabled (idempotency test)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
         account_type: Standard_LRS
         kind: StorageV2
@@ -306,7 +306,7 @@
 
     - name: Update storage account with different identity
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
         account_type: Standard_LRS
         kind: StorageV2
@@ -320,7 +320,7 @@
 
     - name: Gather facts to validate Managed identity
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
       register: output
 
@@ -334,7 +334,7 @@
 
     - name: Update storage account with system identity
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
         account_type: Standard_LRS
         kind: StorageV2
@@ -353,7 +353,7 @@
 
     - name: Disable storage account static website
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
         account_type: Standard_LRS
         kind: StorageV2
@@ -371,7 +371,7 @@
 
     - name: Create new storage account with I(kind=FileStorage)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}02"
         account_type: Premium_ZRS
         kind: FileStorage
@@ -412,7 +412,7 @@
           ip_rules:
             - value: '9.9.9.9'
               action: Allow
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         tags:
           test: test
           galaxy: galaxy
@@ -460,7 +460,7 @@
           ip_rules:
             - value: '9.9.9.9'
               action: Allow
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         tags:
           test: test
           galaxy: galaxy
@@ -489,7 +489,7 @@
 
     - name: Update existing storage account with parameters omitted
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_explicit }}"
       register: output
     - name: Assert that properties have not changed
@@ -516,7 +516,7 @@
 
     - name: Update existing storage account with parameters defined
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}"
         allow_blob_public_access: false
         append_tags: false
@@ -563,7 +563,7 @@
 
     - name: Change existing account type (invalid)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}"
         account_type: Premium_LRS
       register: output
@@ -576,7 +576,7 @@
 
     - name: Unverified custom domain failure
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}"
         custom_domain:
           name: ansible.com
@@ -592,7 +592,7 @@
     - name: Create storage account with no public access
       azure_rm_storageaccount:
         name: "{{ storage_account_name_default }}03"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         account_type: Standard_LRS
         https_only: true
         minimum_tls_version: 'TLS1_2'
@@ -611,7 +611,7 @@
     - name: Create storage account with no public access (idempotent)
       azure_rm_storageaccount:
         name: "{{ storage_account_name_default }}03"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         account_type: Standard_LRS
         https_only: true
         minimum_tls_version: 'TLS1_2'
@@ -625,7 +625,7 @@
 
     - name: Gather facts by tags
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         tags:
           - test
           - galaxy
@@ -636,7 +636,7 @@
 
     - name: Update account tags
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_explicit }}"
         append_tags: false
         tags:
@@ -652,7 +652,7 @@
 
     - name: Gather facts connection string and blob_cors
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_explicit }}"
         show_connection_string: true
         show_blob_cors: true
@@ -674,7 +674,7 @@
 
     - name: Gather enabled static website properties
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}01"
       register: output
     - name: Assert the storage account facts
@@ -688,7 +688,7 @@
 
     - name: Gather disabled static website properties
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}04"
       register: output
     - name: Assert the storage account facts
@@ -702,7 +702,7 @@
 
     - name: Create new storage account with (require_infrastructure_encryption=false)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}05"
         account_type: Standard_RAGRS
         encryption:
@@ -722,7 +722,7 @@
 
     - name: Get account with (require_infrastructure_encryption=false)
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}05"
       register: encryption_output
 
@@ -736,7 +736,7 @@
 
     - name: Create a storage account with allow_shared_key_access
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}07"
         account_type: Standard_LRS
         kind: StorageV2
@@ -752,7 +752,7 @@
 
     - name: Create a storage account with allow_shared_key_access(Idempotent test)
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}07"
         account_type: Standard_LRS
         kind: StorageV2
@@ -768,7 +768,7 @@
 
     - name: Update the storage account
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}07"
         account_type: Standard_LRS
         kind: StorageV2
@@ -784,7 +784,7 @@
 
     - name: Get the storage accounts facts
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}07"
       register: output
 
@@ -797,7 +797,7 @@
 
     - name: List storage accounts by resource group.
       azure_rm_storageaccount_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
       register: output
     - name: Assert all storage account facts
       ansible.builtin.assert:
@@ -806,7 +806,7 @@
 
     - name: Delete storage accounts
       azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ item }}"
         state: absent
         force_delete_nonempty: true
@@ -835,6 +835,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-storageaccount"
         force_delete_nonempty: true
         state: absent
