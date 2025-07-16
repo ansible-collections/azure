@@ -1,7 +1,7 @@
 - name: Create a new resource group for snapshot test
   azure_rm_resourcegroup:
     name: "{{ resource_group }}-snapshot"
-    location: eastus2
+    location: eastus
 
 - name: For snapshot test
   block:

@@ -4,3 +4,4 @@ destructive
 azure_rm_cdnprofile_info
 azure_rm_cdnendpoint
 needs/file/tests/integration_common_tasks/managed_identity.yml
+disabled

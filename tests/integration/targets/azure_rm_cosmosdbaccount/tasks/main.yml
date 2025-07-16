@@ -13,6 +13,7 @@
     - name: Set location based on resource group
       ansible.builtin.set_fact:
         location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-cosmosdbaccount"
 
     - name: Set secondary location if not already defined
       ansible.builtin.set_fact:
@@ -30,6 +31,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'

@@ -9,6 +9,7 @@
       ansible.builtin.set_fact:
         cdnprofilename: "cdnprofile{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
         endpointname: "endpoint{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        new_resource_group: "{{ resource_group }}-cdnprofile"
       run_once: true
 
     - name: Gather Resource Group info
@@ -31,6 +32,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'

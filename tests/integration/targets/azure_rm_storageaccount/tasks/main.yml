@@ -15,6 +15,7 @@
         location: "{{ __rg_info.resourcegroups.0.location }}"
         storage_account_name_default: "sa{{ resource_group | hash('md5') | truncate(20, True, '') }}"
         storage_account_name_explicit: "sa{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
+        new_resource_group: "{{ resource_group }}-storageaccount"
 
     - name: Create identities array
       ansible.builtin.set_fact:
@@ -27,6 +28,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'
@@ -829,6 +831,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'delete'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'

@@ -3,14 +3,14 @@
 
 - name: Create virtual network in secondary resource group
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}-vm02"
+    resource_group: "{{ resource_group }}-vm01-vm02"
     name: "{{ network_name ~ '-2' }}"
     address_prefixes: "{{ secondary_network }}"
   register: create_virt_net_result
 
 - name: Create subnet in secondary resource group
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}-vm02"
+    resource_group: "{{ resource_group }}-vm01-vm02"
     name: "{{ subnet_name ~ '-2' }}"
     address_prefix: "{{ secondary_subnet }}"
     virtual_network: "{{ network_name ~ '-2' }}"
@@ -27,7 +27,7 @@
 
 - name: Create virtual machine with two NICs
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
+    resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
     storage_account: "{{ storage_account }}"
@@ -62,7 +62,7 @@
 
 - name: Retrieve VM facts (filtering by name)
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
+    resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
   register: vm_facts_results
 
@@ -89,7 +89,7 @@
 
 - name: Should be idempotent with a dual NICs
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
+    resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
     storage_account: "{{ storage_account }}"
@@ -120,19 +120,19 @@
 
 - name: Get VM facts
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
   register: vm_state
 
 - name: Generalize VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
+    resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     generalized: true
 
 - name: Gather facts and check if machine is generalized
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
+    resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
   register: generalized_output
 
@@ -142,7 +142,7 @@
 
 - name: Delete dual NIC VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"  # Should this be resource_group_secondary?
+    resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_B1ms

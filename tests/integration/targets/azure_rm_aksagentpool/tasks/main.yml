@@ -16,14 +16,14 @@
 
     - name: Create proximity placement group
       azure_rm_proximityplacementgroup:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         location: westus2
         name: "proxi{{ rpfx }}"
       register: proxi_output
 
     - name: Create public ip prefix
       azure_rm_publicipprefix:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         name: "pipprefix{{ rpfx }}"
         location: westus2
         zones:
@@ -39,7 +39,7 @@
       azure_rm_aks:
         name: "min{{ rpfx }}"
         location: westus2
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -65,7 +65,7 @@
 
     - name: Get managecluster admin credentials
       azure_rm_akscredentials_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         show_admin_credentials: true
       register: output
@@ -73,7 +73,7 @@
 
     - name: Get managecluster user credentials
       azure_rm_akscredentials_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         show_user_credentials: true
       register: output
@@ -81,7 +81,7 @@
 
     - name: Get managecluster monitor user credentials
       azure_rm_akscredentials_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         show_monitor_credentials: true
       register: output
@@ -89,7 +89,7 @@
 
     - name: Get cluster's node agent pool info
       azure_rm_aksagentpool_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
       register: output
 
@@ -100,7 +100,7 @@
 
     - name: Get aks agent pool support version
       azure_rm_aksagentpoolversion_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
       register: agentpool_version
 
@@ -111,7 +111,7 @@
 
     - name: Add agent pool
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
@@ -138,7 +138,7 @@
 
     - name: Add agent pool (Idempotent test)
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
@@ -165,7 +165,7 @@
 
     - name: Get cluster's node agent pool info
       azure_rm_aksagentpool_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
       register: output
 
@@ -176,7 +176,7 @@
 
     - name: Upgrade node agent pool
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
@@ -203,7 +203,7 @@
 
     - name: Get cluster's node agent pool info
       azure_rm_aksagentpool_info:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
       register: output
@@ -222,7 +222,7 @@
 
     - name: Create a new agent pool with multi parameters
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default06
         count: 1
@@ -266,7 +266,7 @@
 
     - name: Create a new agent pool with multi parameters( Idempotent test)
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default06
         count: 1
@@ -310,14 +310,14 @@
 
     - name: Delete node agent pool
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default06
         state: absent
 
     - name: Delete node agent pool
       azure_rm_aksagentpool:
-        resource_group: "{{ resource_group }}-aksagentpool"
+        resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
         state: absent
@@ -330,6 +330,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-aksagentpool"
+        name: "{{ resource_group }}-akspool"
         force_delete_nonempty: true
         state: absent
