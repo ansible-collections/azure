@@ -5,7 +5,6 @@
 
 - name: For batch account test
   block:
-    ---
     # ----------------------------------------------------------------------------
     #
     #     ***     AUTO GENERATED CODE    ***    AUTO GENERATED CODE     ***

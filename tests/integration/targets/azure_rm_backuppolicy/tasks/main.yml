@@ -5,7 +5,6 @@
 
 - name: For backup policy test
   block:
-    ---
     - name: Set Facts for Tests
       ansible.builtin.set_fact:
         vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"

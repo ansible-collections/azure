@@ -6,7 +6,7 @@
     - name: nic01
       location: eastus
     - name: nic02
-      location:  eastus2
+      location: eastus2
 
 - name: For network interface test
   block:

@@ -25,7 +25,7 @@
     - name: Create user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
       vars:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         managed_identity_test_unique: 'eventhub'
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
@@ -36,7 +36,7 @@
 
     - name: Create postgresql flexible server (check mode)
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         sku:
           name: Standard_D2s_v3
@@ -68,7 +68,7 @@
 
     - name: Create postgresql flexible server
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         sku:
           name: Standard_D2s_v3
@@ -111,7 +111,7 @@
 
     - name: Create postgresql flexible server (Idempotent Test)
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         sku:
           name: Standard_D2s_v3
@@ -148,7 +148,7 @@
 
     - name: Update postgresql flexible server with multiple parameters
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         sku:
           name: Standard_D2s_v3
@@ -189,7 +189,7 @@
 
     - name: Gather facts postgresql flexible Server
       azure_rm_postgresqlflexibleserver_info:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
       register: output
 
@@ -208,7 +208,7 @@
     - name: Postgresql server Identity None
       azure_rm_postgresqlflexibleserver:
         name: postflexible{{ rpfx }}
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         identity:
           type: "None"
       register: output
@@ -220,7 +220,7 @@
 
     - name: Create a postgresql flexible database(check mode)
       azure_rm_postgresqlflexibledatabase:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: database{{ rpfx }}
         collation: en_US.utf8
@@ -229,7 +229,7 @@
 
     - name: Create a postgresql flexible database
       azure_rm_postgresqlflexibledatabase:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: database{{ rpfx }}
         collation: en_US.utf8
@@ -243,7 +243,7 @@
 
     - name: Create a postgresql flexible database(Idempotent test)
       azure_rm_postgresqlflexibledatabase:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: database{{ rpfx }}
         collation: en_US.utf8
@@ -257,7 +257,7 @@
 
     - name: Get the postgresql flexibe database facts
       azure_rm_postgresqlflexibledatabase_info:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: database{{ rpfx }}
       register: output
@@ -270,7 +270,7 @@
 
     - name: Delete the postgresql flexibe database
       azure_rm_postgresqlflexibledatabase:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: database{{ rpfx }}
         state: absent
@@ -283,7 +283,7 @@
 
     - name: Create a postgresql flexible firwall rule (Check mode)
       azure_rm_postgresqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: firewall{{ rpfx }}
         start_ip_address: 10.0.0.15
@@ -292,7 +292,7 @@
 
     - name: Create the postgresql flexible firwall rule
       azure_rm_postgresqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: firewall{{ rpfx }}
         start_ip_address: 10.0.0.15
@@ -306,7 +306,7 @@
 
     - name: Create the postgresql flexible firwall rule (Idempotent test)
       azure_rm_postgresqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: firewall{{ rpfx }}
         start_ip_address: 10.0.0.15
@@ -320,7 +320,7 @@
 
     - name: Update the postgresql flexible firwall rule
       azure_rm_postgresqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: firewall{{ rpfx }}
         start_ip_address: 10.0.0.16
@@ -334,7 +334,7 @@
 
     - name: Get the postgresql flexible firwall rule facts
       azure_rm_postgresqlflexiblefirewallrule_info:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: firewall{{ rpfx }}
       register: output
@@ -347,7 +347,7 @@
 
     - name: Delete the postgresql flexible firwall rule
       azure_rm_postgresqlflexiblefirewallrule:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         name: firewall{{ rpfx }}
         state: absent
@@ -360,7 +360,7 @@
 
     - name: List the postgresql flexible config facts
       azure_rm_postgresqlflexibleconfiguration_info:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
       register: output
 
@@ -371,7 +371,7 @@
 
     - name: Create a new backup for the postgresql flexible server
       azure_rm_postgresqlflexiblebackup:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         backup_name: backup{{ rpfx }}
       register: output
@@ -383,7 +383,7 @@
 
     - name: Create a new backup for the postgresql flexible server(Idempotent test)
       azure_rm_postgresqlflexiblebackup:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         backup_name: backup{{ rpfx }}
       register: output
@@ -395,7 +395,7 @@
 
     - name: Get the backup for the postgresql flexible server
       azure_rm_postgresqlflexiblebackup_info:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         backup_name: backup{{ rpfx }}
       register: output
@@ -407,7 +407,7 @@
 
     - name: Delete the backup for the postgresql flexible server
       azure_rm_postgresqlflexiblebackup:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         backup_name: backup{{ rpfx }}
         state: absent
@@ -420,7 +420,7 @@
 
     - name: Create a new virtual endpoint for the postgresql flexible server
       azure_rm_postgresqlflexiblevirtualendpoint:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         virtual_endpoint_name: vendpoint{{ rpfx }}
         endpoint_type: ReadWrite
@@ -435,7 +435,7 @@
 
     - name: Create a new virtual endpoint for the postgresql flexible server(Idempotent test)
       azure_rm_postgresqlflexiblevirtualendpoint:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         virtual_endpoint_name: vendpoint{{ rpfx }}
         endpoint_type: ReadWrite
@@ -450,7 +450,7 @@
 
     - name: Get the virtual endpoint for the postgresql flexible server
       azure_rm_postgresqlflexiblevirtualendpoint_info:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         virtual_endpoint_name: vendpoint{{ rpfx }}
       register: output
@@ -462,7 +462,7 @@
 
     - name: Delete the virtual endpoint for the postgresql flexible server
       azure_rm_postgresqlflexiblevirtualendpoint:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         server_name: postflexible{{ rpfx }}
         virtual_endpoint_name: vendpoint{{ rpfx }}
         state: absent
@@ -475,7 +475,7 @@
 
     - name: Stop the postgresql flexible server
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         is_stop: true
       register: output
@@ -492,7 +492,7 @@
 
     - name: Restart postgresql flexible server
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         is_restart: true
       register: output
@@ -504,7 +504,7 @@
 
     - name: Delete postgresql flexible server
       azure_rm_postgresqlflexibleserver:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         name: postflexible{{ rpfx }}
         state: absent
       register: output
@@ -517,7 +517,7 @@
     - name: Delete user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
       vars:
-        resource_group: "{{ resource_group }}-postgresqlflexibleserver"
+        resource_group: "{{ new_resource_group }}"
         managed_identity_test_unique: 'eventhub'
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'delete'
@@ -528,7 +528,7 @@
 
     - name: Delete the new resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-postgresqlflexibleserver"
+        name: "{{ new_resource_group }}"
         force_delete_nonempty: true
         state: absent
       register: output
