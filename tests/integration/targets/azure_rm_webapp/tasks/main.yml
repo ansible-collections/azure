@@ -1,12 +1,12 @@
 - name: Create the first resource group for webapp test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-webapp01"
-    location: eastus2
-
-- name: Create the secondary resource group for webapp test
-  azure_rm_resourcegroup:
-    name: "{{ resource_group }}-webapp02"
-    location: westus2
+    name: "{{ resource_group }}-{{ item['name'] }}"
+    location: "{{ item['location'] }}"
+  loop:
+    - name: webapp01
+      location: eastus
+    - name: webapp02
+      location: eastus2
 
 - name: For webapp test
   block:
@@ -33,6 +33,7 @@
       ansible.builtin.set_fact:
         location: westus2
         managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-webapp01"
 
     - name: Create user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
@@ -41,6 +42,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
         managed_identity_location: "{{ __rg_info.resourcegroups.0.location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'

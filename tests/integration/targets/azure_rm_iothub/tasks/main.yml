@@ -15,6 +15,7 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
         location: "{{ __rg_info.resourcegroups.0.location }}"
         managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-iothub"
 
     - name: Create user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
@@ -23,6 +24,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'
@@ -276,6 +278,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'delete'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'

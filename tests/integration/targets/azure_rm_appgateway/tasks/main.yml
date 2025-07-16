@@ -20,6 +20,7 @@
         cert2_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
         cert3b64_file: "cert3b64.txt"
         location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-appgateway"
       run_once: true
     - name: Set json query to only retrieve gateways from this test
       ansible.builtin.set_fact:
@@ -37,6 +38,7 @@
         managed_identity_unique: '1'
         managed_identity_action: 'create'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
 
     - name: Load app gateways
       azure_rm_appgateway_info:
@@ -1962,6 +1964,7 @@
         managed_identity_unique: '1'
         managed_identity_action: 'delete'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:

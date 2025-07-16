@@ -24,6 +24,7 @@
       ansible.builtin.set_fact:
         location: "{{ __rg_info.resourcegroups.0.location }}"
         managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-sqlserver"
 
     - name: Create user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
@@ -32,6 +33,7 @@
         managed_identity_unique: '1'
         managed_identity_action: 'create'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
 
     - name: Create instance of SQL Server -- check mode
       azure_rm_sqlserver:
@@ -908,6 +910,8 @@
         managed_identity_unique: '1'
         managed_identity_action: 'delete'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:

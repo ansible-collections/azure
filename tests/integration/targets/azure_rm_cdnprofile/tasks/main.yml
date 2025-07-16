@@ -436,6 +436,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'delete'
         managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
       with_items:
         - '1'
         - '2'
