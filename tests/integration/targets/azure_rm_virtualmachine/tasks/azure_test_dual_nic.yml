@@ -3,14 +3,14 @@
 
 - name: Create virtual network in secondary resource group
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group_secondary }}"
+    resource_group: "{{ resource_group }}-vm02"
     name: "{{ network_name ~ '-2' }}"
     address_prefixes: "{{ secondary_network }}"
   register: create_virt_net_result
 
 - name: Create subnet in secondary resource group
   azure_rm_subnet:
-    resource_group: "{{ resource_group_secondary }}"
+    resource_group: "{{ resource_group }}-vm02"
     name: "{{ subnet_name ~ '-2' }}"
     address_prefix: "{{ secondary_subnet }}"
     virtual_network: "{{ network_name ~ '-2' }}"

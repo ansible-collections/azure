@@ -3,13 +3,13 @@
 
 - name: Create proximity placement group
   azure_rm_proximityplacementgroup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: testproximityplacement
   register: output
 
 - name: Create minimal VM with proximentplace group
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     admin_username: "testuser"
     ssh_password_enabled: false
@@ -30,19 +30,19 @@
 
 - name: Get VM facts
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
   register: vm_state
 
 - name: Generalize VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     generalized: true
 
 - name: Create an image from VM
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     source: "{{ vm_name }}"
     name: testimage
     os_type: Linux
@@ -55,7 +55,7 @@
 
 - name: Create virtual machine ephmeral OS disk
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     admin_username: "testuser"
     ssh_password_enabled: false
@@ -78,7 +78,7 @@
 
 - name: Check virtual machine ephmeral OS disk idempotent
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     admin_username: "testuser"
     ssh_password_enabled: false
@@ -100,7 +100,7 @@
 
 - name: Check virtual machine ephmeral OS disk can't update
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     admin_username: "testuser"
     ssh_password_enabled: false
@@ -121,18 +121,18 @@
 
 - name: Delete VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
 
 - name: Delete VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     state: absent
 
 - name: Create an image from VM
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: testimage
     state: absent

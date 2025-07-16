@@ -1,21 +1,30 @@
-- name: Create a new resource group for test
-  azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: eastus
+---
+- name: Run Azure VM tests in parallel
+  hosts: all
+  gather_facts: false
+  strategy: linear
+  tasks:
+    - name: Create a new resource group for Virtual machine test
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item['name'] }}"
+        location: "{{ item['location'] }}"
+      loop:
+        - name: vm01
+          location: eastus
+        - name: vm02
+          location: eastus2
 
-- name: For test
-  block:
-    ---
-    - name: Run Azure VM tests in parallel
-      hosts: all
-      gather_facts: false
-      strategy: linear
-      tasks:
+    - name: For Virtual machine test
+      block:
         - name: Include tasks based on inventory hostname
           ansible.builtin.include_tasks: tasks/{{ inventory_hostname }}.yml
-  always:
-    - name: Force delete the resource group
-      azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
-        force_delete_nonempty: true
-        state: absent
+
+      always:
+        - name: Force delete the resource group
+          azure_rm_resourcegroup:
+            name: "{{ resource_group }}-{{ item }}"
+            force_delete_nonempty: true
+            state: absent
+          loop:
+            - vm01
+            - vm02
