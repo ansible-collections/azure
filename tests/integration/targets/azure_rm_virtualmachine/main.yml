@@ -4,5 +4,26 @@
   gather_facts: false
   strategy: linear
   tasks:
-    - name: Include tasks based on inventory hostname
-      ansible.builtin.include_tasks: tasks/{{ inventory_hostname }}.yml
+    - name: Create a new resource group for Virtual machine test
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item }}"
+        location: eastus
+      ignore_errors: true
+      loop:
+        - vm01
+        - vm02
+
+    - name: For Virtual machine test
+      block:
+        - name: Include tasks based on inventory hostname
+          ansible.builtin.include_tasks: tasks/{{ inventory_hostname }}.yml
+
+      always:
+        - name: Force delete the resource group
+          azure_rm_resourcegroup:
+            name: "{{ resource_group }}-{{ item }}"
+            force_delete_nonempty: true
+            state: absent
+          loop:
+            - vm01
+            - vm02
