@@ -8,7 +8,8 @@
       azure_rm_resourcegroup:
         name: "{{ resource_group }}-{{ item }}"
         location: eastus
-      ignore_errors: true
+      failed_when: "'already exists in location' in rg_output.msg"
+      register: rg_output
       loop:
         - vm01
         - vm02
