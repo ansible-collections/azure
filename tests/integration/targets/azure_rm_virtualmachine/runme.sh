@@ -2,6 +2,10 @@
 
 set -eux
 
-ansible-playbook create_rg.yml
-ansible-playbook -i inventory.yml main.yml  "$@"
-ansible-playbook delete_rg.yml
+# Create a resource group for VM test
+ansible-playbook -i inventory.yml create_rg.yml "$@"
+
+ansible-playbook -i inventory.yml main.yml "$@"
+
+# Force delete the resource group
+ansible-playbook -i inventory.yml delete_rg.yml "$@"
