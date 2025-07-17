@@ -5,8 +5,10 @@
   loop:
     - name: webapp01
       location: eastus
-    - name: webapp02
+    - name: webapp03
       location: eastus2
+    - name: webapp03
+      location: westus2
 
 - name: For webapp test
   block:
@@ -22,7 +24,7 @@
 
     - name: Fix resource prefix
       ansible.builtin.set_fact:
-        linux_app_plan_resource_group: "{{ resource_group }}-webapp02"
+        linux_app_plan_resource_group: "{{ resource_group }}-webapp03"
         win_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}winapp"
         linux_app_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}{{ 1000 | random }}linuxapp"
         win_plan_name: "{{ (resource_prefix | replace('-', 'x'))[-8:] }}winplan"
@@ -935,3 +937,4 @@
       with_items:
         - webapp01
         - webapp02
+        - webapp03

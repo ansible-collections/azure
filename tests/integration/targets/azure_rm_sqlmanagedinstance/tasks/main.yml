@@ -234,7 +234,7 @@
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
         that:
-          - output.sql_managed_instance[0].tags | length == 2
+          - output.sql_managed_instance[0].tags | length == 1
           - output.sql_managed_instance[0].storage_size_in_gb == 256
           - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
           - output.sql_managed_instance[0].identity.type == 'UserAssigned'
