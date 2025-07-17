@@ -8,13 +8,13 @@
       azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm01"
         location: eastus
-      ignore_errors: true
+      failed_when: false
 
     - name: Create the secondary resource group for Virtual machine test
       azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm02"
         location: eastus
-      ignore_errors: true
+      failed_when: false
 
     - name: For Virtual machine test
       block:
