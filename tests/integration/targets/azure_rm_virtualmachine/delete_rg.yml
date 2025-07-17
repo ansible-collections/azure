@@ -1,0 +1,14 @@
+---
+- name: Delete the resource group
+  hosts: all
+  gather_facts: false
+  strategy: linear
+  tasks:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item }}"
+        force_delete_nonempty: true
+        state: absent
+      loop:
+        - vm01
+        - vm02

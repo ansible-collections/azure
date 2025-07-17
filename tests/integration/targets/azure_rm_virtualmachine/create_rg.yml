@@ -1,0 +1,13 @@
+---
+- name: Creaet a resource group
+  hosts: all
+  gather_facts: false
+  strategy: linear
+  tasks:
+    - name: Create first resource group for Virtual machine test
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item['name'] }}"
+        location: eastus
+      loop:
+        - vm01
+        - vm02
