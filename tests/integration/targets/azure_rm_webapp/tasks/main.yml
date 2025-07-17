@@ -5,7 +5,7 @@
   loop:
     - name: webapp01
       location: eastus
-    - name: webapp03
+    - name: webapp02
       location: eastus2
     - name: webapp03
       location: westus2

@@ -73,7 +73,7 @@
       - vm_facts_results.vms[0].name == vm_name
       - vm_facts_results.vms[0].location != ''
       - vm_facts_results.vms[0].admin_username == 'adminuser'
-      - vm_facts_results.vms[0].resource_group == resource_group
+      - vm_facts_results.vms[0].resource_group == resource_group + '-vm01'
       - vm_facts_results.vms[0].power_state != None
 
 - name: Retrieve facts by tags
