@@ -6,7 +6,7 @@
   tasks:
     - name: Create first resource group for Virtual machine test
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-{{ item['name'] }}"
+        name: "{{ resource_group }}-{{ item }}"
         location: eastus
       loop:
         - vm01
