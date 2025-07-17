@@ -340,6 +340,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-vnet"
+        name: "{{ resource_group }}-multidisk"
         force_delete_nonempty: true
         state: absent

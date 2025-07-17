@@ -76,6 +76,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}"
+        name: "{{ resource_group }}-tags"
         force_delete_nonempty: true
         state: absent
