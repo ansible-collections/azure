@@ -4,13 +4,27 @@
   gather_facts: false
   strategy: linear
   tasks:
-    - name: Create a new resource group for Virtual machine test
+    - name: Get the first resource group status
+      azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-vm01"
+      register: output
+
+    - name: Create first resource group for Virtual machine test
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-{{ item }}"
+        name: "{{ resource_group }}-vm01"
         location: eastus
-      loop:
-        - vm01
-        - vm02
+      when: output.resourcegroups |length == 0
+
+    - name: Get the secondary resource group status
+      azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-vm02"
+      register: output
+
+    - name: Create secondary resource group for Virtual machine test
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-vm02"
+        location: eastus
+      when: output.resourcegroups |length == 0
 
     - name: For Virtual machine test
       block:
