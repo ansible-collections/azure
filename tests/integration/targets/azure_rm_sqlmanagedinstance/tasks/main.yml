@@ -118,7 +118,6 @@
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"
         storage_size_in_gb: 256
-        v_cores: 8
         tags:
           key0: value0
       check_mode: true
@@ -148,7 +147,6 @@
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"
         storage_size_in_gb: 256
-        v_cores: 8
         tags:
           key0: value0
       register: output
@@ -185,7 +183,6 @@
           capacity: 8
         administrator_login: azureuser
         storage_size_in_gb: 256
-        v_cores: 8
         tags:
           key0: value0
       register: output
@@ -214,7 +211,6 @@
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"
         storage_size_in_gb: 256
-        v_cores: 8
         tags:
           key0: value0
           key1: value1
@@ -225,6 +221,15 @@
         that:
           - output is changed
 
+    - name: Wait for sql managed instance update complete
+      azure_rm_sqlmanagedinstance_info:
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
+        name: "{{ random_postfix }}"
+      register: facts
+      until: facts.sql_managed_instance[0]['state'] == 'Ready'
+      retries: 60
+      delay: 60
+
     - name: Get SQL managed instance by name
       azure_rm_sqlmanagedinstance_info:
         resource_group: "{{ resource_group }}-sqlmanagedinstance"
@@ -234,27 +239,27 @@
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
         that:
-          - output.sql_managed_instance[0].tags | length == 1
+          - output.sql_managed_instance[0].tags | length == 2
           - output.sql_managed_instance[0].storage_size_in_gb == 256
           - output.sql_managed_instance[0].sku.name == 'GP_Gen5'
           - output.sql_managed_instance[0].identity.type == 'UserAssigned'
           - output.sql_managed_instance[0].identity.user_assigned_identities | length == 1
           - output.sql_managed_instance[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-    - name: Wait for sql managed instance provisioning to complete
-      azure_rm_sqlmanagedinstance_info:
-        resource_group: "{{ resource_group }}-sqlmanagedinstance"
-        name: "{{ random_postfix }}"
-      register: facts
-      until: facts.sql_managed_instance[0]['state'] == 'Ready'
-      retries: 60
-      delay: 60
-
     - name: Delete sql managed instance
       azure_rm_sqlmanagedinstance:
         resource_group: "{{ resource_group }}-sqlmanagedinstance"
         name: "{{ random_postfix }}"
         state: absent
+
+    - name: Get SQL managed instance and confirm the sql managed instance deleted
+      azure_rm_sqlmanagedinstance_info:
+        resource_group: "{{ resource_group }}-sqlmanagedinstance"
+        name: "{{ random_postfix }}"
+      register: output
+      until: output.sql_managed_instance |length == 0
+      retries: 60
+      delay: 60
 
     - name: Delete user managed identities
       ansible.builtin.include_tasks: managedidentity.yml
