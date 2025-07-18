@@ -727,6 +727,9 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
     def delete_sql_managed_instance(self):
         try:
             response = self.sql_client.managed_instances.begin_delete(self.resource_group, self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+
         except Exception as exc:
             self.fail('Error when deleting SQL managed instance {0}: {1}'.format(self.name, exc))
 
