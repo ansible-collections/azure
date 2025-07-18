@@ -203,7 +203,7 @@ jobs:
         displayName: "Determine the target ansible test group number"
 
   - job: RunTests
-    dependsOn: CreateResourceGroups
+    dependsOn: InitializationTest
     timeoutInMinutes: 180
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.CreateResourceGroups.outputs['setvar.resource_group'] ]
