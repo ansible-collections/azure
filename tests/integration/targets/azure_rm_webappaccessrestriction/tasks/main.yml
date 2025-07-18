@@ -7,7 +7,7 @@
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
-        rpfx: "{{ resource_group_datalake | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
       run_once: true
 
     - name: Create virtual network
