@@ -1,7 +1,10 @@
 - name: Create a new resource group for subnet test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-sub"
+    name: "{{ resource_group }}-{{ item }}"
     location: eastus
+  loop:
+    - sub01
+    - sub02
 
 - name: For subnet test
   block:
@@ -18,12 +21,12 @@
         tags:
           testing: testing
           delete: on-exit
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
 
     - name: Create route table
       azure_rm_routetable:
         name: routetableforsubnet
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
       register: route_table
 
     - name: Remove subnet
@@ -31,13 +34,13 @@
         state: absent
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
 
     - name: Catch invalid cidr
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0/24"
       register: output
       ignore_errors: true
@@ -50,7 +53,7 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0.0/24"
       register: output
 
@@ -64,7 +67,7 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
       register: output
 
     - name: Assert idempotent
@@ -74,7 +77,7 @@
     - name: Create network security group
       azure_rm_securitygroup:
         name: secgroupfoo
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         tags:
           testing: testing
 
@@ -82,7 +85,7 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0.0/16"
         security_group: secgroupfoo
         service_endpoints:
@@ -95,7 +98,7 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0.0/16"
         service_endpoints:
           - service: Microsoft.Sql
@@ -112,7 +115,7 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0.0/16"
         service_endpoints: []
       register: output
@@ -124,19 +127,19 @@
     - name: Create network security group in another resource group
       azure_rm_securitygroup:
         name: secgroupfoo
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-sub02"
       register: nsg
 
     - name: Update the subnet
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0.0/16"
         route_table: "{{ route_table.id }}"
         security_group:
           name: secgroupfoo
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-sub02"
       register: output
 
     - name: Assert the subnet update
@@ -149,7 +152,7 @@
       azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefix_cidr: "10.1.0.0/16"
         route_table: "{{ route_table.id }}"
         security_group: "{{ nsg.state.id }}"
@@ -163,7 +166,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefixes_cidr:
           - "172.100.0.0/16"
           - "fdda:e69b:1587:495e::/64"
@@ -180,7 +183,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefixes_cidr:
           - "172.100.0.0/16"
           - "fdda:e69b:1587:495e::/64"
@@ -194,7 +197,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         address_prefixes_cidr:
           - "172.100.0.0/24"
           - "fdda:e69b:1587:495e::/64"
@@ -210,7 +213,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         private_link_service_network_policies: Disabled
         private_endpoint_network_policies: Enabled
       register: output
@@ -223,7 +226,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         private_link_service_network_policies: Disabled
         private_endpoint_network_policies: Enabled
       register: output
@@ -236,7 +239,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         delegations:
           - name: 'mydeleg'
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
@@ -250,7 +253,7 @@
       azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         delegations:
           - name: 'mydeleg'
             serviceName: 'Microsoft.ContainerInstance/containerGroups'
@@ -264,7 +267,7 @@
       azure_rm_subnet_info:
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
       register: output
 
     - name: Assert that facts are returned
@@ -287,7 +290,7 @@
       azure_rm_subnet_info:
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
       register: output
 
     - name: Assert that facts are returned
@@ -308,14 +311,14 @@
         state: absent
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
 
     - name: Remove subnet (idempotent)
       azure_rm_subnet:
         state: absent
         name: foobar
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
       register: output
 
     - name: Assert idempotent
@@ -327,22 +330,25 @@
         state: absent
         name: foobar01
         virtual_network_name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
 
     - name: Remove security group
       azure_rm_securitygroup:
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         name: secgroupfoo
         state: absent
 
     - name: Remove virtual network
       azure_rm_virtualnetwork:
         name: My_Virtual_Network
-        resource_group: "{{ resource_group }}-sub"
+        resource_group: "{{ resource_group }}-sub01"
         state: absent
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-sub"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
+      loop:
+        - sub01
+        - sub02

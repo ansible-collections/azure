@@ -923,6 +923,7 @@
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'delete'
         managed_identity_location: "{{ location }}"
+        new_resource_group: "{{ resource_group }}-webapp01"
       with_items:
         - '1'
         - '2'

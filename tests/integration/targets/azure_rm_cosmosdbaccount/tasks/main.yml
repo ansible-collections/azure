@@ -1,19 +1,22 @@
 - name: Create a new resource group for cosmosdb account test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-cosmosdbaccount"
+    name: "{{ resource_group }}-{{ item }}"
     location: eastus
+  loop:
+    - cosmosdbaccount01
+    - cosmosdbaccount02
 
 - name: For cosmosdb account test
   block:
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
-        name: "{{ resource_group }}-cosmosdbaccount"
+        name: "{{ resource_group }}-cosmosdbaccount01"
       register: __rg_info
 
     - name: Set location based on resource group
       ansible.builtin.set_fact:
         location: "{{ __rg_info.resourcegroups.0.location }}"
-        new_resource_group: "{{ resource_group }}-cosmosdbaccount"
+        new_resource_group: "{{ resource_group }}-cosmosdbaccount01"
 
     - name: Set secondary location if not already defined
       ansible.builtin.set_fact:
@@ -54,7 +57,7 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ vnname }}"
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -67,12 +70,12 @@
       azure_rm_subnet:
         name: "{{ subnetname }}"
         virtual_network_name: "{{ vnname }}"
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         address_prefix_cidr: "10.1.0.0/24"
 
     - name: Create instance of Database Account -- check mode
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         location: "{{ location }}"
         geo_rep_locations:
@@ -89,7 +92,7 @@
 
     - name: Create instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         location: "{{ location }}"
         kind: global_document_db
@@ -102,7 +105,7 @@
         is_virtual_network_filter_enabled: true
         virtual_network_rules:
           - subnet:
-              resource_group: "{{ resource_group }}-cosmosdbaccount"
+              resource_group: "{{ resource_group }}-cosmosdbaccount01"
               virtual_network_name: "{{ vnname }}"
               subnet_name: "{{ subnetname }}"
             ignore_missing_v_net_service_endpoint: true
@@ -121,7 +124,7 @@
 
     - name: Create again instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         location: "{{ location }}"
         kind: global_document_db
@@ -134,7 +137,7 @@
         is_virtual_network_filter_enabled: true
         virtual_network_rules:
           - subnet:
-              resource_group: "{{ resource_group }}-cosmosdbaccount"
+              resource_group: "{{ resource_group }}-cosmosdbaccount01"
               virtual_network_name: "{{ vnname }}"
               subnet_name: "{{ subnetname }}"
             ignore_missing_v_net_service_endpoint: true
@@ -157,7 +160,7 @@
 
     - name: Create again instance of Database Account -- change something
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         location: "{{ location }}"
         kind: global_document_db
@@ -170,7 +173,7 @@
         is_virtual_network_filter_enabled: true
         virtual_network_rules:
           - subnet:
-              resource_group: "{{ resource_group }}-cosmosdbaccount"
+              resource_group: "{{ resource_group }}-cosmosdbaccount01"
               virtual_network_name: "{{ vnname }}"
               subnet_name: "{{ subnetname }}"
             ignore_missing_v_net_service_endpoint: true
@@ -190,7 +193,7 @@
 
     - name: Create second instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-cosmosdbaccount02"
         name: "{{ db2name }}"
         location: "{{ location }}"
         kind: global_document_db
@@ -203,7 +206,7 @@
         is_virtual_network_filter_enabled: true
         virtual_network_rules:
           - subnet:
-              resource_group: "{{ resource_group }}-cosmosdbaccount"
+              resource_group: "{{ resource_group }}-cosmosdbaccount01"
               virtual_network_name: "{{ vnname }}"
               subnet_name: "{{ subnetname }}"
             ignore_missing_v_net_service_endpoint: true
@@ -223,7 +226,7 @@
 
     - name: Update second instance of Database Account - replace user-identity
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-cosmosdbaccount02"
         name: "{{ db2name }}"
         location: "{{ location }}"
         kind: global_document_db
@@ -236,7 +239,7 @@
         is_virtual_network_filter_enabled: true
         virtual_network_rules:
           - subnet:
-              resource_group: "{{ resource_group }}-cosmosdbaccount"
+              resource_group: "{{ resource_group }}-cosmosdbaccount01"
               virtual_network_name: "{{ vnname }}"
               subnet_name: "{{ subnetname }}"
             ignore_missing_v_net_service_endpoint: true
@@ -257,7 +260,7 @@
 
     - name: Get facts of single account
       azure_rm_cosmosdbaccount_info:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
       register: output
 
@@ -298,7 +301,7 @@
 
     - name: Get facts of second account
       azure_rm_cosmosdbaccount_info:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-cosmosdbaccount02"
         name: "{{ db2name }}"
       register: output
 
@@ -313,7 +316,7 @@
 
     - name: Get facts with keys
       azure_rm_cosmosdbaccount_info:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         retrieve_keys: all
       register: output
@@ -328,7 +331,7 @@
 
     - name: Get facts with readonly keys
       azure_rm_cosmosdbaccount_info:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         retrieve_keys: readonly
         retrieve_connection_strings: true
@@ -345,7 +348,7 @@
 
     - name: List accounts by resource group
       azure_rm_cosmosdbaccount_info:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
       register: output
     - name: Assert that facts are returned
       ansible.builtin.assert:
@@ -395,7 +398,7 @@
 
     - name: Create 4.0 Mongo free-tier instance with public networking disabled
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}-free4"
         location: "{{ location }}"
         kind: mongo_db
@@ -414,7 +417,7 @@
         is_virtual_network_filter_enabled: true
         virtual_network_rules:
           - subnet:
-              resource_group: "{{ resource_group }}-cosmosdbaccount"
+              resource_group: "{{ resource_group }}-cosmosdbaccount01"
               virtual_network_name: "{{ vnname }}"
               subnet_name: "{{ subnetname }}"
             ignore_missing_v_net_service_endpoint: true
@@ -427,7 +430,7 @@
 
     - name: Get facts for free tier account
       azure_rm_cosmosdbaccount_info:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}-free4"
       register: output
     - name: Assert that facts are returned
@@ -443,7 +446,7 @@
 
     - name: Delete instance of Database Account -- check mode
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         state: absent
       check_mode: true
@@ -455,7 +458,7 @@
 
     - name: Delete instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         state: absent
       register: output
@@ -466,7 +469,7 @@
 
     - name: Delete unexisting instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}"
         state: absent
       register: output
@@ -477,7 +480,7 @@
 
     - name: Delete second instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-cosmosdbaccount02"
         name: "{{ db2name }}"
         state: absent
       register: output
@@ -488,7 +491,7 @@
 
     - name: Delete free tier instance of Database Account
       azure_rm_cosmosdbaccount:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ dbname }}-free4"
         state: absent
       register: output
@@ -499,7 +502,7 @@
 
     - name: Clean up virtual network
       azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}-cosmosdbaccount"
+        resource_group: "{{ resource_group }}-cosmosdbaccount01"
         name: "{{ vnname }}"
         state: absent
 
@@ -518,6 +521,9 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-cosmosdbaccount"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
+      loop:
+        - cosmosdbaccount01
+        - cosmosdbaccount02

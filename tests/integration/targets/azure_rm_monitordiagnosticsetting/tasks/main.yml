@@ -1,7 +1,10 @@
 - name: Create a new resource group for monitor diagnostic setting test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-monitordiagnosticsetting"
+    name: "{{ resource_group }}-{{ item }}"
     location: eastus
+  loop:
+    - monitordiagnosticsetting01
+    - monitordiagnosticsetting02
 
 - name: For monitor diagnostic setting test
   block:
@@ -15,17 +18,17 @@
     - name: Create virtual network
       azure_rm_virtualnetwork:
         name: "vnet-{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         address_prefixes: "10.0.0.0/16"
       register: vnet_output
 
     - name: Create web app
       azure_rm_webapp:
         name: "webapp-{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         plan:
           name: "webapp-{{ rpfx }}-plan"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
           is_linux: false
           sku: B1
       register: webapp_output
@@ -33,7 +36,7 @@
     - name: Create storage account
       azure_rm_storageaccount:
         name: "storage{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         account_type: Standard_LRS
         kind: StorageV2
       register: storage_output
@@ -41,7 +44,7 @@
     - name: Create second storage account
       azure_rm_storageaccount:
         name: "storagesecond{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         account_type: Standard_LRS
         kind: StorageV2
       register: storage2_output
@@ -49,13 +52,13 @@
     - name: Create event hub namespace
       azure_rm_eventhub:
         namespace_name: "hub-{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         sku: "Basic"
 
     - name: Create log analytics workspace
       azure_rm_loganalyticsworkspace:
         name: "analytics-{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         retention_in_days: 30
       register: analytics_output
 
@@ -140,7 +143,7 @@
         resource:
           name: "vnet-{{ rpfx }}"
           type: "Microsoft.Network/virtualNetworks"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         storage_account: "{{ storage_output.state.id }}"
         logs:
           - category_group: "allLogs"
@@ -179,7 +182,7 @@
         resource: "{{ vnet_output.state.id }}"
         storage_account:
           name: "storagesecond{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         logs:
           - category: "VMProtectionAlerts"
             retention_policy:
@@ -206,7 +209,7 @@
         resource: "{{ vnet_output.state.id }}"
         storage_account:
           name: "storagesecond{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         logs:
           - category: "VMProtectionAlerts"
             retention_policy:
@@ -224,7 +227,7 @@
         resource: "{{ vnet_output.state.id }}"
         storage_account:
           name: "storagesecond{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         logs:
           - category: "VMProtectionAlerts"
             retention_policy:
@@ -298,13 +301,13 @@
         resource:
           name: "webapp-{{ rpfx }}"
           type: "Microsoft.Web/sites"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         event_hub:
           namespace: "hub-{{ rpfx }}"
           policy: "RootManageSharedAccessKey"
         log_analytics:
           name: "analytics-{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         storage_account:
           name: "storage{{ rpfx }}"
         logs:
@@ -339,13 +342,13 @@
         resource:
           name: "webapp-{{ rpfx }}"
           type: "Microsoft.Web/sites"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         event_hub:
           namespace: "hub-{{ rpfx }}"
           policy: "RootManageSharedAccessKey"
         log_analytics:
           name: "analytics-{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         storage_account:
           name: "storage{{ rpfx }}"
         logs:
@@ -367,13 +370,13 @@
         resource:
           name: "webapp-{{ rpfx }}"
           type: "Microsoft.Web/sites"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         event_hub:
           namespace: "hub-{{ rpfx }}"
           policy: "RootManageSharedAccessKey"
         log_analytics:
           name: "analytics-{{ rpfx }}"
-          resource_group: "{{ resource_group_secondary }}"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         logs:
           - category: "AppServiceHTTPLogs"
           - category: "AppServiceAppLogs"
@@ -399,7 +402,7 @@
         resource:
           name: "webapp-{{ rpfx }}"
           type: "Microsoft.Web/sites"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
       register: output
     - name: Assert resource delete
@@ -413,7 +416,7 @@
         resource:
           name: "webapp-{{ rpfx }}"
           type: "Microsoft.Web/sites"
-          resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+          resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
       register: output
     - name: Assert resource delete
@@ -471,47 +474,50 @@
     - name: Delete log analytics workspace
       azure_rm_loganalyticsworkspace:
         name: "analytics-{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         state: "absent"
 
     - name: Delete event hub namespace
       azure_rm_eventhub:
         namespace_name: "hub-{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete second storage account
       azure_rm_storageaccount:
         name: "storagesecond{{ rpfx }}"
-        resource_group: "{{ resource_group_secondary }}"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         state: "absent"
 
     - name: Delete storage account
       azure_rm_storageaccount:
         name: "storage{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete web app
       azure_rm_webapp:
         name: "webapp-{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete web app plan
       azure_rm_appserviceplan:
         name: "webapp-{{ rpfx }}-plan"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete virtual network
       azure_rm_virtualnetwork:
         name: "vnet-{{ rpfx }}"
-        resource_group: "{{ resource_group }}-monitordiagnosticsetting"
+        resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-monitordiagnosticsetting"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
+      loop:
+        - monitordiagnosticsetting01
+        - monitordiagnosticsetting02
