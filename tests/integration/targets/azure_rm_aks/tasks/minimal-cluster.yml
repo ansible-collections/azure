@@ -1,466 +1,480 @@
-- name: Set varialbles
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-    location: westus2
+- name: Create a new resource group for AKS test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-aks01"
+    location: eastus
 
-- name: Find available k8s version
-  azure_rm_aksversion_info:
-    location: "{{ location }}"
-  register: versions
+- name: For AKS test
+  block:
+    - name: Set varialbles
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        location: westus2
 
-- name: Use minimal parameters and system-assigned identity
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    location: "{{ location }}"
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        mode: System
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      network_plugin_mode: Overlay
-      network_plugin: azure
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-    auto_upgrade_profile:
-      node_os_upgrade_channel: NodeImage
-      upgrade_channel: patch
-    disable_local_accounts: true
-  register: output
+    - name: Find available k8s version
+      azure_rm_aksversion_info:
+        location: "{{ location }}"
+      register: versions
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.provisioning_state == 'Succeeded'
+    - name: Use minimal parameters and system-assigned identity
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          network_plugin_mode: Overlay
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+        auto_upgrade_profile:
+          node_os_upgrade_channel: NodeImage
+          upgrade_channel: patch
+        disable_local_accounts: true
+      register: output
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "minimal{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 1"
-      - fact.aks[0].id == output.id
-      - fact.aks[0].aad_profile.managed == true
-      - fact.aks[0].aad_profile.enable_azure_rbac == true
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "minimal{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks01"
+      register: fact
 
-- name: Use minimal parameters and system-assigned identity (idempotent)
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    location: "{{ location }}"
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    identity:
-      type: "SystemAssigned"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        mode: System
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      network_plugin_mode: Overlay
-      network_plugin: azure
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-    auto_upgrade_profile:
-      node_os_upgrade_channel: NodeImage
-      upgrade_channel: patch
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].id == output.id
+          - fact.aks[0].aad_profile.managed == true
+          - fact.aks[0].aad_profile.enable_azure_rbac == true
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Use minimal parameters and system-assigned identity (idempotent)
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        identity:
+          type: "SystemAssigned"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          network_plugin_mode: Overlay
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+        auto_upgrade_profile:
+          node_os_upgrade_channel: NodeImage
+          upgrade_channel: patch
+      register: output
 
-- name: Use minimal parameters and user-assigned identity
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    location: "{{ location }}"
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    identity:
-      type: "UserAssigned"
-      user_assigned_identities: "{{ user_identity }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        mode: System
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      network_plugin_mode: Overlay
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-      network_plugin: azure
-    auto_upgrade_profile:
-      node_os_upgrade_channel: NodeImage
-      upgrade_channel: patch
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.provisioning_state == 'Succeeded'
+    - name: Use minimal parameters and user-assigned identity
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities: "{{ user_identity }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          network_plugin_mode: Overlay
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+          network_plugin: azure
+        auto_upgrade_profile:
+          node_os_upgrade_channel: NodeImage
+          upgrade_channel: patch
+      register: output
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "minimal{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 1"
-      - fact.aks[0].id == output.id
-      - fact.aks[0].aad_profile.managed == true
-      - fact.aks[0].network_profile.network_plugin_mode == "overlay"
-      - user_identity in fact.aks[0].identity.user_assigned_identities
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "minimal{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks01"
+      register: fact
 
-- name: Use minimal parameters and user-assigned identity (idempotent)
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    location: "{{ location }}"
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    identity:
-      type: "UserAssigned"
-      user_assigned_identities: "{{ user_identity }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        mode: System
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      network_plugin_mode: Overlay
-      network_plugin: azure
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-    auto_upgrade_profile:
-      node_os_upgrade_channel: NodeImage
-      upgrade_channel: patch
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].id == output.id
+          - fact.aks[0].aad_profile.managed == true
+          - fact.aks[0].network_profile.network_plugin_mode == "overlay"
+          - user_identity in fact.aks[0].identity.user_assigned_identities
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Use minimal parameters and user-assigned identity (idempotent)
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities: "{{ user_identity }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          network_plugin_mode: Overlay
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+        auto_upgrade_profile:
+          node_os_upgrade_channel: NodeImage
+          upgrade_channel: patch
+      register: output
 
-- name: Use minimal parameters and user-assigned 2 identity
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    location: "{{ location }}"
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    identity:
-      type: "UserAssigned"
-      user_assigned_identities: "{{ user_identity_2 }}"
-    aad_profile:
-      managed: true
-      enable_azure_rbac: true
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        mode: System
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      network_plugin_mode: Overlay
-      network_plugin: azure
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-    auto_upgrade_profile:
-      node_os_upgrade_channel: NodeImage
-      upgrade_channel: patch
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.provisioning_state == 'Succeeded'
+    - name: Use minimal parameters and user-assigned 2 identity
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities: "{{ user_identity_2 }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          network_plugin_mode: Overlay
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+        auto_upgrade_profile:
+          node_os_upgrade_channel: NodeImage
+          upgrade_channel: patch
+      register: output
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "minimal{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 1"
-      - fact.aks[0].id == output.id
-      - fact.aks[0].aad_profile.managed == true
-      - user_identity_2 in fact.aks[0].identity.user_assigned_identities
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "minimal{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks01"
+      register: fact
 
-- name: Update api_server_access_profile and auto_upgrade_channel config
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    location: "{{ location }}"
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    agent_pool_profiles:
-      - name: default
-        count: 1
-        vm_size: Standard_B2s
-        mode: System
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "173.0.113.0"
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      network_plugin_mode: Overlay
-      network_plugin: azure
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-    auto_upgrade_profile:
-      node_os_upgrade_channel: NodeImage
-      upgrade_channel: stable
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].id == output.id
+          - fact.aks[0].aad_profile.managed == true
+          - user_identity_2 in fact.aks[0].identity.user_assigned_identities
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update api_server_access_profile and auto_upgrade_channel config
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            mode: System
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "173.0.113.0"
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          network_plugin_mode: Overlay
+          network_plugin: azure
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+        auto_upgrade_profile:
+          node_os_upgrade_channel: NodeImage
+          upgrade_channel: stable
+      register: output
 
-- name: Delete the AKS instance
-  azure_rm_aks:
-    name: "minimal{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the AKS instance is well deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the AKS instance
+      azure_rm_aks:
+        name: "minimal{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks01"
+        state: absent
+      register: output
 
-- name: Create Log Analytics Workspace
-  azure_rm_loganalyticsworkspace:
-    name: "log{{ rpfx }}"
-    intelligence_packs:
-      Backup: true
-      Containers: true
-    retention_in_days: 30
-    resource_group: "{{ resource_group }}"
-  register: log_output
+    - name: Assert the AKS instance is well deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create a new kubernet service with security parameters
-  azure_rm_aks:
-    name: "min{{ rpfx }}-sec"
-    location: westus2
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    aad_profile:
-      managed: true
-    security_profile:
-      image_cleaner:
-        enabled: false
-        interval_hours: 38
-      defender:
-        log_analytics_workspace_resource_id: "{{ log_output.id }}"
-        security_monitoring:
-          enabled: true
-    agent_pool_profiles:
-      - name: default
-        count: 2
-        vm_size: Standard_B2s
-        mode: System
+    - name: Create Log Analytics Workspace
+      azure_rm_loganalyticsworkspace:
+        name: "log{{ rpfx }}"
+        intelligence_packs:
+          Backup: true
+          Containers: true
+        retention_in_days: 30
+        resource_group: "{{ resource_group }}-aks01"
+      register: log_output
+
+    - name: Create a new kubernet service with security parameters
+      azure_rm_aks:
+        name: "min{{ rpfx }}-sec"
+        location: westus2
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        aad_profile:
+          managed: true
         security_profile:
-          enable_vtpm: true
-          enable_secure_boot: true
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-  register: output
+          image_cleaner:
+            enabled: false
+            interval_hours: 38
+          defender:
+            log_analytics_workspace_resource_id: "{{ log_output.id }}"
+            security_monitoring:
+              enabled: true
+        agent_pool_profiles:
+          - name: default
+            count: 2
+            vm_size: Standard_B2s
+            mode: System
+            security_profile:
+              enable_vtpm: true
+              enable_secure_boot: true
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+      register: output
 
-- name: Assert the AKS instance is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create a new kubernet service with security parameters (Idempotent test)
-  azure_rm_aks:
-    name: "min{{ rpfx }}-sec"
-    location: westus2
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    aad_profile:
-      managed: true
-    security_profile:
-      image_cleaner:
-        enabled: false
-        interval_hours: 38
-      defender:
-        log_analytics_workspace_resource_id: "{{ log_output.id }}"
-        security_monitoring:
-          enabled: true
-    agent_pool_profiles:
-      - name: default
-        count: 2
-        vm_size: Standard_B2s
-        mode: System
+    - name: Create a new kubernet service with security parameters (Idempotent test)
+      azure_rm_aks:
+        name: "min{{ rpfx }}-sec"
+        location: westus2
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        aad_profile:
+          managed: true
         security_profile:
-          enable_vtpm: true
-          enable_secure_boot: true
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-  register: output
+          image_cleaner:
+            enabled: false
+            interval_hours: 38
+          defender:
+            log_analytics_workspace_resource_id: "{{ log_output.id }}"
+            security_monitoring:
+              enabled: true
+        agent_pool_profiles:
+          - name: default
+            count: 2
+            vm_size: Standard_B2s
+            mode: System
+            security_profile:
+              enable_vtpm: true
+              enable_secure_boot: true
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+      register: output
 
-- name: Assert the AKS instance no changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Assert the AKS instance no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Update the kubernet service security parameters parameters
-  azure_rm_aks:
-    name: "min{{ rpfx }}-sec"
-    location: westus2
-    resource_group: "{{ resource_group }}"
-    kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
-    dns_prefix: "aks{{ rpfx }}"
-    enable_rbac: true
-    aad_profile:
-      managed: true
-    security_profile:
-      image_cleaner:
-        enabled: true
-        interval_hours: 68
-      defender:
-        log_analytics_workspace_resource_id: "{{ log_output.id }}"
-        security_monitoring:
-          enabled: true
-    agent_pool_profiles:
-      - name: default
-        count: 2
-        vm_size: Standard_B2s
-        mode: System
+    - name: Update the kubernet service security parameters parameters
+      azure_rm_aks:
+        name: "min{{ rpfx }}-sec"
+        location: westus2
+        resource_group: "{{ resource_group }}-aks01"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        aad_profile:
+          managed: true
         security_profile:
-          enable_vtpm: false
-          enable_secure_boot: false
-    api_server_access_profile:
-      authorized_ip_ranges:
-        - "192.0.2.0"
-        - "198.51.100.0"
-        - "203.0.113.0"
-      enable_private_cluster: false
-    network_profile:
-      load_balancer_sku: standard
-      outbound_type: loadBalancer
-  register: output
+          image_cleaner:
+            enabled: true
+            interval_hours: 68
+          defender:
+            log_analytics_workspace_resource_id: "{{ log_output.id }}"
+            security_monitoring:
+              enabled: true
+        agent_pool_profiles:
+          - name: default
+            count: 2
+            vm_size: Standard_B2s
+            mode: System
+            security_profile:
+              enable_vtpm: false
+              enable_secure_boot: false
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          load_balancer_sku: standard
+          outbound_type: loadBalancer
+      register: output
 
-- name: Assert the AKS instance updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the AKS instance updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "min{{ rpfx }}-sec"
-    resource_group: "{{ resource_group }}"
-  register: output
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "min{{ rpfx }}-sec"
+        resource_group: "{{ resource_group }}-aks01"
+      register: output
 
-- name: Assert the AKS instance facts
-  ansible.builtin.assert:
-    that:
-      - output.aks[0].agent_pool_profiles[0].security_profile.enable_vtpm is false
-      - output.aks[0].agent_pool_profiles[0].security_profile.enable_secure_boot is false
-      - output.aks[0].security_profile.image_cleaner.enabled is true
-      - output.aks[0].security_profile.image_cleaner.interval_hours == 68
+    - name: Assert the AKS instance facts
+      ansible.builtin.assert:
+        that:
+          - output.aks[0].agent_pool_profiles[0].security_profile.enable_vtpm is false
+          - output.aks[0].agent_pool_profiles[0].security_profile.enable_secure_boot is false
+          - output.aks[0].security_profile.image_cleaner.enabled is true
+          - output.aks[0].security_profile.image_cleaner.interval_hours == 68
 
-- name: Delete the AKS instance
-  azure_rm_aks:
-    name: "min{{ rpfx }}-sec"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Delete the AKS instance
+      azure_rm_aks:
+        name: "min{{ rpfx }}-sec"
+        resource_group: "{{ resource_group }}-aks01"
+        state: absent
 
-- name: Get AKS fact
-  azure_rm_aks_info:
-    name: "minimal{{ rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: fact
+    - name: Get AKS fact
+      azure_rm_aks_info:
+        name: "minimal{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks01"
+      register: fact
 
-- name: Assert fact returns empty
-  ansible.builtin.assert:
-    that:
-      - "fact.aks | length == 0"
+    - name: Assert fact returns empty
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 0"
+
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-aks01"
+        force_delete_nonempty: true
+        state: absent
