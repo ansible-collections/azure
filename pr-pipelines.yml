@@ -173,7 +173,7 @@ pool:
   name: pool-ubuntu-2004
 
 jobs:
-  - job: CreateResourceGroups
+  - job: Initialization test
     steps:
       - bash: |
           echo "##vso[task.setvariable variable=resource_group;isOutput=true]ansibletest-$(uuidgen)"
