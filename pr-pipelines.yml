@@ -264,7 +264,7 @@ jobs:
 
   - job: CleanupResourceGroups
     dependsOn:
-      - CreateResourceGroups
+      - InitializationTest
       - RunTests
     condition: always()
     variables:
