@@ -1,6 +1,6 @@
 - name: Create a new resource group for AKS test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}-aks01"
+    name: "{{ resource_group }}-min"
     location: eastus
 
 - name: For AKS test
@@ -19,7 +19,7 @@
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -57,7 +57,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "minimal{{ rpfx }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
       register: fact
 
     - name: Assert fact returns the created one
@@ -72,7 +72,7 @@
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -111,7 +111,7 @@
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -151,7 +151,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "minimal{{ rpfx }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
       register: fact
 
     - name: Assert fact returns the created one
@@ -167,7 +167,7 @@
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -207,7 +207,7 @@
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -247,7 +247,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "minimal{{ rpfx }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
       register: fact
 
     - name: Assert fact returns the created one
@@ -262,7 +262,7 @@
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -296,7 +296,7 @@
     - name: Delete the AKS instance
       azure_rm_aks:
         name: "minimal{{ rpfx }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         state: absent
       register: output
 
@@ -312,14 +312,14 @@
           Backup: true
           Containers: true
         retention_in_days: 30
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
       register: log_output
 
     - name: Create a new kubernet service with security parameters
       azure_rm_aks:
         name: "min{{ rpfx }}-sec"
         location: westus2
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -361,7 +361,7 @@
       azure_rm_aks:
         name: "min{{ rpfx }}-sec"
         location: westus2
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -403,7 +403,7 @@
       azure_rm_aks:
         name: "min{{ rpfx }}-sec"
         location: westus2
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -444,7 +444,7 @@
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "min{{ rpfx }}-sec"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
       register: output
 
     - name: Assert the AKS instance facts
@@ -458,13 +458,13 @@
     - name: Delete the AKS instance
       azure_rm_aks:
         name: "min{{ rpfx }}-sec"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
         state: absent
 
     - name: Get AKS fact
       azure_rm_aks_info:
         name: "minimal{{ rpfx }}"
-        resource_group: "{{ resource_group }}-aks01"
+        resource_group: "{{ resource_group }}-min"
       register: fact
 
     - name: Assert fact returns empty
@@ -475,6 +475,6 @@
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
-        name: "{{ resource_group }}-aks01"
+        name: "{{ resource_group }}-min"
         force_delete_nonempty: true
         state: absent
