@@ -8,7 +8,6 @@
       azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm01"
         location: eastus
-      run_once: true
       failed_when: false
 
     - name: Create the secondary resource group for Virtual machine test
