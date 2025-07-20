@@ -1,8 +1,7 @@
 ---
-- name: Run Azure VM tests in parallel
+- name: Create the resource group for VM test
   hosts: all
   gather_facts: false
-  strategy: linear
   tasks:
     - name: Create the first resource group for Virtual machine test
       azure_rm_resourcegroup:
@@ -16,6 +15,11 @@
         location: eastus
       run_once: true
 
+- name: Run Azure VM tests in parallel
+  hosts: all
+  gather_facts: false
+  strategy: linear
+  tasks:
     - name: For Virtual machine test
       block:
         - name: Include tasks based on inventory hostname
