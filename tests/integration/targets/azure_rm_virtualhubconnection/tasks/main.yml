@@ -169,6 +169,25 @@
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         state: absent
+
+    - name: Delete the VirtualHub
+      azure_rm_virtualhub:
+        resource_group: "{{ resource_group }}-vnethubconn"
+        name: "vhub{{ rpfx }}"
+        state: absent
+
+    - name: Delete the Virtual Wan
+      azure_rm_virtualwan:
+        resource_group: "{{ resource_group }}-vnethubconn"
+        name: "virtualwan{{ rpfx }}"
+        state: absent
+
+    - name: Delete the virtual network
+      azure_rm_virtualnetwork:
+        name: "vnet{{ rpfx }}"
+        resource_group: "{{ resource_group }}-vnethubconn"
+        state: absent
+
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:

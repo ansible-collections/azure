@@ -270,7 +270,7 @@
           - output is not changed
           - output.accounts | length == 1
           - output.accounts[0]['id'] != None
-          - output.accounts[0]['resource_group'] == resource_group + '-cosmosdbaccount'
+          - output.accounts[0]['resource_group'] == resource_group + '-cosmosdbaccount01'
           - output.accounts[0]['name'] == dbname
           - output.accounts[0]['location'] == location
           - output.accounts[0]['kind'] != None
@@ -356,7 +356,7 @@
           - output is not changed
           - output.accounts | length == 1
           - output.accounts[0]['id'] != None
-          - output.accounts[0]['resource_group'] == resource_group + '-cosmosdbaccount'
+          - output.accounts[0]['resource_group'] == resource_group + '-cosmosdbaccount01'
           - output.accounts[0]['name'] == dbname
           - output.accounts[0]['location'] == location
           - output.accounts[0]['kind'] != None
