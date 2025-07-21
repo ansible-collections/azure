@@ -89,7 +89,7 @@
         name: "{{ name_rpfx }}-seondary"
         state: absent
 
-    - name: Delete  virtual hub
+    - name: Delete virtual hub
       azure_rm_virtualhub:
         resource_group: "{{ resource_group }}-vnethub"
         name: "{{ name_rpfx }}"
@@ -100,6 +100,15 @@
       ansible.builtin.assert:
         that:
           - output is changed
+
+    - name: Get the VirtualHub and confirm it deleted
+      azure_rm_virtualhub_info:
+        resource_group: "{{ resource_group }}-vnethubconn"
+      register: output
+      until: output.virtual_hubs |length == 0
+      retries: 30
+      delay: 30
+
   always:
     - name: Force delete the resource group
       azure_rm_resourcegroup:
