@@ -2,43 +2,43 @@
 azure.azcollection.*:
   query: >-
     (
-      {"apimanagement": "MGMT",
-       "authorization": "SECURITY",
-       "automation": "MGMT",
-       "batch": "MGMT",
-       "cache": "DATABASE",
-       "cdn": "CDN",
-       "classiccompute": "COMPUTE",
-       "compute": "COMPUTE",
-       "containerinstance": "CONTAINERS",
-       "containerregistry": "CONTAINERS",
-       "containerservice": "CONTAINERS",
-       "datafactory": "STORAGE",
-       "dbformariadb": "DATABASE",
-       "dbformysql": "DATABASE",
-       "dbforpostgresql": "DATABASE",
-       "devices": "DEVICES",
-       "documentdb": "DATABASE",
-       "eventhub": "ANALYTICS",
-       "hdinsight": "ANALYTICS",
-       "insights": "ANALYTICS",
-       "keyvault": "SECURITY",
-       "maintenance": "MGMT",
-       "managedidentity": "MGMT",
-       "managedservices": "SERVICES",
-       "management": "MGMT",
-       "network": "NETWORK",
-       "operationalinsights": "ANALYTICS",
-       "recoveryservices": "STORAGE",
-       "redhatopenshift": "CONTAINERS",
+      {"apimanagement": "Metadata",
+       "authorization": "Governance & Operations",
+       "automation": "Governance & Operations",
+       "batch": "Event Generation",
+       "cache": "Database",
+       "cdn": "Networking",
+       "classiccompute": "Compute",
+       "compute": "Compute",
+       "containerinstance": "Compute",
+       "containerregistry": "DevOps",
+       "containerservice": "Compute",
+       "datafactory": "Storage",
+       "dbformariadb": "Database",
+       "dbformysql": "Database",
+       "dbforpostgresql": "Database",
+       "devices": "Hybrid/Edge Cloud Components",
+       "documentdb": "Database",
+       "eventhub": "Data Processing & Analytics",
+       "hdinsight": "Data Processing & Analytics",
+       "insights": "Data Processing & Analytics",
+       "keyvault": "Database",
+       "maintenance": "Governance & Operations",
+       "managedidentity": "Governance & Operations",
+       "managedservices": "Governance & Operations",
+       "management": "Governance & Operations",
+       "network": "Networking",
+       "operationalinsights": "Data Processing & Analytics",
+       "recoveryservices": "Storage",
+       "redhatopenshift": "Compute",
        "resources": "UNKNOWN",
-       "servicebus": "SERVICES",
-       "sql": "DATABASE",
-       "storage": "STORAGE",
-       "web": "WEB"
+       "servicebus": "App Integration & Messaging",
+       "sql": "Database",
+       "storage": "Storage",
+       "web": "App Integration & Messaging"
       } as $mapping |
       (.aks_agent_pools //
-       .ansible_facts.azure_vm /
+       .ansible_facts.azure_vm //
        .ansible_facts.azure_vmss //
        .bastion_host //
        .connection //
@@ -64,16 +64,22 @@ azure.azcollection.*:
           ($data.id | capture("/providers/[Mm]icrosoft.(?<resourcetype>[^/]+)/")? | .resourcetype)
             | ascii_downcase
         ) as $node_type |
+        (
+          ($data.id | capture("/providers/[Mm]icrosoft.[^/]+/(?<subtype>[^/]+)/")? | .subtype)
+            | ascii_downcase
+        ) as $sub_node_type |
         select($data.id != null) |
         {
           name: $data.id,
           canonical_facts: {
-            id: $data.id
+            name: ($data.name // "UNKNOWN"),
+            id: $data.id,
+            node_type: $node_type
           },
           facts: {
-            name: ($data.name // "UNKNOWN"),
-            node_type: $node_type,
-            device_type: ($mapping[$node_type] // "UNKNOWN")
+            infra_type: "PublicCloud",
+            infra_bucket: ($mapping[$node_type] // "UNKNOWN"),
+            device_type: $sub_node_type
           }
         }
     )
