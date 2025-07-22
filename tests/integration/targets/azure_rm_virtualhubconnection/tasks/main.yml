@@ -201,7 +201,7 @@
         name: "vhub{{ rpfx }}"
       register: output
       until: output.virtual_hubs == None
-      retries: 30
+      retries: 60
       delay: 60
 
     - name: Delete the Virtual Wan

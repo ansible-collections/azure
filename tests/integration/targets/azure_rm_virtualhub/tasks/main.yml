@@ -113,10 +113,9 @@
     - name: Get the VirtualHub and confirm it deleted
       azure_rm_virtualhub_info:
         resource_group: "{{ resource_group }}-vnethub"
-        name: "{{ name_rpfx }}-seondary"
       register: output
       until: output.virtual_hubs |length == 0
-      retries: 30
+      retries: 60
       delay: 60
 
   always:
