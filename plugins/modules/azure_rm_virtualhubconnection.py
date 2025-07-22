@@ -477,6 +477,8 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
             response = self.network_client.hub_virtual_network_connections.begin_delete(resource_group_name=self.resource_group,
                                                                                         virtual_hub_name=self.vhub_name,
                                                                                         connection_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the VirtualHub connection instance.')
             self.fail('Error deleting the VirtualHub connection instance: {0}'.format(str(e)))
