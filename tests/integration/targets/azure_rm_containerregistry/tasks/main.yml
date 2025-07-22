@@ -7,7 +7,7 @@
   ansible.builtin.set_fact:
     location: "{{ __rg_info.resourcegroups.0.location }}"
     managed_identity_ids: []
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    rpfx: "{{ resource_group | hash('md5') | truncate(13, True, '') }}"
 
 - name: Create user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
