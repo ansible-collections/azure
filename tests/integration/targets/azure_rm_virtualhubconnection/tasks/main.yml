@@ -193,7 +193,7 @@
       register: output
       until: output.virtual_hubs == None
       retries: 30
-      delay: 30
+      delay: 60
 
     - name: Delete the Virtual Wan
       azure_rm_virtualwan:

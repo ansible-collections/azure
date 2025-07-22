@@ -107,7 +107,7 @@
       register: output
       until: output.virtual_hubs |length == 0
       retries: 30
-      delay: 30
+      delay: 60
 
   always:
     - name: Force delete the resource group
