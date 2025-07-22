@@ -180,6 +180,15 @@
       retries: 30
       delay: 30
 
+    - name: Get the VirtualHub and confirm it deleted
+      azure_rm_virtualhub_info:
+        resource_group: "{{ resource_group }}-vnethubconn"
+        name: "vhub{{ rpfx }}"
+      register: output
+      until: output.virtual_hubs[0].routing_state == "Provisioned"
+      retries: 60
+      delay: 60
+
     - name: Delete the VirtualHub
       azure_rm_virtualhub:
         resource_group: "{{ resource_group }}-vnethubconn"
