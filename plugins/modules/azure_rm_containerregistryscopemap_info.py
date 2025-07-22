@@ -182,8 +182,8 @@ class AzureRMContainerRegistryScopeMapInfo(AzureRMModuleBase):
                                                                          scope_map_name=self.name)
             self.log("Response : {0}".format(response))
         except Exception as e:
-            return []
             self.log("Could not get facts for Registry Scope Map: {0}".format(str(e)))
+            return []
 
         return [self.format_item(response)]
 
