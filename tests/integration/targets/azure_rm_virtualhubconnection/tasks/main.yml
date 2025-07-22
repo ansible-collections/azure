@@ -173,7 +173,7 @@
     - name: Get the virtual hub connection and confirm it deleted
       azure_rm_virtualhubconnection_info:
         resource_group: "{{ resource_group }}-vnethubconn"
-        virtual_hub_nam: "vhub{{ rpfx }}"
+        virtual_hub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
       register: output
       until: output.virtual_hub_connection == None
