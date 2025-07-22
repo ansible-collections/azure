@@ -7,6 +7,7 @@
   ansible.builtin.set_fact:
     location: "{{ __rg_info.resourcegroups.0.location }}"
     managed_identity_ids: []
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
 - name: Create user managed identities
   ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
@@ -21,7 +22,7 @@
 
 - name: Create an container registry
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "acr{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     admin_user_enabled: true
@@ -46,7 +47,7 @@
 
 - name: Update the ACR instance sku, tags and admin_user_enabled
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "acr{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     admin_user_enabled: false
@@ -59,7 +60,7 @@
 
 - name: Create second container registry (to test facts)
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "acr{{ rpfx }}sec"
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     admin_user_enabled: false
@@ -82,7 +83,7 @@
 - name: Gather facts for single Container Registry
   azure_rm_containerregistry_info:
     resource_group: "{{ resource_group }}"
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "acr{{ rpfx }}"
   register: output
 
 - name: Assert that facts are returned
@@ -126,7 +127,7 @@
 
 - name: Update second container registry to test identity
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "acr{{ rpfx }}sec"
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     admin_user_enabled: false
@@ -149,7 +150,7 @@
 
 - name: Update second container registry to test appending identity
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "acr{{ rpfx }}sec"
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     admin_user_enabled: false
@@ -173,7 +174,7 @@
 
 - name: Update second container registry to test System Identity
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "acr{{ rpfx }}sec"
     resource_group: "{{ resource_group }}"
     location: "{{ location }}"
     admin_user_enabled: false
@@ -191,15 +192,96 @@
       - output is changed
       - '"user_assigned_identities" not in output.identity'
 
+- name: Create a new container registry scope map(Checkmod test)
+  azure_rm_containerregistryscopemap:
+    registry_name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "scopemap{{ rpfx }}"
+    description: "description01"
+  check_mode: true
+
+- name: Create a new container registry scope map
+  azure_rm_containerregistryscopemap:
+    registry_name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "scopemap{{ rpfx }}"
+    description: "description01"
+    actions:
+      - repositories/test01/content/read
+  register: output
+
+- name: Assert the container registry scope map created
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+- name: Re-create the container registry scope map(Idempotent test)
+  azure_rm_containerregistryscopemap:
+    registry_name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "scopemap{{ rpfx }}"
+    description: "description01"
+    actions:
+      - repositories/test01/content/read
+  register: output
+
+- name: Assert the container registry scope map no update
+  ansible.builtin.assert:
+    that:
+      - output is not changed
+
+- name: Update the the container registry scope map
+  azure_rm_containerregistryscopemap:
+    registry_name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "scopemap{{ rpfx }}"
+    description: "description02"
+    actions:
+      - repositories/test01/content/read
+      - repositories/test01/content/write
+      - repositories/test01/content/delete
+  register: output
+
+- name: Assert the container registry scope map updated
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
+- name: Get the container registry scope map facts
+  azure_rm_containerregistryscopemap_info:
+    registry_name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "scopemap{{ rpfx }}"
+  register: output
+
+- name: Assert the container registry scope map facts
+  ansible.builtin.assert:
+    that:
+      - output.registry_scope_maps[0].actions |length == 3
+      - output.registry_scope_maps[0].description == 'description02'
+
+- name: Delete the container registry scope map
+  azure_rm_containerregistryscopemap:
+    registry_name: "acr{{ rpfx }}"
+    resource_group: "{{ resource_group }}"
+    name: "scopemap{{ rpfx }}"
+    state: absent
+  register: output
+
+- name: Assert the container registry scope map deleted
+  ansible.builtin.assert:
+    that:
+      - output is changed
+
 - name: Delete first container registry
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+    name: "acr{{ rpfx }}"
     resource_group: "{{ resource_group }}"
     state: absent
 
 - name: Delete second container registry
   azure_rm_containerregistry:
-    name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+    name: "acr{{ rpfx }}sec"
     resource_group: "{{ resource_group }}"
     state: absent
 

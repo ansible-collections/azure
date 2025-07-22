@@ -216,7 +216,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
         before_dict = self.get()
         
         # Create dict form input, without None value
-        scope_map_template = dict(descripion=self.description, actions=self.action)
+        scope_map_template = dict(description=self.description, actions=self.actions)
         
         # Filter out all None values
         scope_map_input = {key: value for key, value in scope_map_template.items() if value is not None}
@@ -226,7 +226,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
             if before_dict:
                 # The container registry already exists, try to update
                 # Dict for update is the union of existing object over written by input data
-                scope_map_update = before_dict() | scope_map_input
+                scope_map_update = before_dict | scope_map_input
                 if not self.default_compare({}, scope_map_update, before_dict, '', result_compare):
                     self.results['changed'] = True
                     if self.check_mode:
@@ -264,7 +264,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
             return None
             self.log("Could not get facts for Registry Scope Map: {0}".format(str(e)))
 
-        return self.format_item(response)
+        return response.as_dict()
 
     def create(self, body):
         try:
