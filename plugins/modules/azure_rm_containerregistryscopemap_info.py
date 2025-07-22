@@ -55,7 +55,7 @@ EXAMPLES = '''
 RETURN = '''
 scope_maps:
     description:
-        - A list of dictionaries containing facts for token.
+        - A list of dictionaries containing facts for scope map.
     returned: always
     type: complex
     contains:
@@ -64,14 +64,13 @@ scope_maps:
                 - The resource ID.
             returned: always
             type: str
-            sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.ContainerRegistry/registr
-                    ies/myRegistry"
+            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/acr01/scopeMaps/map01"
         name:
             description:
                 - The name of the resource.
             returned: always
             type: str
-            sample: token01
+            sample: map01
         registry_name:
             description:
                 - The name of the container registry.
@@ -107,7 +106,7 @@ scope_maps:
                 - Provisioning state of the resource.
             type: str
             returned: always
-            sample: 
+            sample: Success
         system_data:
             description:
                 - Metadata pertaining to creation and last modification of the resource.
@@ -123,7 +122,7 @@ scope_maps:
                 }
         type:
             description:
-                - The type of the resource. 
+                - The type of the resource.
             type: str
             returned: always
             sample: 'Microsoft.ContainerRegistry/registries/scopeMaps'

@@ -35,7 +35,7 @@ options:
             - The user friendly description of the scope map.
         type: str
     actions:
-        descriptions:
+        description:
             - The list of scoped permissions for registry artifacts.
             - Sample as C(repositories/repository-name/content/read) or C(repositories/repository-name/metadata/write).
         type: list
@@ -76,7 +76,7 @@ EXAMPLES = '''
 RETURN = '''
 map_scope:
     description:
-        - A list of dictionaries containing facts for token.
+        - A list of dictionaries containing facts for scope map.
     returned: always
     type: complex
     contains:
@@ -85,13 +85,13 @@ map_scope:
                 - The resource ID.
             returned: always
             type: str
-            sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.ContainerRegistry/registries/myRegistry"
+            sample: "/subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/acr01/scopeMaps/map01"
         name:
             description:
                 - The name of the resource.
             returned: always
             type: str
-            sample: token01
+            sample: map01
         registry_name:
             description:
                 - The name of the container registry.
@@ -127,7 +127,7 @@ map_scope:
                 - Provisioning state of the resource.
             type: str
             returned: always
-            sample: 
+            sample: Success
         system_data:
             description:
                 - Metadata pertaining to creation and last modification of the resource.
@@ -143,7 +143,7 @@ map_scope:
                 }
         type:
             description:
-                - The type of the resource. 
+                - The type of the resource.
             type: str
             returned: always
             sample: 'Microsoft.ContainerRegistry/registries/scopeMaps'
@@ -155,8 +155,12 @@ map_scope:
             sample: UserDefined
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from azure.core.polling import LROPoller
+try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+    from azure.core.polling import LROPoller
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 
 
 class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
@@ -214,10 +218,10 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
 
         # Get current container registry token
         before_dict = self.get()
-        
+
         # Create dict form input, without None value
         scope_map_template = dict(description=self.description, actions=self.actions)
-        
+
         # Filter out all None values
         scope_map_input = {key: value for key, value in scope_map_template.items() if value is not None}
 
@@ -261,17 +265,17 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
                                                                          scope_map_name=self.name)
             self.log("Response : {0}".format(response))
         except Exception as e:
-            return None
             self.log("Could not get facts for Registry Scope Map: {0}".format(str(e)))
+            return None
 
         return response.as_dict()
 
     def create(self, body):
         try:
             response = self.containerregistrytoken_client.scope_maps.begin_create(resource_group_name=self.resource_group,
-                                                                                 registry_name=self.registry_name,
-                                                                                 scope_map_name=self.name,
-                                                                                 scope_map_create_parameters=body)
+                                                                                  registry_name=self.registry_name,
+                                                                                  scope_map_name=self.name,
+                                                                                  scope_map_create_parameters=body)
             self.log("Response: {0}".format(response))
         except Exception as e:
             self.failed("Create {0} failed. Abnormal message as {1}".format(self.name, str(e)))
@@ -284,9 +288,9 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
     def update(self, body):
         try:
             response = self.containerregistrytoken_client.scope_maps.begin_update(resource_group_name=self.resource_group,
-                                                                                 registry_name=self.registry_name,
-                                                                                 scope_map_name=self.name,
-                                                                                 scope_map_update_parameters=body)
+                                                                                  registry_name=self.registry_name,
+                                                                                  scope_map_name=self.name,
+                                                                                  scope_map_update_parameters=body)
             self.log("Response: {0}".format(response))
         except Exception as e:
             self.failed("Update {0} failed. Abnormal message as {1}".format(self.name, str(e)))
