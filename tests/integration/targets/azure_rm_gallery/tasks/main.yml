@@ -1,677 +1,690 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    uuid: "{{ (2**128) | random | to_uuid }}"
-    az_role_definition_id: 9980e02c-c2be-4d73-94e8-173b1dc7cf3c
-  run_once: true
-
-- name: Get resource group info
-  azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
-  register: az_resource_group
-
-- name: Lookup service principal object id
-  ansible.builtin.set_fact:
-    object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
-                   azure_client_id=azure_client_id,
-                   azure_secret=azure_secret,
-                   azure_tenant=azure_tenant) }}"
-  register: object_id_facts
-
-- name: Create role assignment by id
-  azure_rm_roleassignment:
-    scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}"
-    assignee_object_id: "{{ object_id }}"
-    role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_id }}"
-  register: az_role_assignment_create
-  ignore_errors: true
-
-- name: Create first key vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ rpfx }}"
-    enabled_for_disk_encryption: true
-    vault_tenant: "{{ azure_tenant }}"
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ azure_tenant }}"
-        object_id: "{{ object_id }}"
-        keys:
-          - encrypt
-          - decrypt
-          - get
-          - list
-          - wrapkey
-          - unwrapkey
-          - create
-          - update
-          - import
-          - delete
-          - backup
-          - restore
-          - recover
-          - purge
-
-- name: Create secondary key vault
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ rpfx }}02"
-    enabled_for_disk_encryption: true
-    vault_tenant: "{{ azure_tenant }}"
-    location: westus
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ azure_tenant }}"
-        object_id: "{{ object_id }}"
-        keys:
-          - encrypt
-          - decrypt
-          - get
-          - list
-          - wrapkey
-          - unwrapkey
-          - create
-          - update
-          - import
-          - delete
-          - backup
-          - restore
-          - recover
-          - purge
-
-- name: Create first key in key vault
-  azure_rm_keyvaultkey:
-    key_name: testkey
-    keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
-
-- name: Get latest version of key
-  azure_rm_keyvaultkey_info:
-    vault_uri: https://myvault{{ rpfx }}.vault.azure.net
-    name: testkey
-  register: results
-
-- name: Create secondary key in key vault
-  azure_rm_keyvaultkey:
-    key_name: testkey02
-    keyvault_uri: https://myvault{{ rpfx }}02.vault.azure.net
-
-- name: Get latest version of key
-  azure_rm_keyvaultkey_info:
-    vault_uri: https://myvault{{ rpfx }}02.vault.azure.net
-    name: testkey02
-  register: results02
-
-- name: Assert the key vault facts
-  ansible.builtin.set_fact:
-    key_url: "{{ results['keys'][0]['kid'] }}"
-
-- name: Assert the key vault facts
-  ansible.builtin.set_fact:
-    key_url02: "{{ results02['keys'][0]['kid'] }}"
-
-- name: Create first disk encryption set
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "des{{ rpfx }}"
-    source_vault: "myvault{{ rpfx }}"
-    key_url: "{{ key_url }}"
-    identity:
-      type: SystemAssigned
-    state: present
-  register: des_results
-
-- name: Create secondary disk encryption set
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "des{{ rpfx }}02"
-    source_vault: "myvault{{ rpfx }}02"
-    key_url: "{{ key_url02 }}"
-    state: present
-    identity:
-      type: SystemAssigned
-    location: westus
-  register: des_results02
-
-- name: Set get, wrapkey or unwrapkey permission to the disk encryption
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ rpfx }}"
-    enabled_for_disk_encryption: true
-    enable_purge_protection: true
-    vault_tenant: "{{ azure_tenant }}"
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ azure_tenant }}"
-        object_id: "{{ object_id }}"
-        keys:
-          - encrypt
-          - decrypt
-          - get
-          - list
-          - wrapkey
-          - unwrapkey
-          - create
-          - update
-          - import
-          - delete
-          - backup
-          - restore
-          - recover
-          - purge
-      - tenant_id: "{{ azure_tenant }}"
-        object_id: "{{ des_results.state.identity.principal_id }}"
-        keys:
-          - get
-          - wrapkey
-          - unwrapkey
-
-- name: Set get, wrapkey or unwrapkey permission to the disk encryption
-  azure_rm_keyvault:
-    resource_group: "{{ resource_group }}"
-    vault_name: "myvault{{ rpfx }}02"
-    enabled_for_disk_encryption: true
-    enable_purge_protection: true
-    vault_tenant: "{{ azure_tenant }}"
-    location: westus
-    sku:
-      name: standard
-      family: A
-    access_policies:
-      - tenant_id: "{{ azure_tenant }}"
-        object_id: "{{ object_id }}"
-        keys:
-          - encrypt
-          - decrypt
-          - get
-          - list
-          - wrapkey
-          - unwrapkey
-          - create
-          - update
-          - import
-          - delete
-          - backup
-          - restore
-          - recover
-          - purge
-      - tenant_id: "{{ azure_tenant }}"
-        object_id: "{{ des_results02.state.identity.principal_id }}"
-        keys:
-          - get
-          - wrapkey
-          - unwrapkey
-
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "testVnet{{ rpfx }}"
-    address_prefixes: "10.0.0.0/16"
-
-- name: Add subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: "testSubnet{{ rpfx }}"
-    address_prefix: "10.0.1.0/24"
-    virtual_network: "testVnet{{ rpfx }}"
-
-- name: Create public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    allocation_method: Static
-    sku: Standard
-    name: "testPublicIP{{ rpfx }}"
-
-- name: Create virtual network inteface cards for VM A and B
-  azure_rm_networkinterface:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}nic"
-    virtual_network: "testVnet{{ rpfx }}"
-    subnet: "testSubnet{{ rpfx }}"
-    open_ports:
-      - 33
-
-- name: Create VM
-  azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
+- name: Create a new resource group for gallery test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-gallery"
     location: eastus
-    admin_username: testuser
-    ssh_password_enabled: false
-    open_ports:
-      - 33
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    vm_size: Standard_D2s_v3
-    network_interfaces: "vmforimage{{ rpfx }}nic"
-    managed_disk_type: Premium_LRS
-    data_disks:
-      - lun: 0
-        disk_size_gb: 128
+
+- name: For gallery test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        uuid: "{{ (2**128) | random | to_uuid }}"
+        az_role_definition_id: 9980e02c-c2be-4d73-94e8-173b1dc7cf3c
+      run_once: true
+
+    - name: Get resource group info
+      azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-gallery"
+      register: az_resource_group
+
+    - name: Lookup service principal object id
+      ansible.builtin.set_fact:
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=azure_tenant) }}"
+      register: object_id_facts
+
+    - name: Create role assignment by id
+      azure_rm_roleassignment:
+        scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-gallery"
+        assignee_object_id: "{{ object_id }}"
+        role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_id }}"
+      register: az_role_assignment_create
+      ignore_errors: true
+
+    - name: Create first key vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-gallery"
+        vault_name: "myvault{{ rpfx }}"
+        enabled_for_disk_encryption: true
+        vault_tenant: "{{ azure_tenant }}"
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ azure_tenant }}"
+            object_id: "{{ object_id }}"
+            keys:
+              - encrypt
+              - decrypt
+              - get
+              - list
+              - wrapkey
+              - unwrapkey
+              - create
+              - update
+              - import
+              - delete
+              - backup
+              - restore
+              - recover
+              - purge
+
+    - name: Create secondary key vault
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-gallery"
+        vault_name: "myvault{{ rpfx }}02"
+        enabled_for_disk_encryption: true
+        vault_tenant: "{{ azure_tenant }}"
+        location: westus
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ azure_tenant }}"
+            object_id: "{{ object_id }}"
+            keys:
+              - encrypt
+              - decrypt
+              - get
+              - list
+              - wrapkey
+              - unwrapkey
+              - create
+              - update
+              - import
+              - delete
+              - backup
+              - restore
+              - recover
+              - purge
+
+    - name: Create first key in key vault
+      azure_rm_keyvaultkey:
+        key_name: testkey
+        keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
+
+    - name: Get latest version of key
+      azure_rm_keyvaultkey_info:
+        vault_uri: https://myvault{{ rpfx }}.vault.azure.net
+        name: testkey
+      register: results
+
+    - name: Create secondary key in key vault
+      azure_rm_keyvaultkey:
+        key_name: testkey02
+        keyvault_uri: https://myvault{{ rpfx }}02.vault.azure.net
+
+    - name: Get latest version of key
+      azure_rm_keyvaultkey_info:
+        vault_uri: https://myvault{{ rpfx }}02.vault.azure.net
+        name: testkey02
+      register: results02
+
+    - name: Assert the key vault facts
+      ansible.builtin.set_fact:
+        key_url: "{{ results['keys'][0]['kid'] }}"
+
+    - name: Assert the key vault facts
+      ansible.builtin.set_fact:
+        key_url02: "{{ results02['keys'][0]['kid'] }}"
+
+    - name: Create first disk encryption set
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "des{{ rpfx }}"
+        source_vault: "myvault{{ rpfx }}"
+        key_url: "{{ key_url }}"
+        identity:
+          type: SystemAssigned
+        state: present
+      register: des_results
+
+    - name: Create secondary disk encryption set
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "des{{ rpfx }}02"
+        source_vault: "myvault{{ rpfx }}02"
+        key_url: "{{ key_url02 }}"
+        state: present
+        identity:
+          type: SystemAssigned
+        location: westus
+      register: des_results02
+
+    - name: Set get, wrapkey or unwrapkey permission to the disk encryption
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-gallery"
+        vault_name: "myvault{{ rpfx }}"
+        enabled_for_disk_encryption: true
+        enable_purge_protection: true
+        vault_tenant: "{{ azure_tenant }}"
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ azure_tenant }}"
+            object_id: "{{ object_id }}"
+            keys:
+              - encrypt
+              - decrypt
+              - get
+              - list
+              - wrapkey
+              - unwrapkey
+              - create
+              - update
+              - import
+              - delete
+              - backup
+              - restore
+              - recover
+              - purge
+          - tenant_id: "{{ azure_tenant }}"
+            object_id: "{{ des_results.state.identity.principal_id }}"
+            keys:
+              - get
+              - wrapkey
+              - unwrapkey
+
+    - name: Set get, wrapkey or unwrapkey permission to the disk encryption
+      azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-gallery"
+        vault_name: "myvault{{ rpfx }}02"
+        enabled_for_disk_encryption: true
+        enable_purge_protection: true
+        vault_tenant: "{{ azure_tenant }}"
+        location: westus
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ azure_tenant }}"
+            object_id: "{{ object_id }}"
+            keys:
+              - encrypt
+              - decrypt
+              - get
+              - list
+              - wrapkey
+              - unwrapkey
+              - create
+              - update
+              - import
+              - delete
+              - backup
+              - restore
+              - recover
+              - purge
+          - tenant_id: "{{ azure_tenant }}"
+            object_id: "{{ des_results02.state.identity.principal_id }}"
+            keys:
+              - get
+              - wrapkey
+              - unwrapkey
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "testVnet{{ rpfx }}"
+        address_prefixes: "10.0.0.0/16"
+
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "testSubnet{{ rpfx }}"
+        address_prefix: "10.0.1.0/24"
+        virtual_network: "testVnet{{ rpfx }}"
+
+    - name: Create public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-gallery"
+        allocation_method: Static
+        sku: Standard
+        name: "testPublicIP{{ rpfx }}"
+
+    - name: Create virtual network inteface cards for VM A and B
+      azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "vmforimage{{ rpfx }}nic"
+        virtual_network: "testVnet{{ rpfx }}"
+        subnet: "testSubnet{{ rpfx }}"
+        open_ports:
+          - 33
+
+    - name: Create VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "vmforimage{{ rpfx }}"
+        location: eastus
+        admin_username: testuser
+        ssh_password_enabled: false
+        open_ports:
+          - 33
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        vm_size: Standard_D2s_v3
+        network_interfaces: "vmforimage{{ rpfx }}nic"
         managed_disk_type: Premium_LRS
-    image:
-      offer: 0001-com-ubuntu-server-jammy
-      publisher: Canonical
-      sku: 22_04-lts-gen2
-      version: latest
-    tags:
-      acg_allow_capturevm_with_permission: write
+        data_disks:
+          - lun: 0
+            disk_size_gb: 128
+            managed_disk_type: Premium_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        tags:
+          acg_allow_capturevm_with_permission: write
 
-- name: Generalize VM
-  azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-    generalized: true
+    - name: Generalize VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "vmforimage{{ rpfx }}"
+        generalized: true
 
-- name: Create custom image
-  azure_rm_image:
-    resource_group: "{{ resource_group }}"
-    name: testcustomimage
-    source: "vmforimage{{ rpfx }}"
-    hyper_v_generation: V2
-
-- name: Create or update a simple gallery.
-  azure_rm_gallery:
-    resource_group: "{{ resource_group }}"
-    name: myGallery{{ rpfx }}
-    location: eastus
-    description: This is the gallery description.
-  register: output
-
-- name: Assert the gallery created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Create or update a simple gallery - idempotent
-  azure_rm_gallery:
-    resource_group: "{{ resource_group }}"
-    name: myGallery{{ rpfx }}
-    location: eastus
-    description: This is the gallery description.
-  register: output
-
-- name: Assert the gallery created
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-
-- name: Create or update a simple gallery - change description
-  azure_rm_gallery:
-    resource_group: "{{ resource_group }}"
-    name: myGallery{{ rpfx }}
-    location: eastus
-    description: This is the gallery description - xxx.
-  register: output
-
-- name: Assert the gallery updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Get a gallery info.
-  azure_rm_gallery_info:
-    resource_group: "{{ resource_group }}"
-    name: myGallery{{ rpfx }}
-  register: output
-
-- name: Assert the gallery facts
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.galleries['id'] != None
-      - output.galleries['name'] != None
-      - output.galleries['location'] != None
-      - output.galleries['description'] != None
-      - output.galleries['provisioning_state'] != None
-
-- name: Create or update gallery image
-  azure_rm_galleryimage:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    name: myImage
-    location: eastus
-    os_type: linux
-    os_state: generalized
-    identifier:
-      publisher: myPublisherName
-      offer: myOfferName
-      sku: mySkuName
-    description: Image Description
-    hypervgeneration: V2
-    features:
-      - name: SecurityType
-        value: TrustedLaunch
-  register: output
-
-- name: Assert the gallery image created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Create or update gallery image - idempotent
-  azure_rm_galleryimage:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    name: myImage
-    location: eastus
-    os_type: linux
-    os_state: generalized
-    identifier:
-      publisher: myPublisherName
-      offer: myOfferName
-      sku: mySkuName
-    description: Image Description
-    hypervgeneration: V2
-    features:
-      - name: SecurityType
-        value: TrustedLaunch
-  register: output
-
-- name: Assert the gallery image idempotent result
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-
-- name: Create or update gallery image - change description
-  azure_rm_galleryimage:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    name: myImage
-    location: eastus
-    os_type: linux
-    os_state: generalized
-    identifier:
-      publisher: myPublisherName
-      offer: myOfferName
-      sku: mySkuName
-    description: Image Description XXXs
-    hypervgeneration: V2
-    features:
-      - name: SecurityType
-        value: TrustedLaunch
-  register: output
-
-- name: Assert the gallery image updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
-
-- name: Get a gallery image info.
-  azure_rm_galleryimage_info:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    name: myImage
-  register: output
-
-- name: Assert the gallery image facts
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.images['id'] != None
-      - output.images['name'] != None
-      - output.images['location'] != None
-      - output.images['os_state'] != None
-      - output.images['os_type'] != None
-      - output.images['identifier'] != None
-
-- name: Create or update a simple gallery Image Version.
-  azure_rm_galleryimageversion:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.3
-    location: eastus
-    publishing_profile:
-      end_of_life_date: "2050-10-01t00:00:00+00:00"
-      exclude_from_latest: true
-      replica_count: 3
-      storage_account_type: Standard_LRS
-      target_regions:
-        - name: eastus
-          regional_replica_count: 1
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
-          storage_account_type: Standard_LRS
-    storage_profile:
-      source_image:
+    - name: Create custom image
+      azure_rm_image:
+        resource_group: "{{ resource_group }}-gallery"
         name: testcustomimage
-        resource_group: "{{ resource_group }}"
-  register: output
+        source: "vmforimage{{ rpfx }}"
+        hyper_v_generation: V2
 
-- name: Assert the gallery image version created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create or update a simple gallery.
+      azure_rm_gallery:
+        resource_group: "{{ resource_group }}-gallery"
+        name: myGallery{{ rpfx }}
+        location: eastus
+        description: This is the gallery description.
+      register: output
 
-- name: Create or update a simple gallery Image Version.
-  azure_rm_galleryimageversion:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.4
-    location: eastus
-    publishing_profile:
-      end_of_life_date: "2050-10-01t00:00:00+00:00"
-      exclude_from_latest: true
-      replica_count: 3
-      storage_account_type: Standard_LRS
-      target_regions:
-        - name: eastus
-          regional_replica_count: 1
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
+    - name: Assert the gallery created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create or update a simple gallery - idempotent
+      azure_rm_gallery:
+        resource_group: "{{ resource_group }}-gallery"
+        name: myGallery{{ rpfx }}
+        location: eastus
+        description: This is the gallery description.
+      register: output
+
+    - name: Assert the gallery created
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Create or update a simple gallery - change description
+      azure_rm_gallery:
+        resource_group: "{{ resource_group }}-gallery"
+        name: myGallery{{ rpfx }}
+        location: eastus
+        description: This is the gallery description - xxx.
+      register: output
+
+    - name: Assert the gallery updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get a gallery info.
+      azure_rm_gallery_info:
+        resource_group: "{{ resource_group }}-gallery"
+        name: myGallery{{ rpfx }}
+      register: output
+
+    - name: Assert the gallery facts
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.galleries['id'] != None
+          - output.galleries['name'] != None
+          - output.galleries['location'] != None
+          - output.galleries['description'] != None
+          - output.galleries['provisioning_state'] != None
+
+    - name: Create or update gallery image
+      azure_rm_galleryimage:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        name: myImage
+        location: eastus
+        os_type: linux
+        os_state: generalized
+        identifier:
+          publisher: myPublisherName
+          offer: myOfferName
+          sku: mySkuName
+        description: Image Description
+        hypervgeneration: V2
+        features:
+          - name: SecurityType
+            value: TrustedLaunch
+      register: output
+
+    - name: Assert the gallery image created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create or update gallery image - idempotent
+      azure_rm_galleryimage:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        name: myImage
+        location: eastus
+        os_type: linux
+        os_state: generalized
+        identifier:
+          publisher: myPublisherName
+          offer: myOfferName
+          sku: mySkuName
+        description: Image Description
+        hypervgeneration: V2
+        features:
+          - name: SecurityType
+            value: TrustedLaunch
+      register: output
+
+    - name: Assert the gallery image idempotent result
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Create or update gallery image - change description
+      azure_rm_galleryimage:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        name: myImage
+        location: eastus
+        os_type: linux
+        os_state: generalized
+        identifier:
+          publisher: myPublisherName
+          offer: myOfferName
+          sku: mySkuName
+        description: Image Description XXXs
+        hypervgeneration: V2
+        features:
+          - name: SecurityType
+            value: TrustedLaunch
+      register: output
+
+    - name: Assert the gallery image updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get a gallery image info.
+      azure_rm_galleryimage_info:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        name: myImage
+      register: output
+
+    - name: Assert the gallery image facts
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.images['id'] != None
+          - output.images['name'] != None
+          - output.images['location'] != None
+          - output.images['os_state'] != None
+          - output.images['os_type'] != None
+          - output.images['identifier'] != None
+
+    - name: Create or update a simple gallery Image Version.
+      azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.3
+        location: eastus
+        publishing_profile:
+          end_of_life_date: "2050-10-01t00:00:00+00:00"
+          exclude_from_latest: true
+          replica_count: 3
           storage_account_type: Standard_LRS
-    storage_profile:
-      source_image:
-        name: testcustomimage
-        resource_group: "{{ resource_group }}"
-  register: output
+          target_regions:
+            - name: eastus
+              regional_replica_count: 1
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results.state.id }}"
+            - name: westus
+              regional_replica_count: 2
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results02.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results02.state.id }}"
+              storage_account_type: Standard_LRS
+        storage_profile:
+          source_image:
+            name: testcustomimage
+            resource_group: "{{ resource_group }}-gallery"
+      register: output
 
-- name: Assert the gallery image version created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the gallery image version created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create or update a simple gallery Image Version - idempotent
-  azure_rm_galleryimageversion:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.3
-    location: eastus
-    publishing_profile:
-      end_of_life_date: "2050-10-01t00:00:00+00:00"
-      exclude_from_latest: true
-      replica_count: 3
-      storage_account_type: Standard_LRS
-      target_regions:
-        - name: eastus
-          regional_replica_count: 1
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
+    - name: Create or update a simple gallery Image Version.
+      azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.4
+        location: eastus
+        publishing_profile:
+          end_of_life_date: "2050-10-01t00:00:00+00:00"
+          exclude_from_latest: true
+          replica_count: 3
           storage_account_type: Standard_LRS
-    storage_profile:
-      source_image:
-        name: testcustomimage
-        resource_group: "{{ resource_group }}"
-  register: output
+          target_regions:
+            - name: eastus
+              regional_replica_count: 1
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results.state.id }}"
+            - name: westus
+              regional_replica_count: 2
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results02.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results02.state.id }}"
+              storage_account_type: Standard_LRS
+        storage_profile:
+          source_image:
+            name: testcustomimage
+            resource_group: "{{ resource_group }}-gallery"
+      register: output
 
-- name: Assert the gallery image version result
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Assert the gallery image version created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create or update a simple gallery Image Version - change end of life
-  azure_rm_galleryimageversion:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.3
-    location: eastus
-    publishing_profile:
-      end_of_life_date: "2051-10-01t00:00:00+00:00"
-      exclude_from_latest: true
-      replica_count: 3
-      storage_account_type: Standard_LRS
-      target_regions:
-        - name: eastus
-          regional_replica_count: 1
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results.state.id }}"
-        - name: westus
-          regional_replica_count: 2
-          encryption:
-            data_disk_images:
-              - disk_encryption_set_id: "{{ des_results02.state.id }}"
-            os_disk_image:
-              disk_encryption_set_id: "{{ des_results02.state.id }}"
+    - name: Create or update a simple gallery Image Version - idempotent
+      azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.3
+        location: eastus
+        publishing_profile:
+          end_of_life_date: "2050-10-01t00:00:00+00:00"
+          exclude_from_latest: true
+          replica_count: 3
           storage_account_type: Standard_LRS
-    storage_profile:
-      source_image:
-        name: testcustomimage
-        resource_group: "{{ resource_group }}"
-  register: output
+          target_regions:
+            - name: eastus
+              regional_replica_count: 1
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results.state.id }}"
+            - name: westus
+              regional_replica_count: 2
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results02.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results02.state.id }}"
+              storage_account_type: Standard_LRS
+        storage_profile:
+          source_image:
+            name: testcustomimage
+            resource_group: "{{ resource_group }}-gallery"
+      register: output
 
-- name: Assert the gallery image version updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the gallery image version result
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Get a simple gallery Image Version info.
-  azure_rm_galleryimageversion_info:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.3
-  register: output
+    - name: Create or update a simple gallery Image Version - change end of life
+      azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.3
+        location: eastus
+        publishing_profile:
+          end_of_life_date: "2051-10-01t00:00:00+00:00"
+          exclude_from_latest: true
+          replica_count: 3
+          storage_account_type: Standard_LRS
+          target_regions:
+            - name: eastus
+              regional_replica_count: 1
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results.state.id }}"
+            - name: westus
+              regional_replica_count: 2
+              encryption:
+                data_disk_images:
+                  - disk_encryption_set_id: "{{ des_results02.state.id }}"
+                os_disk_image:
+                  disk_encryption_set_id: "{{ des_results02.state.id }}"
+              storage_account_type: Standard_LRS
+        storage_profile:
+          source_image:
+            name: testcustomimage
+            resource_group: "{{ resource_group }}-gallery"
+      register: output
 
-- name: Assert the gallery image version facts
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.versions['id'] != None
-      - output.versions['name'] != None
-      - output.versions['location'] != None
-      - output.versions['publishing_profile'] != None
-      - output.versions['provisioning_state'] != None
+    - name: Assert the gallery image version updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete gallery image version from URI.
-  azure_rm_galleryimageversion:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.4
-    state: absent
-  register: output
+    - name: Get a simple gallery Image Version info.
+      azure_rm_galleryimageversion_info:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.3
+      register: output
 
-- name: Assert the gallery image version from URI deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the gallery image version facts
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.versions['id'] != None
+          - output.versions['name'] != None
+          - output.versions['location'] != None
+          - output.versions['publishing_profile'] != None
+          - output.versions['provisioning_state'] != None
 
-- name: Delete gallery image Version.
-  azure_rm_galleryimageversion:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    gallery_image_name: myImage
-    name: 10.1.3
-    state: absent
-  register: output
+    - name: Delete gallery image version from URI.
+      azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.4
+        state: absent
+      register: output
 
-- name: Assert the gallery image version deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the gallery image version from URI deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Pasue 5 minutes, wait for deletion complete
-  ansible.builtin.pause:
-    minutes: 5
-  changed_when: true
+    - name: Delete gallery image Version.
+      azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.1.3
+        state: absent
+      register: output
 
-- name: Delete gallery image
-  azure_rm_galleryimage:
-    resource_group: "{{ resource_group }}"
-    gallery_name: myGallery{{ rpfx }}
-    name: myImage
-    state: absent
-  register: output
+    - name: Assert the gallery image version deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the gallery image deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Pasue 5 minutes, wait for deletion complete
+      ansible.builtin.pause:
+        minutes: 5
+      changed_when: true
 
-- name: Pasue 2 minutes, wait for deletion complete
-  ansible.builtin.pause:
-    minutes: 2
-  changed_when: true
+    - name: Delete gallery image
+      azure_rm_galleryimage:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        name: myImage
+        state: absent
+      register: output
 
-- name: Delete gallery
-  azure_rm_gallery:
-    resource_group: "{{ resource_group }}"
-    name: myGallery{{ rpfx }}
-    state: absent
-  register: output
+    - name: Assert the gallery image deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the gallery deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Pasue 2 minutes, wait for deletion complete
+      ansible.builtin.pause:
+        minutes: 2
+      changed_when: true
 
-- name: Delete Role Assignment by id
-  azure_rm_roleassignment:
-    id: "{{ az_role_assignment_create.id }}"
-    state: absent
-  when: az_role_assignment_create is changed
+    - name: Delete gallery
+      azure_rm_gallery:
+        resource_group: "{{ resource_group }}-gallery"
+        name: myGallery{{ rpfx }}
+        state: absent
+      register: output
 
-- name: Delete the public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    name: "testPublicIP{{ rpfx }}"
-    state: absent
+    - name: Assert the gallery deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete the VM
-  azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-    state: absent
+    - name: Delete Role Assignment by id
+      azure_rm_roleassignment:
+        id: "{{ az_role_assignment_create.id }}"
+        state: absent
+      when: az_role_assignment_create is changed
+
+    - name: Delete the public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "testPublicIP{{ rpfx }}"
+        state: absent
+
+    - name: Delete the VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-gallery"
+        name: "vmforimage{{ rpfx }}"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-gallery"
+        force_delete_nonempty: true
+        state: absent

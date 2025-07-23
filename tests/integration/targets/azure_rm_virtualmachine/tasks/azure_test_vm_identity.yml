@@ -1,20 +1,20 @@
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}-identity"
     address_prefixes: "{{ network }}"
     location: westus3
 
 - name: Create subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ subnet_name }}"
     address_prefix: "{{ subnet }}"
     virtual_network: "{{ network_name }}-identity"
 
 - name: Create network interface
   azure_rm_networkinterface:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}-identity"
     virtual_network: "{{ network_name }}-identity"
     subnet: "{{ subnet_name }}"
@@ -24,7 +24,7 @@
 
 - name: Create User Managed Identities
   azure_rm_resource:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ item }}"
@@ -38,13 +38,13 @@
 
 - name: Set identities IDs to test. Identities ansible-test-vm-identity and ansible-test-vm-identity-2 have to be created previously
   ansible.builtin.set_fact:
-    user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity"
-    user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity-2"
+    user_identity_1: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-vm01/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity"
+    user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-vm01/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-vm-identity-2"
 
 - name: Create minimal VM with UserAssigned Identity
   azure_rm_virtualmachine:
     allocated: false
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_identity:
       type: UserAssigned
@@ -59,7 +59,7 @@
       - 33
     network_interface_names:
       - name: "{{ interface_name }}-identity"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vm01"
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
@@ -81,7 +81,7 @@
 - name: Append another UserAssigned
   azure_rm_virtualmachine:
     name: "{{ vm_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     vm_identity:
       type: "UserAssigned"
       user_assigned_identities:
@@ -100,7 +100,7 @@
 - name: Add SystemAssigned
   azure_rm_virtualmachine:
     name: "{{ vm_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     vm_identity:
       type: "SystemAssigned, UserAssigned"
       user_assigned_identities:
@@ -117,7 +117,7 @@
 - name: Force only one UserAssigned
   azure_rm_virtualmachine:
     name: "{{ vm_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     vm_identity:
       type: "SystemAssigned, UserAssigned"
       user_assigned_identities:
@@ -136,7 +136,7 @@
 - name: Remove UserAssigned
   azure_rm_virtualmachine:
     name: "{{ vm_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     vm_identity:
       type: "SystemAssigned"
   register: vm_output
@@ -150,7 +150,7 @@
 - name: Disable SystemAssigned
   azure_rm_virtualmachine:
     name: "{{ vm_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     vm_identity:
       type: "None"
   register: vm_output
@@ -162,14 +162,14 @@
 
 - name: Delete VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Destroy NIC
   azure_rm_networkinterface:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}-identity"
     state: absent
   ignore_errors: true
@@ -177,32 +177,32 @@
 
 - name: Delete network security group
   azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}-identity"
     state: absent
 
 - name: Destroy subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}-identity"
     state: absent
 
 - name: Destroy virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}-identity"
     state: absent
 
 - name: Destroy SA of the machine
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_output.ansible_facts.azure_vm.tags._own_sa_ }}"
     state: absent
 
 - name: Destroy User Managed Identities
   azure_rm_resource:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ item }}"

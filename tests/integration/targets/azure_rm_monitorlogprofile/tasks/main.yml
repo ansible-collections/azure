@@ -1,133 +1,146 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    storage_name: "storage{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
-    profile_name: "profile{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
+- name: Create a new resource group for monitor log profile test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-monitorlogprofile"
     location: eastus
-  run_once: true
 
-- name: Create Azure storage account
-  azure_rm_storageaccount:
-    name: '{{ storage_name }}'
-    resource_group: "{{ resource_group }}"
-    account_type: Standard_LRS
+- name: For monitor log profile test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        storage_name: "storage{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
+        profile_name: "profile{{ resource_group | hash('md5') | truncate(5, True, '') }}{{ 1000 | random }}"
+        location: eastus
+      run_once: true
 
-- name: Create log profile (check mode)
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    location: "{{ location }}"
-    locations:
-      - eastus
-      - westus
-    categories:
-      - Write
-      - Action
-    retention_policy:
-      enabled: false
-      days: 1
-    storage_account:
-      resource_group: "{{ resource_group }}"
-      name: "{{ storage_name }}"
-  check_mode: true
-  register: output
+    - name: Create Azure storage account
+      azure_rm_storageaccount:
+        name: '{{ storage_name }}'
+        resource_group: "{{ resource_group }}-monitorlogprofile"
+        account_type: Standard_LRS
 
-- name: Assert create check mode
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create log profile (check mode)
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        location: "{{ location }}"
+        locations:
+          - eastus
+          - westus
+        categories:
+          - Write
+          - Action
+        retention_policy:
+          enabled: false
+          days: 1
+        storage_account:
+          resource_group: "{{ resource_group }}-monitorlogprofile"
+          name: "{{ storage_name }}"
+      check_mode: true
+      register: output
 
-- name: Create log profile
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    location: "{{ location }}"
-    locations:
-      - eastus
-      - westus
-    categories:
-      - Write
-      - Action
-    retention_policy:
-      enabled: false
-      days: 1
-    storage_account:
-      resource_group: "{{ resource_group }}"
-      name: "{{ storage_name }}"
-  register: output
-- name: Assert create
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.id
+    - name: Assert create check mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Update log profile (idempotence)
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    location: "{{ location }}"
-    locations:
-      - eastus
-      - westus
-    categories:
-      - Write
-      - Action
-    retention_policy:
-      enabled: false
-      days: 1
-    storage_account:
-      resource_group: "{{ resource_group }}"
-      name: "{{ storage_name }}"
-  register: output
-- name: Assert update idempotence
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create log profile
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        location: "{{ location }}"
+        locations:
+          - eastus
+          - westus
+        categories:
+          - Write
+          - Action
+        retention_policy:
+          enabled: false
+          days: 1
+        storage_account:
+          resource_group: "{{ resource_group }}-monitorlogprofile"
+          name: "{{ storage_name }}"
+      register: output
+    - name: Assert create
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id
 
-- name: Update log profile
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    location: "{{ location }}"
-    locations:
-      - eastus
-    categories:
-      - Write
-      - Action
-    retention_policy:
-      enabled: false
-      days: 2
-    storage_account:
-      resource_group: "{{ resource_group }}"
-      name: "{{ storage_name }}"
-  register: output
-- name: Assert update
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update log profile (idempotence)
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        location: "{{ location }}"
+        locations:
+          - eastus
+          - westus
+        categories:
+          - Write
+          - Action
+        retention_policy:
+          enabled: false
+          days: 1
+        storage_account:
+          resource_group: "{{ resource_group }}-monitorlogprofile"
+          name: "{{ storage_name }}"
+      register: output
+    - name: Assert update idempotence
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Delete log profile (check mode)
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    state: absent
-  register: output
-  check_mode: true
-- name: Assert delete
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update log profile
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        location: "{{ location }}"
+        locations:
+          - eastus
+        categories:
+          - Write
+          - Action
+        retention_policy:
+          enabled: false
+          days: 2
+        storage_account:
+          resource_group: "{{ resource_group }}-monitorlogprofile"
+          name: "{{ storage_name }}"
+      register: output
+    - name: Assert update
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete log profile
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    state: absent
-  register: output
-- name: Assert delete
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete log profile (check mode)
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        state: absent
+      register: output
+      check_mode: true
+    - name: Assert delete
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete log profile (idempotence)
-  azure_rm_monitorlogprofile:
-    name: "{{ profile_name }}"
-    state: absent
-  register: output
-- name: Assert delete
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Delete log profile
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        state: absent
+      register: output
+    - name: Assert delete
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete log profile (idempotence)
+      azure_rm_monitorlogprofile:
+        name: "{{ profile_name }}"
+        state: absent
+      register: output
+    - name: Assert delete
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-monitorlogprofile"
+        force_delete_nonempty: true
+        state: absent

@@ -1,7 +1,7 @@
 # TODO: Until we have a module to create/delete images this is the best tests I can do
 - name: Assert error thrown with invalid image dict
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     image:
       offer: 0001-com-ubuntu-server-focal
@@ -10,7 +10,7 @@
 
 - name: Assert error thrown with invalid image type
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     image:
       - testing
@@ -19,7 +19,7 @@
 
 - name: Assert error finding missing custom image
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     image: invalid-image
   register: fail_missing_custom_image
@@ -27,7 +27,7 @@
 
 - name: Assert error finding missing custom image (dict style)
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     image:
       name: invalid-image

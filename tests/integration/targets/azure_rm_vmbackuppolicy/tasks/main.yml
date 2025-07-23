@@ -1,78 +1,91 @@
-- name: Fix resource prefix
-  ansible.builtin.set_fact:
-    name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    vault_name: "myVault"
-    location: "eastus"
+- name: Create a new resource group for VM backup policy test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-vmbackuppolicy"
+    location: eastus
 
-- name: Create Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    location: "{{ location }}"
-    state: "present"
-  register: vault
+- name: For VM backup policy test
+  block:
+    - name: Fix resource prefix
+      ansible.builtin.set_fact:
+        name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        vault_name: "myVault"
+        location: "eastus"
 
-- name: Create VM Backup Policy
-  azure_rm_vmbackuppolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    vault_name: "{{ vault.response.name }}"
-    state: "present"
-  register: output
+    - name: Create Azure Recovery Service vault
+      azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        state: "present"
+      register: vault
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create VM Backup Policy
+      azure_rm_vmbackuppolicy:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}"
+        vault_name: "{{ vault.response.name }}"
+        state: "present"
+      register: output
 
-- name: Create VM Backup Policy (idempotent)
-  azure_rm_vmbackuppolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    vault_name: "{{ vault.response.name }}"
-    state: "present"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert that output has no changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create VM Backup Policy (idempotent)
+      azure_rm_vmbackuppolicy:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}"
+        vault_name: "{{ vault.response.name }}"
+        state: "present"
+      register: output
 
-- name: Get VM Backup Policy Details
-  azure_rm_vmbackuppolicy_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    vault_name: "{{ vault.response.name }}"
-  register: output
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output.response.id != None
-      - output.response.name != None
+    - name: Get VM Backup Policy Details
+      azure_rm_vmbackuppolicy_info:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}"
+        vault_name: "{{ vault.response.name }}"
+      register: output
 
-- name: Delete VM Backup Policy
-  azure_rm_vmbackuppolicy:
-    resource_group: "{{ resource_group }}"
-    name: "{{ name_rpfx }}"
-    vault_name: "{{ vault.response.name }}"
-    state: "absent"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output.response.id != None
+          - output.response.name != None
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete VM Backup Policy
+      azure_rm_vmbackuppolicy:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}"
+        vault_name: "{{ vault.response.name }}"
+        state: "absent"
+      register: output
 
-- name: Delete Azure Recovery Service vault
-  azure_rm_recoveryservicesvault:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vault.response.name }}"
-    location: "{{ location }}"
-    state: "absent"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete Azure Recovery Service vault
+      azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ vault.response.name }}"
+        location: "{{ location }}"
+        state: "absent"
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-vmbackuppolicy"
+        force_delete_nonempty: true
+        state: absent

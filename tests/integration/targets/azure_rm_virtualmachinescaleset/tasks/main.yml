@@ -1,1061 +1,1083 @@
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
-  register: __rg_info
+- name: Create a new resource group for VMSS test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
+  loop:
+    - vmss01
+    - vmss02
 
-- name: Set location and managed_identity_ids
-  ansible.builtin.set_fact:
-    location: "{{ __rg_info.resourcegroups.0.location }}"
-    managed_identity_ids: []
+- name: For virtual machine scale set test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-vmss01"
+      register: __rg_info
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'vmss'
-    managed_identity_unique: '1'
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-vmss01"
 
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
-  run_once: true
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'vmss'
+        managed_identity_unique: '1'
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: VMSStestVnet
-    address_prefixes: "10.0.0.0/16"
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
+      run_once: true
 
-- name: Add subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: VMSStestSubnet
-    address_prefix: "10.0.1.0/24"
-    virtual_network: VMSStestVnet
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: VMSStestVnet
+        address_prefixes: "10.0.0.0/16"
 
-- name: Create public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    allocation_method: Static
-    name: testPublicIP
-    sku: Standard
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: VMSStestSubnet
+        address_prefix: "10.0.1.0/24"
+        virtual_network: VMSStestVnet
 
-- name: Create load balancer
-  azure_rm_loadbalancer:
-    resource_group: "{{ resource_group }}"
-    name: testLB
-    frontend_ip_configurations:
-      - name: frontendipconf0
-        public_ip_address: testPublicIP
-    backend_address_pools:
-      - name: backendaddrp0
-    sku: Standard
+    - name: Create public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vmss01"
+        allocation_method: Static
+        name: testPublicIP
+        sku: Standard
 
-- name: Create public IP address 1
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    allocation_method: Static
-    name: testPublicIP1
-    sku: Standard
+    - name: Create load balancer
+      azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testLB
+        frontend_ip_configurations:
+          - name: frontendipconf0
+            public_ip_address: testPublicIP
+        backend_address_pools:
+          - name: backendaddrp0
+        sku: Standard
 
-- name: Create load balancer 1
-  azure_rm_loadbalancer:
-    resource_group: "{{ resource_group }}"
-    name: testLB1
-    frontend_ip_configurations:
-      - name: frontendipconf0
-        public_ip_address: testPublicIP1
-    backend_address_pools:
-      - name: backendaddrp1
-    sku: Standard
+    - name: Create public IP address 1
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vmss01"
+        allocation_method: Static
+        name: testPublicIP1
+        sku: Standard
 
-- name: Create network security group within same resource group of VMSS.
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: testNetworkSecurityGroup
+    - name: Create load balancer 1
+      azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testLB1
+        frontend_ip_configurations:
+          - name: frontendipconf0
+            public_ip_address: testPublicIP1
+        backend_address_pools:
+          - name: backendaddrp1
+        sku: Standard
 
-- name: Create network security group in different resource group of VMSS.
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group_secondary }}"
-    name: testNetworkSecurityGroup2
+    - name: Create network security group within same resource group of VMSS.
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testNetworkSecurityGroup
 
-- name: Create first application security group
-  azure_rm_applicationsecuritygroup:
-    resource_group: "{{ resource_group }}"
-    name: "appsg{{ rpfx }}01"
-  register: asg_output1
+    - name: Create network security group in different resource group of VMSS.
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-vmss02"
+        name: testNetworkSecurityGroup2
 
-- name: Create secondary application security group
-  azure_rm_applicationsecuritygroup:
-    resource_group: "{{ resource_group }}"
-    name: "appsg{{ rpfx }}02"
-  register: asg_output2
+    - name: Create first application security group
+      azure_rm_applicationsecuritygroup:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "appsg{{ rpfx }}01"
+      register: asg_output1
 
-- name: Create virtual network inteface cards for VM A and B
-  azure_rm_networkinterface:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}nic"
-    virtual_network: VMSStestVnet
-    subnet: VMSStestSubnet
-    open_ports:
-      - 33
+    - name: Create secondary application security group
+      azure_rm_applicationsecuritygroup:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "appsg{{ rpfx }}02"
+      register: asg_output2
 
-- name: Create VM
-  azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-    admin_username: testuser
-    ssh_password_enabled: false
-    open_ports:
-      - 33
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    vm_size: Standard_B1ms
-    network_interfaces: "vmforimage{{ rpfx }}nic"
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-- name: Get VM facts
-  azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-  register: vm_state
-- name: Generalize VM
-  azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-    generalized: true
-- name: Create image A
-  azure_rm_image:
-    resource_group: "{{ resource_group }}"
-    name: testimagea
-    source: "vmforimage{{ rpfx }}"
-- name: Create image B
-  azure_rm_image:
-    resource_group: "{{ resource_group }}"
-    name: testimageb
-    source: "vmforimage{{ rpfx }}"
-- name: Delete VM
-  azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
-    name: "vmforimage{{ rpfx }}"
-    state: absent
+    - name: Create virtual network inteface cards for VM A and B
+      azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "vmforimage{{ rpfx }}nic"
+        virtual_network: VMSStestVnet
+        subnet: VMSStestSubnet
+        open_ports:
+          - 33
 
-- name: Pause for 5 mimutes to waiting
-  ansible.builtin.command: sleep 300
-  changed_when: true
+    - name: Create VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "vmforimage{{ rpfx }}"
+        admin_username: testuser
+        ssh_password_enabled: false
+        open_ports:
+          - 33
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        vm_size: Standard_B1ms
+        network_interfaces: "vmforimage{{ rpfx }}nic"
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+    - name: Get VM facts
+      azure_rm_virtualmachine_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "vmforimage{{ rpfx }}"
+      register: vm_state
+    - name: Generalize VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "vmforimage{{ rpfx }}"
+        generalized: true
+    - name: Create image A
+      azure_rm_image:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testimagea
+        source: "vmforimage{{ rpfx }}"
+    - name: Create image B
+      azure_rm_image:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testimageb
+        source: "vmforimage{{ rpfx }}"
+    - name: Delete VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "vmforimage{{ rpfx }}"
+        state: absent
 
-- name: Create VMSS with I(orchestration_mode=Flexible)
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_A1_v2
-    admin_username: testuser
-    single_placement_group: false
-    platform_fault_domain_count: 1
-    public_ip_per_vm: true
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    managed_disk_type: Standard_LRS
-    orchestration_mode: Flexible
-    os_disk_caching: ReadWrite
-    application_security_groups:
-      - "{{ asg_output1.id }}"
-      - "{{ asg_output2.id }}"
-    private_ip_address_version: IPv4
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Pause for 5 mimutes to waiting
+      ansible.builtin.command: sleep 300
+      changed_when: true
+
+    - name: Create VMSS with I(orchestration_mode=Flexible)
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_A1_v2
+        admin_username: testuser
+        single_placement_group: false
+        platform_fault_domain_count: 1
+        public_ip_per_vm: true
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
         managed_disk_type: Standard_LRS
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: results
+        orchestration_mode: Flexible
+        os_disk_caching: ReadWrite
+        application_security_groups:
+          - "{{ asg_output1.id }}"
+          - "{{ asg_output2.id }}"
+        private_ip_address_version: IPv4
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: results
 
-- name: Assert that VMSS can be created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that VMSS can be created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_A1_v2
-    admin_username: testuser
-    single_placement_group: false
-    platform_fault_domain_count: 1
-    public_ip_per_vm: true
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    managed_disk_type: Standard_LRS
-    orchestration_mode: Flexible
-    os_disk_caching: ReadWrite
-    application_security_groups:
-      - "{{ asg_output1.id }}"
-      - "{{ asg_output2.id }}"
-    private_ip_address_version: IPv4
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Create VMSS with I(orchestration_mode=Flexible) again --- Idempotent
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_A1_v2
+        admin_username: testuser
+        single_placement_group: false
+        platform_fault_domain_count: 1
+        public_ip_per_vm: true
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
         managed_disk_type: Standard_LRS
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: results
+        orchestration_mode: Flexible
+        os_disk_caching: ReadWrite
+        application_security_groups:
+          - "{{ asg_output1.id }}"
+          - "{{ asg_output2.id }}"
+        private_ip_address_version: IPv4
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: results
 
-- name: Assert that VMSS can be created
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that VMSS can be created
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Retrieve scaleset VMSS fact
-  azure_rm_virtualmachinescaleset_info:
-    name: testVMSS{{ rpfx }}
-    resource_group: "{{ resource_group }}"
-  register: output_scaleset
+    - name: Retrieve scaleset VMSS fact
+      azure_rm_virtualmachinescaleset_info:
+        name: testVMSS{{ rpfx }}
+        resource_group: "{{ resource_group }}-vmss01"
+      register: output_scaleset
 
-- name: Assert vmss facts
-  ansible.builtin.assert:
-    that:
-      - output_scaleset.vmss[0].orchestration_mode == "Flexible"
-      - output_scaleset.vmss[0].virtual_machine_profile.network_profile.network_interface_configurations[0].ip_configurations[0].application_security_groups|length == 2
-      - managed_identity_ids[0] in output_scaleset.vmss[0].identity.user_assigned_identities
+    - name: Assert vmss facts
+      ansible.builtin.assert:
+        that:
+          - output_scaleset.vmss[0].orchestration_mode == "Flexible"
+          - output_scaleset.vmss[0].virtual_machine_profile.network_profile.network_interface_configurations[0].ip_configurations[0].application_security_groups|length == 2
+          - managed_identity_ids[0] in output_scaleset.vmss[0].identity.user_assigned_identities
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        state: absent
 
-- name: Create VMSS with Spot Instance default value
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_A1_v2
-    admin_username: testuser
-    priority: Spot
-    eviction_policy: Deallocate
-    single_placement_group: true
-    orchestration_mode: Uniform
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    upgrade_policy: Manual
-    tier: Standard
-    managed_disk_type: Standard_LRS
-    os_disk_caching: ReadWrite
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Create VMSS with Spot Instance default value
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_A1_v2
+        admin_username: testuser
+        priority: Spot
+        eviction_policy: Deallocate
+        single_placement_group: true
+        orchestration_mode: Uniform
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
         managed_disk_type: Standard_LRS
-    identity:
-      type: SystemAssigned, UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: results
+        os_disk_caching: ReadWrite
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: results
 
-- name: Assert that VMSS was created using Spot Instance default values
-  ansible.builtin.assert:
-    that:
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Deallocate'
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == -1.0
-      - managed_identity_ids[0] in results.ansible_facts.azure_vmss.identity.user_assigned_identities
+    - name: Assert that VMSS was created using Spot Instance default values
+      ansible.builtin.assert:
+        that:
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Deallocate'
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == -1.0
+          - managed_identity_ids[0] in results.ansible_facts.azure_vmss.identity.user_assigned_identities
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        state: absent
 
-- name: Create VMSS with custom Spot Instance values
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_A1_v2
-    admin_username: testuser
-    priority: Spot
-    eviction_policy: Delete
-    max_price: 1.0
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    upgrade_policy: Manual
-    tier: Standard
-    managed_disk_type: Standard_LRS
-    os_disk_caching: ReadWrite
-    single_placement_group: true
-    orchestration_mode: Uniform
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Create VMSS with custom Spot Instance values
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_A1_v2
+        admin_username: testuser
+        priority: Spot
+        eviction_policy: Delete
+        max_price: 1.0
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
         managed_disk_type: Standard_LRS
-  register: results
+        os_disk_caching: ReadWrite
+        single_placement_group: true
+        orchestration_mode: Uniform
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+      register: results
 
-- name: Assert that VMSS was created using Spot Instance custom values
-  ansible.builtin.assert:
-    that:
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Delete'
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == 1.0
+    - name: Assert that VMSS was created using Spot Instance custom values
+      ansible.builtin.assert:
+        that:
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.priority == 'Spot'
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.eviction_policy == 'Delete'
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.billing_profile.max_price == 1.0
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        state: absent
 
-- name: Create VMSS (check mode)
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_B1s
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    load_balancer: testLB
-    upgrade_policy: Manual
-    tier: Standard
-    managed_disk_type: Standard_LRS
-    os_disk_caching: ReadWrite
-    single_placement_group: true
-    orchestration_mode: Uniform
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Create VMSS (check mode)
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_B1s
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        load_balancer: testLB
+        upgrade_policy: Manual
+        tier: Standard
         managed_disk_type: Standard_LRS
-  register: results
-  check_mode: true
+        os_disk_caching: ReadWrite
+        single_placement_group: true
+        orchestration_mode: Uniform
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+      register: results
+      check_mode: true
 
-- name: Assert that VMSS can be created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that VMSS can be created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Get VMSS to ansible.builtin.assert no VMSS is created in check mode
-  azure_rm_virtualmachinescaleset_info:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    format: curated
-  register: output_scaleset
+    - name: Get VMSS to ansible.builtin.assert no VMSS is created in check mode
+      azure_rm_virtualmachinescaleset_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        format: curated
+      register: output_scaleset
 
-- name: Assert no VMSS created in check mode
-  ansible.builtin.assert:
-    that:
-      - output_scaleset.vmss | length == 0
+    - name: Assert no VMSS created in check mode
+      ansible.builtin.assert:
+        that:
+          - output_scaleset.vmss | length == 0
 
-- name: Create VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_B1s
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    upgrade_policy: Manual
-    load_balancer: testLB
-    tier: Standard
-    managed_disk_type: Standard_LRS
-    os_disk_caching: ReadWrite
-    custom_data: "#cloud-config"
-    single_placement_group: true
-    orchestration_mode: Uniform
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Create VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_B1s
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        load_balancer: testLB
+        tier: Standard
         managed_disk_type: Standard_LRS
-    scale_in_policy: "NewestVM"
-  register: results
+        os_disk_caching: ReadWrite
+        custom_data: "#cloud-config"
+        single_placement_group: true
+        orchestration_mode: Uniform
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+        scale_in_policy: "NewestVM"
+      register: results
 
-- name: Assert that VMSS was created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that VMSS was created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Create VMSS -- test upgrade_policy idempotence and load balancer
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    vm_size: Standard_B1s
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: 1
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    upgrade_policy: Automatic
-    load_balancer: testLB1
-    tier: Standard
-    managed_disk_type: Standard_LRS
-    os_disk_caching: ReadWrite
-    custom_data: "#cloud-config"
-    single_placement_group: true
-    orchestration_mode: Uniform
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
+    - name: Create VMSS -- test upgrade_policy idempotence and load balancer
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        vm_size: Standard_B1s
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Automatic
+        load_balancer: testLB1
+        tier: Standard
         managed_disk_type: Standard_LRS
-  register: results
+        os_disk_caching: ReadWrite
+        custom_data: "#cloud-config"
+        single_placement_group: true
+        orchestration_mode: Uniform
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+      register: results
 
-- name: Assert that VMSS was created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that VMSS was created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Retrieve scaleset facts
-  azure_rm_virtualmachinescaleset_info:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    format: curated
-  register: output_scaleset
+    - name: Retrieve scaleset facts
+      azure_rm_virtualmachinescaleset_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        format: curated
+      register: output_scaleset
 
-- name: Assert the vmss facts
-  ansible.builtin.assert:
-    that:
-      - output_scaleset.vmss[0].load_balancer == "testLB1"
+    - name: Assert the vmss facts
+      ansible.builtin.assert:
+        that:
+          - output_scaleset.vmss[0].load_balancer == "testLB1"
 
-- name: Retrieve scaleset VMs facts
-  azure_rm_virtualmachinescalesetinstance_info:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-  register: instances
+    - name: Retrieve scaleset VMs facts
+      azure_rm_virtualmachinescalesetinstance_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+      register: instances
 
-- name: Assert that facts returned correctly
-  ansible.builtin.assert:
-    that:
-      - instances.instances | length == 1
-      - instances.instances[0].id != None
-      - instances.instances[0].name != None
-      - instances.instances[0].instance_id != None
-      - instances.instances[0].provisioning_state != None
-      - instances.instances[0].vm_id != None
-      - instances.instances[0].latest_model != None
-      - instances.instances[0].power_state != None
+    - name: Assert that facts returned correctly
+      ansible.builtin.assert:
+        that:
+          - instances.instances | length == 1
+          - instances.instances[0].id != None
+          - instances.instances[0].name != None
+          - instances.instances[0].instance_id != None
+          - instances.instances[0].provisioning_state != None
+          - instances.instances[0].vm_id != None
+          - instances.instances[0].latest_model != None
+          - instances.instances[0].power_state != None
 
-- name: Get scaleset body
-  ansible.builtin.set_fact:
-    body: "{{ output_scaleset.vmss[0] }}"
+    - name: Get scaleset body
+      ansible.builtin.set_fact:
+        body: "{{ output_scaleset.vmss[0] }}"
 
-- name: Try to update VMSS using output as input
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ body.resource_group }}"
-    name: "{{ body.name }}"
-    vm_size: "{{ body.vm_size }}"
-    admin_username: "{{ body.admin_username }}"
-    ssh_password_enabled: "{{ body.ssh_password_enabled }}"
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    capacity: "{{ body.capacity }}"
-    virtual_network_name: "{{ body.virtual_network_name }}"
-    subnet_name: "{{ body.subnet_name }}"
-    upgrade_policy: "{{ body.upgrade_policy.mode }}"
-    load_balancer: "{{ body.load_balancer }}"
-    tier: "{{ body.tier }}"
-    managed_disk_type: "{{ body.managed_disk_type }}"
-    os_disk_caching: "{{ body.os_disk_caching }}"
-    image: "{{ body.image }}"
-    data_disks: "{{ body.data_disks }}"
-    overprovision: "{{ body.overprovision }}"
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Try to update VMSS using output as input
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ body.resource_group }}"
+        name: "{{ body.name }}"
+        vm_size: "{{ body.vm_size }}"
+        admin_username: "{{ body.admin_username }}"
+        ssh_password_enabled: "{{ body.ssh_password_enabled }}"
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: "{{ body.capacity }}"
+        virtual_network_name: "{{ body.virtual_network_name }}"
+        subnet_name: "{{ body.subnet_name }}"
+        upgrade_policy: "{{ body.upgrade_policy.mode }}"
+        load_balancer: "{{ body.load_balancer }}"
+        tier: "{{ body.tier }}"
+        managed_disk_type: "{{ body.managed_disk_type }}"
+        os_disk_caching: "{{ body.os_disk_caching }}"
+        image: "{{ body.image }}"
+        data_disks: "{{ body.data_disks }}"
+        overprovision: "{{ body.overprovision }}"
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-- name: Assert that nothing was changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that nothing was changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Install VMSS Extension
-  azure_rm_virtualmachinescalesetextension:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    name: testExtension
-    publisher: Microsoft.Azure.Extensions
-    type: CustomScript
-    type_handler_version: 2.0
-    auto_upgrade_minor_version: true
-    settings: {"commandToExecute": "sudo apt-get -y install apache2"}
-  register: results
+    - name: Install VMSS Extension
+      azure_rm_virtualmachinescalesetextension:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        name: testExtension
+        publisher: Microsoft.Azure.Extensions
+        type: CustomScript
+        type_handler_version: 2.0
+        auto_upgrade_minor_version: true
+        settings: {"commandToExecute": "sudo apt-get -y install apache2"}
+      register: results
 
-- name: Assert that something was changed
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that something was changed
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Install Again VMSS Extension - again
-  azure_rm_virtualmachinescalesetextension:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    name: testExtension
-    publisher: Microsoft.Azure.Extensions
-    type: CustomScript
-    type_handler_version: 2.0
-    auto_upgrade_minor_version: true
-    settings: {"commandToExecute": "sudo apt-get -y install apache2"}
-  register: results
+    - name: Install Again VMSS Extension - again
+      azure_rm_virtualmachinescalesetextension:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        name: testExtension
+        publisher: Microsoft.Azure.Extensions
+        type: CustomScript
+        type_handler_version: 2.0
+        auto_upgrade_minor_version: true
+        settings: {"commandToExecute": "sudo apt-get -y install apache2"}
+      register: results
 
-- name: Assert that nothing was changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that nothing was changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Query extension
-  azure_rm_virtualmachinescalesetextension_info:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    name: testExtension
-  register: results
+    - name: Query extension
+      azure_rm_virtualmachinescalesetextension_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        name: testExtension
+      register: results
 
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.extensions[0]['id'] != None
-      - results.extensions[0]['resource_group'] != None
-      - results.extensions[0]['vmss_name'] != None
-      - results.extensions[0]['name'] != None
-      - results.extensions[0]['publisher'] != None
-      - results.extensions[0]['type'] != None
-      - results.extensions[0]['settings'] != None
-      - results.extensions[0]['auto_upgrade_minor_version'] != None
-      - results.extensions[0]['provisioning_state'] != None
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.extensions[0]['id'] != None
+          - results.extensions[0]['resource_group'] != None
+          - results.extensions[0]['vmss_name'] != None
+          - results.extensions[0]['name'] != None
+          - results.extensions[0]['publisher'] != None
+          - results.extensions[0]['type'] != None
+          - results.extensions[0]['settings'] != None
+          - results.extensions[0]['auto_upgrade_minor_version'] != None
+          - results.extensions[0]['provisioning_state'] != None
 
-- name: List extensions
-  azure_rm_virtualmachinescalesetextension_info:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-  register: results
+    - name: List extensions
+      azure_rm_virtualmachinescalesetextension_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+      register: results
 
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.extensions[0]['id'] != None
-      - results.extensions[0]['resource_group'] != None
-      - results.extensions[0]['vmss_name'] != None
-      - results.extensions[0]['name'] != None
-      - results.extensions[0]['publisher'] != None
-      - results.extensions[0]['type'] != None
-      - results.extensions[0]['settings'] != None
-      - results.extensions[0]['auto_upgrade_minor_version'] != None
-      - results.extensions[0]['provisioning_state'] != None
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.extensions[0]['id'] != None
+          - results.extensions[0]['resource_group'] != None
+          - results.extensions[0]['vmss_name'] != None
+          - results.extensions[0]['name'] != None
+          - results.extensions[0]['publisher'] != None
+          - results.extensions[0]['type'] != None
+          - results.extensions[0]['settings'] != None
+          - results.extensions[0]['auto_upgrade_minor_version'] != None
+          - results.extensions[0]['provisioning_state'] != None
 
-- name: Delete VMSS Extension
-  azure_rm_virtualmachinescalesetextension:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    name: testExtension
-    state: absent
-  register: results
+    - name: Delete VMSS Extension
+      azure_rm_virtualmachinescalesetextension:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        name: testExtension
+        state: absent
+      register: results
 
-- name: Assert that change was reported
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that change was reported
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Upgrade instance to the latest image
-  azure_rm_virtualmachinescalesetinstance:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    instance_id: "{{ instances.instances[0].instance_id }}"
-    latest_model: true
-  register: results
+    - name: Upgrade instance to the latest image
+      azure_rm_virtualmachinescalesetinstance:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        instance_id: "{{ instances.instances[0].instance_id }}"
+        latest_model: true
+      register: results
 
-- name: Assert that something has changed
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that something has changed
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Stop virtual machine
-  azure_rm_virtualmachinescalesetinstance:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    instance_id: "{{ instances.instances[0].instance_id }}"
-    power_state: stopped
-  register: results
+    - name: Stop virtual machine
+      azure_rm_virtualmachinescalesetinstance:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        instance_id: "{{ instances.instances[0].instance_id }}"
+        power_state: stopped
+      register: results
 
-- name: Assert that something has changed
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that something has changed
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete instance
-  azure_rm_virtualmachinescalesetinstance:
-    resource_group: "{{ resource_group }}"
-    vmss_name: testVMSS{{ rpfx }}
-    instance_id: "{{ instances.instances[0].instance_id }}"
-    state: absent
-  register: results
+    - name: Delete instance
+      azure_rm_virtualmachinescalesetinstance:
+        resource_group: "{{ resource_group }}-vmss01"
+        vmss_name: testVMSS{{ rpfx }}
+        instance_id: "{{ instances.instances[0].instance_id }}"
+        state: absent
+      register: results
 
-- name: Assert that something has changed
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that something has changed
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}
+        state: absent
 
-- name: Create VMSS with security group in same resource group, with accelerated networking(check mode).
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}2
-    vm_size: Standard_B1ms
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      name: testimagea
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: true
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
-  check_mode: true
+    - name: Create VMSS with security group in same resource group, with accelerated networking(check mode).
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}2
+        vm_size: Standard_B1ms
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          name: testimagea
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group: testNetworkSecurityGroup
+        enable_accelerated_networking: true
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
+      check_mode: true
 
-- name: Assert that VMSS can be created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that VMSS can be created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Create VMSS with security group in same resource group, with accelerated networking.
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}2
-    vm_size: Standard_B1ms
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      name: testimagea
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: true
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Create VMSS with security group in same resource group, with accelerated networking.
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}2
+        vm_size: Standard_B1ms
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          name: testimagea
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group: testNetworkSecurityGroup
+        enable_accelerated_networking: true
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-- name: Assert that VMSS ran
-  ansible.builtin.assert:
-    that:
-      - 'results is changed'
-      - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].enable_accelerated_networking == true'
-      - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].network_security_group != {}'
+    - name: Assert that VMSS ran
+      ansible.builtin.assert:
+        that:
+          - 'results is changed'
+          - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].enable_accelerated_networking == true'
+          - 'results.ansible_facts.azure_vmss.virtual_machine_profile.network_profile.network_interface_configurations[0].network_security_group != {}'
 
-- name: Create VMSS with security group in same resource group, with accelerated networking.
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}2
-    vm_size: Standard_B1ms
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      name: testimagea
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: true
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Create VMSS with security group in same resource group, with accelerated networking.
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}2
+        vm_size: Standard_B1ms
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          name: testimagea
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group: testNetworkSecurityGroup
+        enable_accelerated_networking: true
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-- name: Assert that nothing has changed
-  ansible.builtin.assert:
-    that:
-      - results is not changed
+    - name: Assert that nothing has changed
+      ansible.builtin.assert:
+        that:
+          - results is not changed
 
-- name: Create VMSS with security group in same resource group, with accelerated networking.
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}2
-    vm_size: Standard_B1ms
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      name: testimageb
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group: testNetworkSecurityGroup
-    enable_accelerated_networking: true
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Create VMSS with security group in same resource group, with accelerated networking.
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}2
+        vm_size: Standard_B1ms
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          name: testimageb
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group: testNetworkSecurityGroup
+        enable_accelerated_networking: true
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-- name: Assert that something has changed
-  ansible.builtin.assert:
-    that:
-      - results is changed
+    - name: Assert that something has changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
 
-- name: Update VMSS with security group in different resource group.
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}2
-    vm_size: Standard_B1s
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      name: testimageb
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group:
-      name: testNetworkSecurityGroup2
-      resource_group: "{{ resource_group_secondary }}"
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Update VMSS with security group in different resource group.
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}2
+        vm_size: Standard_B1s
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          name: testimageb
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group:
+          name: testNetworkSecurityGroup2
+          resource_group: "{{ resource_group }}-vmss02"
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-# disable for now
-# - name: Assert that security group is correct
-#  ansible.builtin.assert:
-#    that:
-#      - 'results is changed'
-#      - '"testNetworkSecurityGroup2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
+    # disable for now
+    # - name: Assert that security group is correct
+    #  ansible.builtin.assert:
+    #    that:
+    #      - 'results is changed'
+    #      - '"testNetworkSecurityGroup2" in results.ansible_facts.azure_vmss.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.0.properties.networkSecurityGroup.id'
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}2
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}2
+        state: absent
 
-- name: Create VMSS with ephmeral OS disk.
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}3
-    vm_size: Standard_DS2_v2
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    ephemeral_os_disk: true
-    image:
-      name: testimageb
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group:
-      name: testNetworkSecurityGroup2
-      resource_group: "{{ resource_group_secondary }}"
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Create VMSS with ephmeral OS disk.
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}3
+        vm_size: Standard_DS2_v2
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        ephemeral_os_disk: true
+        image:
+          name: testimageb
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group:
+          name: testNetworkSecurityGroup2
+          resource_group: "{{ resource_group }}-vmss02"
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-- name: Assert vmss created
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
+    - name: Assert vmss created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.ansible_facts.azure_vmss.virtual_machine_profile.storage_profile.os_disk.diff_disk_settings.option == 'Local'
 
-- name: Check VMSS ephmeral OS disk can't udpate
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}3
-    vm_size: Standard_DS2_v2
-    capacity: 0
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    ephemeral_os_disk: false
-    image:
-      name: testimageb
-      resource_group: "{{ resource_group }}"
-    upgrade_policy: Manual
-    security_group:
-      name: testNetworkSecurityGroup2
-      resource_group: "{{ resource_group_secondary }}"
-    single_placement_group: true
-    orchestration_mode: Uniform
-  ignore_errors: true
-  register: ignore_errors_register
+    - name: Check VMSS ephmeral OS disk can't udpate
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}3
+        vm_size: Standard_DS2_v2
+        capacity: 0
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        ephemeral_os_disk: false
+        image:
+          name: testimageb
+          resource_group: "{{ resource_group }}-vmss01"
+        upgrade_policy: Manual
+        security_group:
+          name: testNetworkSecurityGroup2
+          resource_group: "{{ resource_group }}-vmss02"
+        single_placement_group: true
+        orchestration_mode: Uniform
+      ignore_errors: true
+      register: ignore_errors_register
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}3
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}3
+        state: absent
 
-- name: Fail when instance type is not supported to enable accelerated networking
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}4
-    vm_size: Standard_B1s
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: Canonical
-      sku: 20_04-lts
-      version: latest
-    upgrade_policy: Manual
-    enable_accelerated_networking: true
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
-  ignore_errors: true
+    - name: Fail when instance type is not supported to enable accelerated networking
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}4
+        vm_size: Standard_B1s
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+        upgrade_policy: Manual
+        enable_accelerated_networking: true
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
+      ignore_errors: true
 
-- name: Assert failure to show that accelerated networking is enabled only with supported instance types.
-  ansible.builtin.assert:
-    that:
-      - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
+    - name: Assert failure to show that accelerated networking is enabled only with supported instance types.
+      ansible.builtin.assert:
+        that:
+          - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}4
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}4
+        state: absent
 
-- name: Set up disk encryption sets
-  ansible.builtin.include_tasks: setup_des.yml
+    - name: Set up disk encryption sets
+      ansible.builtin.include_tasks: setup_des.yml
 
-- name: Create VMSS with disk encryption
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}des
-    vm_size: Standard_B1ms
-    virtual_network_name: VMSStestVnet
-    subnet_name: VMSStestSubnet
-    admin_username: testuser
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/testuser/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    image:
-      name: testimagea
-      resource_group: "{{ resource_group }}"
-    os_disk_encryption_set: "{{ des_results.state.id }}"
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        caching: ReadWrite
-        managed_disk_type: Standard_LRS
-        disk_encryption_set: "{{ des_results.state.id }}"
-    upgrade_policy: Manual
-    single_placement_group: true
-    orchestration_mode: Uniform
-  register: results
+    - name: Create VMSS with disk encryption
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}des
+        vm_size: Standard_B1ms
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        image:
+          name: testimagea
+          resource_group: "{{ resource_group }}-vmss01"
+        os_disk_encryption_set: "{{ des_results.state.id }}"
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+            disk_encryption_set: "{{ des_results.state.id }}"
+        upgrade_policy: Manual
+        single_placement_group: true
+        orchestration_mode: Uniform
+      register: results
 
-- name: Assert that VMSS can be created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that VMSS can be created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete VMSS
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testVMSS{{ rpfx }}des
-    state: absent
+    - name: Delete VMSS
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testVMSS{{ rpfx }}des
+        state: absent
 
-- name: Destroy disk encryption set
-  azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
-    name: "{{ des_name }}"
-    state: absent
+    - name: Destroy disk encryption set
+      azure_rm_diskencryptionset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "{{ des_name }}"
+        state: absent
 
-- name: Destroy key vault
-  azure_rm_keyvault:
-    vault_name: "{{ vault_name }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Destroy key vault
+      azure_rm_keyvault:
+        vault_name: "{{ vault_name }}"
+        resource_group: "{{ resource_group }}-vmss01"
+        state: absent
 
-- name: Delete network security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: testNetworkSecurityGroup
-    state: absent
+    - name: Delete network security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testNetworkSecurityGroup
+        state: absent
 
-- name: Delete network security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group_secondary }}"
-    name: testNetworkSecurityGroup2
-    state: absent
+    - name: Delete network security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-vmss02"
+        name: testNetworkSecurityGroup2
+        state: absent
 
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: "{{ resource_group }}"
-    name: testLB
-    state: absent
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testLB
+        state: absent
 
-- name: Delete public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    state: absent
-    name: testPublicIP
+    - name: Delete public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vmss01"
+        state: absent
+        name: testPublicIP
 
-- name: Delete virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: VMSStestVnet
-    state: absent
-    address_prefixes: "10.0.0.0/16"
+    - name: Delete virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: VMSStestVnet
+        state: absent
+        address_prefixes: "10.0.0.0/16"
 
-# TODO: Until we have a module to create/delete images this is the best tests
-# I can do
-- name: Assert error thrown with invalid image dict
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testvm002
-    vm_size: Standard_B1s
-    image:
-      offer: 0001-com-ubuntu-server-focal
-  register: fail_invalid_image_dict
-  failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
+    # TODO: Until we have a module to create/delete images this is the best tests
+    # I can do
+    - name: Assert error thrown with invalid image dict
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testvm002
+        vm_size: Standard_B1s
+        image:
+          offer: 0001-com-ubuntu-server-focal
+      register: fail_invalid_image_dict
+      failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
 
-- name: Assert error thrown with invalid image type
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testvm002
-    vm_size: Standard_B1s
-    image:
-      - testing
-  register: fail_invalid_image_type
-  failed_when: 'fail_invalid_image_type.msg != "parameter error: expecting image to be a string or dict not list"'
+    - name: Assert error thrown with invalid image type
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testvm002
+        vm_size: Standard_B1s
+        image:
+          - testing
+      register: fail_invalid_image_type
+      failed_when: 'fail_invalid_image_type.msg != "parameter error: expecting image to be a string or dict not list"'
 
-- name: Assert error finding missing custom image
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testvm002
-    vm_size: Standard_B1s
-    image: invalid-image
-  register: fail_missing_custom_image
-  failed_when: fail_missing_custom_image.msg != "Error could not find image with name invalid-image"
+    - name: Assert error finding missing custom image
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testvm002
+        vm_size: Standard_B1s
+        image: invalid-image
+      register: fail_missing_custom_image
+      failed_when: fail_missing_custom_image.msg != "Error could not find image with name invalid-image"
 
-- name: Assert error finding missing custom image (dict style)
-  azure_rm_virtualmachinescaleset:
-    resource_group: "{{ resource_group }}"
-    name: testvm002
-    vm_size: Standard_B1s
-    image:
-      name: invalid-image
-  register: fail_missing_custom_image_dict
-  failed_when: fail_missing_custom_image_dict.msg != "Error could not find image with name invalid-image"
+    - name: Assert error finding missing custom image (dict style)
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testvm002
+        vm_size: Standard_B1s
+        image:
+          name: invalid-image
+      register: fail_missing_custom_image_dict
+      failed_when: fail_missing_custom_image_dict.msg != "Error could not find image with name invalid-image"
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'vmss'
-    managed_identity_unique: '1'
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'vmss'
+        managed_identity_unique: '1'
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
 
-- name: Delete load balancer
-  azure_rm_loadbalancer:
-    resource_group: "{{ resource_group }}"
-    name: testLB1
-    state: absent
+    - name: Delete load balancer
+      azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testLB1
+        state: absent
 
-- name: Delete the public IP address 1
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    name: testPublicIP1
-    state: absent
+    - name: Delete the public IP address 1
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testPublicIP1
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item }}"
+        force_delete_nonempty: true
+        state: absent
+      loop:
+        - vmss01
+        - vmss02

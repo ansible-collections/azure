@@ -1,82 +1,95 @@
-- name: Create random domain name
-  ansible.builtin.set_fact:
-    domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+- name: Create a new resource group for private dns zone test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-privatednszone"
+    location: eastus
 
-- name: Create a private DNS zone (check mode)
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-  register: results
-  check_mode: true
+- name: For private dns zone test
+  block:
+    - name: Create random domain name
+      ansible.builtin.set_fact:
+        domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
-- name: Assert there is no private dns zone resource
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create a private DNS zone (check mode)
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}-privatednszone"
+        name: "{{ domain_name }}.com"
+      register: results
+      check_mode: true
 
-- name: Create a private DNS zone
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-  register: results
+    - name: Assert there is no private dns zone resource
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the private dns zone created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create a private DNS zone
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}-privatednszone"
+        name: "{{ domain_name }}.com"
+      register: results
 
-- name: Update private DNS zone with tags
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    tags:
-      test: modified
-  register: results
+    - name: Assert the private dns zone created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the private dns zone updated
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update private DNS zone with tags
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}-privatednszone"
+        name: "{{ domain_name }}.com"
+        tags:
+          test: modified
+      register: results
 
-- name: Test idempotent
-  azure_rm_privatednszone:
-    name: "{{ domain_name }}.com"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the private dns zone updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - results is not changed
+    - name: Test idempotent
+      azure_rm_privatednszone:
+        name: "{{ domain_name }}.com"
+        resource_group: "{{ resource_group }}-privatednszone"
+      register: results
 
-- name: Retrieve DNS Zone Facts
-  azure_rm_privatednszone_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-  register: zones
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - results is not changed
 
-- name: Assert that facts module returned result
-  ansible.builtin.assert:
-    that:
-      - zones.privatednszones[0].tags.test == 'modified'
-      - zones.privatednszones[0].number_of_record_sets == 1
+    - name: Retrieve DNS Zone Facts
+      azure_rm_privatednszone_info:
+        resource_group: "{{ resource_group }}-privatednszone"
+        name: "{{ domain_name }}.com"
+      register: zones
 
-#
-# azure_rm_privatednszone cleanup
-#
+    - name: Assert that facts module returned result
+      ansible.builtin.assert:
+        that:
+          - zones.privatednszones[0].tags.test == 'modified'
+          - zones.privatednszones[0].number_of_record_sets == 1
 
-- name: Delete private DNS zone
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    state: absent
+    #
+    # azure_rm_privatednszone cleanup
+    #
 
-- name: Delete private DNS zone (idempotent)
-  azure_rm_privatednszone:
-    resource_group: "{{ resource_group }}"
-    name: "{{ domain_name }}.com"
-    state: absent
-  register: results
+    - name: Delete private DNS zone
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}-privatednszone"
+        name: "{{ domain_name }}.com"
+        state: absent
 
-- name: Assert the private dns zone deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Delete private DNS zone (idempotent)
+      azure_rm_privatednszone:
+        resource_group: "{{ resource_group }}-privatednszone"
+        name: "{{ domain_name }}.com"
+        state: absent
+      register: results
+
+    - name: Assert the private dns zone deleted
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-privatednszone"
+        force_delete_nonempty: true
+        state: absent

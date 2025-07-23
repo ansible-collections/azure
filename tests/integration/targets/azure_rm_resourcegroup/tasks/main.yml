@@ -1,55 +1,68 @@
-- name: Get resource group datalake info
-  azure_rm_resourcegroup_info:
-    name: "{{ resource_group_datalake }}"
-    list_resources: true
-  register: rg
-
-- name: Assert the resource group facts
-  ansible.builtin.assert:
-    that:
-      - rg.resourcegroups | length == 1
-      - rg.resourcegroups[0].resources | length >= 0
-
-- name: Get resource group info
-  azure_rm_resourcegroup_info:
-  register: rg
-
-- name: Assert all resource group facts
-  ansible.builtin.assert:
-    that:
-      - rg.resourcegroups | length >= 1
-
-- name: Get resource group info
-  azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
-    list_resources: true
-  register: rg
-
-- name: Assert the resource group facts
-  ansible.builtin.assert:
-    that:
-      - rg.resourcegroups | length == 1
-      - rg.resourcegroups[0].resources | length >= 0
-
-- name: Create resource group (idempontent)
+- name: Create a new resource group for resource group test
   azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    location: "{{ rg.resourcegroups[0].location }}"
-  register: output
+    name: "{{ resource_group }}-resource"
+    location: eastus
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+- name: For resoruce group test
+  block:
+    - name: Get resource group datalake info
+      azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-resource"
+        list_resources: true
+      register: rg
 
-- name: Delete resource group
-  azure_rm_resourcegroup:
-    name: "{{ resource_group }}"
-    state: absent
-  check_mode: true
-  register: output
+    - name: Assert the resource group facts
+      ansible.builtin.assert:
+        that:
+          - rg.resourcegroups | length == 1
+          - rg.resourcegroups[0].resources | length >= 0
 
-- name: Assert the resource group deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Get resource group info
+      azure_rm_resourcegroup_info:
+      register: rg
+
+    - name: Assert all resource group facts
+      ansible.builtin.assert:
+        that:
+          - rg.resourcegroups | length >= 1
+
+    - name: Get resource group info
+      azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-resource"
+        list_resources: true
+      register: rg
+
+    - name: Assert the resource group facts
+      ansible.builtin.assert:
+        that:
+          - rg.resourcegroups | length == 1
+          - rg.resourcegroups[0].resources | length >= 0
+
+    - name: Create resource group (idempontent)
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-resource"
+        location: "{{ rg.resourcegroups[0].location }}"
+      register: output
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-resource"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert the resource group deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-resource"
+        force_delete_nonempty: true
+        state: absent

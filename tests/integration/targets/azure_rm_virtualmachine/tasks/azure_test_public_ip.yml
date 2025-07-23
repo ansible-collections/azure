@@ -3,14 +3,14 @@
 
 - name: Create public ip
   azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     allocation_method: Static
     sku: Standard
     name: "{{ public_ip_name }}"
 
 - name: Create security group
   azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ security_group }}"
     purge_rules: true
     rules:
@@ -30,7 +30,7 @@
 
 - name: Create network interface
   azure_rm_networkinterface:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}"
     open_ports:
       - 33
@@ -45,7 +45,7 @@
 - name: Create virtual machine with a single NIC and no boot diagnostics
   register: output
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
     storage_account: "{{ storage_account }}"
@@ -83,7 +83,7 @@
 
 - name: Get facts for virtual machine without boot diagnostics disabled
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
   register: vm_facts_no_boot_diag_result
 
@@ -96,13 +96,13 @@
 
 - name: Get VM facts
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
   register: vm_state
 
 - name: Enable boot diagnostics on an existing VM for the first time without specifying a storage account
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     boot_diagnostics:
       enabled: true
@@ -118,7 +118,7 @@
 
 - name: Get facts for virtual machine with boot diagnostics enabled
   azure_rm_virtualmachine_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
   register: vm_facts_boot_diag_result
 
@@ -133,7 +133,7 @@
 
 - name: Change the boot diagnostics storage account while enabled
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     boot_diagnostics:
       enabled: true
@@ -143,7 +143,7 @@
 
 - name: Disable boot diagnostics and change the storage account at the same time
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     boot_diagnostics:
       enabled: false
@@ -156,7 +156,7 @@
 
 - name: Re-enable boot diagnostics on an existing VM where it was previously configured
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     boot_diagnostics:
       enabled: true
@@ -212,7 +212,7 @@
 
 - name: Should be idempotent with a single NIC
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
     storage_account: "{{ storage_account }}"
@@ -241,7 +241,7 @@
 
 - name: Resize VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_A1_v2
     storage_account: "{{ storage_account }}"
@@ -272,14 +272,14 @@
 
 - name: Delete VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_B1ms
 
 - name: NIC should be gone
   azure_rm_networkinterface_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}"
   register: output
 
@@ -289,7 +289,7 @@
 
 - name: Public IP should be gone
   azure_rm_publicipaddress_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ public_ip_name }}"
   register: output
 
@@ -299,44 +299,44 @@
 
 - name: Destroy NIC
   azure_rm_networkinterface:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}"
     state: absent
 
 - name: Destroy security group
   azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ security_group }}"
     state: absent
 
 - name: Destroy subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
     state: absent
 
 - name: Destroy public ip
   azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ public_ip_name }}"
     state: absent
 
 - name: Destroy availability set
   azure_rm_availabilityset:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
   azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ storage_account }}"
     force_delete_nonempty: true
     state: absent

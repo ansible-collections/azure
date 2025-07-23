@@ -3,7 +3,7 @@
 
 - name: Create virtual machine without public ip address and with boot diagnostics enabled
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_B1ms
     admin_username: adminuser
@@ -39,7 +39,7 @@
 
 - name: Delete VM with no public ip
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
     remove_on_absent: all_autocreated

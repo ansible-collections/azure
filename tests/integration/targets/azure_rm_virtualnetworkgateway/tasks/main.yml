@@ -1,147 +1,22 @@
-# FIXME: needs minimal tests (check mode?) that can run quickly, VNG creation takes > 20min
+- name: Create a new resource group for virtual network gateway test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-vnetgw"
+    location: eastus
 
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-
-- name: Create virtual network gateway without bgp settings (check mode)
-  check_mode: true
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}01"
-    ip_configurations:
-      - name: testipconfig
-        private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}01"
-    virtual_network: "{{ vnetname }}01"
-    tags:
-      common: "xyz"
-  register: output
-
-- name: Assert the virtual network gateway check mode
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Create virtual network gateway Generation2 (check mode)
-  check_mode: true
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}02"
-    sku: VpnGw2
-    vpn_gateway_generation: Generation2
-    ip_configurations:
-      - name: testipconfig
-        private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}02"
-    virtual_network: "{{ vnetname }}02"
-    tags:
-      common: "xyz"
-
-- name: Assert the virtual network gateway check mode
-  ansible.builtin.assert:
-    that: output is changed
-
-- name: Long-running virtualnetworkgateway tests
+- name: For virtual network gateway test
   block:
-    - name: Create virtual network
-      azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}"
-        name: "{{ vnetname }}{{ item }}"
-        address_prefixes: "10.0.0.0/16"
-      with_items:
-        - '01'
-        - '02'
+    # FIXME: needs minimal tests (check mode?) that can run quickly, VNG creation takes > 20min
 
-    - name: Add subnet
-      azure_rm_subnet:
-        resource_group: "{{ resource_group }}"
-        name: GatewaySubnet
-        address_prefix: "10.0.2.0/24"
-        virtual_network: "{{ vnetname }}{{ item }}"
-      with_items:
-        - '01'
-        - '02'
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
-    - name: Create public IP address
-      azure_rm_publicipaddress:
-        resource_group: "{{ resource_group }}"
-        name: "{{ pubipname }}{{ item }}"
-        sku: Standard
-        allocation_method: Static
-      with_items:
-        - '01'
-        - '02'
-
-    - name: Create virtual network gateway without bgp settings
+    - name: Create virtual network gateway without bgp settings (check mode)
+      check_mode: true
       azure_rm_virtualnetworkgateway:
-        resource_group: "{{ resource_group }}"
-        name: "{{ vngname }}{{ item['number'] }}"
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: "{{ pubipname }}{{ item['number'] }}"
-        virtual_network: "{{ vnetname }}{{ item['number'] }}"
-        sku: "{{ item['sku'] }}"
-        vpn_gateway_generation: "{{ item['vpn_gateway_generation'] }}"
-        tags:
-          common: "xyz"
-      loop:
-        - sku: VpnGw1
-          vpn_gateway_generation: Generation1
-          number: '01'
-        - sku: VpnGw2
-          vpn_gateway_generation: Generation2
-          number: '02'
-      register: network_gateway_output
-      async: 3600
-      poll: 0
-
-    - name: Wait for the virtual network gatway to be created
-      ansible.builtin.async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: network_gateway
-      until: network_gateway.finished
-      retries: 120
-      delay: 30
-      loop: "{{ network_gateway_output.results }}"
-
-    - name: Get the virtual network gateway facts
-      azure_rm_virtualnetworkgateway_info:
-        resource_group: "{{ resource_group }}"
-        name: "{{ vngname }}01"
-      register: output
-
-    - name: Assert the virtual network gateway facts
-      ansible.builtin.assert:
-        that:
-          - output.virtual_network_gatways[0].provisioning_state == 'Succeeded'
-          - output.virtual_network_gatways[0].tags |length == 1
-          - output.virtual_network_gatways[0].ip_configurations |length == 1
-
-    - name: Create virtual network gateway without bgp settings - idempotent
-      azure_rm_virtualnetworkgateway:
-        resource_group: "{{ resource_group }}"
-        name: "{{ vngname }}01"
-        ip_configurations:
-          - name: testipconfig
-            private_ip_allocation_method: Dynamic
-            public_ip_address_name: "{{ pubipname }}01"
-        virtual_network: "{{ vnetname }}01"
-        sku: VpnGw1
-        vpn_gateway_generation: Generation1
-        tags:
-          common: "xyz"
-      register: output
-
-    - name: Assert the idempotent
-      ansible.builtin.assert:
-        that: output is not changed
-
-    - name: Update virtual network gateway
-      azure_rm_virtualnetworkgateway:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-vnetgw"
         name: "{{ vngname }}01"
         ip_configurations:
           - name: testipconfig
@@ -149,83 +24,221 @@
             public_ip_address_name: "{{ pubipname }}01"
         virtual_network: "{{ vnetname }}01"
         tags:
-          newcommon: "mno"
+          common: "xyz"
       register: output
 
-    - name: Assert the virtual network gateway updated
+    - name: Assert the virtual network gateway check mode
       ansible.builtin.assert:
         that: output is changed
 
-    - name: List the virtual network gateway and filter by tags
-      azure_rm_virtualnetworkgateway_info:
-        resource_group: "{{ resource_group }}"
+    - name: Create virtual network gateway Generation2 (check mode)
+      check_mode: true
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}-vnetgw"
+        name: "{{ vngname }}02"
+        sku: VpnGw2
+        vpn_gateway_generation: Generation2
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: "{{ pubipname }}02"
+        virtual_network: "{{ vnetname }}02"
         tags:
-          - newcommon
+          common: "xyz"
+
+    - name: Assert the virtual network gateway check mode
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Long-running virtualnetworkgateway tests
+      block:
+        - name: Create virtual network
+          azure_rm_virtualnetwork:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ vnetname }}{{ item }}"
+            address_prefixes: "10.0.0.0/16"
+          with_items:
+            - '01'
+            - '02'
+
+        - name: Add subnet
+          azure_rm_subnet:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: GatewaySubnet
+            address_prefix: "10.0.2.0/24"
+            virtual_network: "{{ vnetname }}{{ item }}"
+          with_items:
+            - '01'
+            - '02'
+
+        - name: Create public IP address
+          azure_rm_publicipaddress:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ pubipname }}{{ item }}"
+            sku: Standard
+            allocation_method: Static
+          with_items:
+            - '01'
+            - '02'
+
+        - name: Create virtual network gateway without bgp settings
+          azure_rm_virtualnetworkgateway:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ vngname }}{{ item['number'] }}"
+            ip_configurations:
+              - name: testipconfig
+                private_ip_allocation_method: Dynamic
+                public_ip_address_name: "{{ pubipname }}{{ item['number'] }}"
+            virtual_network: "{{ vnetname }}{{ item['number'] }}"
+            sku: "{{ item['sku'] }}"
+            vpn_gateway_generation: "{{ item['vpn_gateway_generation'] }}"
+            tags:
+              common: "xyz"
+          loop:
+            - sku: VpnGw1
+              vpn_gateway_generation: Generation1
+              number: '01'
+            - sku: VpnGw2
+              vpn_gateway_generation: Generation2
+              number: '02'
+          register: network_gateway_output
+          async: 3600
+          poll: 0
+
+        - name: Wait for the virtual network gatway to be created
+          ansible.builtin.async_status:
+            jid: "{{ item.ansible_job_id }}"
+          register: network_gateway
+          until: network_gateway.finished
+          retries: 120
+          delay: 30
+          loop: "{{ network_gateway_output.results }}"
+
+        - name: Get the virtual network gateway facts
+          azure_rm_virtualnetworkgateway_info:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ vngname }}01"
+          register: output
+
+        - name: Assert the virtual network gateway facts
+          ansible.builtin.assert:
+            that:
+              - output.virtual_network_gatways[0].provisioning_state == 'Succeeded'
+              - output.virtual_network_gatways[0].tags |length == 1
+              - output.virtual_network_gatways[0].ip_configurations |length == 1
+
+        - name: Create virtual network gateway without bgp settings - idempotent
+          azure_rm_virtualnetworkgateway:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ vngname }}01"
+            ip_configurations:
+              - name: testipconfig
+                private_ip_allocation_method: Dynamic
+                public_ip_address_name: "{{ pubipname }}01"
+            virtual_network: "{{ vnetname }}01"
+            sku: VpnGw1
+            vpn_gateway_generation: Generation1
+            tags:
+              common: "xyz"
+          register: output
+
+        - name: Assert the idempotent
+          ansible.builtin.assert:
+            that: output is not changed
+
+        - name: Update virtual network gateway
+          azure_rm_virtualnetworkgateway:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ vngname }}01"
+            ip_configurations:
+              - name: testipconfig
+                private_ip_allocation_method: Dynamic
+                public_ip_address_name: "{{ pubipname }}01"
+            virtual_network: "{{ vnetname }}01"
+            tags:
+              newcommon: "mno"
+          register: output
+
+        - name: Assert the virtual network gateway updated
+          ansible.builtin.assert:
+            that: output is changed
+
+        - name: List the virtual network gateway and filter by tags
+          azure_rm_virtualnetworkgateway_info:
+            resource_group: "{{ resource_group }}-vnetgw"
+            tags:
+              - newcommon
+          register: output
+
+        - name: Assert there is only one virtualnetwork gateway
+          ansible.builtin.assert:
+            that:
+              - output.virtual_network_gatways |length == 1
+
+        - name: Delete virtual network gateway
+          azure_rm_virtualnetworkgateway:
+            resource_group: "{{ resource_group }}-vnetgw"
+            name: "{{ vngname }}{{ item }}"
+            state: absent
+          register: network_gateway_deleted
+          async: 2400
+          poll: 0
+          with_items:
+            - '01'
+            - '02'
+
+        - name: Wait for the virtual network gatway to be deleted
+          ansible.builtin.async_status:
+            jid: "{{ item.ansible_job_id }}"
+          register: network_gateway
+          until: network_gateway.finished
+          retries: 120
+          delay: 20
+          loop: "{{ network_gateway_deleted.results }}"
+
+    - name: Delete virtual network gateway - idempotent
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}-vnetgw"
+        name: "{{ vngname }}01"
+        state: absent
       register: output
 
-    - name: Assert there is only one virtualnetwork gateway
+    - name: Assert the virtual network gateway deleted
       ansible.builtin.assert:
-        that:
-          - output.virtual_network_gatways |length == 1
+        that: output is not changed
 
-    - name: Delete virtual network gateway
-      azure_rm_virtualnetworkgateway:
-        resource_group: "{{ resource_group }}"
-        name: "{{ vngname }}{{ item }}"
+    # Clean up networking components after test
+    - name: Delete subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}-vnetgw"
+        name: GatewaySubnet
+        virtual_network: "{{ vnetname }}{{ item }}"
         state: absent
-      register: network_gateway_deleted
-      async: 2400
-      poll: 0
       with_items:
         - '01'
         - '02'
 
-    - name: Wait for the virtual network gatway to be deleted
-      ansible.builtin.async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: network_gateway
-      until: network_gateway.finished
-      retries: 120
-      delay: 20
-      loop: "{{ network_gateway_deleted.results }}"
+    - name: Delete public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vnetgw"
+        allocation_method: Dynamic
+        name: "{{ pubipname }}{{ item }}"
+        state: absent
+      with_items:
+        - '01'
+        - '02'
 
-- name: Delete virtual network gateway - idempotent
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}01"
-    state: absent
-  register: output
-
-- name: Assert the virtual network gateway deleted
-  ansible.builtin.assert:
-    that: output is not changed
-
-# Clean up networking components after test
-- name: Delete subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: GatewaySubnet
-    virtual_network: "{{ vnetname }}{{ item }}"
-    state: absent
-  with_items:
-    - '01'
-    - '02'
-
-- name: Delete public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    allocation_method: Dynamic
-    name: "{{ pubipname }}{{ item }}"
-    state: absent
-  with_items:
-    - '01'
-    - '02'
-
-- name: Delete virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vnetname }}{{ item }}"
-    state: absent
-  with_items:
-    - '01'
-    - '02'
+    - name: Delete virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-vnetgw"
+        name: "{{ vnetname }}{{ item }}"
+        state: absent
+      with_items:
+        - '01'
+        - '02'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-vnetgw"
+        force_delete_nonempty: true
+        state: absent

@@ -3,7 +3,7 @@
 
 - name: Create an image from VM (check mode)
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
     name: testimage001
     os_type: Linux
@@ -21,7 +21,7 @@
 
 - name: Create an image from VM
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     source:
       name: "{{ vm_name }}"
       type: disks
@@ -40,7 +40,7 @@
 
 - name: Create an image from VM (idempotent)
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
     name: testimage001
     hyper_v_generation: V1
@@ -57,7 +57,7 @@
 
 - name: Gather information about image created
   azure_rm_image_info:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     name: testimage001
   register: output
 
@@ -69,7 +69,7 @@
 
 - name: Delete image (check mode)
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     name: testimage001
     state: absent
   register: output
@@ -82,7 +82,7 @@
 
 - name: Delete image
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     name: testimage001
     state: absent
   register: output
@@ -94,7 +94,7 @@
 
 - name: Delete image (idempotent)
   azure_rm_image:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     name: testimage001
     state: absent
   register: output
@@ -106,12 +106,12 @@
 
 - name: Destroy disk encryption set
   azure_rm_diskencryptionset:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     name: "{{ des_name }}"
     state: absent
 
 - name: Destroy key vault
   azure_rm_keyvault:
     vault_name: "{{ vault_name }}"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-image"
     state: absent

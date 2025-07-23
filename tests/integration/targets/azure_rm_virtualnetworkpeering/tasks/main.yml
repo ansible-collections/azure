@@ -1,131 +1,150 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    vnetname1: "vnet1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    vnetname2: "vnet2{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    peering_name: "peering1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 100 | random }}"
+- name: Create a new resource group for virtual network peering test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
+  loop:
+    - vnetpeer01
+    - vnetpeer02
 
-- name: Create first virtual network
-  azure_rm_virtualnetwork:
-    name: "{{ vnetname1 }}"
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-    tags:
-      testing: testing
-      delete: on-exit
-    resource_group: "{{ resource_group }}"
-  register: vnet1
+- name: For virtual network peering test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        vnetname1: "vnet1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        vnetname2: "vnet2{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        peering_name: "peering1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 100 | random }}"
 
-- name: Create second virtual network
-  azure_rm_virtualnetwork:
-    name: "{{ vnetname2 }}"
-    address_prefixes_cidr:
-      - 10.2.0.0/24
-    resource_group: "{{ resource_group_secondary }}"
-  register: vnet2
+    - name: Create first virtual network
+      azure_rm_virtualnetwork:
+        name: "{{ vnetname1 }}"
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+        tags:
+          testing: testing
+          delete: on-exit
+        resource_group: "{{ resource_group }}-vnetpeer01"
+      register: vnet1
 
-- name: Assert the second virtual network created
-  ansible.builtin.assert:
-    that:
-      - vnet1 is changed
-      - vnet2 is changed
+    - name: Create second virtual network
+      azure_rm_virtualnetwork:
+        name: "{{ vnetname2 }}"
+        address_prefixes_cidr:
+          - 10.2.0.0/24
+        resource_group: "{{ resource_group }}-vnetpeer02"
+      register: vnet2
 
-- name: Create virtual network peering (check mode)
-  azure_rm_virtualnetworkpeering:
-    resource_group: "{{ resource_group }}"
-    name: "{{ peering_name }}"
-    virtual_network: "{{ vnetname1 }}"
-    remote_virtual_network:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "{{ vnetname2 }}"
-    allow_virtual_network_access: false
-    allow_forwarded_traffic: true
-  check_mode: true
-  register: output
+    - name: Assert the second virtual network created
+      ansible.builtin.assert:
+        that:
+          - vnet1 is changed
+          - vnet2 is changed
 
-- name: Assert the virtual network peering check mode
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Create virtual network peering (check mode)
+      azure_rm_virtualnetworkpeering:
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        name: "{{ peering_name }}"
+        virtual_network: "{{ vnetname1 }}"
+        remote_virtual_network:
+          resource_group: "{{ resource_group }}-vnetpeer02"
+          name: "{{ vnetname2 }}"
+        allow_virtual_network_access: false
+        allow_forwarded_traffic: true
+      check_mode: true
+      register: output
 
-- name: Create virtual network peering
-  azure_rm_virtualnetworkpeering:
-    resource_group: "{{ resource_group }}"
-    name: "{{ peering_name }}"
-    virtual_network: "{{ vnetname1 }}"
-    remote_virtual_network:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "{{ vnetname2 }}"
-    allow_virtual_network_access: false
-    allow_forwarded_traffic: true
-  register: output
+    - name: Assert the virtual network peering check mode
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the virtual network peering created
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Create virtual network peering
+      azure_rm_virtualnetworkpeering:
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        name: "{{ peering_name }}"
+        virtual_network: "{{ vnetname1 }}"
+        remote_virtual_network:
+          resource_group: "{{ resource_group }}-vnetpeer02"
+          name: "{{ vnetname2 }}"
+        allow_virtual_network_access: false
+        allow_forwarded_traffic: true
+      register: output
 
-- name: Update virtual network peering (idempotent)
-  azure_rm_virtualnetworkpeering:
-    resource_group: "{{ resource_group }}"
-    name: "{{ peering_name }}"
-    virtual_network: "{{ vnetname1 }}"
-    remote_virtual_network:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "{{ vnetname2 }}"
-    allow_virtual_network_access: false
-    allow_forwarded_traffic: true
-  register: output
+    - name: Assert the virtual network peering created
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert the virtual network peering idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Update virtual network peering (idempotent)
+      azure_rm_virtualnetworkpeering:
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        name: "{{ peering_name }}"
+        virtual_network: "{{ vnetname1 }}"
+        remote_virtual_network:
+          resource_group: "{{ resource_group }}-vnetpeer02"
+          name: "{{ vnetname2 }}"
+        allow_virtual_network_access: false
+        allow_forwarded_traffic: true
+      register: output
 
-- name: Update virtual network peering
-  azure_rm_virtualnetworkpeering:
-    resource_group: "{{ resource_group }}"
-    name: "{{ peering_name }}"
-    virtual_network: "{{ vnetname1 }}"
-    remote_virtual_network:
-      resource_group: "{{ resource_group_secondary }}"
-      name: "{{ vnetname2 }}"
-    allow_virtual_network_access: true
-    allow_forwarded_traffic: false
-  register: output
+    - name: Assert the virtual network peering idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert the virtual network peering updated
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Update virtual network peering
+      azure_rm_virtualnetworkpeering:
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        name: "{{ peering_name }}"
+        virtual_network: "{{ vnetname1 }}"
+        remote_virtual_network:
+          resource_group: "{{ resource_group }}-vnetpeer02"
+          name: "{{ vnetname2 }}"
+        allow_virtual_network_access: true
+        allow_forwarded_traffic: false
+      register: output
 
-- name: Get facts
-  azure_rm_virtualnetworkpeering_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ peering_name }}"
-    virtual_network: "{{ vnetname1 }}"
-  register: facts
+    - name: Assert the virtual network peering updated
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert Facts
-  ansible.builtin.assert:
-    that:
-      - facts['vnetpeerings'] | length == 1
-      - facts['vnetpeerings'][0]['id']
-      - facts['vnetpeerings'][0]['peering_state']
-      - facts['vnetpeerings'][0]['remote_virtual_network']
-      - facts['vnetpeerings'][0]['provisioning_state']
+    - name: Get facts
+      azure_rm_virtualnetworkpeering_info:
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        name: "{{ peering_name }}"
+        virtual_network: "{{ vnetname1 }}"
+      register: facts
 
-- name: Delete virtual network peering
-  azure_rm_virtualnetworkpeering:
-    resource_group: "{{ resource_group }}"
-    name: "{{ peering_name }}"
-    virtual_network: "{{ vnetname1 }}"
-    state: absent
-  register: output
+    - name: Assert Facts
+      ansible.builtin.assert:
+        that:
+          - facts['vnetpeerings'] | length == 1
+          - facts['vnetpeerings'][0]['id']
+          - facts['vnetpeerings'][0]['peering_state']
+          - facts['vnetpeerings'][0]['remote_virtual_network']
+          - facts['vnetpeerings'][0]['provisioning_state']
 
-- name: Delete first virtual network
-  azure_rm_virtualnetwork:
-    name: "{{ vnetname1 }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Delete virtual network peering
+      azure_rm_virtualnetworkpeering:
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        name: "{{ peering_name }}"
+        virtual_network: "{{ vnetname1 }}"
+        state: absent
+      register: output
 
-- name: Delete virtual network
-  azure_rm_virtualnetwork:
-    name: "{{ vnetname2 }}"
-    resource_group: "{{ resource_group_secondary }}"
-    state: absent
+    - name: Delete first virtual network
+      azure_rm_virtualnetwork:
+        name: "{{ vnetname1 }}"
+        resource_group: "{{ resource_group }}-vnetpeer01"
+        state: absent
+
+    - name: Delete virtual network
+      azure_rm_virtualnetwork:
+        name: "{{ vnetname2 }}"
+        resource_group: "{{ resource_group }}-vnetpeer02"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item }}"
+        force_delete_nonempty: true
+        state: absent
+      with_items:
+        - vnetpeer01
+        - vnetpeer02

@@ -1,76 +1,89 @@
-- name: Fix resource prefix
-  ansible.builtin.set_fact:
-    resource_group: 'MyResourceGroup'
-    recovery_vault_name: 'MyRecoveryVault'
-    resource_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/MyVM"
-    backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/DefaultPolicy"
+- name: Create a new resource group for backup azure VM test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-backupazurevm"
+    location: eastus
 
-- name: Enabling/Updating protection for the Azure VM
-  azure_rm_backupazurevm:
-    resource_group: "{{ resource_group }}"
-    recovery_vault_name: "{{ recovery_vault_name }}"
-    resource_id: "{{ resource_id }}"
-    backup_policy_id: "{{ backup_policy_id }}"
-    state: "create"
-  register: output
+- name: For backup azure VM test
+  block:
+    - name: Fix resource prefix
+      ansible.builtin.set_fact:
+        resource_group: 'MyResourceGroup'
+        recovery_vault_name: 'MyRecoveryVault'
+        resource_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/MyVM"
+        backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/DefaultPolicy"
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Enabling/Updating protection for the Azure VM
+      azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ resource_id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+        state: "create"
+      register: output
 
-- name: Trigger an on-demand backup for a protected Azure VM
-  azure_rm_backupazurevm:
-    resource_group: "{{ resource_group }}"
-    recovery_vault_name: "{{ recovery_vault_name }}"
-    resource_id: "{{ resource_id }}"
-    backup_policy_id: "{{ backup_policy_id }}"
-    recovery_point_expiry_time: "2025-02-03T05:00:00Z"
-    state: "backup"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Trigger an on-demand backup for a protected Azure VM
+      azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ resource_id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+        recovery_point_expiry_time: "2025-02-03T05:00:00Z"
+        state: "backup"
+      register: output
 
-- name: Stop protection but retain existing data
-  azure_rm_backupazurevm:
-    resource_group: "{{ resource_group }}"
-    recovery_vault_name: "{{ recovery_vault_name }}"
-    resource_id: "{{ resource_id }}"
-    backup_policy_id: "{{ backup_policy_id }}"
-    state: "stop"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Stop protection but retain existing data
+      azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ resource_id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+        state: "stop"
+      register: output
 
-- name: Get backup azure vm info
-  azure_rm_backupazurevm_info:
-    resource_group: "{{ resource_group }}"
-    recovery_vault_name: "{{ recovery_vault_name }}"
-    resource_id: "{{ resource_id }}"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output.response.id != None
-      - output.response.name != None
+    - name: Get backup azure vm info
+      azure_rm_backupazurevm_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ resource_id }}"
+      register: output
 
-- name: Stop protection and delete data
-  azure_rm_backupazurevm:
-    resource_group: "{{ resource_group }}"
-    recovery_vault_name: "{{ recovery_vault_name }}"
-    resource_id: "{{ resource_id }}"
-    backup_policy_id: "{{ backup_policy_id }}"
-    state: "delete"
-  register: output
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output.response.id != None
+          - output.response.name != None
 
-- name: Assert that output has changed
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Stop protection and delete data
+      azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ resource_id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+        state: "delete"
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-backupazurevm"
+        force_delete_nonempty: true
+        state: absent

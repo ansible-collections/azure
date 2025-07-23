@@ -1,378 +1,397 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    secgroupname: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    asg_name1: "asg1{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-    asg_name2: "asg2{{ resource_group | hash('md5') | truncate(7, True, '') }}"
-    sg_name1: "sgasg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
+- name: Create a new resource group for test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
+  loop:
+    - securitygroup01
+    - securitygroup02
 
-- name: Create security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-      testkey: testvalue
-    purge_rules: true
-    rules:
-      - name: DenySSH
-        protocol: Tcp
-        destination_port_range: 22
-        access: Deny
-        priority: 100
-        direction: Inbound
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
-  register: output
-- name: Assert resource created
-  ansible.builtin.assert:
-    that:
-      - output.state.rules | length == 2
+- name: For test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        secgroupname: "sg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        asg_name1: "asg1{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+        asg_name2: "asg2{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+        sg_name1: "sgasg{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
 
-- name: Gather facts by tags
-  azure_rm_securitygroup_info:
-    resource_group: "{{ resource_group }}"
-    tags:
-      - testing
-      - foo:bar
-      - testkey
-  register: output
-- name: Assert resource retrieved
-  ansible.builtin.assert:
-    that:
-      - output.securitygroups | length == 1
-      - output.securitygroups[0].default_rules | length > 0
-      - output.securitygroups[0].name == secgroupname
-      - output.securitygroups[0].network_interfaces | length == 0
-      - output.securitygroups[0].rules | length == 2
-      - output.securitygroups[0].subnets | length == 0
+    - name: Create security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+          testkey: testvalue
+        purge_rules: true
+        rules:
+          - name: DenySSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Deny
+            priority: 100
+            direction: Inbound
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
+      register: output
+    - name: Assert resource created
+      ansible.builtin.assert:
+        that:
+          - output.state.rules | length == 2
 
-- name: Add/Update rules on existing security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    rules:
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix: 174.108.158.0/24
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-      - name: AllowSSHFromHome
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range: 22-23
-        priority: 102
-      - name: AllowHTTPandHTTPS
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range:
-          - 80
-          - 443
-        priority: 103
-  register: output
-- name: Assert resource updated
-  ansible.builtin.assert:
-    that:
-      - output.state.rules | length== 4
-      - output.state.rules[0].source_address_prefix == '174.108.158.0/24'
+    - name: Gather facts by tags
+      azure_rm_securitygroup_info:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        tags:
+          - testing
+          - foo:bar
+          - testkey
+      register: output
+    - name: Assert resource retrieved
+      ansible.builtin.assert:
+        that:
+          - output.securitygroups | length == 1
+          - output.securitygroups[0].default_rules | length > 0
+          - output.securitygroups[0].name == secgroupname
+          - output.securitygroups[0].network_interfaces | length == 0
+          - output.securitygroups[0].rules | length == 2
+          - output.securitygroups[0].subnets | length == 0
 
-- name: Gather facts after update
-  azure_rm_securitygroup_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-  register: output
-- name: Assert rules updated
-  ansible.builtin.assert:
-    that:
-      - output.securitygroups[0].rules | length == 4
+    - name: Add/Update rules on existing security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        rules:
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix: 174.108.158.0/24
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+          - name: AllowSSHFromHome
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range: 22-23
+            priority: 102
+          - name: AllowHTTPandHTTPS
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range:
+              - 80
+              - 443
+            priority: 103
+      register: output
+    - name: Assert resource updated
+      ansible.builtin.assert:
+        that:
+          - output.state.rules | length== 4
+          - output.state.rules[0].source_address_prefix == '174.108.158.0/24'
 
-- name: Test idempotence
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    rules:
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix: 174.108.158.0/24
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-      - name: AllowSSHFromHome
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range: 22-23
-        priority: 102
-      - name: AllowHTTPandHTTPS
-        protocol: Tcp
-        source_address_prefix: 174.109.158.0/24
-        destination_port_range:
-          - 80
-          - 443
-        priority: 103
-  register: output
-- name: Assert resource not updated
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Gather facts after update
+      azure_rm_securitygroup_info:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+      register: output
+    - name: Assert rules updated
+      ansible.builtin.assert:
+        that:
+          - output.securitygroups[0].rules | length == 4
 
-- name: Update tags
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    tags:
-      testing: testing
-      delete: never
-      baz: bar
-    append_tags: false
-  register: output
-- name: Assert resource updated
-  ansible.builtin.assert:
-    that:
-      - output.state.tags | length == 3
-      - output.state.tags.delete == 'never'
+    - name: Test idempotence
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        rules:
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix: 174.108.158.0/24
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+          - name: AllowSSHFromHome
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range: 22-23
+            priority: 102
+          - name: AllowHTTPandHTTPS
+            protocol: Tcp
+            source_address_prefix: 174.109.158.0/24
+            destination_port_range:
+              - 80
+              - 443
+            priority: 103
+      register: output
+    - name: Assert resource not updated
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Purge tags
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    append_tags: false
-    tags:
-      testing: testing
-      delete: on-exit
-  register: output
-- name: Assert resource updated
-  ansible.builtin.assert:
-    that:
-      - output.state.tags | length == 2
-      - output.state.tags.delete == 'on-exit'
+    - name: Update tags
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        tags:
+          testing: testing
+          delete: never
+          baz: bar
+        append_tags: false
+      register: output
+    - name: Assert resource updated
+      ansible.builtin.assert:
+        that:
+          - output.state.tags | length == 3
+          - output.state.tags.delete == 'never'
 
-- name: Gather facts for one accounts
-  azure_rm_securitygroup_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-  register: output
-- name: Assert resource retrieved
-  ansible.builtin.assert:
-    that:
-      - output.securitygroups | length == 1
+    - name: Purge tags
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        append_tags: false
+        tags:
+          testing: testing
+          delete: on-exit
+      register: output
+    - name: Assert resource updated
+      ansible.builtin.assert:
+        that:
+          - output.state.tags | length == 2
+          - output.state.tags.delete == 'on-exit'
 
-- name: Gather facts for all accounts
-  azure_rm_securitygroup_info:
-    resource_group: "{{ resource_group }}"
-    tags:
-      - testing:testing
-  register: output_groups
-- name: Assert resource retrieved
-  ansible.builtin.assert:
-    that:
-      - output_groups.securitygroups | length > 0
+    - name: Gather facts for one accounts
+      azure_rm_securitygroup_info:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+      register: output
+    - name: Assert resource retrieved
+      ansible.builtin.assert:
+        that:
+          - output.securitygroups | length == 1
 
-- name: Create security group with source_address_prefixes
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    purge_rules: true
-    rules:
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix:
-          - 52.100.120.240
-          - 53.100.250.190
-          - 54.110.200.200
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
-  register: output
-- name: Assert resource created
-  ansible.builtin.assert:
-    that:
-      - output.state.rules | length == 1
-      - output.state.rules[0].source_address_prefixes | length == 3
-      - not output.state.rules[0].source_address_prefix
+    - name: Gather facts for all accounts
+      azure_rm_securitygroup_info:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        tags:
+          - testing:testing
+      register: output_groups
+    - name: Assert resource retrieved
+      ansible.builtin.assert:
+        that:
+          - output_groups.securitygroups | length > 0
 
-- name: Create security group with source_address_prefixes(idempotent)
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    purge_rules: true
-    rules:
-      - name: AllowSSH
-        protocol: Tcp
-        source_address_prefix:
-          - 52.100.120.240
-          - 53.100.250.190
-          - 54.110.200.200
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
-  register: output
-- name: Assert resource not updated
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Create security group with source_address_prefixes
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        purge_rules: true
+        rules:
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix:
+              - 52.100.120.240
+              - 53.100.250.190
+              - 54.110.200.200
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
+      register: output
+    - name: Assert resource created
+      ansible.builtin.assert:
+        that:
+          - output.state.rules | length == 1
+          - output.state.rules[0].source_address_prefixes | length == 3
+          - not output.state.rules[0].source_address_prefix
 
-- name: Add a single one group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    rules:
-      - name: DenySSH
-        protocol: Tcp
-        source_address_prefix:
-          - 54.120.120.240
-        destination_port_range: 22
-        access: Deny
-        priority: 102
-        direction: Inbound
-  register: output
-- name: Assert resource updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.rules | length == 2
+    - name: Create security group with source_address_prefixes(idempotent)
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        purge_rules: true
+        rules:
+          - name: AllowSSH
+            protocol: Tcp
+            source_address_prefix:
+              - 52.100.120.240
+              - 53.100.250.190
+              - 54.110.200.200
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
+      register: output
+    - name: Assert resource not updated
+      ansible.builtin.assert:
+        that: output is not changed
 
-# Use azure_rm_resource module to create with uppercase protocol name
-- name: Create security group with uppercase protocol name
-  azure_rm_resource:
-    resource_group: "{{ resource_group }}"
-    provider: network
-    resource_type: networkSecurityGroups
-    resource_name: "{{ secgroupname }}"
-    api_version: 2022-07-01
-    body:
-      location: "{{ output.state.location }}"
-      properties:
-        securityRules:
+    - name: Add a single one group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        rules:
+          - name: DenySSH
+            protocol: Tcp
+            source_address_prefix:
+              - 54.120.120.240
+            destination_port_range: 22
+            access: Deny
+            priority: 102
+            direction: Inbound
+      register: output
+    - name: Assert resource updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.rules | length == 2
+
+    # Use azure_rm_resource module to create with uppercase protocol name
+    - name: Create security group with uppercase protocol name
+      azure_rm_resource:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        provider: network
+        resource_type: networkSecurityGroups
+        resource_name: "{{ secgroupname }}"
+        api_version: 2022-07-01
+        body:
+          location: "{{ output.state.location }}"
+          properties:
+            securityRules:
+              - name: Upper_Protocal
+                properties:
+                  protocol: TCP  # UPPERCASE
+                  access: Allow
+                  sourceAddressPrefix: "*"
+                  sourcePortRange: "*"
+                  destinationAddressPrefix: "*"
+                  destinationPortRange: 80
+                  priority: 100
+                  direction: Inbound
+
+    - name: Create security group with capitalized protocol name(idempotent)
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        rules:
           - name: Upper_Protocal
-            properties:
-              protocol: TCP  # UPPERCASE
-              access: Allow
-              sourceAddressPrefix: "*"
-              sourcePortRange: "*"
-              destinationAddressPrefix: "*"
-              destinationPortRange: 80
-              priority: 100
-              direction: Inbound
+            protocol: Tcp     # Capitalized
+            access: Allow
+            destination_port_range: 80
+            priority: 100
+            direction: Inbound
+      register: output
+    - name: Assert resource not updated
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Create security group with capitalized protocol name(idempotent)
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    rules:
-      - name: Upper_Protocal
-        protocol: Tcp     # Capitalized
-        access: Allow
-        destination_port_range: 80
-        priority: 100
-        direction: Inbound
-  register: output
-- name: Assert resource not updated
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create Application security group 1
+      azure_rm_applicationsecuritygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ asg_name1 }}"
+        tags:
+          testing: testing
+      register: asg1
 
-- name: Create Application security group 1
-  azure_rm_applicationsecuritygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ asg_name1 }}"
-    tags:
-      testing: testing
-  register: asg1
+    - name: Create Application security group 2
+      azure_rm_applicationsecuritygroup:
+        resource_group: "{{ resource_group }}-securitygroup02"
+        name: "{{ asg_name2 }}"
+        tags:
+          testing: testing
+      register: asg2
 
-- name: Create Application security group 2
-  azure_rm_applicationsecuritygroup:
-    resource_group: "{{ resource_group_secondary }}"
-    name: "{{ asg_name2 }}"
-    tags:
-      testing: testing
-  register: asg2
+    - name: Create security group with application security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ sg_name1 }}"
+        purge_rules: true
+        rules:
+          - name: AsgToAsg
+            protocol: Tcp
+            source_application_security_groups:
+              - "{{ asg1.id }}"
+            destination_application_security_groups:
+              - resource_group: "{{ resource_group }}-securitygroup02"
+                name: "{{ asg_name2 }}"
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
+      register: output
+    - name: Assert resource retrieved
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create security group with application security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ sg_name1 }}"
-    purge_rules: true
-    rules:
-      - name: AsgToAsg
-        protocol: Tcp
-        source_application_security_groups:
-          - "{{ asg1.id }}"
-        destination_application_security_groups:
-          - resource_group: "{{ resource_group_secondary }}"
-            name: "{{ asg_name2 }}"
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
-  register: output
-- name: Assert resource retrieved
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create security group with application security group - Idempotent
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ sg_name1 }}"
+        purge_rules: true
+        rules:
+          - name: AsgToAsg
+            protocol: Tcp
+            source_application_security_groups:
+              - "{{ asg_name1 }}"
+            destination_application_security_groups:
+              - resource_group: "{{ resource_group }}-securitygroup02"
+                name: "{{ asg_name2 }}"
+            destination_port_range: 22
+            access: Allow
+            priority: 101
+            direction: Inbound
+      register: output
+    - name: Assert resource not updated
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Create security group with application security group - Idempotent
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ sg_name1 }}"
-    purge_rules: true
-    rules:
-      - name: AsgToAsg
-        protocol: Tcp
-        source_application_security_groups:
-          - "{{ asg_name1 }}"
-        destination_application_security_groups:
-          - resource_group: "{{ resource_group_secondary }}"
-            name: "{{ asg_name2 }}"
-        destination_port_range: 22
-        access: Allow
-        priority: 101
-        direction: Inbound
-  register: output
-- name: Assert resource not updated
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Delete security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ sg_name1 }}"
+        state: absent
 
-- name: Delete security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ sg_name1 }}"
-    state: absent
+    - name: Delete security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ secgroupname }}"
+        state: absent
 
-- name: Delete security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ secgroupname }}"
-    state: absent
+    - name: Clean up Application security group 2
+      azure_rm_applicationsecuritygroup:
+        resource_group: "{{ resource_group }}-securitygroup01"
+        name: "{{ asg_name1 }}"
+        state: absent
 
-- name: Clean up Application security group 2
-  azure_rm_applicationsecuritygroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ asg_name1 }}"
-    state: absent
-
-- name: Clean up Application security group 2
-  azure_rm_applicationsecuritygroup:
-    resource_group: "{{ resource_group_secondary }}"
-    name: "{{ asg_name2 }}"
-    state: absent
+    - name: Clean up Application security group 2
+      azure_rm_applicationsecuritygroup:
+        resource_group: "{{ resource_group }}-securitygroup02"
+        name: "{{ asg_name2 }}"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item }}"
+        force_delete_nonempty: true
+        state: absent
+      loop:
+        - securitygroup01
+        - securitygroup02
