@@ -15,6 +15,7 @@
         location: "{{ __rg_info.resourcegroups.0.location }}"
         managed_identity_ids: []
         new_resource_group: "{{ resource_group }}-containerregistry"
+        rpfx: "{{ resource_group | hash('md5') | truncate(12, True, '') }}"
 
     - name: Create user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
@@ -30,7 +31,7 @@
 
     - name: Create an container registry
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+        name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: true
@@ -55,7 +56,7 @@
 
     - name: Update the ACR instance sku, tags and admin_user_enabled
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+        name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
@@ -68,7 +69,7 @@
 
     - name: Create second container registry (to test facts)
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+        name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
@@ -91,7 +92,7 @@
     - name: Gather facts for single Container Registry
       azure_rm_containerregistry_info:
         resource_group: "{{ resource_group }}-containerregistry"
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+        name: "acr{{ rpfx }}"
       register: output
 
     - name: Assert that facts are returned
@@ -135,7 +136,7 @@
 
     - name: Update second container registry to test identity
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+        name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
@@ -158,7 +159,7 @@
 
     - name: Update second container registry to test appending identity
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+        name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
@@ -182,7 +183,7 @@
 
     - name: Update second container registry to test System Identity
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+        name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
         admin_user_enabled: false
@@ -283,13 +284,13 @@
 
     - name: Delete first container registry
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+        name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         state: absent
 
     - name: Delete second container registry
       azure_rm_containerregistry:
-        name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}sec"
+        name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         state: absent
 
