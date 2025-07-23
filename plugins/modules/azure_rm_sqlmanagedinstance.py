@@ -493,6 +493,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.sql.models import (ResourceIdentity, UserIdentity)
+    from azure.core.polling import LROPoller
 except ImportError:
     pass
 
@@ -706,11 +707,8 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             response = self.sql_client.managed_instances.begin_update(resource_group_name=self.resource_group,
                                                                       managed_instance_name=self.name,
                                                                       parameters=parameters)
-            try:
-                response = self.sql_client.managed_instances.get(resource_group_name=self.resource_group,
-                                                                 managed_instance_name=self.name)
-            except ResourceNotFoundError:
-                self.fail("The resource created failed, can't get the facts")
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
             return self.to_dict(response)
         except Exception as exc:
             self.fail('Error when updating SQL managed instance {0}: {1}'.format(self.name, exc.message))
@@ -720,11 +718,8 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
             response = self.sql_client.managed_instances.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                 managed_instance_name=self.name,
                                                                                 parameters=parameters)
-            try:
-                response = self.sql_client.managed_instances.get(resource_group_name=self.resource_group,
-                                                                 managed_instance_name=self.name)
-            except ResourceNotFoundError:
-                self.fail("The resource created failed, can't get the facts")
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
             return self.to_dict(response)
         except Exception as exc:
             self.fail('Error when creating SQL managed instance {0}: {1}'.format(self.name, exc))
@@ -732,6 +727,9 @@ class AzureRMSqlManagedInstance(AzureRMModuleBaseExt):
     def delete_sql_managed_instance(self):
         try:
             response = self.sql_client.managed_instances.begin_delete(self.resource_group, self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+
         except Exception as exc:
             self.fail('Error when deleting SQL managed instance {0}: {1}'.format(self.name, exc))
 
