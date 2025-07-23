@@ -192,7 +192,7 @@
       - output is changed
       - '"user_assigned_identities" not in output.identity'
 
-- name: Create a new container registry scope map(Checkmod test)
+- name: Create a new container registry scope map(Checkmode test)
   azure_rm_containerregistryscopemap:
     registry_name: "acr{{ rpfx }}"
     resource_group: "{{ resource_group }}"
