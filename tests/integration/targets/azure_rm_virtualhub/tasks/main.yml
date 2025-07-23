@@ -89,7 +89,7 @@
         name: "{{ name_rpfx }}-seondary"
       register: output
       until: output.virtual_hubs[0].routing_state == "Provisioned"
-      retries: 30
+      retries: 60
       delay: 60
 
     - name: Delete Second VirtualHub
