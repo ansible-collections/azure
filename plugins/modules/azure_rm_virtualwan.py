@@ -388,6 +388,8 @@ class AzureRMVirtualWan(AzureRMModuleBaseExt):
         try:
             response = self.network_client.virtual_wans.begin_delete(resource_group_name=self.resource_group,
                                                                      virtual_wan_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the VirtualWan instance.')
             self.fail('Error deleting the VirtualWan instance: {0}'.format(str(e)))
