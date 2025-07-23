@@ -278,7 +278,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
                                                                                   scope_map_create_parameters=body)
             self.log("Response: {0}".format(response))
         except Exception as e:
-            self.failed("Create {0} failed. Abnormal message as {1}".format(self.name, str(e)))
+            self.fail("Create {0} fail. Abnormal message as {1}".format(self.name, str(e)))
 
         if isinstance(response, LROPoller):
             response = self.get_poller_result(response)
@@ -293,7 +293,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
                                                                                   scope_map_update_parameters=body)
             self.log("Response: {0}".format(response))
         except Exception as e:
-            self.failed("Update {0} failed. Abnormal message as {1}".format(self.name, str(e)))
+            self.fail("Update {0} fail. Abnormal message as {1}".format(self.name, str(e)))
 
         if isinstance(response, LROPoller):
             response = self.get_poller_result(response)
@@ -307,7 +307,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
                                                                                   scope_map_name=self.name)
             self.log("Response: {0}".format(response))
         except Exception as e:
-            self.failed("Deletion {0} failed. Abnormal message as {1}".format(self.name, str(e)))
+            self.fail("Deletion {0} fail. Abnormal message as {1}".format(self.name, str(e)))
 
         if isinstance(response, LROPoller):
             self.get_poller_result(response)

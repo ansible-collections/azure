@@ -204,7 +204,7 @@
     - name: Create a new container registry scope map(Checkmode test)
       azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
         description: "description01"
       check_mode: true
@@ -212,7 +212,7 @@
     - name: Create a new container registry scope map
       azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
         description: "description01"
         actions:
@@ -227,7 +227,7 @@
     - name: Re-create the container registry scope map(Idempotent test)
       azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
         description: "description01"
         actions:
@@ -242,7 +242,7 @@
     - name: Update the the container registry scope map
       azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
         description: "description02"
         actions:
@@ -259,7 +259,7 @@
     - name: Get the container registry scope map facts
       azure_rm_containerregistryscopemap_info:
         registry_name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
       register: output
 
@@ -272,7 +272,7 @@
     - name: Delete the container registry scope map
       azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
         state: absent
       register: output
