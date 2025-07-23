@@ -280,7 +280,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-      
+
     - name: Delete first container registry
       azure_rm_containerregistry:
         name: "acr{{ resource_group | hash('md5') | truncate(7, True, '') }}"
