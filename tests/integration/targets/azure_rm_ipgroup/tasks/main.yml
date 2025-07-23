@@ -1,107 +1,120 @@
-- name: Create IP group name
-  ansible.builtin.set_fact:
-    group_name: "ipgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-
-- name: Create IP group (check mode)
-  azure_rm_ipgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
+- name: Create a new resource group for IP group test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ipgroup"
     location: eastus
-    ip_addresses:
-      - 13.64.39.16/32
-      - 40.74.146.80/31
-      - 40.74.147.32/28
-    tags:
-      key1: "value1"
-    state: present
-  check_mode: true
 
-- name: Create IP group
-  azure_rm_ipgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    location: eastus
-    ip_addresses:
-      - 13.64.39.16/32
-      - 40.74.146.80/31
-      - 40.74.147.32/28
-    tags:
-      key1: "value1"
-    state: present
-  register: results
+- name: For IP group test
+  block:
+    - name: Create IP group name
+      ansible.builtin.set_fact:
+        group_name: "ipgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Assert that IP group is created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create IP group (check mode)
+      azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+        location: eastus
+        ip_addresses:
+          - 13.64.39.16/32
+          - 40.74.146.80/31
+          - 40.74.147.32/28
+        tags:
+          key1: "value1"
+        state: present
+      check_mode: true
 
-- name: Create same IP group again (Idempotent test)
-  azure_rm_ipgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    location: eastus
-    ip_addresses:
-      - 13.64.39.16/32
-      - 40.74.146.80/31
-      - 40.74.147.32/28
-    tags:
-      key1: "value1"
-    state: present
-  register: results
+    - name: Create IP group
+      azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+        location: eastus
+        ip_addresses:
+          - 13.64.39.16/32
+          - 40.74.146.80/31
+          - 40.74.147.32/28
+        tags:
+          key1: "value1"
+        state: present
+      register: results
 
-- name: Assert that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that IP group is created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Update IP group
-  azure_rm_ipgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    location: eastus
-    ip_addresses:
-      - 10.0.0.0/24
-    tags:
-      key2: "value2"
-  register: results
+    - name: Create same IP group again (Idempotent test)
+      azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+        location: eastus
+        ip_addresses:
+          - 13.64.39.16/32
+          - 40.74.146.80/31
+          - 40.74.147.32/28
+        tags:
+          key1: "value1"
+        state: present
+      register: results
 
-- name: Assert that IP group is updated
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Get IP group facts
-  azure_rm_ipgroup_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-  register: results
+    - name: Update IP group
+      azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+        location: eastus
+        ip_addresses:
+          - 10.0.0.0/24
+        tags:
+          key2: "value2"
+      register: results
 
-- name: Assert the ip group facts
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.ipgroups[0].id != None
-      - results.ipgroups[0].name == "{{ group_name }}"
-      - results.ipgroups[0].location == "eastus"
-      - results.ipgroups[0].provisioning_state == "Succeeded"
-      - results.ipgroups[0].ip_addresses == ["10.0.0.0/24"]
-      - results.ipgroups[0].tags | length > 0
+    - name: Assert that IP group is updated
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Delete IP group
-  azure_rm_ipgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    state: absent
-  register: results
+    - name: Get IP group facts
+      azure_rm_ipgroup_info:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+      register: results
 
-- name: Assert that IP group is deleted
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Assert the ip group facts
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.ipgroups[0].id != None
+          - results.ipgroups[0].name == "{{ group_name }}"
+          - results.ipgroups[0].location == "eastus"
+          - results.ipgroups[0].provisioning_state == "Succeeded"
+          - results.ipgroups[0].ip_addresses == ["10.0.0.0/24"]
+          - results.ipgroups[0].tags | length > 0
 
-- name: Delete IP group again (Idempotent test)
-  azure_rm_ipgroup:
-    resource_group: "{{ resource_group }}"
-    name: "{{ group_name }}"
-    state: absent
-  register: results
+    - name: Delete IP group
+      azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+        state: absent
+      register: results
 
-- name: Asset that output is not changed
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Assert that IP group is deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete IP group again (Idempotent test)
+      azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-ipgroup"
+        name: "{{ group_name }}"
+        state: absent
+      register: results
+
+    - name: Asset that output is not changed
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-ipgroup"
+        force_delete_nonempty: true
+        state: absent

@@ -1,251 +1,263 @@
----
-- name: Set Facts for Tests
-  ansible.builtin.set_fact:
-    vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    location: "eastus"
-    policy_name_daily: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
-    policy_name_daily_enhanced: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}-enhanced"
-    policy_name_weekly: "bp-weekly-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+- name: Create a new resource group for backup policy test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-backuppolicy"
+    location: eastus
 
-- name: Create Azure Recovery Service vault
-  azure.azcollection.azure_rm_recoveryservicesvault:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vault_name }}"
-    location: "{{ location }}"
-    state: "present"
+- name: For backup policy test
+  block:
+    - name: Set Facts for Tests
+      ansible.builtin.set_fact:
+        vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        location: "eastus"
+        policy_name_daily: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        policy_name_daily_enhanced: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}-enhanced"
+        policy_name_weekly: "bp-weekly-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Create a daily VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily }}"
-    resource_group: "{{ resource_group }}"
-    state: present
-    backup_management_type: "AzureIaasVM"
-    schedule_run_frequency: "Daily"
-    instant_recovery_snapshot_retention: 2
-    daily_retention_count: 12
-    time_zone: "Pacific Standard Time"
-    schedule_run_time: 14
-  register: daily_policy_output
+    - name: Create Azure Recovery Service vault
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-backuppolicy"
+        name: "{{ vault_name }}"
+        location: "{{ location }}"
+        state: "present"
 
-- name: Create a daily VM backup policy
-  azure.azcollection.azure_rm_backuppolicy_info:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily }}"
-    resource_group: "{{ resource_group }}"
-  register: backup_policy_exists
+    - name: Create a daily VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 14
+      register: daily_policy_output
 
-- name: Assert success on daily backup policy creation
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output is changed
-      - daily_policy_output.name == policy_name_daily
+    - name: Create a daily VM backup policy
+      azure.azcollection.azure_rm_backuppolicy_info:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+      register: backup_policy_exists
 
-- name: Assert Policy Success Retrieving Info
-  ansible.builtin.assert:
-    that:
-      - backup_policy_exists.id == daily_policy_output.id
-      - backup_policy_exists.location == daily_policy_output.location
-      - backup_policy_exists.name == daily_policy_output.name
-      - backup_policy_exists.type == daily_policy_output.type
+    - name: Assert success on daily backup policy creation
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output is changed
+          - daily_policy_output.name == policy_name_daily
 
-- name: Create a daily VM backup policy (idempotent)
-  azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily }}"
-    resource_group: "{{ resource_group }}"
-    state: present
-    backup_management_type: "AzureIaasVM"
-    schedule_run_frequency: "Daily"
-    instant_recovery_snapshot_retention: 2
-    daily_retention_count: 12
-    time_zone: "Pacific Standard Time"
-    schedule_run_time: 14
-  register: daily_policy_output_idempotent
+    - name: Assert Policy Success Retrieving Info
+      ansible.builtin.assert:
+        that:
+          - backup_policy_exists.id == daily_policy_output.id
+          - backup_policy_exists.location == daily_policy_output.location
+          - backup_policy_exists.name == daily_policy_output.name
+          - backup_policy_exists.type == daily_policy_output.type
 
-- name: Assert that there is no change after second deletion of daily backup policy
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_idempotent is not changed
+    - name: Create a daily VM backup policy (idempotent)
+      azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 14
+      register: daily_policy_output_idempotent
 
-- name: Create a daily enhanced VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily_enhanced }}"
-    resource_group: "{{ resource_group }}"
-    policy_type: V2
-    state: present
-    backup_management_type: "AzureIaasVM"
-    schedule_run_frequency: "Daily"
-    instant_recovery_snapshot_retention: 7
-    daily_retention_count: 12
-    time_zone: "Pacific Standard Time"
-    schedule_run_time: 14
-  register: daily_policy_output_enhanced
+    - name: Assert that there is no change after second deletion of daily backup policy
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_idempotent is not changed
 
-- name: Create a daily VM backup policy
-  azure.azcollection.azure_rm_backuppolicy_info:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily_enhanced }}"
-    resource_group: "{{ resource_group }}"
-  register: backup_policy_exists_enhanced
+    - name: Create a daily enhanced VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily_enhanced }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        policy_type: V2
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 7
+        daily_retention_count: 12
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 14
+      register: daily_policy_output_enhanced
 
-- name: Assert success on daily backup policy creation
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_enhanced is changed
-      - daily_policy_output_enhanced.name == policy_name_daily_enhanced
+    - name: Create a daily VM backup policy
+      azure.azcollection.azure_rm_backuppolicy_info:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily_enhanced }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+      register: backup_policy_exists_enhanced
 
-- name: Assert Policy Success Retrieving Info
-  ansible.builtin.assert:
-    that:
-      - backup_policy_exists_enhanced.id == daily_policy_output_enhanced.id
-      - backup_policy_exists_enhanced.location == daily_policy_output_enhanced.location
-      - backup_policy_exists_enhanced.name == daily_policy_output_enhanced.name
-      - backup_policy_exists_enhanced.type == daily_policy_output_enhanced.type
+    - name: Assert success on daily backup policy creation
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_enhanced is changed
+          - daily_policy_output_enhanced.name == policy_name_daily_enhanced
 
-- name: Update daily VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily }}"
-    resource_group: "{{ resource_group }}"
-    state: present
-    backup_management_type: "AzureIaasVM"
-    schedule_run_frequency: "Daily"
-    instant_recovery_snapshot_retention: 5
-    daily_retention_count: 10
-    time_zone: "Pacific Standard Time"
-    schedule_run_time: 10
-  register: daily_policy_output_update
+    - name: Assert Policy Success Retrieving Info
+      ansible.builtin.assert:
+        that:
+          - backup_policy_exists_enhanced.id == daily_policy_output_enhanced.id
+          - backup_policy_exists_enhanced.location == daily_policy_output_enhanced.location
+          - backup_policy_exists_enhanced.name == daily_policy_output_enhanced.name
+          - backup_policy_exists_enhanced.type == daily_policy_output_enhanced.type
 
-- name: Assert success on update of daily policy
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_update is changed
-      - daily_policy_output_update.name == policy_name_daily
+    - name: Update daily VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 5
+        daily_retention_count: 10
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 10
+      register: daily_policy_output_update
 
-- name: Create a weekly VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_weekly }}"
-    resource_group: "{{ resource_group }}"
-    state: present
-    backup_management_type: "AzureIaasVM"
-    schedule_run_frequency: "Weekly"
-    instant_recovery_snapshot_retention: 5
-    weekly_retention_count: 4
-    schedule_days:
-      - "Monday"
-      - "Wednesday"
-      - "Friday"
-    time_zone: "Pacific Standard Time"
-    schedule_run_time: 8
-  register: weekly_policy_output
+    - name: Assert success on update of daily policy
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_update is changed
+          - daily_policy_output_update.name == policy_name_daily
 
-- name: Assert success on weekly backup policy creation
-  ansible.builtin.assert:
-    that:
-      - weekly_policy_output is changed
-      - weekly_policy_output.name == policy_name_weekly
+    - name: Create a weekly VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_weekly }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Weekly"
+        instant_recovery_snapshot_retention: 5
+        weekly_retention_count: 4
+        schedule_days:
+          - "Monday"
+          - "Wednesday"
+          - "Friday"
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 8
+      register: weekly_policy_output
 
-- name: Update weekly VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_weekly }}"
-    resource_group: "{{ resource_group }}"
-    state: present
-    backup_management_type: "AzureIaasVM"
-    schedule_run_frequency: "Weekly"
-    instant_recovery_snapshot_retention: 5
-    weekly_retention_count: 4
-    schedule_days:
-      - "Monday"
-      - "Wednesday"
-      - "Thursday"
-    time_zone: "Pacific Standard Time"
-    schedule_run_time: 10
-  register: weekly_policy_output_update
+    - name: Assert success on weekly backup policy creation
+      ansible.builtin.assert:
+        that:
+          - weekly_policy_output is changed
+          - weekly_policy_output.name == policy_name_weekly
 
-- name: Assert success on update of weekly policy
-  ansible.builtin.assert:
-    that:
-      - weekly_policy_output_update is changed
-      - weekly_policy_output_update.name == policy_name_weekly
+    - name: Update weekly VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_weekly }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Weekly"
+        instant_recovery_snapshot_retention: 5
+        weekly_retention_count: 4
+        schedule_days:
+          - "Monday"
+          - "Wednesday"
+          - "Thursday"
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 10
+      register: weekly_policy_output_update
 
-- name: Delete a daily VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: daily_policy_output_delete
+    - name: Assert success on update of weekly policy
+      ansible.builtin.assert:
+        that:
+          - weekly_policy_output_update is changed
+          - weekly_policy_output_update.name == policy_name_weekly
 
-- name: Assert success on daily backup policy deletion
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_delete is changed
+    - name: Delete a daily VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: daily_policy_output_delete
 
-- name: Delete a daily VM enhanced backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily_enhanced }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: daily_policy_output_enhanced_delete
+    - name: Assert success on daily backup policy deletion
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_delete is changed
 
-- name: Assert success on daily enhanced backup policy deletion
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_enhanced_delete is changed
+    - name: Delete a daily VM enhanced backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily_enhanced }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: daily_policy_output_enhanced_delete
 
-- name: Delete a weekly VM backup policy
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_weekly }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: weekly_policy_output_delete
+    - name: Assert success on daily enhanced backup policy deletion
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_enhanced_delete is changed
 
-- name: Assert success on weekly backup policy deletion
-  ansible.builtin.assert:
-    that:
-      - weekly_policy_output_delete is changed
+    - name: Delete a weekly VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_weekly }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: weekly_policy_output_delete
 
-- name: Delete a daily VM backup policy (idempotent)
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: daily_policy_output_delete_idempotent
+    - name: Assert success on weekly backup policy deletion
+      ansible.builtin.assert:
+        that:
+          - weekly_policy_output_delete is changed
 
-- name: Assert that there is no change after second deletion of daily backup policy
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_delete_idempotent is not changed
+    - name: Delete a daily VM backup policy (idempotent)
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: daily_policy_output_delete_idempotent
 
-- name: Delete a daily VM enhanced backup policy (idempotent)
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_daily_enhanced }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: daily_policy_output_enhanced_delete_idempotent
+    - name: Assert that there is no change after second deletion of daily backup policy
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_delete_idempotent is not changed
 
-- name: Assert that there is no change after second deletion of daily enhanced backup policy
-  ansible.builtin.assert:
-    that:
-      - daily_policy_output_enhanced_delete_idempotent is not changed
+    - name: Delete a daily VM enhanced backup policy (idempotent)
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily_enhanced }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: daily_policy_output_enhanced_delete_idempotent
 
-- name: Delete a weekly VM backup policy (idempotent)
-  azure.azcollection.azure_rm_backuppolicy:
-    vault_name: "{{ vault_name }}"
-    name: "{{ policy_name_weekly }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: weekly_policy_output_delete_idempotent
+    - name: Assert that there is no change after second deletion of daily enhanced backup policy
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_enhanced_delete_idempotent is not changed
 
-- name: Assert that there is no change after second deletion of weekly backup policy
-  ansible.builtin.assert:
-    that:
-      - weekly_policy_output_delete_idempotent is not changed
+    - name: Delete a weekly VM backup policy (idempotent)
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_weekly }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: weekly_policy_output_delete_idempotent
+
+    - name: Assert that there is no change after second deletion of weekly backup policy
+      ansible.builtin.assert:
+        that:
+          - weekly_policy_output_delete_idempotent is not changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-backuppolicy"
+        force_delete_nonempty: true
+        state: absent

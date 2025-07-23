@@ -4,7 +4,7 @@
 
 - name: Set user managed identity ID base path
   ansible.builtin.set_fact:
-    base_path: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}"
+    base_path: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-sqlmanagedinstance"
 
 - name: Set user managed identity ID
   ansible.builtin.set_fact:
@@ -17,7 +17,7 @@
 
 - name: Create the user managed identity - {{ identity_name }}
   azure_rm_resource:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-sqlmanagedinstance"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ identity_name }}"
@@ -30,7 +30,7 @@
 - name: Lookup service principal object id for identity {{ identity_name }}
   azure_rm_resource_info:
     api_version: "2023-01-31"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-sqlmanagedinstance"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ identity_name }}"
@@ -48,7 +48,7 @@
 
 - name: Destroy the user managed identity - {{ identity_name }}
   azure_rm_resource:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-sqlmanagedinstance"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ identity_name }}"

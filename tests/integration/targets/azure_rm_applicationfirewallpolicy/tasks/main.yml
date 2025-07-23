@@ -1,302 +1,315 @@
-- name: Set variables
-  ansible.builtin.set_fact:
-    rpfx: "{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
+- name: Create a new resource group for application firewall policytest
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-applicationfirewallpolicy"
+    location: eastus
 
-- name: Create a new application firewall policy (Checkmode Test)
-  azure_rm_applicationfirewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "policy{{ rpfx }}"
-    location: australiasoutheast
-    policy_settings:
-      file_upload_enforcement: true
-      file_upload_limit_in_mb: 88
-      js_challenge_cookie_expiration_in_mins: 30
-      max_request_body_size_in_kb: 128
-      mode: Detection
-      request_body_check: true
-      request_body_enforcement: true
-      request_body_inspect_limit_in_kb: 128
-      state: Enabled
-      custom_block_response_status_code: 200
-      custom_block_response_body: Fredtest
-      log_scrubbing:
-        state: Enabled
-        scrubbing_rules:
-          - match_variable: RequestHeaderNames
-            selector_match_operator: Equals
-            selector: '*'
+- name: For application firewall policy test
+  block:
+    - name: Set variables
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
+
+    - name: Create a new application firewall policy (Checkmode Test)
+      azure_rm_applicationfirewallpolicy:
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
+        name: "policy{{ rpfx }}"
+        location: australiasoutheast
+        policy_settings:
+          file_upload_enforcement: true
+          file_upload_limit_in_mb: 88
+          js_challenge_cookie_expiration_in_mins: 30
+          max_request_body_size_in_kb: 128
+          mode: Detection
+          request_body_check: true
+          request_body_enforcement: true
+          request_body_inspect_limit_in_kb: 128
+          state: Enabled
+          custom_block_response_status_code: 200
+          custom_block_response_body: Fredtest
+          log_scrubbing:
             state: Enabled
-    custom_rules:
-      - action: Block
-        match_conditions:
-          - match_values:
-              - 10.1.0.0/24
-              - 10.2.0.0/24
-            match_variables:
-              - variable_name: RemoteAddr
-            negation_conditon: true
-            operator: IPMatch
-            transforms:
-              - Uppercase
-              - Lowercase
-        name: ruledefine01
-        priority: 21
-        rule_type: MatchRule
-        state: Enabled
-    managed_rules:
-      exclusions:
-        - match_variable: RequestHeaderNames
-          selector_match_operator: Equals
-          selector: IPMatch
-          exclusion_managed_rule_sets:
+            scrubbing_rules:
+              - match_variable: RequestHeaderNames
+                selector_match_operator: Equals
+                selector: '*'
+                state: Enabled
+        custom_rules:
+          - action: Block
+            match_conditions:
+              - match_values:
+                  - 10.1.0.0/24
+                  - 10.2.0.0/24
+                match_variables:
+                  - variable_name: RemoteAddr
+                negation_conditon: true
+                operator: IPMatch
+                transforms:
+                  - Uppercase
+                  - Lowercase
+            name: ruledefine01
+            priority: 21
+            rule_type: MatchRule
+            state: Enabled
+        managed_rules:
+          exclusions:
+            - match_variable: RequestHeaderNames
+              selector_match_operator: Equals
+              selector: IPMatch
+              exclusion_managed_rule_sets:
+                - rule_set_type: Microsoft_DefaultRuleSet
+                  rule_set_version: 2.1
+          managed_rule_sets:
+            - rule_set_type: Microsoft_BotManagerRuleSet
+              rule_set_version: 1.0
             - rule_set_type: Microsoft_DefaultRuleSet
               rule_set_version: 2.1
-      managed_rule_sets:
-        - rule_set_type: Microsoft_BotManagerRuleSet
-          rule_set_version: 1.0
-        - rule_set_type: Microsoft_DefaultRuleSet
-          rule_set_version: 2.1
-    tags:
-      key1: value1
-  check_mode: true
-  register: output
+        tags:
+          key1: value1
+      check_mode: true
+      register: output
 
-- name: Assert the there is no application firewall policy
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the there is no application firewall policy
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create a new application firewall policy
-  azure_rm_applicationfirewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "policy{{ rpfx }}"
-    location: australiasoutheast
-    policy_settings:
-      file_upload_enforcement: true
-      file_upload_limit_in_mb: 88
-      js_challenge_cookie_expiration_in_mins: 30
-      max_request_body_size_in_kb: 128
-      mode: Detection
-      request_body_check: true
-      request_body_enforcement: true
-      request_body_inspect_limit_in_kb: 128
-      state: Enabled
-      custom_block_response_status_code: 200
-      custom_block_response_body: Fredtest
-      log_scrubbing:
-        state: Enabled
-        scrubbing_rules:
-          - match_variable: RequestHeaderNames
-            selector_match_operator: Equals
-            selector: '*'
+    - name: Create a new application firewall policy
+      azure_rm_applicationfirewallpolicy:
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
+        name: "policy{{ rpfx }}"
+        location: australiasoutheast
+        policy_settings:
+          file_upload_enforcement: true
+          file_upload_limit_in_mb: 88
+          js_challenge_cookie_expiration_in_mins: 30
+          max_request_body_size_in_kb: 128
+          mode: Detection
+          request_body_check: true
+          request_body_enforcement: true
+          request_body_inspect_limit_in_kb: 128
+          state: Enabled
+          custom_block_response_status_code: 200
+          custom_block_response_body: Fredtest
+          log_scrubbing:
             state: Enabled
-    custom_rules:
-      - action: Block
-        match_conditions:
-          - match_values:
-              - 10.1.0.0/24
-              - 10.2.0.0/24
-            match_variables:
-              - variable_name: RemoteAddr
-            negation_conditon: true
-            operator: IPMatch
-            transforms:
-              - Uppercase
-              - Lowercase
-        name: ruledefine01
-        priority: 21
-        rule_type: MatchRule
-        state: Enabled
-    managed_rules:
-      exclusions:
-        - match_variable: RequestHeaderNames
-          selector_match_operator: Equals
-          selector: IPMatch
-          exclusion_managed_rule_sets:
+            scrubbing_rules:
+              - match_variable: RequestHeaderNames
+                selector_match_operator: Equals
+                selector: '*'
+                state: Enabled
+        custom_rules:
+          - action: Block
+            match_conditions:
+              - match_values:
+                  - 10.1.0.0/24
+                  - 10.2.0.0/24
+                match_variables:
+                  - variable_name: RemoteAddr
+                negation_conditon: true
+                operator: IPMatch
+                transforms:
+                  - Uppercase
+                  - Lowercase
+            name: ruledefine01
+            priority: 21
+            rule_type: MatchRule
+            state: Enabled
+        managed_rules:
+          exclusions:
+            - match_variable: RequestHeaderNames
+              selector_match_operator: Equals
+              selector: IPMatch
+              exclusion_managed_rule_sets:
+                - rule_set_type: Microsoft_DefaultRuleSet
+                  rule_set_version: 2.1
+          managed_rule_sets:
+            - rule_set_type: Microsoft_BotManagerRuleSet
+              rule_set_version: 1.0
             - rule_set_type: Microsoft_DefaultRuleSet
               rule_set_version: 2.1
-      managed_rule_sets:
-        - rule_set_type: Microsoft_BotManagerRuleSet
-          rule_set_version: 1.0
-        - rule_set_type: Microsoft_DefaultRuleSet
-          rule_set_version: 2.1
-    tags:
-      key1: value1
-  register: output
+        tags:
+          key1: value1
+      register: output
 
-- name: Assert the policy created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the policy created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Create a new application firewall policy (Idempotent Test)
-  azure_rm_applicationfirewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "policy{{ rpfx }}"
-    location: australiasoutheast
-    policy_settings:
-      file_upload_enforcement: true
-      file_upload_limit_in_mb: 88
-      js_challenge_cookie_expiration_in_mins: 30
-      max_request_body_size_in_kb: 128
-      mode: Detection
-      request_body_check: true
-      request_body_enforcement: true
-      request_body_inspect_limit_in_kb: 128
-      state: Enabled
-      custom_block_response_status_code: 200
-      custom_block_response_body: Fredtest
-      log_scrubbing:
-        state: Enabled
-        scrubbing_rules:
-          - match_variable: RequestHeaderNames
-            selector_match_operator: Equals
-            selector: '*'
+    - name: Create a new application firewall policy (Idempotent Test)
+      azure_rm_applicationfirewallpolicy:
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
+        name: "policy{{ rpfx }}"
+        location: australiasoutheast
+        policy_settings:
+          file_upload_enforcement: true
+          file_upload_limit_in_mb: 88
+          js_challenge_cookie_expiration_in_mins: 30
+          max_request_body_size_in_kb: 128
+          mode: Detection
+          request_body_check: true
+          request_body_enforcement: true
+          request_body_inspect_limit_in_kb: 128
+          state: Enabled
+          custom_block_response_status_code: 200
+          custom_block_response_body: Fredtest
+          log_scrubbing:
             state: Enabled
-    custom_rules:
-      - action: Block
-        match_conditions:
-          - match_values:
-              - 10.1.0.0/24
-              - 10.2.0.0/24
-            match_variables:
-              - variable_name: RemoteAddr
-            operator: IPMatch
-            negation_conditon: true
-            transforms:
-              - Uppercase
-              - Lowercase
-        name: ruledefine01
-        priority: 21
-        rule_type: MatchRule
-        state: Enabled
-    managed_rules:
-      exclusions:
-        - match_variable: RequestHeaderNames
-          selector_match_operator: Equals
-          selector: IPMatch
-          exclusion_managed_rule_sets:
+            scrubbing_rules:
+              - match_variable: RequestHeaderNames
+                selector_match_operator: Equals
+                selector: '*'
+                state: Enabled
+        custom_rules:
+          - action: Block
+            match_conditions:
+              - match_values:
+                  - 10.1.0.0/24
+                  - 10.2.0.0/24
+                match_variables:
+                  - variable_name: RemoteAddr
+                operator: IPMatch
+                negation_conditon: true
+                transforms:
+                  - Uppercase
+                  - Lowercase
+            name: ruledefine01
+            priority: 21
+            rule_type: MatchRule
+            state: Enabled
+        managed_rules:
+          exclusions:
+            - match_variable: RequestHeaderNames
+              selector_match_operator: Equals
+              selector: IPMatch
+              exclusion_managed_rule_sets:
+                - rule_set_type: Microsoft_DefaultRuleSet
+                  rule_set_version: 2.1
+          managed_rule_sets:
+            - rule_set_type: Microsoft_BotManagerRuleSet
+              rule_set_version: 1.0
             - rule_set_type: Microsoft_DefaultRuleSet
               rule_set_version: 2.1
-      managed_rule_sets:
-        - rule_set_type: Microsoft_BotManagerRuleSet
-          rule_set_version: 1.0
-        - rule_set_type: Microsoft_DefaultRuleSet
-          rule_set_version: 2.1
-    tags:
-      key1: value1
-  register: output
+        tags:
+          key1: value1
+      register: output
 
-- name: Assert the policy no change
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Assert the policy no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Update the new application firewall policy
-  azure_rm_applicationfirewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "policy{{ rpfx }}"
-    location: australiasoutheast
-    policy_settings:
-      file_upload_enforcement: true
-      file_upload_limit_in_mb: 66
-      js_challenge_cookie_expiration_in_mins: 30
-      max_request_body_size_in_kb: 128
-      mode: Detection
-      request_body_check: false
-      request_body_enforcement: true
-      request_body_inspect_limit_in_kb: 128
-      state: Enabled
-      custom_block_response_status_code: 200
-      custom_block_response_body: Fredtest
-      log_scrubbing:
-        state: Enabled
-        scrubbing_rules:
-          - match_variable: RequestHeaderNames
-            selector_match_operator: Equals
-            selector: '*'
+    - name: Update the new application firewall policy
+      azure_rm_applicationfirewallpolicy:
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
+        name: "policy{{ rpfx }}"
+        location: australiasoutheast
+        policy_settings:
+          file_upload_enforcement: true
+          file_upload_limit_in_mb: 66
+          js_challenge_cookie_expiration_in_mins: 30
+          max_request_body_size_in_kb: 128
+          mode: Detection
+          request_body_check: false
+          request_body_enforcement: true
+          request_body_inspect_limit_in_kb: 128
+          state: Enabled
+          custom_block_response_status_code: 200
+          custom_block_response_body: Fredtest
+          log_scrubbing:
             state: Enabled
-    custom_rules:
-      - action: Block
-        match_conditions:
-          - match_values:
-              - 10.1.0.0/24
-              - 10.2.0.0/24
-            match_variables:
-              - variable_name: RemoteAddr
-            operator: IPMatch
-            negation_conditon: true
-            transforms:
-              - Uppercase
-              - Lowercase
-        name: ruledefine01
-        priority: 21
-        rule_type: MatchRule
-        state: Enabled
-      - action: Block
-        group_by_user_session:
-          - group_by_variables:
-              - variable_name: ClientAddr
-        match_conditions:
-          - match_values:
-              - 10.1.0.0/24
-              - 10.2.0.0/24
-            match_variables:
-              - variable_name: RemoteAddr
-            negation_conditon: false
-            operator: IPMatch
-        name: ruledefine02
-        priority: 22
-        rule_type: RateLimitRule
-        rate_limit_threshold: 100
-        rate_limit_duration: OneMin
-        state: Enabled
-    managed_rules:
-      exclusions:
-        - match_variable: RequestHeaderNames
-          selector_match_operator: Equals
-          selector: IPMatch
-          exclusion_managed_rule_sets:
+            scrubbing_rules:
+              - match_variable: RequestHeaderNames
+                selector_match_operator: Equals
+                selector: '*'
+                state: Enabled
+        custom_rules:
+          - action: Block
+            match_conditions:
+              - match_values:
+                  - 10.1.0.0/24
+                  - 10.2.0.0/24
+                match_variables:
+                  - variable_name: RemoteAddr
+                operator: IPMatch
+                negation_conditon: true
+                transforms:
+                  - Uppercase
+                  - Lowercase
+            name: ruledefine01
+            priority: 21
+            rule_type: MatchRule
+            state: Enabled
+          - action: Block
+            group_by_user_session:
+              - group_by_variables:
+                  - variable_name: ClientAddr
+            match_conditions:
+              - match_values:
+                  - 10.1.0.0/24
+                  - 10.2.0.0/24
+                match_variables:
+                  - variable_name: RemoteAddr
+                negation_conditon: false
+                operator: IPMatch
+            name: ruledefine02
+            priority: 22
+            rule_type: RateLimitRule
+            rate_limit_threshold: 100
+            rate_limit_duration: OneMin
+            state: Enabled
+        managed_rules:
+          exclusions:
+            - match_variable: RequestHeaderNames
+              selector_match_operator: Equals
+              selector: IPMatch
+              exclusion_managed_rule_sets:
+                - rule_set_type: Microsoft_DefaultRuleSet
+                  rule_set_version: 2.1
+          managed_rule_sets:
+            - rule_set_type: Microsoft_BotManagerRuleSet
+              rule_set_version: 1.0
             - rule_set_type: Microsoft_DefaultRuleSet
               rule_set_version: 2.1
-      managed_rule_sets:
-        - rule_set_type: Microsoft_BotManagerRuleSet
-          rule_set_version: 1.0
-        - rule_set_type: Microsoft_DefaultRuleSet
-          rule_set_version: 2.1
-    tags:
-      key1: value1
-      key2: value2
-  register: output
+        tags:
+          key1: value1
+          key2: value2
+      register: output
 
-- name: Assert the policy updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the policy updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Get the application gateway facts
-  azure_rm_applicationfirewallpolicy_info:
-    resource_group: "{{ resource_group }}"
-    name: "policy{{ rpfx }}"
-  register: output
+    - name: Get the application gateway facts
+      azure_rm_applicationfirewallpolicy_info:
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
+        name: "policy{{ rpfx }}"
+      register: output
 
-- name: Assert the policy facts
-  ansible.builtin.assert:
-    that:
-      - output.firewall_policy[0].policy_settings.file_upload_limit_in_mb == 66
-      - output.firewall_policy[0].policy_settings.request_body_check is false
-      - output.firewall_policy[0].managed_rules |length == 2
-      - output.firewall_policy[0].custom_rules |length == 2
-      - output.firewall_policy[0].tags |length == 2
+    - name: Assert the policy facts
+      ansible.builtin.assert:
+        that:
+          - output.firewall_policy[0].policy_settings.file_upload_limit_in_mb == 66
+          - output.firewall_policy[0].policy_settings.request_body_check is false
+          - output.firewall_policy[0].managed_rules |length == 2
+          - output.firewall_policy[0].custom_rules |length == 2
+          - output.firewall_policy[0].tags |length == 2
 
-- name: Delete the application firewall policy
-  azure_rm_applicationfirewallpolicy:
-    resource_group: "{{ resource_group }}"
-    name: "policy{{ rpfx }}"
-    state: absent
-  register: output
+    - name: Delete the application firewall policy
+      azure_rm_applicationfirewallpolicy:
+        resource_group: "{{ resource_group }}-applicationfirewallpolicy"
+        name: "policy{{ rpfx }}"
+        state: absent
+      register: output
 
-- name: Assert the policy deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Assert the policy deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-applicationfirewallpolicy"
+        force_delete_nonempty: true
+        state: absent

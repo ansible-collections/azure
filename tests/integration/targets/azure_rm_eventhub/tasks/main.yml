@@ -1,377 +1,393 @@
-- name: Create random event hub and namespace
-  ansible.builtin.set_fact:
-    namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
-    name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+- name: Create a new resource group for event  hub test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-eventhub"
+    location: eastus
 
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
-  register: __rg_info
+- name: For event hub test
+  block:
+    - name: Create random event hub and namespace
+      ansible.builtin.set_fact:
+        namespace_name: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+        name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
-- name: Set location and managed_identity_ids
-  ansible.builtin.set_fact:
-    location: "{{ __rg_info.resourcegroups.0.location }}"
-    managed_identity_ids: []
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-eventhub"
+      register: __rg_info
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'eventhub'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-eventhub"
 
-- name: Create Event Hub Namespace (check mode)
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Basic"
-  check_mode: true
-  register: results
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'eventhub'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
 
-- name: Assert the check mode result
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create Event Hub Namespace (check mode)
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Basic"
+      check_mode: true
+      register: results
 
-- name: Create Event Hub (check mode)
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Basic"
-  check_mode: true
-  register: results
+    - name: Assert the check mode result
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the check mode result
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create Event Hub (check mode)
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Basic"
+      check_mode: true
+      register: results
 
-- name: Create Event Hub Namespace
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Basic"
-  register: results
+    - name: Assert the check mode result
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the event hub namespace created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create Event Hub Namespace
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Basic"
+      register: results
 
-- name: Create Event Hub
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the event hub namespace created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the event hub created
-  ansible.builtin.assert:
-    that: results is changed
+    - name: Create Event Hub
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ resource_group }}-eventhub"
+      register: results
 
-- name: Update Namespace
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-  register: results
+    - name: Assert the event hub created
+      ansible.builtin.assert:
+        that: results is changed
 
-- name: Assert the namespace updated
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update Namespace
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+      register: results
 
-- name: Update Namespace - add SystemAssigned Identity
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-    identity:
-      type: SystemAssigned
-  register: results
+    - name: Assert the namespace updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert the Namespace updated with the SystemAssigned Identity
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update Namespace - add SystemAssigned Identity
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+        identity:
+          type: SystemAssigned
+      register: results
 
-- name: Retrieve Namespace with the SystemAssigned Identity
-  azure_rm_eventhub_info:
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the Namespace updated with the SystemAssigned Identity
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert the facts of the Namespace with the SystemAssigned Identity
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.namespace[0].name == "{{ namespace_name }}"
-      - results.namespace[0].identity.type == 'SystemAssigned'
-      - results.namespace[0].identity.user_assigned_identities is not defined
+    - name: Retrieve Namespace with the SystemAssigned Identity
+      azure_rm_eventhub_info:
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+      register: results
 
-- name: Update Namespace - change to first UserAssigned Identity
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: results
+    - name: Assert the facts of the Namespace with the SystemAssigned Identity
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.namespace[0].name == "{{ namespace_name }}"
+          - results.namespace[0].identity.type == 'SystemAssigned'
+          - results.namespace[0].identity.user_assigned_identities is not defined
 
-- name: Assert the Namespace updated with the first UserAssigned Identity
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update Namespace - change to first UserAssigned Identity
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: results
 
-- name: Retrieve Namespace with the first UserAssigned Identity
-  azure_rm_eventhub_info:
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the Namespace updated with the first UserAssigned Identity
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert the facts of the Namespace with the first UserAssigned Identity
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.namespace[0].name == "{{ namespace_name }}"
-      - results.namespace[0].identity.type == 'UserAssigned'
-      - results.namespace[0].identity.user_assigned_identities | length == 1
-      - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: Retrieve Namespace with the first UserAssigned Identity
+      azure_rm_eventhub_info:
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+      register: results
 
-- name: Update Namespace - replace to second UserAssigned Identity
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-        append: false
-  register: results
+    - name: Assert the facts of the Namespace with the first UserAssigned Identity
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.namespace[0].name == "{{ namespace_name }}"
+          - results.namespace[0].identity.type == 'UserAssigned'
+          - results.namespace[0].identity.user_assigned_identities | length == 1
+          - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: Assert the Namespace updated with the second UserAssigned Identity
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update Namespace - replace to second UserAssigned Identity
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+            append: false
+      register: results
 
-- name: Retrieve Namespace with the second UserAssigned Identity
-  azure_rm_eventhub_info:
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the Namespace updated with the second UserAssigned Identity
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert the facts of the Namespace with the second UserAssigned Identity
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.namespace[0].name == "{{ namespace_name }}"
-      - results.namespace[0].identity.type == 'UserAssigned'
-      - results.namespace[0].identity.user_assigned_identities | length == 1
-      - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Retrieve Namespace with the second UserAssigned Identity
+      azure_rm_eventhub_info:
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+      register: results
 
-- name: Update Namespace - append multiple Identities
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-    identity:
-      type: SystemAssigned, UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: results
+    - name: Assert the facts of the Namespace with the second UserAssigned Identity
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.namespace[0].name == "{{ namespace_name }}"
+          - results.namespace[0].identity.type == 'UserAssigned'
+          - results.namespace[0].identity.user_assigned_identities | length == 1
+          - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Assert the Namespace updated with multiple identities
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Update Namespace - append multiple Identities
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: results
 
-- name: Retrieve Namespace with multiple identities
-  azure_rm_eventhub_info:
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the Namespace updated with multiple identities
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert the facts of the Namespace with multiple identities
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.namespace[0].name == "{{ namespace_name }}"
-      - results.namespace[0].identity.type == 'SystemAssigned, UserAssigned'
-      - results.namespace[0].identity.user_assigned_identities | length == 2
-      - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
-      - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Retrieve Namespace with multiple identities
+      azure_rm_eventhub_info:
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+      register: results
 
-- name: Update Event Hub
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
-    message_retention_in_days: 1
-    state: present
-    tags:
-      test1: modified1
-  register: results
+    - name: Assert the facts of the Namespace with multiple identities
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.namespace[0].name == "{{ namespace_name }}"
+          - results.namespace[0].identity.type == 'SystemAssigned, UserAssigned'
+          - results.namespace[0].identity.user_assigned_identities | length == 2
+          - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+          - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Assert the event hub updated
-  ansible.builtin.assert:
-    that:
-      - results is changed
+    - name: Update Event Hub
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        message_retention_in_days: 1
+        state: present
+        tags:
+          test1: modified1
+      register: results
 
-- name: Test idempotent
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-  register: results
+    - name: Assert the event hub updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
 
-- name: Assert idempotent success
-  ansible.builtin.assert:
-    that:
-      - results is not changed
+    - name: Test idempotent
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+      register: results
 
-# cleanup
-- name: Delete Event Hub
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Assert idempotent success
+      ansible.builtin.assert:
+        that:
+          - results is not changed
 
-- name: Delete Event Hub (idempotent)
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    name: "{{ name_rpfx }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: results
+    # cleanup
+    - name: Delete Event Hub
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        state: absent
 
-- name: Assert the event hub deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Delete Event Hub (idempotent)
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        state: absent
+      register: results
 
-- name: Delete Namespace
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Assert the event hub deleted
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Pause for 1 minutes to check namespace deleted
-  ansible.builtin.pause:
-    minutes: 1
-  changed_when: true
+    - name: Delete Namespace
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        state: absent
 
-- name: Delete Namespace (idempotent)
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
-  register: results
+    - name: Pause for 1 minutes to check namespace deleted
+      ansible.builtin.pause:
+        minutes: 1
+      changed_when: true
 
-- name: Assert the namespace deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Delete Namespace (idempotent)
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        state: absent
+      register: results
 
-- name: Create Namespace - with multiple UserAssigned Identities
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    sku: "Standard"
-    tags:
-      test: modified
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-          - "{{ managed_identity_ids[1] }}"
-  register: results
+    - name: Assert the namespace deleted
+      ansible.builtin.assert:
+        that: results is not changed
 
-- name: Assert the Namespace updated with multiple UserAssigned Identities
-  ansible.builtin.assert:
-    that:
-      - results is changed
-      - results.state.tags.test == 'modified'
+    - name: Create Namespace - with multiple UserAssigned Identities
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        sku: "Standard"
+        tags:
+          test: modified
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+      register: results
 
-- name: Retrieve Namespace with multiple UserAssigned Identities
-  azure_rm_eventhub_info:
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-  register: results
+    - name: Assert the Namespace updated with multiple UserAssigned Identities
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.tags.test == 'modified'
 
-- name: Assert the facts of the Namespace with multiple UserAssigned Identities
-  ansible.builtin.assert:
-    that:
-      - results is not changed
-      - results.namespace[0].name == "{{ namespace_name }}"
-      - results.namespace[0].identity.type == 'UserAssigned'
-      - results.namespace[0].identity.user_assigned_identities | length == 2
-      - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
-      - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Retrieve Namespace with multiple UserAssigned Identities
+      azure_rm_eventhub_info:
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+      register: results
 
-- name: Delete Namespace
-  azure_rm_eventhub:
-    location: "{{ location }}"
-    namespace_name: "{{ namespace_name }}"
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Assert the facts of the Namespace with multiple UserAssigned Identities
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.namespace[0].name == "{{ namespace_name }}"
+          - results.namespace[0].identity.type == 'UserAssigned'
+          - results.namespace[0].identity.user_assigned_identities | length == 2
+          - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+          - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Pause for 1 minutes to check namespace deleted
-  ansible.builtin.pause:
-    minutes: 1
-  changed_when: true
+    - name: Delete Namespace
+      azure_rm_eventhub:
+        location: "{{ location }}"
+        namespace_name: "{{ namespace_name }}"
+        resource_group: "{{ resource_group }}-eventhub"
+        state: absent
 
-- name: Assert the namespace deleted
-  ansible.builtin.assert:
-    that: results is not changed
+    - name: Pause for 1 minutes to check namespace deleted
+      ansible.builtin.pause:
+        minutes: 1
+      changed_when: true
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'eventhub'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Assert the namespace deleted
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'eventhub'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-eventhub"
+        force_delete_nonempty: true
+        state: absent

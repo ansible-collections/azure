@@ -1,432 +1,448 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    cdnprofilename: "cdnprofile{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    endpointname: "endpoint{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-  run_once: true
+- name: Create a new resource group for cdn profile test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-cdnprofile"
+    location: eastus
 
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
-  register: __rg_info
+- name: For cdn profile test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        cdnprofilename: "cdnprofile{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        endpointname: "endpoint{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        new_resource_group: "{{ resource_group }}-cdnprofile"
+      run_once: true
 
-- name: Set location based on resource group
-  ansible.builtin.set_fact:
-    location: "{{ __rg_info.resourcegroups.0.location }}"
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-cdnprofile"
+      register: __rg_info
 
-- name: Create identities array
-  ansible.builtin.set_fact:
-    managed_identity_ids: []
+    - name: Set location based on resource group
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
 
-- name: Create user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'cdnprofile'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'create'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Create identities array
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
 
-- name: Create a CDN profile(check mode)
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    sku: standard_microsoft
-    location: global
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  check_mode: true
-  register: output
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'cdnprofile'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
 
-- name: Check there is no CDN profile created
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Create a CDN profile(check mode)
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        sku: standard_microsoft
+        location: global
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      check_mode: true
+      register: output
 
-- name: Check there is no CDN profile created
-  ansible.builtin.assert:
-    that:
-      - fact.cdnprofiles | length == 0
+    - name: Check there is no CDN profile created
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Create a CDN profile
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    sku: standard_microsoft
-    location: global
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: Check there is no CDN profile created
+      ansible.builtin.assert:
+        that:
+          - fact.cdnprofiles | length == 0
 
-- name: Assert the CDN profile is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.id != ''
+    - name: Create a CDN profile
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        sku: standard_microsoft
+        location: global
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Gather CDN profile facts
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Assert the CDN profile is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id != ''
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - fact.cdnprofiles | length == 1
-      - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
-      - fact.cdnprofiles[0].tags.foo == 'bar'
-      - fact.cdnprofiles[0].identity.type == 'UserAssigned'
-      - fact.cdnprofiles[0].identity.user_assigned_identities | length == 1
-      - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+    - name: Gather CDN profile facts
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Create a CDN profile (idempotent)
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    sku: standard_microsoft
-    location: global
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - fact.cdnprofiles | length == 1
+          - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
+          - fact.cdnprofiles[0].tags.foo == 'bar'
+          - fact.cdnprofiles[0].identity.type == 'UserAssigned'
+          - fact.cdnprofiles[0].identity.user_assigned_identities | length == 1
+          - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a CDN profile (idempotent)
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        sku: standard_microsoft
+        location: global
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Update the CDN profile - replace user identity
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    sku: standard_microsoft
-    location: global
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-      baz: qux
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[1] }}"
-        append: false
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the CDN profile is updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the CDN profile - replace user identity
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        sku: standard_microsoft
+        location: global
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+          baz: qux
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[1] }}"
+            append: false
+      register: output
 
-- name: Gather CDN profile facts
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Assert the CDN profile is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - fact.cdnprofiles | length == 1
-      - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
-      - fact.cdnprofiles[0].tags.foo == 'bar'
-      - fact.cdnprofiles[0].identity.type == 'UserAssigned'
-      - fact.cdnprofiles[0].identity.user_assigned_identities | length == 1
-      - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Gather CDN profile facts
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Update the CDN profile - append user identity
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    sku: standard_microsoft
-    location: global
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-      baz: qux
-    identity:
-      type: UserAssigned
-      user_assigned_identities:
-        id:
-          - "{{ managed_identity_ids[0] }}"
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - fact.cdnprofiles | length == 1
+          - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
+          - fact.cdnprofiles[0].tags.foo == 'bar'
+          - fact.cdnprofiles[0].identity.type == 'UserAssigned'
+          - fact.cdnprofiles[0].identity.user_assigned_identities | length == 1
+          - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Assert the CDN profile is updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the CDN profile - append user identity
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        sku: standard_microsoft
+        location: global
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+          baz: qux
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
 
-- name: Gather CDN profile facts
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Assert the CDN profile is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - fact.cdnprofiles | length == 1
-      - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
-      - fact.cdnprofiles[0].tags.foo == 'bar'
-      - fact.cdnprofiles[0].identity.type == 'UserAssigned'
-      - fact.cdnprofiles[0].identity.user_assigned_identities | length == 2
-      - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
-      - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
+    - name: Gather CDN profile facts
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Update the CDN profile - change to SystemAssigned identity
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    sku: standard_microsoft
-    location: global
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-      baz: qux
-    identity:
-      type: SystemAssigned
-  register: output
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - fact.cdnprofiles | length == 1
+          - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
+          - fact.cdnprofiles[0].tags.foo == 'bar'
+          - fact.cdnprofiles[0].identity.type == 'UserAssigned'
+          - fact.cdnprofiles[0].identity.user_assigned_identities | length == 2
+          - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
+          - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
-- name: Assert the CDN profile is updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the CDN profile - change to SystemAssigned identity
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        sku: standard_microsoft
+        location: global
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+          baz: qux
+        identity:
+          type: SystemAssigned
+      register: output
 
-- name: Gather CDN profile facts
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Assert the CDN profile is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert fact returns the created one
-  ansible.builtin.assert:
-    that:
-      - fact.cdnprofiles | length == 1
-      - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
-      - fact.cdnprofiles[0].tags.foo == 'bar'
-      - fact.cdnprofiles[0].identity.type == 'SystemAssigned'
-      - fact.cdnprofiles[0].identity.user_assigned_identities is not defined
+    - name: Gather CDN profile facts
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Delete the CDN profile(check mode)
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    state: absent
-  check_mode: true
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - fact.cdnprofiles | length == 1
+          - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
+          - fact.cdnprofiles[0].tags.foo == 'bar'
+          - fact.cdnprofiles[0].identity.type == 'SystemAssigned'
+          - fact.cdnprofiles[0].identity.user_assigned_identities is not defined
 
-- name: Gather CDN profile facts
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Delete the CDN profile(check mode)
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        state: absent
+      check_mode: true
 
-- name: Assert the CDN is still there
-  ansible.builtin.assert:
-    that:
-      - "fact.cdnprofiles | length == 1"
-      - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
-      - fact.cdnprofiles[0].tags.foo == 'bar'
-      - fact.cdnprofiles[0].tags.baz == 'qux'
+    - name: Gather CDN profile facts
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Create a Azure CDN endpoint(check mode)
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    origins:
-      - name: "org{{ endpointname }}"
-        host_name: "www.google.com"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-  check_mode: true
+    - name: Assert the CDN is still there
+      ansible.builtin.assert:
+        that:
+          - "fact.cdnprofiles | length == 1"
+          - fact.cdnprofiles[0].sku == 'Standard_Microsoft'
+          - fact.cdnprofiles[0].tags.foo == 'bar'
+          - fact.cdnprofiles[0].tags.baz == 'qux'
 
-- name: Create a Azure CDN endpoint
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    origins:
-      - name: "org{{ endpointname }}"
-        host_name: "www.google.com"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-  register: output
+    - name: Create a Azure CDN endpoint(check mode)
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        origins:
+          - name: "org{{ endpointname }}"
+            host_name: "www.google.com"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+      check_mode: true
 
-- name: Assert the Azure CDN endpoint is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.id
+    - name: Create a Azure CDN endpoint
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        origins:
+          - name: "org{{ endpointname }}"
+            host_name: "www.google.com"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+      register: output
 
-- name: Get facts of a Azure CDN endpoint
-  azure_rm_cdnendpoint_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-  register: facts
+    - name: Assert the Azure CDN endpoint is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id
 
-- name: Assert facts output
-  ansible.builtin.assert:
-    that:
-      - facts['cdnendpoints'] | length == 1
-      - facts['cdnendpoints'][0]['id']
-      - facts['cdnendpoints'][0]['name']
-      - facts['cdnendpoints'][0]['profile_name']
-      - facts['cdnendpoints'][0]['origin']
-      - facts['cdnendpoints'][0]['location']
-      - facts['cdnendpoints'][0]['provisioning_state']
-      - facts['cdnendpoints'][0]['resource_state']
+    - name: Get facts of a Azure CDN endpoint
+      azure_rm_cdnendpoint_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+      register: facts
 
-- name: Create a Azure CDN endpoint(idempotent)
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    origins:
-      - name: "org{{ endpointname }}"
-        host_name: "www.google.com"
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: bar
-  register: output
+    - name: Assert facts output
+      ansible.builtin.assert:
+        that:
+          - facts['cdnendpoints'] | length == 1
+          - facts['cdnendpoints'][0]['id']
+          - facts['cdnendpoints'][0]['name']
+          - facts['cdnendpoints'][0]['profile_name']
+          - facts['cdnendpoints'][0]['origin']
+          - facts['cdnendpoints'][0]['location']
+          - facts['cdnendpoints'][0]['provisioning_state']
+          - facts['cdnendpoints'][0]['resource_state']
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a Azure CDN endpoint(idempotent)
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        origins:
+          - name: "org{{ endpointname }}"
+            host_name: "www.google.com"
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: bar
+      register: output
 
-- name: Stop a Azure CDN endpoint
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    started: false
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert stopped
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Stop a Azure CDN endpoint
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        started: false
+      register: output
 
-- name: Stop a Azure CDN endpoint(idempotent)
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    started: false
-  register: output
+    - name: Assert stopped
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert still stopped and not changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Stop a Azure CDN endpoint(idempotent)
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        started: false
+      register: output
 
-- name: Start a Azure CDN endpoint
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    started: true
-  register: output
+    - name: Assert still stopped and not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert started
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Start a Azure CDN endpoint
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        started: true
+      register: output
 
-- name: Update the Azure CDN endpoint
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    origin_path: /test/
-    tags:
-      testing: testing
-      delete: on-exit
-      foo: baz
-  register: output
+    - name: Assert started
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the Azure CDN endpoint is updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the Azure CDN endpoint
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        origin_path: /test/
+        tags:
+          testing: testing
+          delete: on-exit
+          foo: baz
+      register: output
 
-- name: Delete a Azure CDN endpoint(check mode)
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    state: absent
-  check_mode: true
+    - name: Assert the Azure CDN endpoint is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete a Azure CDN endpoint
-  azure_rm_cdnendpoint:
-    resource_group: "{{ resource_group }}"
-    name: "{{ endpointname }}"
-    profile_name: "{{ cdnprofilename }}"
-    state: absent
+    - name: Delete a Azure CDN endpoint(check mode)
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        state: absent
+      check_mode: true
 
-- name: Delete the CDN profile
-  azure_rm_cdnprofile:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-    state: absent
-  register: output
+    - name: Delete a Azure CDN endpoint
+      azure_rm_cdnendpoint:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ endpointname }}"
+        profile_name: "{{ cdnprofilename }}"
+        state: absent
 
-- name: Assert the CDN profile is well deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the CDN profile
+      azure_rm_cdnprofile:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+        state: absent
+      register: output
 
-- name: Get CDN profile fact
-  azure_rm_cdnprofile_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ cdnprofilename }}"
-  register: fact
+    - name: Assert the CDN profile is well deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert fact returns empty
-  ansible.builtin.assert:
-    that:
-      - "fact.cdnprofiles | length == 0"
+    - name: Get CDN profile fact
+      azure_rm_cdnprofile_info:
+        resource_group: "{{ resource_group }}-cdnprofile"
+        name: "{{ cdnprofilename }}"
+      register: fact
 
-- name: Delete user managed identities
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-  vars:
-    managed_identity_test_unique: 'cdnprofile'
-    managed_identity_unique: "{{ item }}"
-    managed_identity_action: 'delete'
-    managed_identity_location: "{{ location }}"
-  with_items:
-    - '1'
-    - '2'
+    - name: Assert fact returns empty
+      ansible.builtin.assert:
+        that:
+          - "fact.cdnprofiles | length == 0"
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'cdnprofile'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-cdnprofile"
+        force_delete_nonempty: true
+        state: absent

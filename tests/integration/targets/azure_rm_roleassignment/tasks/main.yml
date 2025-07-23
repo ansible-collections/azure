@@ -1,235 +1,248 @@
-- name: Setup basic facts
-  ansible.builtin.set_fact:
-    uuid: "{{ (2**128) | random | to_uuid }}"
-    # Disk Backup Reader, unlikely to be already assigned in ansible-test resource groups.
-    az_role_definition_guid: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24'
+- name: Create a new resource group for role assignment test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-roleassignemnt"
+    location: eastus
 
-- name: List All
-  azure_rm_roleassignment_info:
-  register: az_role_assignments
+- name: For role assignment test
+  block:
+    - name: Setup basic facts
+      ansible.builtin.set_fact:
+        uuid: "{{ (2**128) | random | to_uuid }}"
+        # Disk Backup Reader, unlikely to be already assigned in ansible-test resource groups.
+        az_role_definition_guid: '3e5e47e6-65f7-47ef-90b5-e5dd4d455f24'
 
-- name: Fetch specific assignments
-  azure_rm_roleassignment_info:
-    name: "{{ item.name | default(omit) }}"
-    assignee: "{{ item.assignee | default(omit) }}"
-    id: "{{ item.id | default(omit) }}"
-    role_definition_id: "{{ item.role_definition_id | default(omit) }}"
-    scope: "{{ item.scope | default(omit) }}"
-    strict_scope_match: true
-  register: az_role_assignment_specific
-  loop:
-    - name: "{{ az_role_assignments.roleassignments[0].name }}"
-      scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-    - assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-      scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
-    - id: "{{ az_role_assignments.roleassignments[0].id }}"
+    - name: List All
+      azure_rm_roleassignment_info:
+      register: az_role_assignments
 
-- name: Check specific fetch for single return
-  ansible.builtin.assert:
-    that:
-      - "{{ (item.roleassignments | length) == 1 }}"
-  loop: "{{ az_role_assignment_specific.results }}"
+    - name: Fetch specific assignments
+      azure_rm_roleassignment_info:
+        name: "{{ item.name | default(omit) }}"
+        assignee: "{{ item.assignee | default(omit) }}"
+        id: "{{ item.id | default(omit) }}"
+        role_definition_id: "{{ item.role_definition_id | default(omit) }}"
+        scope: "{{ item.scope | default(omit) }}"
+        strict_scope_match: true
+      register: az_role_assignment_specific
+      loop:
+        - name: "{{ az_role_assignments.roleassignments[0].name }}"
+          scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+        - assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+          scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+          role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
+        - id: "{{ az_role_assignments.roleassignments[0].id }}"
 
-- name: Intentional mutual exclusion info
-  azure_rm_roleassignment_info:
-    name: "{{ item.name | default(omit) }}"
-    assignee: "{{ item.assignee | default(omit) }}"
-    id: "{{ item.id | default(omit) }}"
-    scope: "{{ item.scope | default(omit) }}"
-  register: failures_info
-  ignore_errors: true
-  loop:
-    - name: "{{ az_role_assignments.roleassignments[0].name }}"
-      assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    - assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-      id: "{{ az_role_assignments.roleassignments[0].id }}"
-    - name: "{{ az_role_assignments.roleassignments[0].name }}"
-      id: "{{ az_role_assignments.roleassignments[0].id }}"
+    - name: Check specific fetch for single return
+      ansible.builtin.assert:
+        that:
+          - "{{ (item.roleassignments | length) == 1 }}"
+      loop: "{{ az_role_assignment_specific.results }}"
 
-- name: Check intended failures
-  ansible.builtin.assert:
-    that:
-      - item is failed
-  loop: "{{ failures_info.results }}"
+    - name: Intentional mutual exclusion info
+      azure_rm_roleassignment_info:
+        name: "{{ item.name | default(omit) }}"
+        assignee: "{{ item.assignee | default(omit) }}"
+        id: "{{ item.id | default(omit) }}"
+        scope: "{{ item.scope | default(omit) }}"
+      register: failures_info
+      ignore_errors: true
+      loop:
+        - name: "{{ az_role_assignments.roleassignments[0].name }}"
+          assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        - assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+          id: "{{ az_role_assignments.roleassignments[0].id }}"
+        - name: "{{ az_role_assignments.roleassignments[0].name }}"
+          id: "{{ az_role_assignments.roleassignments[0].id }}"
 
-- name: Intentional failures mutable
-  azure_rm_roleassignment:
-    name: "{{ item.name | default(omit) }}"
-    assignee_object_id: "{{ item.assignee | default(omit) }}"
-    id: "{{ item.id | default(omit) }}"
-    scope: "{{ item.scope | default(omit) }}"
-    role_definition_id: "{{ item.role_definition_id | default(omit) }}"
-    state: "{{ item.state | default(omit) }}"
-  register: failures_mutable
-  ignore_errors: true
-  loop:
-      # mutually exclusive
-    - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      id: "{{ az_role_assignments.roleassignments[0].id }}"
-      # mutually exclusive
-    - name: "{{ az_role_assignments.roleassignments[0].name }}"
-      id: "{{ az_role_assignments.roleassignments[0].id }}"
-      # missing required role_definition_id
-    - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-      state: "present"
-      # missing required assignee_object_id
-    - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
-      state: "present"
-      # missing required role_definition_id
-    - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-      state: "absent"
-      # missing required assignee_object_id
-    - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-      role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
-      state: "absent"
+    - name: Check intended failures
+      ansible.builtin.assert:
+        that:
+          - item is failed
+      loop: "{{ failures_info.results }}"
 
-- name: Check intended failures
-  ansible.builtin.assert:
-    that:
-      - item is failed
-  loop: "{{ failures_mutable.results }} "
+    - name: Intentional failures mutable
+      azure_rm_roleassignment:
+        name: "{{ item.name | default(omit) }}"
+        assignee_object_id: "{{ item.assignee | default(omit) }}"
+        id: "{{ item.id | default(omit) }}"
+        scope: "{{ item.scope | default(omit) }}"
+        role_definition_id: "{{ item.role_definition_id | default(omit) }}"
+        state: "{{ item.state | default(omit) }}"
+      register: failures_mutable
+      ignore_errors: true
+      loop:
+          # mutually exclusive
+        - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+          id: "{{ az_role_assignments.roleassignments[0].id }}"
+          # mutually exclusive
+        - name: "{{ az_role_assignments.roleassignments[0].name }}"
+          id: "{{ az_role_assignments.roleassignments[0].id }}"
+          # missing required role_definition_id
+        - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+          assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+          state: "present"
+          # missing required assignee_object_id
+        - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+          role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
+          state: "present"
+          # missing required role_definition_id
+        - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+          assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+          state: "absent"
+          # missing required assignee_object_id
+        - scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+          role_definition_id: "{{ az_role_assignments.roleassignments[0].role_definition_id }}"
+          state: "absent"
 
-- name: Get resource group info
-  azure_rm_resourcegroup_info:
-    name: "{{ resource_group }}"
-  register: az_resource_group
+    - name: Check intended failures
+      ansible.builtin.assert:
+        that:
+          - item is failed
+      loop: "{{ failures_mutable.results }} "
 
-- name: Create role assignment by id
-  azure_rm_roleassignment:
-    id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/resourceGroups/{{ resource_group | upper }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-  register: az_role_assignment_create
+    - name: Get resource group info
+      azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-roleassignemnt"
+      register: az_resource_group
 
-- name: Create role assignment with name
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    name: "{{ uuid }}"
-  register: az_role_assignment_name_idempotent
+    - name: Create role assignment by id
+      azure_rm_roleassignment:
+        id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/resourceGroups/{{ resource_group | upper }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
+        assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+      register: az_role_assignment_create
 
-- name: Create role assignment by scope
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-  register: az_role_assignment_scope_idempotent
+    - name: Create role assignment with name
+      azure_rm_roleassignment:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+        assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+        name: "{{ uuid }}"
+      register: az_role_assignment_name_idempotent
 
-- name: Check idempotence
-  ansible.builtin.assert:
-    that:
-      - az_role_assignment_name_idempotent is not changed
-      - az_role_assignment_scope_idempotent is not changed
-#
-# - name: List Role Assignments by Name
-#   azure_rm_roleassignment_info:
-#     name: "{{ az_role_assignment_create.name }}"
-#     scope: "{{ az_role_assignment_create.scope }}"
-#   register: az_role_assignment_by_name
+    - name: Create role assignment by scope
+      azure_rm_roleassignment:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+        assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+      register: az_role_assignment_scope_idempotent
 
-- name: List Role Assignments at scope
-  azure_rm_roleassignment_info:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-  register: az_role_assignment_by_scope
+    - name: Check idempotence
+      ansible.builtin.assert:
+        that:
+          - az_role_assignment_name_idempotent is not changed
+          - az_role_assignment_scope_idempotent is not changed
+    #
+    # - name: List Role Assignments by Name
+    #   azure_rm_roleassignment_info:
+    #     name: "{{ az_role_assignment_create.name }}"
+    #     scope: "{{ az_role_assignment_create.scope }}"
+    #   register: az_role_assignment_by_name
 
-- name: List Role Assignments at scope with strict matching
-  azure_rm_roleassignment_info:
-    scope: "{{ az_role_assignments.roleassignments[0].scope }}"
-    strict_scope_match: true
-  register: az_role_assignment_by_scope_strict
+    - name: List Role Assignments at scope
+      azure_rm_roleassignment_info:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+      register: az_role_assignment_by_scope
 
-- name: Check strict scope matching
-  ansible.builtin.assert:
-    that:
-      - item.scope == az_role_assignments.roleassignments[0].scope
-  loop: "{{ az_role_assignment_by_scope_strict.roleassignments }}"
+    - name: List Role Assignments at scope with strict matching
+      azure_rm_roleassignment_info:
+        scope: "{{ az_role_assignments.roleassignments[0].scope }}"
+        strict_scope_match: true
+      register: az_role_assignment_by_scope_strict
 
-# - name: List Role Assignments at id
-#  azure_rm_roleassignment_info:
-#    id: "{{ az_role_assignment_create.id }}"
-#  register: az_role_assignment_by_id
+    - name: Check strict scope matching
+      ansible.builtin.assert:
+        that:
+          - item.scope == az_role_assignments.roleassignments[0].scope
+      loop: "{{ az_role_assignment_by_scope_strict.roleassignments }}"
 
-- name: List Role Assignments by assignee
-  azure_rm_roleassignment_info:
-    assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-  register: az_role_assignment_by_assignee
+    # - name: List Role Assignments at id
+    #  azure_rm_roleassignment_info:
+    #    id: "{{ az_role_assignment_create.id }}"
+    #  register: az_role_assignment_by_id
 
-- name: Delete Role Assignment by id
-  azure_rm_roleassignment:
-    id: "{{ az_role_assignment_create.id }}"
-    state: absent
-  register: az_role_assignment_delete
-  when: az_role_assignment_create is changed
+    - name: List Role Assignments by assignee
+      azure_rm_roleassignment_info:
+        assignee: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+      register: az_role_assignment_by_assignee
 
-- name: Create role assignment with name
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    name: "{{ uuid }}"
-  register: az_role_assignment_create
-  ignore_errors: true
+    - name: Delete Role Assignment by id
+      azure_rm_roleassignment:
+        id: "{{ az_role_assignment_create.id }}"
+        state: absent
+      register: az_role_assignment_delete
+      when: az_role_assignment_create is changed
 
-- name: Delete Role by Name
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    name: "{{ uuid }}"
-    state: absent
-  register: az_role_assignment_delete
-  ignore_errors: true
+    - name: Create role assignment with name
+      azure_rm_roleassignment:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+        assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+        name: "{{ uuid }}"
+      register: az_role_assignment_create
+      ignore_errors: true
 
-- name: Create role assignment by scope
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-  register: az_role_assignment_create_by_scope
-  ignore_errors: true
+    - name: Delete Role by Name
+      azure_rm_roleassignment:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+        name: "{{ uuid }}"
+        state: absent
+      register: az_role_assignment_delete
+      ignore_errors: true
 
-- name: Delete by scope, assignee_object_id and role_definition_id
-  azure_rm_roleassignment:
-    scope: "{{ az_resource_group.resourcegroups[0].id }}"
-    assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
-    role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-    state: absent
-  register: az_role_assignment_delete
-  # when: az_role_assignment_create is changed
-  ignore_errors: true
+    - name: Create role assignment by scope
+      azure_rm_roleassignment:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+        assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+      register: az_role_assignment_create_by_scope
+      ignore_errors: true
 
-- name: Absent assignment that doesn't exist - id
-  azure.azcollection.azure_rm_roleassignment:
-    id: "{{ az_role_assignment_delete.id }}"
-    state: absent
-  register: absent_nochange_id
-  ignore_errors: true
+    - name: Delete by scope, assignee_object_id and role_definition_id
+      azure_rm_roleassignment:
+        scope: "{{ az_resource_group.resourcegroups[0].id }}"
+        assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
+        role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
+        state: absent
+      register: az_role_assignment_delete
+      # when: az_role_assignment_create is changed
+      ignore_errors: true
 
-- name: Absent assignment that doesn't exist - name
-  azure.azcollection.azure_rm_roleassignment:
-    name: "{{ az_role_assignment_delete.name }}"
-    scope: "{{ az_role_assignment_delete.scope }}"
-    state: absent
-  register: absent_nochange_name
-  ignore_errors: true
+    - name: Absent assignment that doesn't exist - id
+      azure.azcollection.azure_rm_roleassignment:
+        id: "{{ az_role_assignment_delete.id }}"
+        state: absent
+      register: absent_nochange_id
+      ignore_errors: true
 
-- name: Absent assignment that doesn't exist - properties
-  azure.azcollection.azure_rm_roleassignment:
-    scope: "{{ az_role_assignment_delete.scope }}"
-    assignee_object_id: "{{ az_role_assignment_delete.assignee_object_id }}"
-    role_definition_id: "{{ az_role_assignment_delete.role_definition_id }}"
-    state: absent
-  register: absent_nochange_properties
-  ignore_errors: true
+    - name: Absent assignment that doesn't exist - name
+      azure.azcollection.azure_rm_roleassignment:
+        name: "{{ az_role_assignment_delete.name }}"
+        scope: "{{ az_role_assignment_delete.scope }}"
+        state: absent
+      register: absent_nochange_name
+      ignore_errors: true
 
-# - name: Check intended failures info
-#   ansible.builtin.assert:
-#     that:
-#       - item is not changed
-#   loop:
-#     - "{{ absent_nochange_properties }}"
-#     - "{{ absent_nochange_id }}"
-#     - "{{ absent_nochange_name }}"
+    - name: Absent assignment that doesn't exist - properties
+      azure.azcollection.azure_rm_roleassignment:
+        scope: "{{ az_role_assignment_delete.scope }}"
+        assignee_object_id: "{{ az_role_assignment_delete.assignee_object_id }}"
+        role_definition_id: "{{ az_role_assignment_delete.role_definition_id }}"
+        state: absent
+      register: absent_nochange_properties
+      ignore_errors: true
+
+    # - name: Check intended failures info
+    #   ansible.builtin.assert:
+    #     that:
+    #       - item is not changed
+    #   loop:
+    #     - "{{ absent_nochange_properties }}"
+    #     - "{{ absent_nochange_id }}"
+    #     - "{{ absent_nochange_name }}"
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-roleassignemnt"
+        force_delete_nonempty: true
+        state: absent

@@ -1,335 +1,354 @@
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    name: My_Virtual_Network
-    address_prefixes_cidr:
-      - 10.1.0.0/16
-      - 172.100.0.0/16
-      - fdda:e69b:1587:495e::/64
-    dns_servers:
-      - 127.0.0.1
-      - 127.0.0.3
-    tags:
-      testing: testing
-      delete: on-exit
-    resource_group: "{{ resource_group }}"
+- name: Create a new resource group for subnet test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-{{ item }}"
+    location: eastus
+  loop:
+    - sub01
+    - sub02
 
-- name: Create route table
-  azure_rm_routetable:
-    name: routetableforsubnet
-    resource_group: "{{ resource_group }}"
-  register: route_table
+- name: For subnet test
+  block:
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        name: My_Virtual_Network
+        address_prefixes_cidr:
+          - 10.1.0.0/16
+          - 172.100.0.0/16
+          - fdda:e69b:1587:495e::/64
+        dns_servers:
+          - 127.0.0.1
+          - 127.0.0.3
+        tags:
+          testing: testing
+          delete: on-exit
+        resource_group: "{{ resource_group }}-sub01"
 
-- name: Remove subnet
-  azure_rm_subnet:
-    state: absent
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
+    - name: Create route table
+      azure_rm_routetable:
+        name: routetableforsubnet
+        resource_group: "{{ resource_group }}-sub01"
+      register: route_table
 
-- name: Catch invalid cidr
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0/24"
-  register: output
-  ignore_errors: true
+    - name: Remove subnet
+      azure_rm_subnet:
+        state: absent
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
 
-- name: Assert created fail
-  ansible.builtin.assert:
-    that: output is failed
+    - name: Catch invalid cidr
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0/24"
+      register: output
+      ignore_errors: true
 
-- name: Add the subnet back
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/24"
-  register: output
+    - name: Assert created fail
+      ansible.builtin.assert:
+        that: output is failed
 
-- name: Assert the subnet created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.address_prefix == "10.1.0.0/24"
+    - name: Add the subnet back
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0.0/24"
+      register: output
 
-- name: Add the subnet back (idempontent)
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-  register: output
+    - name: Assert the subnet created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.address_prefix == "10.1.0.0/24"
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Add the subnet back (idempontent)
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+      register: output
 
-- name: Create network security group
-  azure_rm_securitygroup:
-    name: secgroupfoo
-    resource_group: "{{ resource_group }}"
-    tags:
-      testing: testing
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Update the subnet
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    security_group: secgroupfoo
-    service_endpoints:
-      - service: Microsoft.Sql
-        locations:
-          - eastus
-          - westus
+    - name: Create network security group
+      azure_rm_securitygroup:
+        name: secgroupfoo
+        resource_group: "{{ resource_group }}-sub01"
+        tags:
+          testing: testing
 
-- name: Should be idempotent
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    service_endpoints:
-      - service: Microsoft.Sql
-        locations:
-          - eastus
-          - westus
-  register: output
+    - name: Update the subnet
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0.0/16"
+        security_group: secgroupfoo
+        service_endpoints:
+          - service: Microsoft.Sql
+            locations:
+              - eastus
+              - westus
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Should be idempotent
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0.0/16"
+        service_endpoints:
+          - service: Microsoft.Sql
+            locations:
+              - eastus
+              - westus
+      register: output
 
-- name: Able to completely remove service endpoints
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    service_endpoints: []
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert the subnet updated
-  ansible.builtin.assert:
-    that: output.state.service_endpoints is not defined
+    - name: Able to completely remove service endpoints
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0.0/16"
+        service_endpoints: []
+      register: output
 
-- name: Create network security group in another resource group
-  azure_rm_securitygroup:
-    name: secgroupfoo
-    resource_group: "{{ resource_group_secondary }}"
-  register: nsg
+    - name: Assert the subnet updated
+      ansible.builtin.assert:
+        that: output.state.service_endpoints is not defined
 
-- name: Update the subnet
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    route_table: "{{ route_table.id }}"
-    security_group:
-      name: secgroupfoo
-      resource_group: "{{ resource_group_secondary }}"
-  register: output
+    - name: Create network security group in another resource group
+      azure_rm_securitygroup:
+        name: secgroupfoo
+        resource_group: "{{ resource_group }}-sub02"
+      register: nsg
 
-- name: Assert the subnet update
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - output.state.network_security_group.id == nsg.state.id
+    - name: Update the subnet
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0.0/16"
+        route_table: "{{ route_table.id }}"
+        security_group:
+          name: secgroupfoo
+          resource_group: "{{ resource_group }}-sub02"
+      register: output
 
-- name: Update the subnet (idempotent)
-  azure_rm_subnet:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefix_cidr: "10.1.0.0/16"
-    route_table: "{{ route_table.id }}"
-    security_group: "{{ nsg.state.id }}"
-  register: output
+    - name: Assert the subnet update
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.network_security_group.id == nsg.state.id
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Update the subnet (idempotent)
+      azure_rm_subnet:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.1.0.0/16"
+        route_table: "{{ route_table.id }}"
+        security_group: "{{ nsg.state.id }}"
+      register: output
 
-- name: Create subnet with IPv4 and IPv6
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefixes_cidr:
-      - "172.100.0.0/16"
-      - "fdda:e69b:1587:495e::/64"
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert the subnet created
-  ansible.builtin.assert:
-    that:
-      - output is changed
-      - not output.state.address_prefix
-      - output.state.address_prefixes | length > 0
+    - name: Create subnet with IPv4 and IPv6
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefixes_cidr:
+          - "172.100.0.0/16"
+          - "fdda:e69b:1587:495e::/64"
+      register: output
 
-- name: Update the subnet to IPv4 and IPv6 (idempotent)
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefixes_cidr:
-      - "172.100.0.0/16"
-      - "fdda:e69b:1587:495e::/64"
-  register: output
+    - name: Assert the subnet created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - not output.state.address_prefix
+          - output.state.address_prefixes | length > 0
 
-- name: Assert the subnet updated
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Update the subnet to IPv4 and IPv6 (idempotent)
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefixes_cidr:
+          - "172.100.0.0/16"
+          - "fdda:e69b:1587:495e::/64"
+      register: output
 
-- name: Update the subnet's IPv4 and IPv6 address
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    address_prefixes_cidr:
-      - "172.100.0.0/24"
-      - "fdda:e69b:1587:495e::/64"
-    security_group: "{{ nsg.state.id }}"
-  register: output
+    - name: Assert the subnet updated
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert the subnet update
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Update the subnet's IPv4 and IPv6 address
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefixes_cidr:
+          - "172.100.0.0/24"
+          - "fdda:e69b:1587:495e::/64"
+        security_group: "{{ nsg.state.id }}"
+      register: output
 
-- name: Update the subnet with network policies
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    private_link_service_network_policies: Disabled
-    private_endpoint_network_policies: Enabled
-  register: output
+    - name: Assert the subnet update
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the subnet updated
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Update the subnet with network policies
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        private_link_service_network_policies: Disabled
+        private_endpoint_network_policies: Enabled
+      register: output
 
-- name: The subnet with network policies should be idempotent
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    private_link_service_network_policies: Disabled
-    private_endpoint_network_policies: Enabled
-  register: output
+    - name: Assert the subnet updated
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: The subnet with network policies should be idempotent
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        private_link_service_network_policies: Disabled
+        private_endpoint_network_policies: Enabled
+      register: output
 
-- name: Update the subnet with delegations
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    delegations:
-      - name: 'mydeleg'
-        serviceName: 'Microsoft.ContainerInstance/containerGroups'
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert the subnet updated
-  ansible.builtin.assert:
-    that: output is changed
+    - name: Update the subnet with delegations
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        delegations:
+          - name: 'mydeleg'
+            serviceName: 'Microsoft.ContainerInstance/containerGroups'
+      register: output
 
-- name: The subnet with delegations should be idempotent
-  azure_rm_subnet:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    delegations:
-      - name: 'mydeleg'
-        serviceName: 'Microsoft.ContainerInstance/containerGroups'
-  register: output
+    - name: Assert the subnet updated
+      ansible.builtin.assert:
+        that: output is changed
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: The subnet with delegations should be idempotent
+      azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        delegations:
+          - name: 'mydeleg'
+            serviceName: 'Microsoft.ContainerInstance/containerGroups'
+      register: output
 
-- name: Get subnet facts
-  azure_rm_subnet_info:
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-  register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.subnets[0]['id'] != None
-      - output.subnets[0]['resource_group'] != None
-      - output.subnets[0]['virtual_network_name'] != None
-      - output.subnets[0]['name'] != None
-      - not output.subnets[0]['address_prefix_cidr']
-      - output.subnets[0]['address_prefixes_cidr'] != None
-      - output.subnets[0]['security_group'] != None
-      - output.subnets[0]['provisioning_state'] != None
-      - output.subnets[0]['private_endpoint_network_policies'] != None
-      - output.subnets[0]['private_link_service_network_policies'] != None
-      - output.subnets[0]['delegations'] != None
+    - name: Get subnet facts
+      azure_rm_subnet_info:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+      register: output
 
-- name: Get subnet facts
-  azure_rm_subnet_info:
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-  register: output
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.subnets[0]['id'] != None
+          - output.subnets[0]['resource_group'] != None
+          - output.subnets[0]['virtual_network_name'] != None
+          - output.subnets[0]['name'] != None
+          - not output.subnets[0]['address_prefix_cidr']
+          - output.subnets[0]['address_prefixes_cidr'] != None
+          - output.subnets[0]['security_group'] != None
+          - output.subnets[0]['provisioning_state'] != None
+          - output.subnets[0]['private_endpoint_network_policies'] != None
+          - output.subnets[0]['private_link_service_network_policies'] != None
+          - output.subnets[0]['delegations'] != None
 
-- name: Assert that facts are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.subnets[0]['id'] != None
-      - output.subnets[0]['resource_group'] != None
-      - output.subnets[0]['virtual_network_name'] != None
-      - output.subnets[0]['name'] != None
-      - output.subnets[0]['route_table'] != None
-      - output.subnets[0]['address_prefix_cidr'] != None
-      - output.subnets[0]['security_group'] != None
-      - output.subnets[0]['provisioning_state'] != None
+    - name: Get subnet facts
+      azure_rm_subnet_info:
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+      register: output
 
-- name: Remove subnet
-  azure_rm_subnet:
-    state: absent
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
+    - name: Assert that facts are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.subnets[0]['id'] != None
+          - output.subnets[0]['resource_group'] != None
+          - output.subnets[0]['virtual_network_name'] != None
+          - output.subnets[0]['name'] != None
+          - output.subnets[0]['route_table'] != None
+          - output.subnets[0]['address_prefix_cidr'] != None
+          - output.subnets[0]['security_group'] != None
+          - output.subnets[0]['provisioning_state'] != None
 
-- name: Remove subnet (idempotent)
-  azure_rm_subnet:
-    state: absent
-    name: foobar
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-  register: output
+    - name: Remove subnet
+      azure_rm_subnet:
+        state: absent
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
 
-- name: Assert idempotent
-  ansible.builtin.assert:
-    that: output is not changed
+    - name: Remove subnet (idempotent)
+      azure_rm_subnet:
+        state: absent
+        name: foobar
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+      register: output
 
-- name: Remove subnet
-  azure_rm_subnet:
-    state: absent
-    name: foobar01
-    virtual_network_name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
 
-- name: Remove security group
-  azure_rm_securitygroup:
-    resource_group: "{{ resource_group }}"
-    name: secgroupfoo
-    state: absent
+    - name: Remove subnet
+      azure_rm_subnet:
+        state: absent
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
 
-- name: Remove virtual network
-  azure_rm_virtualnetwork:
-    name: My_Virtual_Network
-    resource_group: "{{ resource_group }}"
-    state: absent
+    - name: Remove security group
+      azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}-sub01"
+        name: secgroupfoo
+        state: absent
+
+    - name: Remove virtual network
+      azure_rm_virtualnetwork:
+        name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-{{ item }}"
+        force_delete_nonempty: true
+        state: absent
+      loop:
+        - sub01
+        - sub02

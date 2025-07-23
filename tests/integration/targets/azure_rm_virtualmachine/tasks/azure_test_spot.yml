@@ -3,7 +3,7 @@
 
 - name: Create minimal VM with Spot Instance default values
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     priority: Spot
     eviction_policy: Deallocate
@@ -32,14 +32,14 @@
 
 - name: Delete VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_A1_v2
 
 - name: Create minimal VM with custom Spot Instance values
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     priority: Spot
     eviction_policy: Delete
@@ -69,20 +69,20 @@
 
 - name: Delete VM
   azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
     vm_size: Standard_A1_v2
 
 - name: Destroy subnet
   azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
     state: absent

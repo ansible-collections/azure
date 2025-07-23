@@ -1,73 +1,86 @@
-- name: Create random dns label
-  ansible.builtin.set_fact:
-    dns_label: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
-    password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+- name: Create a new resource group for deployment test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-deployment"
+    location: eastus
 
-- name: Error Create Azure Deploy
-  azure_rm_deployment:
-    resource_group: "{{ resource_group }}"
-    location: "eastus"
-    template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
-    deployment_name: "{{ dns_label }}"
-    parameters:
-      adminUsername:
-        value: chouseknecht
-      adminPassword:
-        value: "{{ password }}"
-      dnsLabelPrefix:
-        value: "{{ dns_label }}"
-      ubuntuOSVersion:
-        value: "Never-LTS"
-  register: output
-  ignore_errors: true
+- name: For deployment test
+  block:
+    - name: Create random dns label
+      ansible.builtin.set_fact:
+        dns_label: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+        password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
 
-- name: Create Azure Deploy
-  azure_rm_deployment:
-    resource_group: "{{ resource_group }}"
-    location: "eastus"
-    template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
-    deployment_name: "{{ dns_label }}"
-    parameters:
-      adminUsername:
-        value: chouseknecht
-      adminPassword:
-        value: "{{ password }}"
-      dnsLabelPrefix:
-        value: "{{ dns_label }}"
-      ubuntuOSVersion:
-        value: "16.04.0-LTS"
-  register: output
+    - name: Error Create Azure Deploy
+      azure_rm_deployment:
+        resource_group: "{{ resource_group }}-deployment"
+        location: "eastus"
+        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
+        deployment_name: "{{ dns_label }}"
+        parameters:
+          adminUsername:
+            value: chouseknecht
+          adminPassword:
+            value: "{{ password }}"
+          dnsLabelPrefix:
+            value: "{{ dns_label }}"
+          ubuntuOSVersion:
+            value: "Never-LTS"
+      register: output
+      ignore_errors: true
 
-- name: Add new instance to host group
-  ansible.builtin.add_host:
-    hostname: "{{ item.vm_name }}"
-    ansible_host: "{{ item['ips'][0].public_ip }}"
-    ansible_user: chouseknecht
-    ansible_ssh_pass: "{{ password }}"
-    groupname: azure_vms
-  with_items: "{{ output.deployment.instances }}"
+    - name: Create Azure Deploy
+      azure_rm_deployment:
+        resource_group: "{{ resource_group }}-deployment"
+        location: "eastus"
+        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
+        deployment_name: "{{ dns_label }}"
+        parameters:
+          adminUsername:
+            value: chouseknecht
+          adminPassword:
+            value: "{{ password }}"
+          dnsLabelPrefix:
+            value: "{{ dns_label }}"
+          ubuntuOSVersion:
+            value: "16.04.0-LTS"
+      register: output
 
-- name: Get Deployment Facts for Resource Group
-  azure_rm_deployment_info:
-    resource_group: "{{ resource_group }}"
-  register: output
-- name: Print the deployment facts
-  ansible.builtin.debug:
-    var: output
+    - name: Add new instance to host group
+      ansible.builtin.add_host:
+        hostname: "{{ item.vm_name }}"
+        ansible_host: "{{ item['ips'][0].public_ip }}"
+        ansible_user: chouseknecht
+        ansible_ssh_pass: "{{ password }}"
+        groupname: azure_vms
+      with_items: "{{ output.deployment.instances }}"
 
-- name: Get Deployment Facts for named deployment
-  azure_rm_deployment_info:
-    resource_group: "{{ resource_group }}"
-    name: "{{ dns_label }}"
-  register: output
-- name: Print the deployment facts
-  ansible.builtin.debug:
-    var: output
+    - name: Get Deployment Facts for Resource Group
+      azure_rm_deployment_info:
+        resource_group: "{{ resource_group }}-deployment"
+      register: output
+    - name: Print the deployment facts
+      ansible.builtin.debug:
+        var: output
 
-- name: Assert that values are returned
-  ansible.builtin.assert:
-    that:
-      - output is not changed
-      - output.deployments[0]['provisioning_state'] != None
-      - output.deployments[0]['output_resources'] | length > 0
-      - output.deployments[0]['outputs'] | length > 0
+    - name: Get Deployment Facts for named deployment
+      azure_rm_deployment_info:
+        resource_group: "{{ resource_group }}-deployment"
+        name: "{{ dns_label }}"
+      register: output
+    - name: Print the deployment facts
+      ansible.builtin.debug:
+        var: output
+
+    - name: Assert that values are returned
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+          - output.deployments[0]['provisioning_state'] != None
+          - output.deployments[0]['output_resources'] | length > 0
+          - output.deployments[0]['outputs'] | length > 0
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-deployment"
+        force_delete_nonempty: true
+        state: absent

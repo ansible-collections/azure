@@ -1,152 +1,165 @@
-- name: Prepare random number
-  ansible.builtin.set_fact:
-    natrulename: "nat{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-    pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+- name: Create a new resource group for virtual network gateway natrule test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-vnetgwnatrule"
+    location: eastus
 
-- name: Create virtual network
-  azure_rm_virtualnetwork:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vnetname }}"
-    address_prefixes: "10.0.0.0/16"
+- name: For virtual network gateway natrule test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        natrulename: "nat{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        vnetname: "vnet{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        vngname: "vng{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
-- name: Add subnet
-  azure_rm_subnet:
-    resource_group: "{{ resource_group }}"
-    name: GatewaySubnet
-    address_prefix: "10.0.2.0/24"
-    virtual_network: "{{ vnetname }}"
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        name: "{{ vnetname }}"
+        address_prefixes: "10.0.0.0/16"
 
-- name: Create public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    allocation_method: Static
-    sku: standard
-    name: "{{ pubipname }}"
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        name: GatewaySubnet
+        address_prefix: "10.0.2.0/24"
+        virtual_network: "{{ vnetname }}"
 
-- name: Create a virtual network gateway
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}"
-    sku: VpnGw2
-    vpn_gateway_generation: Generation2
-    ip_configurations:
-      - name: testipconfig
-        private_ip_allocation_method: Dynamic
-        public_ip_address_name: "{{ pubipname }}"
-    virtual_network: "{{ vnetname }}"
+    - name: Create public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        allocation_method: Static
+        sku: standard
+        name: "{{ pubipname }}"
 
-- name: Create a virtual netowrk nat rule(check_mode test)
-  azure_rm_virtualnetworkgatewaynatrule:
-    resource_group: "{{ resource_group }}"
-    virtual_network_gateway_name: "{{ vngname }}"
-    name: "{{ natrulename }}"
-    type_properties_type: Static
-    mode: EgressSnat
-    internal_mappings:
-      - 10.1.0.0/24
-    external_mappings:
-      - 192.168.1.0/24
-  check_mode: true
+    - name: Create a virtual network gateway
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        name: "{{ vngname }}"
+        sku: VpnGw2
+        vpn_gateway_generation: Generation2
+        ip_configurations:
+          - name: testipconfig
+            private_ip_allocation_method: Dynamic
+            public_ip_address_name: "{{ pubipname }}"
+        virtual_network: "{{ vnetname }}"
 
-- name: Create a virtual netowrk nat rule
-  azure_rm_virtualnetworkgatewaynatrule:
-    resource_group: "{{ resource_group }}"
-    virtual_network_gateway_name: "{{ vngname }}"
-    name: "{{ natrulename }}"
-    type_properties_type: Static
-    mode: EgressSnat
-    internal_mappings:
-      - 10.1.0.0/24
-    external_mappings:
-      - 192.168.1.0/24
-  register: output
+    - name: Create a virtual netowrk nat rule(check_mode test)
+      azure_rm_virtualnetworkgatewaynatrule:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        virtual_network_gateway_name: "{{ vngname }}"
+        name: "{{ natrulename }}"
+        type_properties_type: Static
+        mode: EgressSnat
+        internal_mappings:
+          - 10.1.0.0/24
+        external_mappings:
+          - 192.168.1.0/24
+      check_mode: true
 
-- name: Assert the virtual network nat rule is well created
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a virtual netowrk nat rule
+      azure_rm_virtualnetworkgatewaynatrule:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        virtual_network_gateway_name: "{{ vngname }}"
+        name: "{{ natrulename }}"
+        type_properties_type: Static
+        mode: EgressSnat
+        internal_mappings:
+          - 10.1.0.0/24
+        external_mappings:
+          - 192.168.1.0/24
+      register: output
 
-- name: Create a virtual netowrk nat rule(Idempotent test)
-  azure_rm_virtualnetworkgatewaynatrule:
-    resource_group: "{{ resource_group }}"
-    virtual_network_gateway_name: "{{ vngname }}"
-    name: "{{ natrulename }}"
-    type_properties_type: Static
-    mode: EgressSnat
-    internal_mappings:
-      - 10.1.0.0/24
-    external_mappings:
-      - 192.168.1.0/24
-  register: output
+    - name: Assert the virtual network nat rule is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the virtual network nat rule no changed
-  ansible.builtin.assert:
-    that:
-      - output is not changed
+    - name: Create a virtual netowrk nat rule(Idempotent test)
+      azure_rm_virtualnetworkgatewaynatrule:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        virtual_network_gateway_name: "{{ vngname }}"
+        name: "{{ natrulename }}"
+        type_properties_type: Static
+        mode: EgressSnat
+        internal_mappings:
+          - 10.1.0.0/24
+        external_mappings:
+          - 192.168.1.0/24
+      register: output
 
-- name: Create a new virtual netowrk nat rule (Update test)
-  azure_rm_virtualnetworkgatewaynatrule:
-    resource_group: "{{ resource_group }}"
-    virtual_network_gateway_name: "{{ vngname }}"
-    name: "{{ natrulename }}"
-    type_properties_type: Static
-    mode: EgressSnat
-    internal_mappings:
-      - 10.3.0.0/24
-    external_mappings:
-      - 192.168.2.0/24
-  register: output
+    - name: Assert the virtual network nat rule no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
-- name: Assert the virtual network nat rule is well Updated
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Create a new virtual netowrk nat rule (Update test)
+      azure_rm_virtualnetworkgatewaynatrule:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        virtual_network_gateway_name: "{{ vngname }}"
+        name: "{{ natrulename }}"
+        type_properties_type: Static
+        mode: EgressSnat
+        internal_mappings:
+          - 10.3.0.0/24
+        external_mappings:
+          - 192.168.2.0/24
+      register: output
 
-- name: Get the virtual netowrk nat rule facts
-  azure_rm_virtualnetworkgatewaynatrule_info:
-    resource_group: "{{ resource_group }}"
-    virtual_network_gateway_name: "{{ vngname }}"
-    name: "{{ natrulename }}"
-  register: output
+    - name: Assert the virtual network nat rule is well Updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Assert the virtual network nat rule facts
-  ansible.builtin.assert:
-    that:
-      - output.state[0].mode == 'EgressSnat'
-      - output.state[0].internal_mappings == ["10.3.0.0/24"]
-      - output.state[0].external_mappings == ["192.168.2.0/24"]
+    - name: Get the virtual netowrk nat rule facts
+      azure_rm_virtualnetworkgatewaynatrule_info:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        virtual_network_gateway_name: "{{ vngname }}"
+        name: "{{ natrulename }}"
+      register: output
 
-- name: Delete the virtual netowrk nat rule
-  azure_rm_virtualnetworkgatewaynatrule:
-    resource_group: "{{ resource_group }}"
-    virtual_network_gateway_name: "{{ vngname }}"
-    name: "{{ natrulename }}"
-    state: absent
-  register: output
+    - name: Assert the virtual network nat rule facts
+      ansible.builtin.assert:
+        that:
+          - output.state[0].mode == 'EgressSnat'
+          - output.state[0].internal_mappings == ["10.3.0.0/24"]
+          - output.state[0].external_mappings == ["192.168.2.0/24"]
 
-- name: Assert the virtual network nat rule deleted
-  ansible.builtin.assert:
-    that:
-      - output is changed
+    - name: Delete the virtual netowrk nat rule
+      azure_rm_virtualnetworkgatewaynatrule:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        virtual_network_gateway_name: "{{ vngname }}"
+        name: "{{ natrulename }}"
+        state: absent
+      register: output
 
-- name: Pause for 5 mimutes to delete the virtual network gateway
-  ansible.builtin.command: sleep 300
-  changed_when: true
+    - name: Assert the virtual network nat rule deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
-- name: Delete the virtual network gateway
-  azure_rm_virtualnetworkgateway:
-    resource_group: "{{ resource_group }}"
-    name: "{{ vngname }}"
-    state: absent
+    - name: Pause for 5 mimutes to delete the virtual network gateway
+      ansible.builtin.command: sleep 300
+      changed_when: true
 
-- name: Pause for 5 mimutes to delete the virtual network connection
-  ansible.builtin.command: sleep 300
-  changed_when: true
+    - name: Delete the virtual network gateway
+      azure_rm_virtualnetworkgateway:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        name: "{{ vngname }}"
+        state: absent
 
-- name: Delete the public IP address
-  azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}"
-    name: "{{ pubipname }}"
-    state: absent
+    - name: Pause for 5 mimutes to delete the virtual network connection
+      ansible.builtin.command: sleep 300
+      changed_when: true
+
+    - name: Delete the public IP address
+      azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vnetgwnatrule"
+        name: "{{ pubipname }}"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-vnetgwnatrule"
+        force_delete_nonempty: true
+        state: absent

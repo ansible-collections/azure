@@ -1,126 +1,139 @@
-- name: Set storage account name
-  ansible.builtin.set_fact:
-    storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+- name: Create a new resource group for storage share test
+  azure_rm_resourcegroup:
+    name: "{{ resource_group }}-storageshare"
+    location: eastus
 
-- name: Create storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}"
-    account_type: Standard_LRS
-    kind: StorageV2
+- name: For storage share test
+  block:
+    - name: Set storage account name
+      ansible.builtin.set_fact:
+        storage_account: "sb{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
-- name: Set storage share facts
-  ansible.builtin.set_fact:
-    share_name: testshare
-    quota: 32
-    access_tier: Cool
-    metadata:
-      source: ansible
-      purpose: test
+    - name: Create storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageshare"
+        name: "{{ storage_account }}"
+        account_type: Standard_LRS
+        kind: StorageV2
 
-- name: Create share
-  azure_rm_storageshare:
-    name: "{{ share_name }}"
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    quota: "{{ quota }}"
-    metadata: "{{ metadata }}"
-    access_tier: "{{ access_tier }}"
-  register: create_result
+    - name: Set storage share facts
+      ansible.builtin.set_fact:
+        share_name: testshare
+        quota: 32
+        access_tier: Cool
+        metadata:
+          source: ansible
+          purpose: test
 
-- name: Assert create success
-  ansible.builtin.assert:
-    that:
-      - create_result is changed
-      - create_result.state.name == share_name
-      - create_result.state.share_quota == quota
-      - create_result.state.metadata.source == metadata.source
-      - create_result.state.metadata.purpose == metadata.purpose
-      - create_result.state.access_tier == access_tier
-      - create_result.state.id is defined
-      - create_result.state.etag is defined
+    - name: Create share
+      azure_rm_storageshare:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storageshare"
+        account_name: "{{ storage_account }}"
+        quota: "{{ quota }}"
+        metadata: "{{ metadata }}"
+        access_tier: "{{ access_tier }}"
+      register: create_result
 
-- name: Run again to check idempotence
-  azure_rm_storageshare:
-    name: "{{ share_name }}"
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-  register: create_result
+    - name: Assert create success
+      ansible.builtin.assert:
+        that:
+          - create_result is changed
+          - create_result.state.name == share_name
+          - create_result.state.share_quota == quota
+          - create_result.state.metadata.source == metadata.source
+          - create_result.state.metadata.purpose == metadata.purpose
+          - create_result.state.access_tier == access_tier
+          - create_result.state.id is defined
+          - create_result.state.etag is defined
 
-- name: Assert idempotence
-  ansible.builtin.assert:
-    that: create_result is not changed
+    - name: Run again to check idempotence
+      azure_rm_storageshare:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storageshare"
+        account_name: "{{ storage_account }}"
+      register: create_result
 
-- name: Get share details
-  azure_rm_storageshare_info:
-    name: "{{ share_name }}"
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-  register: share_facts
+    - name: Assert idempotence
+      ansible.builtin.assert:
+        that: create_result is not changed
 
-- name: Assert storage share details
-  ansible.builtin.assert:
-    that:
-      - share_facts is not changed
-      - share_facts.storageshares.name == share_name
-      - share_facts.storageshares.share_quota == quota
-      - share_facts.storageshares.metadata.source == metadata.source
-      - share_facts.storageshares.metadata.purpose == metadata.purpose
-      - share_facts.storageshares.access_tier == access_tier
-      - share_facts.storageshares.id is defined
-      - share_facts.storageshares.etag is defined
+    - name: Get share details
+      azure_rm_storageshare_info:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storageshare"
+        account_name: "{{ storage_account }}"
+      register: share_facts
 
-- name: Set new storage share facts
-  ansible.builtin.set_fact:
-    quota: 64
-    access_tier: Hot
+    - name: Assert storage share details
+      ansible.builtin.assert:
+        that:
+          - share_facts is not changed
+          - share_facts.storageshares.name == share_name
+          - share_facts.storageshares.share_quota == quota
+          - share_facts.storageshares.metadata.source == metadata.source
+          - share_facts.storageshares.metadata.purpose == metadata.purpose
+          - share_facts.storageshares.access_tier == access_tier
+          - share_facts.storageshares.id is defined
+          - share_facts.storageshares.etag is defined
 
-- name: Update share
-  azure_rm_storageshare:
-    name: "{{ share_name }}"
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    quota: "{{ quota }}"
-    access_tier: "{{ access_tier }}"
-  register: update_result
+    - name: Set new storage share facts
+      ansible.builtin.set_fact:
+        quota: 64
+        access_tier: Hot
 
-- name: Assert share update success
-  ansible.builtin.assert:
-    that: update_result is changed
+    - name: Update share
+      azure_rm_storageshare:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storageshare"
+        account_name: "{{ storage_account }}"
+        quota: "{{ quota }}"
+        access_tier: "{{ access_tier }}"
+      register: update_result
 
-- name: Get updated details
-  azure_rm_storageshare_info:
-    name: "{{ share_name }}"
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-  register: share_facts
+    - name: Assert share update success
+      ansible.builtin.assert:
+        that: update_result is changed
 
-- name: Assert storage share details
-  ansible.builtin.assert:
-    that:
-      - share_facts.storageshares.name == share_name
-      - share_facts.storageshares.share_quota == quota
-      - share_facts.storageshares.metadata.source== metadata.source
-      - share_facts.storageshares.metadata.purpose == metadata.purpose
-      - share_facts.storageshares.access_tier == access_tier
-      - share_facts.storageshares.id is defined
-      - share_facts.storageshares.etag is defined
+    - name: Get updated details
+      azure_rm_storageshare_info:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storageshare"
+        account_name: "{{ storage_account }}"
+      register: share_facts
 
-- name: Delete share
-  azure_rm_storageshare:
-    name: "{{ share_name }}"
-    resource_group: "{{ resource_group }}"
-    account_name: "{{ storage_account }}"
-    state: absent
-  register: delete_output
+    - name: Assert storage share details
+      ansible.builtin.assert:
+        that:
+          - share_facts.storageshares.name == share_name
+          - share_facts.storageshares.share_quota == quota
+          - share_facts.storageshares.metadata.source== metadata.source
+          - share_facts.storageshares.metadata.purpose == metadata.purpose
+          - share_facts.storageshares.access_tier == access_tier
+          - share_facts.storageshares.id is defined
+          - share_facts.storageshares.etag is defined
 
-- name: Pause for 3 minutes to waiting delete
-  ansible.builtin.pause:
-    minutes: 3
-  changed_when: true
+    - name: Delete share
+      azure_rm_storageshare:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storageshare"
+        account_name: "{{ storage_account }}"
+        state: absent
+      register: delete_output
 
-- name: Delete storage account
-  azure_rm_storageaccount:
-    resource_group: "{{ resource_group }}"
-    name: "{{ storage_account }}"
-    state: absent
+    - name: Pause for 3 minutes to waiting delete
+      ansible.builtin.pause:
+        minutes: 3
+      changed_when: true
+
+    - name: Delete storage account
+      azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageshare"
+        name: "{{ storage_account }}"
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}-storageshare"
+        force_delete_nonempty: true
+        state: absent
