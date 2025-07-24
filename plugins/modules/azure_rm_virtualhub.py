@@ -743,6 +743,8 @@ class AzureRMVirtualHub(AzureRMModuleBaseExt):
         try:
             response = self.network_client.virtual_hubs.begin_delete(resource_group_name=self.resource_group,
                                                                      virtual_hub_name=self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the VirtualHub instance.')
             self.fail('Error deleting the VirtualHub instance: {0}'.format(str(e)))
