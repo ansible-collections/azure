@@ -53,7 +53,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-scope_maps:
+registry_scope_maps:
     description:
         - A list of dictionaries containing facts for scope map.
     returned: always

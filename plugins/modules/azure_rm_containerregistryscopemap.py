@@ -74,7 +74,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-map_scope:
+scope_map:
     description:
         - A list of dictionaries containing facts for scope map.
     returned: always
@@ -268,7 +268,7 @@ class AzureRMContainerRegistryScopeMap(AzureRMModuleBaseExt):
             self.log("Could not get facts for Registry Scope Map: {0}".format(str(e)))
             return None
 
-        return response.as_dict()
+        return self.format_item(response)
 
     def create(self, body):
         try:
