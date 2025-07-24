@@ -343,6 +343,34 @@
           - output.registry_tokens[0].scope_map_id == secondary_output.scope_map.id
           - output.registry_tokens[0].status == 'disabled'
 
+    - name: The container registry token generate password1
+      azure_rm_containerregistrytokenpassword:
+        registry_name: "acr{{ rpfx }}"
+        resource_group: "{{ resource_group }}-containerregistry"
+        name: password1
+        token_id: "{{ output.registry_tokens[0].id }}"
+      register: output
+
+    - name: Assert the container registry token password1 created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.passwords |length == 1
+          - output.passwords[0].name == 'password1'
+
+    - name: The container registry token re-generate password1 and password2
+      azure_rm_containerregistrytokenpassword:
+        registry_name: "acr{{ rpfx }}"
+        resource_group: "{{ resource_group }}-containerregistry"
+        token_id: "{{ output.registry_tokens[0].id }}"
+      register: output
+
+    - name: Assert the container registry token password1 and password2 created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.passwords |length == 2
+
     - name: Delete the container registry token
       azure_rm_containerregistrytoken:
         registry_name: "acr{{ rpfx }}"
