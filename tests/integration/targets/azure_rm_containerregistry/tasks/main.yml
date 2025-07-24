@@ -335,20 +335,20 @@
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
-      register: output
+      register: token_output
 
     - name: Assert the container registry token facts
       ansible.builtin.assert:
         that:
-          - output.registry_tokens[0].scope_map_id == secondary_output.scope_map.id
-          - output.registry_tokens[0].status == 'disabled'
+          - token_output.registry_tokens[0].scope_map_id == secondary_output.scope_map.id
+          - token_output.registry_tokens[0].status == 'disabled'
 
     - name: The container registry token generate password1
       azure_rm_containerregistrytokenpassword:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: password1
-        token_id: "{{ output.registry_tokens[0].id }}"
+        token_id: "{{ token_output.registry_tokens[0].id }}"
       register: output
 
     - name: Assert the container registry token password1 created
@@ -362,7 +362,7 @@
       azure_rm_containerregistrytokenpassword:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
-        token_id: "{{ output.registry_tokens[0].id }}"
+        token_id: "{{ token_output.registry_tokens[0].id }}"
       register: output
 
     - name: Assert the container registry token password1 and password2 created
