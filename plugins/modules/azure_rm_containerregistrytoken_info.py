@@ -53,7 +53,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-tokens:
+registry_tokens:
     description:
         - A list of dictionaries containing facts for token.
     returned: always

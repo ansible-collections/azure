@@ -41,53 +41,6 @@ options:
         choices:
             - enabled
             - disabled
-    credentials:
-        description:
-            - The credentials that can be used for authenticating the token.
-        type: dict
-        suboptions:
-            certificates:
-                description:
-                    - The certificate of the token credentials.
-                type: list
-                elements: dict
-                suboptions:
-                    name:
-                        description:
-                            - The certificate name.
-                        type: str
-                        choices:
-                            - certificate1
-                            - certificate2
-                    expiry:
-                        description:
-                            - The expiry datetime of the certificate.
-                        type: str
-                    thumbprint:
-                        description:
-                            - The thumbprint of the certificate.
-                        type: str
-                    encoded_pem_certificate:
-                        description:
-                            - Base 64 encoded string of the public certificate1 in PEM format that will be used for authenticating the token.
-                        type: str
-            passwords:
-                description:
-                    - The password of the token credentials.
-                type: list
-                elements: dict
-                suboptions:
-                    expiry:
-                        description:
-                            - The expiry datetime of the password.
-                        type: str
-                    name:
-                        description:
-                            - The password name C(password1) or C(password2).
-                        type: str
-                        choices:
-                            - password1
-                            - password2
     state:
         description:
             - Assert the state of the container registry token.
@@ -108,11 +61,13 @@ author:
 '''
 
 EXAMPLES = '''
-- name: Get instance of Registry Token
+- name: Create a new Container Registry Token
   azure_rm_containerregistrytoken:
     resource_group: myResourceGroup
     registry_name: myRegistry
     name: mytoken
+    status: enabled
+    scope_map_id: scopemap_id
 
 - name: Delete the container registry token
   azure_rm_containerregistrytoken:
@@ -122,7 +77,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-tokens:
+registry_token:
     description:
         - A list of dictionaries containing facts for token.
     returned: always
@@ -242,22 +197,6 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
                 type='str',
                 choices=['enabled', 'disabled']
             ),
-            cred=dict(
-                type='dict',
-                aliase=['credentials'],
-                options=dict(
-                    certificates=dict(
-                        name=dict(type='str', choices=['certificate1', 'certificate2']),
-                        expiry=dict(type='str'),
-                        thumbprint=dict(type='str'),
-                        encoded_pem_certificate=dict(type='str')
-                    ),
-                    passwords=dict(
-                        expiry=dict(type='str'),
-                        name=dict(type='str', choices=['password1', 'password2'])
-                    )
-                )
-            ),
             state=dict(
                 type='str',
                 default='present',
@@ -267,13 +206,12 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
         # store the results of the module operation
         self.results = dict(
             changed=False,
-            diff=None,
+            diff=[],
             token=None,
         )
         self.resource_group = None
         self.registry_name = None
         self.name = None
-        self.cred = None
         self.status = None
         self.scope_map_id = None
 
@@ -288,32 +226,29 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
 
         # Defaults for variables
         result = None
-        result_compare = dict(compare=[])
 
         # Get current container registry token
-        before_dict = self.get()
-
-        # Create dict form input, without None value
-        token_template = dict(scope_map_id=self.scope_map_id,
-                              credentials=self.cred,
-                              status=self.status)
-
-        # Filter out all None values
-        token_input = {key: value for key, value in token_template.items() if value is not None}
+        old_response = self.get()
 
         # Create/Update if state==present
         if self.state == 'present':
-            if before_dict:
-                # The container registry already exists, try to update
-                # Dict for update is the union of existing object over written by input data
-                token_update = before_dict() | token_input
-                if not self.default_compare({}, token_update, before_dict, '', result_compare):
+            if old_response:
+                # The container registry token already exists, try to update
+                if self.scope_map_id is not None and self.scope_map_id.lower() != old_response['scope_map_id'].lower():
                     self.results['changed'] = True
+                    self.results['diff'].append('scope_map_id')
+                if self.status is not None and self.status != old_response['status'].lower():
+                    self.results['changed'] = True
+                    self.results['diff'].append('status')
+
+                if self.results['changed']:
                     if self.check_mode:
                         # Check mode, skipping actual creation
                         pass
                     else:
-                        result = self.update(token_update)
+                        result = self.update()
+                else:
+                    result = old_response
             else:
                 self.results['changed'] = True
                 # The container registry token not exist, create
@@ -321,8 +256,8 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
                     # Check mode, Skipping actual creation
                     pass
                 else:
-                    result = self.create(token_input)
-        elif self.state == 'absent' and before_dict:
+                    result = self.create()
+        elif self.state == 'absent' and old_response:
             self.results['changed'] = True
             if not self.check_mode:
                 self.delete()
@@ -330,11 +265,11 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
                 # Do not delete in check mode
                 pass
 
-        self.results['diff'] = result_compare
-        self.results['token'] = result
+        self.results['registry_token'] = result
         return self.results
 
     def get(self):
+        # Gets the properties of the specified token
         try:
             response = self.containerregistrytoken_client.tokens.get(resource_group_name=self.resource_group,
                                                                      registry_name=self.registry_name,
@@ -344,14 +279,16 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
             self.log("Could not get facts for Registry Token: {0}".format(str(e)))
             return None
 
-        return response.as_dict()
+        return self.format_item(response)
 
-    def create(self, body):
+    def create(self):
+        # Creates a token for a container registry with the specified parameters
         try:
             response = self.containerregistrytoken_client.tokens.begin_create(resource_group_name=self.resource_group,
                                                                               registry_name=self.registry_name,
                                                                               token_name=self.name,
-                                                                              token_create_parameters=body)
+                                                                              token_create_parameters=dict(scope_map_id=self.scope_map_id,
+                                                                                                           status=self.status))
             self.log("Response: {0}".format(response))
         except Exception as e:
             self.fail("Create {0} failed. Abnormal message as {1}".format(self.name, str(e)))
@@ -361,12 +298,14 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
 
         return self.format_item(response)
 
-    def update(self, body):
+    def update(self):
+        # Updates a token with the specified parameters
         try:
             response = self.containerregistrytoken_client.tokens.begin_update(resource_group_name=self.resource_group,
                                                                               registry_name=self.registry_name,
                                                                               token_name=self.name,
-                                                                              token_update_parameters=body)
+                                                                              token_update_parameters=dict(scope_map_id=self.scope_map_id,
+                                                                                                           status=self.status))
             self.log("Response: {0}".format(response))
         except Exception as e:
             self.fail("Update {0} failed. Abnormal message as {1}".format(self.name, str(e)))
@@ -377,6 +316,7 @@ class AzureRMContainerRegistryToken(AzureRMModuleBaseExt):
         return self.format_item(response)
 
     def delete(self):
+        # Deletes a token from a container registry
         try:
             response = self.containerregistrytoken_client.tokens.begin_delete(resource_group_name=self.resource_group,
                                                                               registry_name=self.registry_name,
