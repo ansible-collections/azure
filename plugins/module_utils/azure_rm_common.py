@@ -455,6 +455,7 @@ class AzureRMModuleBase(object):
         self._postgresql_client = None
         self._postgresql_flexible_client = None
         self._containerregistry_client = None
+        self._containerregistrytoken_client = None
         self._containerinstance_client = None
         self._containerservice_client = None
         self._managedcluster_client = None
@@ -1334,6 +1335,16 @@ class AzureRMModuleBase(object):
                                                                       api_version='2021-09-01')
 
         return self._containerregistry_client
+
+    @property
+    def containerregistrytoken_client(self):
+        self.log('Getting container registry token mgmt client')
+        if not self._containerregistrytoken_client:
+            self._containerregistrytoken_client = self.get_mgmt_svc_client(ContainerRegistryManagementClient,
+                                                                           base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                           api_version='2023-07-01')
+
+        return self._containerregistrytoken_client
 
     @property
     def containerinstance_client(self):

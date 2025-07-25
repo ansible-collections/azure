@@ -64,6 +64,8 @@ action_groups:
     - azure.azcollection.azure_rm_containerinstance_info
     - azure.azcollection.azure_rm_containerregistry
     - azure.azcollection.azure_rm_containerregistry_info
+    - azure.azcollection.azure_rm_containerregistryscopemap
+    - azure.azcollection.azure_rm_containerregistryscopemap_info
     - azure.azcollection.azure_rm_containerregistryreplication
     - azure.azcollection.azure_rm_containerregistryreplication_info
     - azure.azcollection.azure_rm_containerregistrytag

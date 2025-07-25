@@ -2,4 +2,6 @@ cloud/azure
 shippable/azure/group2
 destructive
 azure_rm_containerregistry_info
+azure_rm_containerregistryscopemap
+azure_rm_containerregistryscopemap_info
 needs/file/tests/integration_common_tasks/managed_identity.yml
