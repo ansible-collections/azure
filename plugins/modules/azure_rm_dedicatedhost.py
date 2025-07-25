@@ -345,8 +345,8 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
         try:
             # restart the dedicate host
             response = self.compute_client.dedicated_hosts.begin_restart(resource_group_name=self.resource_group,
-                                                              host_group_name=self.host_group_name,
-                                                              host_name=self.name)
+                                                                         host_group_name=self.host_group_name,
+                                                                         host_name=self.name)
             if isinstance(response, LROPoller):
                 return self.get_poller_result(response)
         except Exception as exc:
