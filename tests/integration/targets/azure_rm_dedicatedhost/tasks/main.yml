@@ -1,5 +1,5 @@
 - name: Creat a new resource group for dedicated host test
-  azure_rm_resourcegoup:
+  azure_rm_resourcegroup:
     name: "{{ resource_group }}-dhost"
     location: eastus
 
