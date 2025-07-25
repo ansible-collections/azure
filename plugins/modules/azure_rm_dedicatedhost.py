@@ -269,9 +269,11 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
                     changed = True
                 elif self.auto_replace_on_failure is not None and bool(self.auto_replace_on_failure) != bool(results['auto_replace_on_failure']):
                     changed = True
-                elif self.platform_fault_domain is not None and self.platform_fault_domain != results['platform_fault_domain']:
+                elif self.platform_fault_domain and self.platform_fault_domain != results['platform_fault_domain']:
                     changed = True
-                elif self.sku is not None and self.sku['name'] != results['sku']['name']:
+                elif self.sku and self.sku['name'] != results['sku']['name']:
+                    changed = True
+                elif self.license_type and self.license_type != results['license_type']:
                     changed = True
                 if not self.check_mode and changed:
                     results = self.update_dedicatedhost()
