@@ -9,7 +9,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_dedicatedhost_info
 
-version_added: "3.5.0"
+version_added: "3.7.0"
 
 short_description: Retrieves information abount dedicated host
 

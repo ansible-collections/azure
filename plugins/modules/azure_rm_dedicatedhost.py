@@ -9,7 +9,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_dedicatedhost
 
-version_added: "3.5.0"
+version_added: "3.7.0"
 
 short_description: Create, delete and update a dedicated host
 
@@ -344,18 +344,23 @@ class AzureRMDedicatedHost(AzureRMModuleBase):
     def restart_dedicatedhost(self):
         try:
             # restart the dedicate host
-            self.compute_client.dedicated_hosts.begin_restart(resource_group_name=self.resource_group,
+            response = self.compute_client.dedicated_hosts.begin_restart(resource_group_name=self.resource_group,
                                                               host_group_name=self.host_group_name,
                                                               host_name=self.name)
+            if isinstance(response, LROPoller):
+                return self.get_poller_result(response)
         except Exception as exc:
             self.fail("Error restarting host {0} - {1}".format(self.name, str(exc)))
 
     def delete_dedicatedhost(self):
         try:
             # delete the dedicated host
-            self.compute_client.dedicated_hosts.begin_delete(resource_group_name=self.resource_group,
-                                                             host_group_name=self.host_group_name,
-                                                             host_name=self.name)
+            response = self.compute_client.dedicated_hosts.begin_delete(resource_group_name=self.resource_group,
+                                                                        host_group_name=self.host_group_name,
+                                                                        host_name=self.name)
+            if isinstance(response, LROPoller):
+                return self.get_poller_result(response)
+
         except Exception as exc:
             self.fail("Error deleting host {0} - {1}".format(self.name, str(exc)))
 
