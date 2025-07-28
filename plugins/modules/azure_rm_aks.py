@@ -1048,7 +1048,10 @@ def create_addon_profiles_spec():
         configs = values.get('config') or {}
         for item in configs.keys():
             addon_spec[item] = dict(type='str', aliases=[configs[item]], required=True)
-        spec[key] = dict(type='dict', options=addon_spec, aliases=[values['name']])
+        if key == 'azure_keyvault_secrets_provider':
+            spec[key] = dict(type='dict', no_log=True, options=addon_spec, aliases=[values['name']])
+        else:
+            spec[key] = dict(type='dict', options=addon_spec, aliases=[values['name']])
     return spec
 
 
