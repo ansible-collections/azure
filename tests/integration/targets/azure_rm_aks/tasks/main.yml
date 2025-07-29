@@ -260,6 +260,8 @@
         addon:
           http_application_routing:
             enabled: false
+          azure_keyvault_secrets_provider:
+            enabled: true
         network_profile:
           network_plugin: azure
           load_balancer_sku: standard
@@ -271,7 +273,8 @@
         that:
           - output is changed
           - output.kubernetes_version == version1.azure_aks_versions[0]
-          - output.addon.httpApplicationRouting.enabled ==  False
+          - output.addon.httpApplicationRouting.enabled == False
+          - output.addon.azureKeyvaultSecretsProvider.enabled == true
           - output.agent_pool_profiles[0].count == 1
           - output.network_profile.network_plugin == 'azure'
 
@@ -301,6 +304,8 @@
         addon:
           http_application_routing:
             enabled: false
+          azure_keyvault_secrets_provider:
+            enabled: true
         network_profile:
           network_plugin: azure
           load_balancer_sku: standard
