@@ -465,6 +465,7 @@ class AzureRMModuleBase(object):
         self._monitor_diagnostic_settings_client = None
         self._monitor_data_collection_rules_client = None
         self._monitor_management_client_action_groups = None
+        self._monitor_management_client_activity_log_alerts = None
         self._monitor_management_client_metric_alerts = None
         self._resource = None
         self._log_analytics_client = None
@@ -1408,6 +1409,15 @@ class AzureRMModuleBase(object):
                                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                                      api_version='2023-01-01')
         return self._monitor_management_client_action_groups
+
+    @property
+    def monitor_management_client_activity_log_alerts(self):
+        self.log('Getting monitor client for diagnostic_settings')
+        if not self._monitor_management_client_activity_log_alerts:
+            self._monitor_management_client_activity_log_alerts = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                                           base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                                           api_version='2020-10-01')
+        return self._monitor_management_client_activity_log_alerts
 
     @property
     def monitor_management_client_data_collection_rules(self):
