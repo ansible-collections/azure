@@ -452,6 +452,7 @@ options:
                 description:
                     - Whether to enable the Azure Key Vault provider in an AKS cluster.
                 type: dict
+                version_added: "3.7.0"
                 aliases:
                     - azureKeyvaultSecretsProvider
                 suboptions:
