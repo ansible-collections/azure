@@ -1,4 +1,47 @@
 # Change Log
+## v3.7.0 (2025-07-29)
+
+### NEW MODULES
+  - azure_rm_monitordatacollectionrules.py: ([#1952](https://github.com/ansible-collections/azure/pull/1952))
+  - azure_rm_monitordatacollectionrules_info.py: ([#1952](https://github.com/ansible-collections/azure/pull/1952))
+  - plugins/doc_fragments/azure_kql.py: ([#1944](https://github.com/ansible-collections/azure/pull/1994))
+  - plugins/inventory/azure_kql.py: ([#1944](https://github.com/ansible-collections/azure/pull/1994))
+  - azure_rm_monitoractiongroups.py: ([1964](https://github.com/ansible-collections/azure/pull/1964))
+  - azure_rm_monitoractiongroups_info: ([1964](https://github.com/ansible-collections/azure/pull/1964))
+  - extensions/eda/plugins/event_source/azure_service_bus.py: ([#1967](https://github.com/ansible-collections/azure/pull/1967))
+  - extensions/eda/plugins/event_source/schemas/azure_service_bus.json: ([#1967](https://github.com/ansible-collections/azure/pull/1967))
+  - azure_rm_containerregistryscopemap.py: ([#2019](https://github.com/ansible-collections/azure/pull/2019))
+  - azure_rm_containerregistryscopemap_info.py: ([#2019](https://github.com/ansible-collections/azure/pull/2019))
+  - azure_rm_containerregistrytoken.py: ([#2023](https://github.com/ansible-collections/azure/pull/2023))
+  - azure_rm_containerregistrytoken_info.py: ([#2023](https://github.com/ansible-collections/azure/pull/2023))
+  - azure_rm_containerregistrytokenpassword.py: ([#2023](https://github.com/ansible-collections/azure/pull/2023))
+
+### FEATURE ENHANCEMENT
+  - plugins/module_utils/azure_rm_common.py:
+    - Add the constraint of requied_by and set monitor client for data collection rule ([1952](https://github.com/ansible-collections/azure/pull/1952))
+    - Set monitor client for action groups ([1964](https://github.com/ansible-collections/azure/pull/1964))
+    - Set container registry client for scope map: ([#2019](https://github.com/ansible-collections/azure/pull/2019))
+    - Set container registry client for token: ([#2023](https://github.com/ansible-collections/azure/pull/2023))
+  - azure_rm_loadbalancer: Support to append sub-properties instead of overwriting ([#1969](https://github.com/ansible-collections/azure/pull/1969))
+  - azure_rm_virtualmachinescaleset.py: Support Priority Type Regular on azure_rm_virtualmachinescaleset Module ([#2001](https://github.com/ansible-collections/azure/pull/2001))
+  - azure_rm_privatednszonelink.py: Add support for 'resolution_policy' ([#1962](https://github.com/ansible-collections/azure/pull/1962))
+  - azure_rm_privatednszonelink_info.py: Support return 'resolution_policy' ([#1962](https://github.com/ansible-collections/azure/pull/1962))
+  - azure_rm_subnet.py: Add support for Microsoft.App/environments in subnet delegations ([#2007](https://github.com/ansible-collections/azure/pull/2007))
+  - tests/unit/event_source/test_azure_service_bus.py: Add async functionality ([#2017](https://github.com/ansible-collections/azure/pull/2017))
+  - textensions/eda/plugins/event_source/azure_service_bus.py: Add async functionality ([#2017](https://github.com/ansible-collections/azure/pull/2017))
+  - pr-pipeline.yml: Delete the creation of resource groups that are not needed ([#2014](https://github.com/ansible-collections/azure/pull/2014))
+  - azure_rm_sqlmanagedinstance.py: Add waiting processing LROPoller results ([#2018](https://github.com/ansible-collections/azure/pull/2018))
+  - azure_rm_virtualwan.py: Add waiting processing LROPoller results ([#2021](https://github.com/ansible-collections/azure/pull/2021))
+  - azure_rm_virtualhubconnection.py: Add waiting processing LROPoller results ([#2022](https://github.com/ansible-collections/azure/pull/2022))
+  - azure_rm_virtualhub.py: Add waiting processing LROPoller results ([#2020](https://github.com/ansible-collections/azure/pull/2020))
+
+### BUG FIXING
+  - plugins/module_utils/security_domain_utils.py: Add future import and metaclass boilerplate ([#1987](https://github.com/ansible-collections/azure/pull/1987))
+  - plugins/modules/azure_rm_keyvaultsecret_info.py: Fix the handling error that get disabled secret ([#1992](https://github.com/ansible-collections/azure/pull/1992))
+  - azure_rm_virtualmachine.py: Used required_by instead of required_if ([#1998](https://github.com/ansible-collections/azure/pull/1998))
+  - azure_rm_virtualnetwork.py: Used required_by instead of required_if ([#1998](https://github.com/ansible-collections/azure/pull/1998))
+
+
 ## v3.6.0 (2025-06-30)
 
 ### NEW MODULES
