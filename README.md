@@ -139,7 +139,6 @@ Testing:
 
 Create a virtual machine
 ```yaml
----
 - name: Using Azure collection
   hosts: localhost
   collections:
