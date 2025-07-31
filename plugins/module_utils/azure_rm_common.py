@@ -1804,13 +1804,13 @@ class AzureRMAuth(object):
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
-        subscription_id = subscription_id or self._get_env('subscription_id')
-
         cloud_environment = get_cli_active_cloud()
 
         az_cli = AzureCliCredential()
+
+        # SubscriptionClient to get the current subscription details
         sub_list = SubscriptionClient(az_cli).subscriptions.list()
-        subscription_id = subscription_id or self._get_env('subscription_id') or [item.subscription_id for item in sub_list][0]
+        subscription_id = [item.subscription_id for item in sub_list][0] or subscription_id or self._get_env('subscription_id')
 
         cli_credentials = {
             'credentials': az_cli,
