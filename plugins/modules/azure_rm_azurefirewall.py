@@ -486,7 +486,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
             network_rule_collections=dict(
                 type='list',
                 elements='dict',
-                mutually_exclusive=[('destination_fqdns', 'destination_addresses')],
                 options=dict(
                     priority=dict(
                         type='int',
@@ -499,6 +498,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     rules=dict(
                         type='list',
                         elements='dict',
+                        mutually_exclusive=[('destination_fqdns', 'destination_addresses')],
                         options=dict(
                             name=dict(
                                 type='str'
