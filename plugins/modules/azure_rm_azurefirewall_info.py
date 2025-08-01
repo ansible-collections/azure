@@ -88,8 +88,9 @@ firewalls:
             returned: always
             sample: [
                 {
-                    "etag": "W/\"25b7fca4-c909-4913-8799-6cdb7da2e298\"",
-                    "id": "/subscriptions/xxx-xxx1/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myFirewall/applicationRuleCollections/apprulecoll",
+                    "etag": "25b7fca4-c909-4913-8799-6cdb7da2e298",
+                    "id": "/subscriptions/xxx-xxx1/resourceGroups/myResourceGroup/providers/
+                           Microsoft.Network/azureFirewalls/myFirewall/applicationRuleCollections/apprulecoll",
                     "name": "apprulecoll",
                     "properties": {
                         "action": {
@@ -132,8 +133,9 @@ firewalls:
             returned: always
             sample: [
                 {
-                    "etag": "W/\"3759e8b1-cdf7-44f4-a643-3a75e2b67877\"",
-                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myFirewall/natRuleCollections/natrulecoll",
+                    "etag": '3759e8b1-cdf7-44f4-a643-3a75e2b67877',
+                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                           azureFirewalls/myFirewall/natRuleCollections/natrulecoll",
                     "name": "natrulecoll",
                     "properties": {
                         "action": {
@@ -172,8 +174,9 @@ firewalls:
             returned: always
             sample: [
                 {
-                    "etag": "W/\"3759e8b1-cdf7-44f4-a643-3a75e2b67877\"",
-                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myFirewall/networkRuleCollections/netrulecoll",
+                    "etag": "3759e8b1-cdf7-44f4-a643-3a75e2b67877",
+                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                           azureFirewalls/myFirewall/networkRuleCollections/netrulecoll",
                     "name": "netrulecoll",
                     "properties": {
                         "action": {
@@ -227,7 +230,7 @@ firewalls:
             returned: always
             sample: [
                 {
-                    "etag": "W/\"3759e8b1-cdf7-44f4-a643-3a75e2b67877\"",
+                    "etag": "3759e8b1-cdf7-44f4-a643-3a75e2b67877",
                     "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myFirewall/i
                            azureFirewallIpConfigurations/azureFirewallIpConfiguration",
                     "name": "azureFirewallIpConfiguration",
@@ -238,7 +241,8 @@ firewalls:
                             "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/myPublicIpAddress"
                         },
                         "subnet": {
-                            "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVirtualNetwork/subnets/AzureFirewallSubnet"
+                            "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                                   virtualNetworks/myVirtualNetwork/subnets/AzureFirewallSubnet"
                         }
                     },
                     "type": "Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations"

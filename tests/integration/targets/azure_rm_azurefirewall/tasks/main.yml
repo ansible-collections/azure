@@ -85,7 +85,6 @@
             name: natrulecoll
         network_rule_collections:
           - priority: 112
-            name: netrulecoll
             action: deny
             rules:
               - name: L4-traffic
@@ -111,6 +110,7 @@
                 destination_ports:
                   - 443-444
                   - '8443'
+            name: netrulecoll
         ip_configurations:
           - subnet:
               virtual_network_name: "{{ virtual_network_name }}"
@@ -167,7 +167,6 @@
             name: natrulecoll
         network_rule_collections:
           - priority: 112
-            name: netrulecoll
             action: deny
             rules:
               - name: L4-traffic
@@ -193,6 +192,7 @@
                 destination_ports:
                   - 443-444
                   - '8443'
+            name: netrulecoll
         ip_configurations:
           - subnet:
               virtual_network_name: "{{ virtual_network_name }}"
@@ -250,7 +250,6 @@
         network_rule_collections:
           - priority: 112
             action: deny
-            name: netrulecoll
             rules:
               - name: L4-traffic
                 description: Block traffic based on source IPs and ports
@@ -275,6 +274,7 @@
                 destination_ports:
                   - 443-444
                   - '8443'
+            name: netrulecoll
         ip_configurations:
           - subnet:
               virtual_network_name: "{{ virtual_network_name }}"
