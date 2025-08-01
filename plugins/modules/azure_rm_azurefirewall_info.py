@@ -81,18 +81,173 @@ firewalls:
             returned: always
             type: str
             sample: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        application_rule_collections:
+            description:
+                - Collection of application rule collections used by Azure Firewall.
+            type: list
+            returned: always
+            sample: [
+                {
+                    "etag": "25b7fca4-c909-4913-8799-6cdb7da2e298",
+                    "id": "/subscriptions/xxx-xxx1/resourceGroups/myResourceGroup/providers/
+                           Microsoft.Network/azureFirewalls/myFirewall/applicationRuleCollections/apprulecoll",
+                    "name": "apprulecoll",
+                    "properties": {
+                        "action": {
+                            "type": "Deny"
+                        },
+                        "priority": 110,
+                        "provisioningState": "Failed",
+                        "rules": [
+                            {
+                                "actions": [],
+                                "description": "Deny inbound rule",
+                                "direction": "Inbound",
+                                "fqdnTags": [],
+                                "name": "rule1",
+                                "priority": 0,
+                                "protocols": [
+                                    {
+                                        "port": 443,
+                                        "protocolType": "Https"
+                                    }
+                                ],
+                                "sourceAddresses": [
+                                    "216.58.216.164",
+                                    "10.0.0.0/25"
+                                ],
+                                "sourceIpGroups": [],
+                                "targetFqdns": [
+                                    "www.test.com"
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "Microsoft.Network/azureFirewalls/applicationRuleCollections"
+                }
+            ]
         nat_rule_collections:
             description:
                 - Collection of NAT rule collections used by Azure Firewall.
             type: list
+            returned: always
+            sample: [
+                {
+                    "etag": '3759e8b1-cdf7-44f4-a643-3a75e2b67877',
+                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                           azureFirewalls/myFirewall/natRuleCollections/natrulecoll",
+                    "name": "natrulecoll",
+                    "properties": {
+                        "action": {
+                            "type": "Dnat"
+                        },
+                        "priority": 112,
+                        "provisioningState": "Failed",
+                        "rules": [
+                            {
+                                "description": "D-NAT all outbound web traffic for inspection",
+                                "destinationAddresses": [
+                                    "20.169.156.124"
+                                ],
+                                "destinationPorts": [
+                                    "443"
+                                ],
+                                "name": "DNAT-HTTPS-traffic",
+                                "protocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "*"
+                                ],
+                                "translatedAddress": "1.2.3.5",
+                                "translatedPort": "8443"
+                            }
+                        ]
+                    },
+                    "type": "Microsoft.Network/azureFirewalls/natRuleCollections"
+                }
+            ]
         network_rule_collections:
             description:
                 - Collection of network rule collections used by Azure Firewall.
             type: list
+            returned: always
+            sample: [
+                {
+                    "etag": "3759e8b1-cdf7-44f4-a643-3a75e2b67877",
+                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                           azureFirewalls/myFirewall/networkRuleCollections/netrulecoll",
+                    "name": "netrulecoll",
+                    "properties": {
+                        "action": {
+                            "type": "Deny"
+                        },
+                        "priority": 112,
+                        "provisioningState": "Failed",
+                        "rules": [
+                            {
+                                "description": "Block traffic based on source IPs and ports",
+                                "destinationAddresses": [
+                                    "*"
+                                ],
+                                "destinationPorts": [
+                                    "443-444",
+                                    "8443"
+                                ],
+                                "name": "L4-traffic",
+                                "protocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "192.168.1.1-192.168.1.12",
+                                    "10.1.4.12-10.1.4.255"
+                                ]
+                            },
+                            {
+                                "description": "Block traffic based on source IPs and ports to amazon",
+                                "destinationAddresses": [],
+                                "destinationPorts": [
+                                    "443-444",
+                                    "8443"
+                                ],
+                                "name": "L4-traffic-with_FQDN",
+                                "protocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "10.2.4.12-10.2.4.255"
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "Microsoft.Network/azureFirewalls/networkRuleCollections"
+                }
+            ]
         ip_configurations:
             description:
                 - IP configuration of the Azure Firewall resource.
             type: list
+            returned: always
+            sample: [
+                {
+                    "etag": "3759e8b1-cdf7-44f4-a643-3a75e2b67877",
+                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myFirewall/i
+                           azureFirewallIpConfigurations/azureFirewallIpConfiguration",
+                    "name": "azureFirewallIpConfiguration",
+                    "properties": {
+                        "privateIPAllocationMethod": "Dynamic",
+                        "provisioningState": "Succeeded",
+                        "publicIPAddress": {
+                            "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/myPublicIpAddress"
+                        },
+                        "subnet": {
+                            "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
+                                   virtualNetworks/myVirtualNetwork/subnets/AzureFirewallSubnet"
+                        }
+                    },
+                    "type": "Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations"
+                }
+            ]
         provisioning_state:
             description:
                 - The current state of the gallery.
@@ -127,7 +282,7 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
         self.status_code = [200]
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2018-11-01'
+        self.query_parameters['api-version'] = '2024-01-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -255,6 +410,7 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
         if isinstance(item.get('properties'), dict):
             d['nat_rule_collections'] = item.get('properties').get('natRuleCollections')
             d['network_rule_collections'] = item.get('properties').get('networkRuleCollections')
+            d['application_rule_collections'] = item.get('properties').get('applicationRuleCollections')
             d['ip_configurations'] = item.get('properties').get('ipConfigurations')
             d['provisioning_state'] = item.get('properties').get('provisioningState')
         return d

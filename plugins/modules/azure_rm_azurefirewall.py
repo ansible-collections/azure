@@ -210,6 +210,11 @@ options:
                             - List of destination ports.
                         type: list
                         elements: str
+                    destination_fqdns:
+                        description:
+                            - List of destination FQDNS.
+                        type: list
+                        elements: str
             name:
                 description:
                     - Gets name of the resource that is unique within a resource group.
@@ -299,6 +304,7 @@ EXAMPLES = '''
     network_rule_collections:
       - priority: 112
         action: deny
+        name: netrulecoll
         rules:
           - name: L4-traffic
             description: Block traffic based on source IPs and ports
@@ -312,7 +318,17 @@ EXAMPLES = '''
             destination_ports:
               - 443-444
               - '8443'
-        name: netrulecoll
+          - name: L4-traffic-destination_fqdns
+            description: Block traffic based on source IPs and ports to amazon
+            protocols:
+              - tcp
+            source_addresses:
+              - 10.2.4.12-10.2.4.255
+            destination_fqdns:
+              - 'www.test.com'
+            destination_ports:
+              - 443-444
+              - '8443'
     ip_configurations:
       - subnet: >-
           /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup
@@ -482,6 +498,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     rules=dict(
                         type='list',
                         elements='dict',
+                        mutually_exclusive=[('destination_fqdns', 'destination_addresses')],
                         options=dict(
                             name=dict(
                                 type='str'
@@ -498,6 +515,10 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                                 elements='str',
                             ),
                             destination_addresses=dict(
+                                type='list',
+                                elements='str',
+                            ),
+                            destination_fqdns=dict(
                                 type='list',
                                 elements='str',
                             ),
@@ -547,7 +568,7 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
         self.to_do = Actions.NoAction
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2018-11-01'
+        self.query_parameters['api-version'] = '2024-01-01'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -649,6 +670,8 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                                     net_value['sourceAddresses'] = value.get('source_addresses')
                                 if value.get('destination_addresses') is not None:
                                     net_value['destinationAddresses'] = value.get('destination_addresses')
+                                if value.get('destination_fqdns') is not None:
+                                    net_value['destinationFqdns'] = value.get('destination_fqdns')
                                 if value.get('destination_ports') is not None:
                                     net_value['destinationPorts'] = value.get('destination_ports')
                                 if value.get('protocols') is not None:
