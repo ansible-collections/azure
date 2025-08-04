@@ -1811,7 +1811,10 @@ class AzureRMAuth(object):
         az_cli = AzureCliCredential()
 
         # Get the current subscription details
-        subscription_id = Profile().get_subscription()['id']
+        try:
+            subscription_id = Profile().get_subscription(subscription=subscription_id)['id']
+        except Exception as ec:
+            self.fail("Obtain the az login's subscription exception, exception information {0}".format(ec))
 
         cli_credentials = {
             'credentials': az_cli,
