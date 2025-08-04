@@ -312,6 +312,7 @@ except ImportError:
 
 try:
     from azure.cli.core.util import CLIError
+    from azure.cli.core._profile import Profile
     from azure.common.cloud import get_cli_active_cloud
 except ImportError:
     HAS_AZURE_CLI_CORE = False
@@ -1806,11 +1807,11 @@ class AzureRMAuth(object):
     def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
         cloud_environment = get_cli_active_cloud()
 
+        subscription_id = subscription_id or self._get_env('subscription_id')
         az_cli = AzureCliCredential()
 
-        # SubscriptionClient to get the current subscription details
-        sub_list = SubscriptionClient(az_cli).subscriptions.list()
-        subscription_id = [item.subscription_id for item in sub_list][0] or subscription_id or self._get_env('subscription_id')
+        # Get the current subscription details
+        subscription_id = Profile().get_subscription()['id']
 
         cli_credentials = {
             'credentials': az_cli,
