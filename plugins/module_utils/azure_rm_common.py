@@ -1668,11 +1668,6 @@ class AzureRMAuth(object):
                 except Exception as e:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(raw_cloud_env, e.message), exception=traceback.format_exc())
 
-        if self.credentials.get('subscription_id', None) is None and self.credentials.get('credentials') is None:
-            self.fail("Credentials did not include a subscription_id value.")
-        self.log("setting subscription_id")
-        self.subscription_id = self.credentials['subscription_id']
-
         # get authentication authority
         # for adfs, user could pass in authority or not.
         # for others, use default authority from cloud environment
@@ -1733,6 +1728,24 @@ class AzureRMAuth(object):
                       "Credentials must include client_id, secret and tenant or ad_user and password, or "
                       "ad_user, password, client_id, tenant and adfs_authority_url(optional) for ADFS authentication, or "
                       "be logged in using AzureCLI.")
+
+        if self.credentials.get('subscription_id', None):
+            self.subscription_id = self.credentials['subscription_id']
+        else:
+            sub_client = SubscriptionClient(self.azure_credential_track2)
+            try:
+                sub_list = sub_client.subscriptions.list()
+                subs = [item.subscription_id for item in sub_list]
+                if len(subs) == 0:
+                    self.fail("Authentication failed, Please confirm that the parameters for obtaining the token are filled in correctly")
+                elif len(subs) == 1:
+                    self.credentials['subscription_id'] = subs[0]
+                    self.subscription_id = subs[0]
+                else:
+                    self.fail("Multiple subscription_id are specified through the provided token. Please specify the subscription_id.")
+
+            except Exception as ec:
+                self.fail("An exception occurred when obtaining subscription_id. The exception as {0}".format(ec))
 
     def fail(self, msg, exception=None, **kwargs):
         self._fail_impl(msg)
