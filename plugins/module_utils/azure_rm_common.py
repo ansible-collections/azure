@@ -1804,22 +1804,17 @@ class AzureRMAuth(object):
             'auth_source': 'msi'
         }
 
-    def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
-        cloud_environment = get_cli_active_cloud()
-
+    def _get_azure_cli_credentials(self, subscription_id=None):
         subscription_id = subscription_id or self._get_env('subscription_id')
-        az_cli = AzureCliCredential()
-
-        # Get the current subscription details
-        try:
-            subscription_id = Profile().get_subscription(subscription=subscription_id)['id']
-        except Exception as ec:
-            self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
-
+        if not subscription_id:
+            try:
+                subscription_id = Profile().get_subscription_id()
+            except Exception as ec:
+                self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
         cli_credentials = {
-            'credentials': az_cli,
+            'credentials': AzureCliCredential(),
             'subscription_id': subscription_id,
-            'cloud_environment': cloud_environment
+            'cloud_environment': get_cli_active_cloud(),
         }
         return cli_credentials
 
