@@ -312,7 +312,7 @@ except ImportError:
 
 try:
     from azure.cli.core.util import CLIError
-    from azure.common.credentials import get_cli_profile
+    from azure.cli.core._profile import Profile
     from azure.common.cloud import get_cli_active_cloud
 except ImportError:
     HAS_AZURE_CLI_CORE = False
@@ -1804,24 +1804,17 @@ class AzureRMAuth(object):
             'auth_source': 'msi'
         }
 
-    def _get_azure_cli_credentials(self, subscription_id=None, resource=None):
-        if self.is_ad_resource:
-            resource = 'https://graph.windows.net/'
+    def _get_azure_cli_credentials(self, subscription_id=None):
         subscription_id = subscription_id or self._get_env('subscription_id')
-        try:
-            profile = get_cli_profile()
-        except Exception as exc:
-            self.fail("Failed to load CLI profile {0}.".format(str(exc)))
-
-        cred, subscription_id, tenant = profile.get_login_credentials(
-            subscription_id=subscription_id)
-        cloud_environment = get_cli_active_cloud()
-
-        az_cli = AzureCliCredential()
+        if not subscription_id:
+            try:
+                subscription_id = Profile().get_subscription_id()
+            except Exception as ec:
+                self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
         cli_credentials = {
-            'credentials': az_cli if self.is_ad_resource else cred,
+            'credentials': AzureCliCredential(),
             'subscription_id': subscription_id,
-            'cloud_environment': cloud_environment
+            'cloud_environment': get_cli_active_cloud(),
         }
         return cli_credentials
 
