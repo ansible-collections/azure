@@ -1853,8 +1853,9 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
         elif (env_credentials.get('client_id') and env_credentials.get('secret') and env_credentials.get('tenant')) or \
-                (env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') and env_credentials.get('x509_certificate_path')) or \
-                (env_credentials.get('ad_user') and env_credentials.get('password')):
+                (env_credentials.get('ad_user') and env_credentials.get('password')) or \
+                (env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') and
+                 env_credentials.get('x509_certificate_path')):
             return env_credentials
         else:
             return None
