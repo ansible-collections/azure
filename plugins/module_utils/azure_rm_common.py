@@ -1772,7 +1772,12 @@ class AzureRMAuth(object):
             except Exception:
                 pass
 
-        return credentials
+        if (credentials.get('client_id') and credentials.get('secret') and credentials.get('tenant')) or \
+                (credentials.get('client_id') and credentials.get('tenant') and credentials.get('thumbprint') and credentials.get('x509_certificate_path')) or \
+                (credentials.get('ad_user') and credentials.get('password')):
+            return credentials
+        else:
+            return None
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, _cloud_environment=None, **kwargs):
         # Get object `cloud_environment` from string `_cloud_environment`
@@ -1844,7 +1849,15 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
 
-        return env_credentials
+        if env_credentials['profile']:
+            credentials = self._get_profile(env_credentials['profile'])
+            return credentials
+        elif (env_credentials.get('client_id') and env_credentials.get('secret') and env_credentials.get('tenant')) or \
+                (env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') and env_credentials.get('x509_certificate_path')) or \
+                (env_credentials.get('ad_user') and env_credentials.get('password')):
+            return env_credentials
+        else:
+            return None
 
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
