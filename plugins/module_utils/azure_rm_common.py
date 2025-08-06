@@ -1729,8 +1729,8 @@ class AzureRMAuth(object):
                       "ad_user, password, client_id, tenant and adfs_authority_url(optional) for ADFS authentication, or "
                       "be logged in using AzureCLI.")
 
-        if self.credentials.get('subscription_id', None):
-            self.subscription_id = self.credentials['subscription_id']
+        if self.credentials.get('subscription_id', None) or self.is_ad_resource:
+            self.subscription_id = self.credentials.get('subscription_id')
         else:
             sub_client = SubscriptionClient(self.azure_credential_track2)
             try:
@@ -1844,10 +1844,7 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
 
-        if env_credentials.get('subscription_id') is not None:
-            return env_credentials
-
-        return None
+        return env_credentials
 
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
