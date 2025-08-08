@@ -950,8 +950,6 @@ class AzureRMModuleBase(object):
             base_url += "/"
 
         mgmt_subscription_id = self.azure_auth.subscription_id
-        if self.module.params.get('subscription_id'):
-            mgmt_subscription_id = self.module.params.get('subscription_id')
 
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
@@ -1053,7 +1051,7 @@ class AzureRMModuleBase(object):
 
     @property
     def subscription_id(self):
-        return self.azure_auth.subscription_id
+        return self.module.params.get('subscription_id') or self.azure_auth.subscription_id
 
     @property
     def storage_client(self):
