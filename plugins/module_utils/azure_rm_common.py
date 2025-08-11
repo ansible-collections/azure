@@ -1800,33 +1800,39 @@ class AzureRMAuth(object):
 
         client_id = client_id or self._get_env('client_id')
         credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
-        subscription_id = subscription_id or self._get_env('subscription_id')
-        if not subscription_id:
-            try:
-                # use the first subscription of the MSI
-                subscription_client = SubscriptionClient(credential)
-                subscription = next(subscription_client.subscriptions.list())
-                subscription_id = str(subscription.subscription_id)
-            except Exception as exc:
+        try:
+            # use the first subscription of the MSI
+            subscription_client = SubscriptionClient(credential)
+            subscription = next(subscription_client.subscriptions.list())
+            sub_id = str(subscription.subscription_id)
+        except Exception as exc:
+            sub_id = subscription_id or self._get_env('subscription_id')
+            if sub_id:
+                pass
+            else:
                 self.fail("Failed to get MSI token: {0}. "
                           "Please check whether your machine enabled MSI or grant access to any subscription.".format(str(exc)))
+
         return {
             'credentials': credential,
-            'subscription_id': subscription_id,
+            'subscription_id': sub_id,
             'cloud_environment': cloud_environment,
             'auth_source': 'msi'
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None):
-        subscription_id = subscription_id or self._get_env('subscription_id')
-        if not subscription_id:
-            try:
-                subscription_id = Profile().get_subscription_id()
-            except Exception as ec:
+        try:
+            sub_id = Profile().get_subscription_id()
+        except Exception as ec:
+            sub_id = subscription_id or self._get_env('subscription_id')
+            if sub_id:
+                pass
+            else:
                 self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
+
         cli_credentials = {
             'credentials': AzureCliCredential(),
-            'subscription_id': subscription_id,
+            'subscription_id': sub_id,
             'cloud_environment': get_cli_active_cloud(),
         }
         return cli_credentials
