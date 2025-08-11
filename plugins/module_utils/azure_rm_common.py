@@ -1808,7 +1808,7 @@ class AzureRMAuth(object):
         except Exception as exc:
             sub_id = subscription_id or self._get_env('subscription_id')
             if sub_id:
-                pass
+                self.log("Failed to obtain the az login credential's subscription_id. Use configuration or environment variable.")
             else:
                 self.fail("Failed to get MSI token: {0}. "
                           "Please check whether your machine enabled MSI or grant access to any subscription.".format(str(exc)))
@@ -1826,7 +1826,7 @@ class AzureRMAuth(object):
         except Exception as ec:
             sub_id = subscription_id or self._get_env('subscription_id')
             if sub_id:
-                pass
+                self.log("Failed to obtain the MSI credential's subscription_id. Use configuration or environment variable.")
             else:
                 self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
 
