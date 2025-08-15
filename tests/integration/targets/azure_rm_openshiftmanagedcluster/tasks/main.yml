@@ -1,5 +1,5 @@
 - name: Create a new resource group for openshift cluster test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
     location: eastus
   loop:
@@ -13,12 +13,12 @@
         cluster_name: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
     - name: Get resource group info
-      azure_rm_resourcegroup_info:
+      azure.azcollection.azure_rm_resourcegroup_info:
         name: "{{ resource_group }}-openshiftmanagedcluster02"
       register: rg_output
 
     - name: Get available clusters for a specific resource_group
-      azure_rm_openshiftmanagedcluster_info:
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
       register: output
 
@@ -27,7 +27,7 @@
         that: output['clusters'] | length == 0
 
     - name: Get specific cluster information for a specific cluster
-      azure_rm_openshiftmanagedcluster_info:
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
         name: "{{ cluster_name }}"
       register: output
@@ -37,7 +37,7 @@
         that: output['clusters'].keys() | length == 0
 
     - name: Get all clusters
-      azure_rm_openshiftmanagedcluster_info:
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
       register: output
 
     - name: Assert all clusters facts
@@ -45,7 +45,7 @@
         that: output['clusters']['value'] | length == 0
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
         name: testVnet
         address_prefixes_cidr:
@@ -53,7 +53,7 @@
           - 10.152.0.0/16
 
     - name: Create master subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: master_foobar
         virtual_network_name: testVnet
         resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
@@ -61,7 +61,7 @@
       register: master_sub_output
 
     - name: Create work subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: worker_foobar
         virtual_network_name: testVnet
         resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
@@ -69,7 +69,7 @@
       register: worker_sub_output
 
     - name: Get available openshift cluster versions
-      azure_rm_openshiftmanagedclusterversion_info:
+      azure.azcollection.azure_rm_openshiftmanagedclusterversion_info:
         location: "eastus"
       register: ocp_cl_vers
 
@@ -82,7 +82,7 @@
         that: ocp_version | length != 0
 
     - name: Create openshift cluster
-      azure_rm_openshiftmanagedcluster:
+      azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
         location: "eastus"
@@ -113,7 +113,7 @@
 
 
     - name: Get available clusters for a specific resource_group
-      azure_rm_openshiftmanagedcluster_info:
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
       register: output
 
@@ -122,7 +122,7 @@
         that: output['clusters'] | length == 1
 
     - name: Get specific cluster information for a specific cluster
-      azure_rm_openshiftmanagedcluster_info:
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
       register: output
@@ -132,7 +132,7 @@
         that: output['clusters']['name'] == "{{ cluster_name }}"
 
     - name: Get all clusters
-      azure_rm_openshiftmanagedcluster_info:
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
       register: output
 
     - name: Assert all cluster
@@ -140,7 +140,7 @@
         that: output['clusters'] | length >= 1
 
     - name: Fetch kubeconfig file to register
-      azure_rm_openshiftmanagedclusterkubeconfig_info:
+      azure.azcollection.azure_rm_openshiftmanagedclusterkubeconfig_info:
         name: "{{ cluster_name }}"
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
       register: kubeconfig_reg
@@ -150,7 +150,7 @@
         that: kubeconfig_reg['kubeconfig'] | length >= 1
 
     - name: Fetch kubeconfig file with specific name
-      azure_rm_openshiftmanagedclusterkubeconfig_info:
+      azure.azcollection.azure_rm_openshiftmanagedclusterkubeconfig_info:
         name: "{{ cluster_name }}"
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         path: "/home/testuser/{{ cluster_name }}"
@@ -167,7 +167,7 @@
           - named_kubeconf_file.stat.size != 0
 
     - name: Fetch kubeconfig file with default name (kubeconfig)
-      azure_rm_openshiftmanagedclusterkubeconfig_info:
+      azure.azcollection.azure_rm_openshiftmanagedclusterkubeconfig_info:
         name: "{{ cluster_name }}"
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         path: "/home/testuser/"
@@ -184,7 +184,7 @@
           - default_kubeconf_file.stat.size != 0
 
     - name: Delete openshift cluster
-      azure_rm_openshiftmanagedcluster:
+      azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
         location: "eastus"
@@ -196,7 +196,7 @@
         that: output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-openshiftmanagedcluster01"
         force_delete_nonempty: true
         state: absent

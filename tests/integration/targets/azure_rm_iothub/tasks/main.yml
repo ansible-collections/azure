@@ -1,5 +1,5 @@
 - name: Create a new resource group for iot hub test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-iothub"
     location: eastus
 
@@ -30,7 +30,7 @@
         - '2'
 
     - name: Create IoT Hub (check mode)
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         ip_filters:
@@ -46,14 +46,14 @@
           - iothub is changed
 
     - name: Query IoT Hub
-      azure_rm_iothub_info:
+      azure.azcollection.azure_rm_iothub_info:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
       register: iothub
       ignore_errors: true
 
     - name: Create IoT Hub
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         ip_filters:
@@ -68,7 +68,7 @@
           - iothub is changed
 
     - name: Update IoT Hub (identity)
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         identity:
@@ -84,7 +84,7 @@
           - iothub is changed
 
     - name: Get the IoT Hub facts
-      azure_rm_iothub_info:
+      azure.azcollection.azure_rm_iothub_info:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
       register: iothub
@@ -96,7 +96,7 @@
           - managed_identity_ids[0] in iothub.iothubs[0].identity.user_assigned_identities
 
     - name: Create IoT Hub (idempontent)
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         ip_filters:
@@ -116,7 +116,7 @@
           - iothub is not changed
 
     - name: Update IoT Hub (identity)
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         identity:
@@ -133,7 +133,7 @@
           - iothub is changed
 
     - name: Get the IoT Hub facts
-      azure_rm_iothub_info:
+      azure.azcollection.azure_rm_iothub_info:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
       register: iothub
@@ -146,7 +146,7 @@
           - managed_identity_ids[1] in iothub.iothubs[0].identity.user_assigned_identities
 
     - name: Query IoT Hub
-      azure_rm_iothub_info:
+      azure.azcollection.azure_rm_iothub_info:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         list_keys: true
@@ -166,7 +166,7 @@
       when: item.rights == 'RegistryWrite, ServiceConnect, DeviceConnect'
 
     - name: Create devices
-      azure_rm_iotdevice:
+      azure.azcollection.azure_rm_iotdevice:
         hub: "hub{{ rpfx }}"
         hub_policy_name: "{{ registry_write_name }}"
         hub_policy_key: "{{ registry_write_key }}"
@@ -183,7 +183,7 @@
         - 2
 
     - name: Query devices
-      azure_rm_iotdevice_info:
+      azure.azcollection.azure_rm_iotdevice_info:
         hub: "hub{{ rpfx }}"
         hub_policy_name: "{{ registry_write_name }}"
         hub_policy_key: "{{ registry_write_key }}"
@@ -195,7 +195,7 @@
           - devices.iot_devices | length == 2
 
     - name: Query devices by name
-      azure_rm_iotdevice_info:
+      azure.azcollection.azure_rm_iotdevice_info:
         hub: "hub{{ rpfx }}"
         name: "mydevice1"
         hub_policy_name: "{{ registry_write_name }}"
@@ -213,7 +213,7 @@
       changed_when: true
 
     - name: Update devices
-      azure_rm_iotdevice:
+      azure.azcollection.azure_rm_iotdevice:
         hub: "hub{{ rpfx }}"
         hub_policy_name: "{{ registry_write_name }}"
         hub_policy_key: "{{ registry_write_key }}"
@@ -235,7 +235,7 @@
       ansible.builtin.command: sleep 300
 
     - name: Query devices twin
-      azure_rm_iotdevice_info:
+      azure.azcollection.azure_rm_iotdevice_info:
         hub: "hub{{ rpfx }}"
         hub_policy_name: "{{ registry_write_name }}"
         hub_policy_key: "{{ registry_write_key }}"
@@ -247,7 +247,7 @@
           - devices.iot_devices | length == 2
 
     - name: Delete IoT Hub (check mode)
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         state: absent
@@ -260,7 +260,7 @@
           - iothub is changed
 
     - name: Delete IoT Hub
-      azure_rm_iothub:
+      azure.azcollection.azure_rm_iothub:
         name: "hub{{ rpfx }}"
         resource_group: "{{ resource_group }}-iothub"
         state: absent
@@ -284,7 +284,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-iothub"
         force_delete_nonempty: true
         state: absent

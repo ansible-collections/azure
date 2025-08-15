@@ -2,7 +2,7 @@
   ansible.builtin.include_tasks: setup_des.yml
 
 - name: Create an image from VM (check mode)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-image"
     source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
     name: testimage001
@@ -20,7 +20,7 @@
     that: output is changed
 
 - name: Create an image from VM
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-image"
     source:
       name: "{{ vm_name }}"
@@ -39,7 +39,7 @@
       - output.id
 
 - name: Create an image from VM (idempotent)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-image"
     source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
     name: testimage001
@@ -56,7 +56,7 @@
       - output.id
 
 - name: Gather information about image created
-  azure_rm_image_info:
+  azure.azcollection.azure_rm_image_info:
     resource_group: "{{ resource_group }}-image"
     name: testimage001
   register: output
@@ -68,7 +68,7 @@
       - output.images[0].hyper_v_generation == 'V1'
 
 - name: Delete image (check mode)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-image"
     name: testimage001
     state: absent
@@ -81,7 +81,7 @@
       - output is changed
 
 - name: Delete image
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-image"
     name: testimage001
     state: absent
@@ -93,7 +93,7 @@
       - output is changed
 
 - name: Delete image (idempotent)
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-image"
     name: testimage001
     state: absent
@@ -105,13 +105,13 @@
       - output is not changed
 
 - name: Destroy disk encryption set
-  azure_rm_diskencryptionset:
+  azure.azcollection.azure_rm_diskencryptionset:
     resource_group: "{{ resource_group }}-image"
     name: "{{ des_name }}"
     state: absent
 
 - name: Destroy key vault
-  azure_rm_keyvault:
+  azure.azcollection.azure_rm_keyvault:
     vault_name: "{{ vault_name }}"
     resource_group: "{{ resource_group }}-image"
     state: absent

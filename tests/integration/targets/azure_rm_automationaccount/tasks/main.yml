@@ -1,5 +1,5 @@
 - name: Create a new resource group for automation account test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-automationaccount"
     location: westus2
 
@@ -12,7 +12,7 @@
       run_once: true
 
     - name: Create automation account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
       check_mode: true
@@ -24,7 +24,7 @@
           - output is changed
 
     - name: Create automation account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
       register: output
@@ -36,7 +36,7 @@
           - output.id
 
     - name: Create automation account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
       register: output
@@ -47,7 +47,7 @@
           - output is not changed
 
     - name: Get automation account
-      azure_rm_automationaccount_info:
+      azure.azcollection.azure_rm_automationaccount_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
         list_statistics: true
@@ -65,7 +65,7 @@
           - facts.automation_accounts[0].state == "Ok"
 
     - name: Delete account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
         state: absent
@@ -78,7 +78,7 @@
           - output is changed
 
     - name: Delete account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
         state: absent
@@ -90,7 +90,7 @@
           - output is changed
 
     - name: Delete account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-automationaccount"
         state: absent
@@ -102,7 +102,7 @@
           - output is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-automationaccount"
         force_delete_nonempty: true
         state: absent

@@ -1,5 +1,5 @@
 - name: Create a new resource group for host group test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-hostgroup"
     location: eastus
 
@@ -10,7 +10,7 @@
         group_name: "hostgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: Create a host group
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -25,7 +25,7 @@
         that: results is changed
 
     - name: Create a host group again (Idempotent test)
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -40,7 +40,7 @@
         that: results is not changed
 
     - name: Update a host group
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -57,7 +57,7 @@
         that: results is changed
 
     - name: Get host group facts
-      azure_rm_hostgroup_info:
+      azure.azcollection.azure_rm_hostgroup_info:
         resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
       register: results
@@ -73,7 +73,7 @@
           - results.hostgroups[0].tags | length > 0
 
     - name: Delete host group
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         state: absent
@@ -84,7 +84,7 @@
         that: results is changed
 
     - name: Delete host group again (Idempotent test)
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-hostgroup"
         name: "{{ group_name }}"
         state: absent
@@ -95,7 +95,7 @@
         that: results is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-hostgroup"
         force_delete_nonempty: true
         state: absent

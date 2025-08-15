@@ -1,5 +1,5 @@
 - name: Create a new resource group for resource health status test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-resourcehealthstates"
     location: eastus
 
@@ -11,20 +11,20 @@
       run_once: true
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-resourcehealthstates"
         name: "vnet{{ rpfx }}"
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-resourcehealthstates"
         name: "sub{{ rpfx }}"
         address_prefix: "10.0.1.0/24"
         virtual_network: "vnet{{ rpfx }}"
 
     - name: Create a VMSS
-      azure_rm_virtualmachinescaleset:
+      azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-resourcehealthstates"
         name: testVMSS{{ rpfx }}
         vm_size: Standard_A1_v2
@@ -54,7 +54,7 @@
       register: vmss_output
 
     - name: Get the resource facts by resource uri
-      azure_rm_resourcehealthstates_info:
+      azure.azcollection.azure_rm_resourcehealthstates_info:
         resource_uri: "{{ vmss_output.ansible_facts.azure_vmss.id }}"
       register: output
 
@@ -64,7 +64,7 @@
           - output.health_states |length == 1
 
     - name: Get the resource facts by resource grouop
-      azure_rm_resourcehealthstates_info:
+      azure.azcollection.azure_rm_resourcehealthstates_info:
         resource_group: "{{ resource_group }}-resourcehealthstates"
       register: output
 
@@ -74,7 +74,7 @@
           - output.health_states |length >= 1
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-resourcehealthstates"
         force_delete_nonempty: true
         state: absent

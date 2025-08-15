@@ -1,5 +1,5 @@
 - name: Create a new resource group for multi managed disk test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-multidisk"
     location: westus2
 
@@ -46,7 +46,7 @@
           - azure_disks.state | length == 2
 
     - name: Ensure disks exist
-      azure_rm_manageddisk_info:
+      azure.azcollection.azure_rm_manageddisk_info:
         name: "{{ item.name }}"
         resource_group: "{{ item.resource_group }}"
       register: azure_disks_info
@@ -72,14 +72,14 @@
 
     # setup: create virtual machines to attach disks on
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-multidisk"
         name: "vnet-{{ item.name }}"
         address_prefixes: "{{ shared_virtual_network_cidr }}"
       with_items: "{{ shared_virtual_machines }}"
 
     - name: Add subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-multidisk"
         name: "sub-{{ item.name }}"
         address_prefix: "{{ shared_subnet_cidr }}"
@@ -87,7 +87,7 @@
       with_items: "{{ shared_virtual_machines }}"
 
     - name: Create virtual machines
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
         vm_size: Standard_B1ms
@@ -118,7 +118,7 @@
       loop: "{{ create_vms.results }}"
 
     - name: Get virtual machine info
-      azure_rm_virtualmachine_info:
+      azure.azcollection.azure_rm_virtualmachine_info:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
       register: vm_result
@@ -144,7 +144,7 @@
           - attach_disks.results | length == 1
 
     - name: Retrieve managed disks info
-      azure_rm_manageddisk_info:
+      azure.azcollection.azure_rm_manageddisk_info:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
       register: azure_disks
@@ -188,7 +188,7 @@
           - detach_disks is changed
 
     - name: Retrieve managed disks info
-      azure_rm_manageddisk_info:
+      azure.azcollection.azure_rm_manageddisk_info:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
       register: azure_disks
@@ -227,7 +227,7 @@
       register: detach_from_vms
 
     - name: Retrieve managed disks info
-      azure_rm_manageddisk_info:
+      azure.azcollection.azure_rm_manageddisk_info:
         resource_group: "{{ shared_disks[1].resource_group }}"
         name: "{{ shared_disks[1].name }}"
       register: azure_disks
@@ -261,7 +261,7 @@
       register: delete_attached_disk
 
     - name: Retrieve managed disks info
-      azure_rm_manageddisk_info:
+      azure.azcollection.azure_rm_manageddisk_info:
         resource_group: "{{ shared_disks[0].resource_group }}"
         name: "{{ shared_disks[0].name }}"
       register: azure_disks
@@ -307,7 +307,7 @@
       register: delete_disk
 
     - name: Retrieve managed disks info
-      azure_rm_manageddisk_info:
+      azure.azcollection.azure_rm_manageddisk_info:
         resource_group: "{{ shared_disks[1].resource_group }}"
         name: "{{ shared_disks[1].name }}"
       register: azure_disks
@@ -331,7 +331,7 @@
           - delete_idempotency is not changed
 
     - name: Delte the virtual machines
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
         state: absent
@@ -339,7 +339,7 @@
 
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-multidisk"
         force_delete_nonempty: true
         state: absent

@@ -18,7 +18,7 @@
         var: hostvars[vm_name_2].powerstate
 
     - name: Power off minimal VM 2
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ vm_name_2 }}"
         started: false

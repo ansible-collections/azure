@@ -1,5 +1,5 @@
 - name: Create a new resource group for public IP test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-publicip"
     location: eastus
 
@@ -11,13 +11,13 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(9, True, '') }}{{ 1000 | random }}"
 
     - name: Remove public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
         state: absent
 
     - name: Create the first public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-first"
         allocation_method: Static
@@ -26,7 +26,7 @@
       register: output
 
     - name: Create public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
         allocation_method: Static
@@ -47,7 +47,7 @@
           - output.state.tags.testing == 'testing'
 
     - name: Create public ip with IPV6
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-02"
         allocation_method: Static
@@ -65,7 +65,7 @@
           - output.state.zones == ['1']
 
     - name: Should be idempotent
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
         sku: 'Standard'
@@ -78,7 +78,7 @@
         that: output is not changed
 
     - name: Update tags
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
         allocation_method: static
@@ -97,7 +97,7 @@
           - output.state.tags.delete == 'never'
 
     - name: Gather facts, filtering by tag
-      azure_rm_publicipaddress_info:
+      azure.azcollection.azure_rm_publicipaddress_info:
         resource_group: "{{ resource_group }}-publicip"
         tags:
           - testing
@@ -109,7 +109,7 @@
         that: infos.publicipaddresses | length == 1
 
     - name: Purge all tags
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
         sku: 'Standard'
@@ -124,7 +124,7 @@
           - output.state.tags | length == 0
 
     - name: Gather facts for a public ip
-      azure_rm_publicipaddress_info:
+      azure.azcollection.azure_rm_publicipaddress_info:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
       register: pip
@@ -138,7 +138,7 @@
           - pip.publicipaddresses[0].dns_settings.domain_name_label == domain_name
 
     - name: Gather facts for all public ips
-      azure_rm_publicipaddress_info:
+      azure.azcollection.azure_rm_publicipaddress_info:
         resource_group: "{{ resource_group }}-publicip"
       register: infos
 
@@ -147,25 +147,25 @@
         that: infos.publicipaddresses | length > 0
 
     - name: Remove IPV6 public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-02"
         state: absent
 
     - name: Remove the first public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-first"
         state: absent
 
     - name: Remove public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
         state: absent
 
     - name: Gather facts for a public ip
-      azure_rm_publicipaddress_info:
+      azure.azcollection.azure_rm_publicipaddress_info:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}"
       register: infos
@@ -175,7 +175,7 @@
         that: infos.publicipaddresses | length == 0
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-publicip"
         force_delete_nonempty: true
         state: absent

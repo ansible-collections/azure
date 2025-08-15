@@ -1,5 +1,5 @@
 - name: Create a new resource group for Azure Front Door route test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-afdroute"
     location: eastus
 
@@ -15,7 +15,7 @@
         route: "route-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
 
     - name: Create Standard Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
         resource_group: "{{ resource_group }}-afdroute"
@@ -23,7 +23,7 @@
         state: "present"
 
     - name: Create EndPoint
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdroute"
@@ -31,7 +31,7 @@
         state: "present"
 
     - name: Create Origin Group
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdroute"
@@ -48,7 +48,7 @@
       register: output
 
     - name: Create Origin
-      azure_rm_afdorigin:
+      azure.azcollection.azure_rm_afdorigin:
         name: "{{ origin }}"
         origin_group_name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
@@ -63,14 +63,14 @@
       register: output
 
     - name: Create Ruleset
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdroute"
         state: "present"
 
     - name: Create Route
-      azure_rm_afdroute:
+      azure.azcollection.azure_rm_afdroute:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -96,7 +96,7 @@
           - output.id
 
     - name: Update Route (idempotent test)
-      azure_rm_afdroute:
+      azure.azcollection.azure_rm_afdroute:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -122,7 +122,7 @@
           - output.id
 
     - name: Load Route info
-      azure_rm_afdroute_info:
+      azure.azcollection.azure_rm_afdroute_info:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -139,7 +139,7 @@
           - output is not changed
 
     - name: Update Route (with different values)
-      azure_rm_afdroute:
+      azure.azcollection.azure_rm_afdroute:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -167,7 +167,7 @@
           - output.id
 
     - name: Update Route (idempotent test)
-      azure_rm_afdroute:
+      azure.azcollection.azure_rm_afdroute:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -195,7 +195,7 @@
           - output.id
 
     - name: Delete Route
-      azure_rm_afdroute:
+      azure.azcollection.azure_rm_afdroute:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -211,7 +211,7 @@
           - output.id
 
     - name: Delete Route (idempotent test)
-      azure_rm_afdroute:
+      azure.azcollection.azure_rm_afdroute:
         name: "{{ route }}"
         endpoint_name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
@@ -226,7 +226,7 @@
           - output is not changed
 
     - name: Delete Origin
-      azure_rm_afdorigin:
+      azure.azcollection.azure_rm_afdorigin:
         name: "{{ origin }}"
         origin_group_name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
@@ -234,7 +234,7 @@
         state: "absent"
 
     - name: Delete Origin Group
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdroute"
@@ -242,14 +242,14 @@
       register: output
 
     - name: Create Ruleset
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdroute"
         state: "absent"
 
     - name: Delete EndPoint
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdroute"
@@ -257,7 +257,7 @@
       register: output
 
     - name: Delete Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
         resource_group: "{{ resource_group }}-afdroute"
@@ -265,7 +265,7 @@
         state: "absent"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-afdroute"
         force_delete_nonempty: true
         state: absent

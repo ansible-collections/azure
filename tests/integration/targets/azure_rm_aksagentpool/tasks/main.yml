@@ -1,5 +1,5 @@
 - name: Create a new resource group for AKS agent pool test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-akspool"
     location: eastus
 
@@ -10,19 +10,19 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
     - name: Find available k8s version
-      azure_rm_aksversion_info:
+      azure.azcollection.azure_rm_aksversion_info:
         location: westus2
       register: versions
 
     - name: Create proximity placement group
-      azure_rm_proximityplacementgroup:
+      azure.azcollection.azure_rm_proximityplacementgroup:
         resource_group: "{{ resource_group }}-akspool"
         location: westus2
         name: "proxi{{ rpfx }}"
       register: proxi_output
 
     - name: Create public ip prefix
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-akspool"
         name: "pipprefix{{ rpfx }}"
         location: westus2
@@ -36,7 +36,7 @@
       register: pip_output
 
     - name: Create a kubernet service with minimal parameters
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "min{{ rpfx }}"
         location: westus2
         resource_group: "{{ resource_group }}-akspool"
@@ -64,7 +64,7 @@
       register: output
 
     - name: Get managecluster admin credentials
-      azure_rm_akscredentials_info:
+      azure.azcollection.azure_rm_akscredentials_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         show_admin_credentials: true
@@ -72,7 +72,7 @@
       ignore_errors: true
 
     - name: Get managecluster user credentials
-      azure_rm_akscredentials_info:
+      azure.azcollection.azure_rm_akscredentials_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         show_user_credentials: true
@@ -80,7 +80,7 @@
       ignore_errors: true
 
     - name: Get managecluster monitor user credentials
-      azure_rm_akscredentials_info:
+      azure.azcollection.azure_rm_akscredentials_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         show_monitor_credentials: true
@@ -88,7 +88,7 @@
       ignore_errors: true
 
     - name: Get cluster's node agent pool info
-      azure_rm_aksagentpool_info:
+      azure.azcollection.azure_rm_aksagentpool_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
       register: output
@@ -99,7 +99,7 @@
           - "output.aks_agent_pools | length == 1"
 
     - name: Get aks agent pool support version
-      azure_rm_aksagentpoolversion_info:
+      azure.azcollection.azure_rm_aksagentpoolversion_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
       register: agentpool_version
@@ -110,7 +110,7 @@
           - "agentpool_version.azure_orchestrator_version | length >= 1"
 
     - name: Add agent pool
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
@@ -137,7 +137,7 @@
           - output is changed
 
     - name: Add agent pool (Idempotent test)
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
@@ -164,7 +164,7 @@
           - output is not changed
 
     - name: Get cluster's node agent pool info
-      azure_rm_aksagentpool_info:
+      azure.azcollection.azure_rm_aksagentpool_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
       register: output
@@ -175,7 +175,7 @@
           - "output.aks_agent_pools | length == 2"
 
     - name: Upgrade node agent pool
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
@@ -202,7 +202,7 @@
           - output is changed
 
     - name: Get cluster's node agent pool info
-      azure_rm_aksagentpool_info:
+      azure.azcollection.azure_rm_aksagentpool_info:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
@@ -221,7 +221,7 @@
           - output.aks_agent_pools[0].security_profile.enable_secure_boot is false
 
     - name: Create a new agent pool with multi parameters
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default06
@@ -265,7 +265,7 @@
           - output is changed
 
     - name: Create a new agent pool with multi parameters( Idempotent test)
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default06
@@ -309,14 +309,14 @@
           - output is not changed
 
     - name: Delete node agent pool
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default06
         state: absent
 
     - name: Delete node agent pool
-      azure_rm_aksagentpool:
+      azure.azcollection.azure_rm_aksagentpool:
         resource_group: "{{ resource_group }}-akspool"
         cluster_name: "min{{ rpfx }}"
         name: default03
@@ -329,7 +329,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-akspool"
         force_delete_nonempty: true
         state: absent

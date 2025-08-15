@@ -1,5 +1,5 @@
 - name: Create a new resource group for monitor activity log alert test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-logalert"
     location: eastus
   register: resource_group_output
@@ -530,7 +530,7 @@
 
   always:
     - name: Force delete the log alert resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-logalert"
         force_delete_nonempty: true
         state: absent

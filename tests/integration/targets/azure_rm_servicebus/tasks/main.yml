@@ -1,5 +1,5 @@
 - name: Create a new resource group for service bus test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-servicebus"
     location: eastus
 
@@ -35,7 +35,7 @@
         - '3'
 
     - name: Create a namespace
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -51,7 +51,7 @@
           - output.tags
 
     - name: Create a namespace (idempontent)
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -63,7 +63,7 @@
           - output is not changed
 
     - name: Update namespace - ManagedIdentity SystemAssigned
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -78,7 +78,7 @@
           - output.identity.type == "SystemAssigned"
 
     - name: Gather facts
-      azure_rm_servicebus_info:
+      azure.azcollection.azure_rm_servicebus_info:
         name: "ns{{ rpfx }}"
         type: namespace
         resource_group: "{{ resource_group }}-servicebus"
@@ -89,7 +89,7 @@
         var: facts
 
     - name: Update namespace - ManagedIdentity UserAssigned
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -109,7 +109,7 @@
           - output.identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
     - name: Update namespace - ManagedIdentity UserAssigned Append
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -130,7 +130,7 @@
           - output.identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Update namespace - ManagedIdentity UserAssigned Append false
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -151,7 +151,7 @@
           - output.identity.user_assigned_identities[managed_identity_ids[2]] is defined
 
     - name: Create a secondary namespace
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}02"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -170,7 +170,7 @@
           - output is changed
 
     - name: Update the secondary namespace
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}02"
         resource_group: "{{ resource_group }}-servicebus"
         sku: premium
@@ -189,7 +189,7 @@
           - output is changed
 
     - name: Gather the namespace facts
-      azure_rm_servicebus_info:
+      azure.azcollection.azure_rm_servicebus_info:
         name: "ns{{ rpfx }}"
         type: namespace
         resource_group: "{{ resource_group }}-servicebus"
@@ -206,7 +206,7 @@
           - facts.servicebuses[0].premium_messaging_partitions == 1
 
     - name: Create a queue
-      azure_rm_servicebusqueue:
+      azure.azcollection.azure_rm_servicebusqueue:
         name: "queue{{ rpfx }}"
         namespace: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
@@ -221,7 +221,7 @@
           - queue is changed
 
     - name: Create a topic (check mode)
-      azure_rm_servicebustopic:
+      azure.azcollection.azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
@@ -237,7 +237,7 @@
           - output is changed
 
     - name: Create a topic
-      azure_rm_servicebustopic:
+      azure.azcollection.azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
@@ -254,7 +254,7 @@
           - "'subscription_count' not in output"
 
     - name: Create a topic (idempontent)
-      azure_rm_servicebustopic:
+      azure.azcollection.azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
@@ -269,7 +269,7 @@
           - output is not changed
 
     - name: Create test policy
-      azure_rm_servicebussaspolicy:
+      azure.azcollection.azure_rm_servicebussaspolicy:
         name: testpolicy
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
@@ -277,7 +277,7 @@
         rights: manage
 
     - name: Create a subscription
-      azure_rm_servicebustopicsubscription:
+      azure.azcollection.azure_rm_servicebustopicsubscription:
         name: "subs{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
@@ -291,7 +291,7 @@
           - subs is changed
 
     - name: Retrive topic
-      azure_rm_servicebus_info:
+      azure.azcollection.azure_rm_servicebus_info:
         type: topic
         name: "topic{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
@@ -309,7 +309,7 @@
           - facts.servicebuses[0].sas_policies.testpolicy.rights == 'manage'
 
     - name: Delete subscription
-      azure_rm_servicebustopicsubscription:
+      azure.azcollection.azure_rm_servicebustopicsubscription:
         name: "subs{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
@@ -317,7 +317,7 @@
         state: absent
 
     - name: Retrive topic
-      azure_rm_servicebus_info:
+      azure.azcollection.azure_rm_servicebus_info:
         type: topic
         name: "topic{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
@@ -332,14 +332,14 @@
           - "facts.servicebuses | length == 1"
 
     - name: Delete topic
-      azure_rm_servicebustopic:
+      azure.azcollection.azure_rm_servicebustopic:
         name: "topic{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         state: absent
 
     - name: Retrive topic
-      azure_rm_servicebus_info:
+      azure.azcollection.azure_rm_servicebus_info:
         name: "topic{{ rpfx }}"
         type: topic
         resource_group: "{{ resource_group }}-servicebus"
@@ -353,14 +353,14 @@
           - "facts.servicebuses | length == 0"
 
     - name: Delete queue
-      azure_rm_servicebusqueue:
+      azure.azcollection.azure_rm_servicebusqueue:
         name: "queue{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         namespace: "ns{{ rpfx }}"
         state: absent
 
     - name: Delete namespace
-      azure_rm_servicebus:
+      azure.azcollection.azure_rm_servicebus:
         name: "ns{{ rpfx }}"
         resource_group: "{{ resource_group }}-servicebus"
         state: absent
@@ -379,7 +379,7 @@
         - '3'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-servicebus"
         force_delete_nonempty: true
         state: absent

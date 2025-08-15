@@ -1,19 +1,19 @@
 - name: Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}-disk"
     address_prefixes: "{{ network }}"
     location: westus3
 
 - name: Create subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ subnet_name }}"
     address_prefix: "{{ subnet }}"
     virtual_network: "{{ network_name }}-disk"
 
 - name: Create network interface
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}-disk"
     virtual_network: "{{ network_name }}-disk"
@@ -23,7 +23,7 @@
       - 33
 
 - name: Create minimal VM with defaults and a custom managed disk type
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -54,14 +54,14 @@
       - vm_output is changed
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Destroy NIC
-  azure_rm_networkinterface:
+  azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}-disk"
     state: absent
@@ -69,26 +69,26 @@
   register: ignore_errors_register
 
 - name: Delete network security group
-  azure_rm_securitygroup:
+  azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ interface_name }}-disk"
     state: absent
 
 - name: Destroy disk
-  azure_rm_manageddisk:
+  azure.azcollection.azure_rm_manageddisk:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}-disk"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}-disk"
     state: absent

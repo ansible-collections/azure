@@ -2,13 +2,13 @@
   ansible.builtin.include_tasks: setup.yml
 
 - name: Create proximity placement group
-  azure_rm_proximityplacementgroup:
+  azure.azcollection.azure_rm_proximityplacementgroup:
     resource_group: "{{ resource_group }}-vm01"
     name: testproximityplacement
   register: output
 
 - name: Create minimal VM with proximentplace group
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -29,19 +29,19 @@
   register: vm_output
 
 - name: Get VM facts
-  azure_rm_virtualmachine_info:
+  azure.azcollection.azure_rm_virtualmachine_info:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
   register: vm_state
 
 - name: Generalize VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     generalized: true
 
 - name: Create an image from VM
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-vm01"
     source: "{{ vm_name }}"
     name: testimage
@@ -54,7 +54,7 @@
       - output is changed
 
 - name: Create virtual machine ephmeral OS disk
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     admin_username: "testuser"
@@ -77,7 +77,7 @@
       - output.ansible_facts.azure_vm.properties.storageProfile.osDisk.diffDiskSettings.option == 'Local'
 
 - name: Check virtual machine ephmeral OS disk idempotent
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     admin_username: "testuser"
@@ -99,7 +99,7 @@
       - output is not changed
 
 - name: Check virtual machine ephmeral OS disk can't update
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     admin_username: "testuser"
@@ -120,19 +120,19 @@
       - output is not changed
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-02"
     state: absent
 
 - name: Create an image from VM
-  azure_rm_image:
+  azure.azcollection.azure_rm_image:
     resource_group: "{{ resource_group }}-vm01"
     name: testimage
     state: absent

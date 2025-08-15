@@ -1,5 +1,5 @@
 - name: Create a new resource group for test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-publicipprefix"
     location: westus2
 
@@ -10,7 +10,7 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
     - name: Create public ip prefix (Check mode)
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
@@ -25,7 +25,7 @@
       check_mode: true
 
     - name: Create public ip prefix
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
@@ -45,7 +45,7 @@
           - output is changed
 
     - name: Create public ip prefix (Idempotent test)
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
@@ -65,7 +65,7 @@
           - output is not changed
 
     - name: Update public ip prefix (Update tags)
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         zones:
@@ -85,7 +85,7 @@
           - output is changed
 
     - name: Gather facts for a public ip prefix
-      azure_rm_publicipprefix_info:
+      azure.azcollection.azure_rm_publicipprefix_info:
         resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
       register: output
@@ -97,7 +97,7 @@
           - output.publicipprefixes[0].prefix_length == 29
 
     - name: Delete the public IP prefix
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicipprefix"
         name: "pipprefix{{ rpfx }}"
         state: absent
@@ -109,7 +109,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-publicipprefix"
         force_delete_nonempty: true
         state: absent

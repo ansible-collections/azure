@@ -1,5 +1,5 @@
 - name: Create a new resource group for autoscale test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-autoscale"
     location: eastus
 
@@ -12,20 +12,20 @@
       run_once: true
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-autoscale"
         name: testVnet
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-autoscale"
         name: testSubnet
         address_prefix: "10.0.1.0/24"
         virtual_network: testVnet
 
     - name: Create VMSS
-      azure_rm_virtualmachinescaleset:
+      azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-autoscale"
         name: testVMSS{{ rpfx }}
         vm_size: Standard_B1ms
@@ -55,7 +55,7 @@
       register: vmss
 
     - name: Create auto scaling (check mode)
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target: "{{ vmss.ansible_facts.azure_vmss.id }}"
@@ -82,7 +82,7 @@
           - output is changed
 
     - name: Create auto scaling
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target:
@@ -112,7 +112,7 @@
           - output.id
 
     - name: Create auto scaling (idemponent)
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target: "{{ vmss.ansible_facts.azure_vmss.id }}"
@@ -139,7 +139,7 @@
           - output.id
 
     - name: Update auto scaling
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         target: "{{ vmss.ansible_facts.azure_vmss.id }}"
@@ -187,7 +187,7 @@
           - output.profiles[0].rules[0].metric_resource_uri == vmss.ansible_facts.azure_vmss.id
 
     - name: Delete auto scaling (check mode)
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         state: absent
@@ -200,7 +200,7 @@
           - output is changed
 
     - name: Delete auto scaling
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         state: absent
@@ -212,7 +212,7 @@
           - output is changed
 
     - name: Delete auto scaling (idemponetent)
-      azure_rm_autoscale:
+      azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
         state: absent
@@ -224,27 +224,27 @@
           - output is not changed
 
     - name: Clean VMSS
-      azure_rm_virtualmachinescaleset:
+      azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-autoscale"
         vm_size: Standard_DS1_v2
         name: testVMSS{{ rpfx }}
         state: absent
 
     - name: Clean subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-autoscale"
         name: testSubnet
         virtual_network: testVnet
         state: absent
 
     - name: Clean virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-autoscale"
         name: testVnet
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-autoscale"
         force_delete_nonempty: true
         state: absent

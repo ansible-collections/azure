@@ -1,5 +1,5 @@
 - name: Create a new resource group for event  hub test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-eventhub"
     location: eastus
 
@@ -34,7 +34,7 @@
         - '2'
 
     - name: Create Event Hub Namespace (check mode)
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -47,7 +47,7 @@
         that: results is changed
 
     - name: Create Event Hub (check mode)
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -61,7 +61,7 @@
         that: results is changed
 
     - name: Create Event Hub Namespace
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -73,7 +73,7 @@
         that: results is changed
 
     - name: Create Event Hub
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -85,7 +85,7 @@
         that: results is changed
 
     - name: Update Namespace
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -101,7 +101,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Update Namespace - add SystemAssigned Identity
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -119,7 +119,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Retrieve Namespace with the SystemAssigned Identity
-      azure_rm_eventhub_info:
+      azure.azcollection.azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
       register: results
@@ -133,7 +133,7 @@
           - results.namespace[0].identity.user_assigned_identities is not defined
 
     - name: Update Namespace - change to first UserAssigned Identity
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -154,7 +154,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Retrieve Namespace with the first UserAssigned Identity
-      azure_rm_eventhub_info:
+      azure.azcollection.azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
       register: results
@@ -169,7 +169,7 @@
           - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
     - name: Update Namespace - replace to second UserAssigned Identity
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -191,7 +191,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Retrieve Namespace with the second UserAssigned Identity
-      azure_rm_eventhub_info:
+      azure.azcollection.azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
       register: results
@@ -206,7 +206,7 @@
           - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Update Namespace - append multiple Identities
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -227,7 +227,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Retrieve Namespace with multiple identities
-      azure_rm_eventhub_info:
+      azure.azcollection.azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
       register: results
@@ -243,7 +243,7 @@
           - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Update Event Hub
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -260,7 +260,7 @@
           - results is changed
 
     - name: Test idempotent
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -276,7 +276,7 @@
 
     # cleanup
     - name: Delete Event Hub
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -284,7 +284,7 @@
         state: absent
 
     - name: Delete Event Hub (idempotent)
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -297,7 +297,7 @@
         that: results is not changed
 
     - name: Delete Namespace
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -309,7 +309,7 @@
       changed_when: true
 
     - name: Delete Namespace (idempotent)
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -321,7 +321,7 @@
         that: results is not changed
 
     - name: Create Namespace - with multiple UserAssigned Identities
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -343,7 +343,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Retrieve Namespace with multiple UserAssigned Identities
-      azure_rm_eventhub_info:
+      azure.azcollection.azure_rm_eventhub_info:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
       register: results
@@ -359,7 +359,7 @@
           - results.namespace[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Delete Namespace
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         location: "{{ location }}"
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-eventhub"
@@ -387,7 +387,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-eventhub"
         force_delete_nonempty: true
         state: absent

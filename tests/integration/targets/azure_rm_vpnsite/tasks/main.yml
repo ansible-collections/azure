@@ -1,5 +1,5 @@
 - name: Create a new resource group for VPN site test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-vpnsite"
     location: eastus
 
@@ -10,7 +10,7 @@
         vpn_site: "vpn{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: Create a VpnSite
-      azure_rm_vpnsite:
+      azure.azcollection.azure_rm_vpnsite:
         resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         ip_address: 10.0.0.0
@@ -38,7 +38,7 @@
           - output is changed
 
     - name: Create the VpnSite without change (Idempotent test)
-      azure_rm_vpnsite:
+      azure.azcollection.azure_rm_vpnsite:
         resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         ip_address: 10.0.0.0
@@ -66,7 +66,7 @@
           - output is not changed
 
     - name: Update the VpnSite's device properties
-      azure_rm_vpnsite:
+      azure.azcollection.azure_rm_vpnsite:
         resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         ip_address: 10.0.0.0
@@ -94,7 +94,7 @@
           - output is changed
 
     - name: Get the VpnSite info
-      azure_rm_vpnsite_info:
+      azure.azcollection.azure_rm_vpnsite_info:
         resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
       register: output
@@ -107,13 +107,13 @@
           - "output.vpn_sites[0].device_properties.link_speed_in_mbps == 100"
 
     - name: Delete the VpnSite
-      azure_rm_vpnsite:
+      azure.azcollection.azure_rm_vpnsite:
         resource_group: "{{ resource_group }}-vpnsite"
         name: "{{ vpn_site }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vpnsite"
         force_delete_nonempty: true
         state: absent

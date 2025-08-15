@@ -1,5 +1,5 @@
 - name: Create a new resource group for virtual network gateway connection test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-vnetgwconn"
     location: eastus
 
@@ -13,7 +13,7 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: Create a new local network gateway
-      azure_rm_localnetworkgateway:
+      azure.azcollection.azure_rm_localnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ rpfx }}"
         local_network_address_space:
@@ -30,47 +30,47 @@
       register: local_gateway_output
 
     - name: Create the first virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ vnetname }}01"
         address_prefixes: "30.0.0.0/16"
 
     - name: Create the secondary virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ vnetname }}02"
         address_prefixes: "20.0.0.0/16"
 
     - name: Add the first subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: GatewaySubnet
         address_prefix: "30.0.2.0/24"
         virtual_network: "{{ vnetname }}01"
 
     - name: Add the secondary subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: GatewaySubnet
         address_prefix: "20.0.2.0/24"
         virtual_network: "{{ vnetname }}02"
 
     - name: Create the first public IP address
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgwconn"
         allocation_method: Static
         name: "{{ pubipname }}01"
         sku: standard
 
     - name: Create the secondary public IP address
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgwconn"
         allocation_method: Static
         name: "{{ pubipname }}02"
         sku: standard
 
     - name: Create the virtual network gateway without bgp settings
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ vngname }}{{ item }}"
         ip_configurations:
@@ -97,19 +97,19 @@
       loop: "{{ network_gateway_output.results }}"
 
     - name: Get the first virtual network gateway facts
-      azure_rm_virtualnetworkgateway_info:
+      azure.azcollection.azure_rm_virtualnetworkgateway_info:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ vngname }}01"
       register: network_gateway1_output
 
     - name: Get the secondary virtual network gateway facts
-      azure_rm_virtualnetworkgateway_info:
+      azure.azcollection.azure_rm_virtualnetworkgateway_info:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ vngname }}02"
       register: network_gateway2_output
 
     - name: Create a 'Vnet2Vnet' virtual network connection
-      azure_rm_virtualnetworkgatewayconnection:
+      azure.azcollection.azure_rm_virtualnetworkgatewayconnection:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "new{{ rpfx }}01"
         virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
@@ -131,7 +131,7 @@
           - output is changed
 
     - name: Create a 'IPsec' type virtual network connection
-      azure_rm_virtualnetworkgatewayconnection:
+      azure.azcollection.azure_rm_virtualnetworkgatewayconnection:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "new{{ rpfx }}02"
         virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
@@ -153,7 +153,7 @@
           - output is changed
 
     - name: Re-create the virtual network connection(Idempotent test)
-      azure_rm_virtualnetworkgatewayconnection:
+      azure.azcollection.azure_rm_virtualnetworkgatewayconnection:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "new{{ rpfx }}02"
         virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
@@ -175,7 +175,7 @@
           - output is not changed
 
     - name: Update the virtual network connection(Update test)
-      azure_rm_virtualnetworkgatewayconnection:
+      azure.azcollection.azure_rm_virtualnetworkgatewayconnection:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "new{{ rpfx }}02"
         virtual_network_gateway1: "{{ network_gateway1_output.virtual_network_gatways[0].id }}"
@@ -199,7 +199,7 @@
           - output is changed
 
     - name: Get the virtual network connection
-      azure_rm_virtualnetworkgatewayconnection_info:
+      azure.azcollection.azure_rm_virtualnetworkgatewayconnection_info:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "new{{ rpfx }}02"
       register: output
@@ -215,7 +215,7 @@
           - output.state[0].use_policy_based_traffic_selectors == false
 
     - name: Delete the virtual network connection
-      azure_rm_virtualnetworkgatewayconnection:
+      azure.azcollection.azure_rm_virtualnetworkgatewayconnection:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "new{{ rpfx }}{{ item }}"
         state: absent
@@ -230,7 +230,7 @@
           - output is changed
 
     - name: Delete the virtual network gateway
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ vngname }}{{ item }}"
         state: absent
@@ -255,7 +255,7 @@
       changed_when: true
 
     - name: Delete the public IP address
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgwconn"
         name: "{{ pubipname }}{{ item }}"
         state: absent
@@ -264,7 +264,7 @@
         - '02'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vnetgwconn"
         force_delete_nonempty: true
         state: absent

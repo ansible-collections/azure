@@ -1,5 +1,5 @@
 - name: Create a new resource group for Azure Front Door ruleset test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-afdruleset"
     location: eastus
 
@@ -12,7 +12,7 @@
         ruleset2: "ruleset2{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
 
     - name: Create Standard Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -20,7 +20,7 @@
         state: "present"
 
     - name: Create Ruleset
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -34,7 +34,7 @@
           - output.id
 
     - name: Update Ruleset (idempotent test)
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -47,7 +47,7 @@
           - output is not changed
 
     - name: Create Ruleset 2
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset2 }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -61,7 +61,7 @@
           - output.id
 
     - name: Load info for all Rulesets
-      azure_rm_afdruleset_info:
+      azure.azcollection.azure_rm_afdruleset_info:
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
       register: output
@@ -73,7 +73,7 @@
           - output is not changed
 
     - name: Delete Origin Group 2
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset2 }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -87,7 +87,7 @@
           - output.id
 
     - name: Load info for all Rulesets
-      azure_rm_afdruleset_info:
+      azure.azcollection.azure_rm_afdruleset_info:
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
       register: output
@@ -100,7 +100,7 @@
           - output is not changed
 
     - name: Delete Ruleset
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -113,7 +113,7 @@
           - output is changed
 
     - name: Delete Ruleset (idempotent test)
-      azure_rm_afdruleset:
+      azure.azcollection.azure_rm_afdruleset:
         name: "{{ ruleset }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
@@ -126,13 +126,13 @@
           - output is not changed
 
     - name: Delete Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdruleset"
         state: "absent"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-afdruleset"
         force_delete_nonempty: true
         state: absent

@@ -1,5 +1,5 @@
 - name: Create a new resource group for container instance test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-containerinstance"
     location: eastus
 
@@ -33,7 +33,7 @@
         - '2'
 
     - name: Create sample container instance
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
@@ -61,7 +61,7 @@
           - output.provisioning_state == 'Succeeded'
 
     - name: Create sample container instance -- same parameters
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
@@ -84,7 +84,7 @@
           - output is not changed
 
     - name: Create sample container instance -- force update
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
@@ -115,7 +115,7 @@
           - output.provisioning_state == 'Succeeded'
 
     - name: Create second container instance for testing purposes
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}sec"
         os_type: linux
@@ -138,7 +138,7 @@
       register: output
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "vnet{{ rpfx }}"
         address_prefixes_cidr:
@@ -146,7 +146,7 @@
           - 172.100.0.0/16
 
     - name: Create a subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "sub{{ rpfx }}"
         virtual_network_name: "vnet{{ rpfx }}"
@@ -159,7 +159,7 @@
       register: subnet_output
 
     - name: Create third container instance for subnet_ids
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
         os_type: linux
@@ -184,7 +184,7 @@
           - output is changed
 
     - name: Gather facts for single Container Instance
-      azure_rm_containerinstance_info:
+      azure.azcollection.azure_rm_containerinstance_info:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}sec"
       register: output
@@ -208,7 +208,7 @@
           - output.containerinstances[0]['restart_policy'] == 'on_failure'
 
     - name: Gather facts for all Container Instances in the resource group
-      azure_rm_containerinstance_info:
+      azure.azcollection.azure_rm_containerinstance_info:
         resource_group: "{{ resource_group }}-containerinstance"
       register: output
 
@@ -232,7 +232,7 @@
           - output.containerinstances[1]['containers'] != None
 
     - name: Create sample container instance -- User Identity
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}fourth"
         os_type: linux
@@ -256,7 +256,7 @@
       register: output
 
     - name: Gather facts for single Container Instance
-      azure_rm_containerinstance_info:
+      azure.azcollection.azure_rm_containerinstance_info:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}fourth"
       register: output
@@ -273,7 +273,7 @@
           - managed_identity_ids[1] in output.containerinstances[0].identity.user_assigned_identities
 
     - name: Remove container instance -- User Identity
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}fourth"
         os_type: linux
@@ -298,7 +298,7 @@
       register: output
 
     - name: Create sample container instance with volume
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
         os_type: linux
@@ -340,7 +340,7 @@
       ignore_errors: true
 
     - name: Gather facts for Container Instance
-      azure_rm_containerinstance_info:
+      azure.azcollection.azure_rm_containerinstance_info:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
       register: output
@@ -371,7 +371,7 @@
       register: ignore_errors_register
 
     - name: Remove container instance
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}thi"
         os_type: linux
@@ -400,7 +400,7 @@
       ignore_errors: true
 
     - name: Remove container instance
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
@@ -424,7 +424,7 @@
           - output is changed
 
     - name: Remove container instance
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}sec"
         os_type: linux
@@ -442,7 +442,7 @@
         state: absent
 
     - name: Remove container instance again
-      azure_rm_containerinstance:
+      azure.azcollection.azure_rm_containerinstance:
         resource_group: "{{ resource_group }}-containerinstance"
         name: "aci{{ rpfx }}"
         os_type: linux
@@ -478,7 +478,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-containerinstance"
         force_delete_nonempty: true
         state: absent
