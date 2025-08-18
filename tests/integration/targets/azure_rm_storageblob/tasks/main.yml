@@ -8,7 +8,7 @@
     - name: Create storage account name
       ansible.builtin.set_fact:
         storage_account: "sb{{ resource_group | hash('md5') | truncate(21, True, '') }}"
-        test1_file: "./targets/azure.azcollection.azure_rm_storageblob/files/Ratings.png"
+        test1_file: "./targets/azure_rm_storageblob/files/Ratings.png"
 
     - name: Create storage account
       azure.azcollection.azure_rm_storageaccount:
