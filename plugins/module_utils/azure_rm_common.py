@@ -304,6 +304,7 @@ from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import HMAC
 from time import time
+import subprocess
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -312,8 +313,6 @@ except ImportError:
 
 try:
     from azure.cli.core.util import CLIError
-    from azure.cli.core._profile import Profile
-    from azure.common.cloud import get_cli_active_cloud
 except ImportError:
     HAS_AZURE_CLI_CORE = False
     HAS_AZURE_CLI_CORE_EXC = None
@@ -1808,13 +1807,14 @@ class AzureRMAuth(object):
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
-                subscription_id = Profile().get_subscription_id()
+                cmd = ["az", "account", "show", "--query", "id", "-o", "tsv"]
+                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
             except Exception as ec:
                 self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
         cli_credentials = {
             'credentials': AzureCliCredential(),
             'subscription_id': subscription_id,
-            'cloud_environment': get_cli_active_cloud(),
+            'cloud_environment': azure_cloud.AZURE_PUBLIC_CLOUD,
         }
         return cli_credentials
 
