@@ -240,7 +240,6 @@ except ImportError:
 try:
     from enum import Enum
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
-    from azure.cli.core import cloud as azure_cloud
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.network import models as NetworkModels
     from azure.mgmt.resource.resources import ResourceManagementClient
@@ -294,6 +293,8 @@ try:
     from azure.mgmt.batch import models as BatchManagementModel
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
     from azure.mgmt.cdn import CdnManagementClient
+    from ansible_collections.azure.azcollection.plugins.module_utils import azure_cloud
+    from azure.cli.core import cloud as azure_cloud
 
 except ImportError as exc:
     Authentication = object
@@ -304,21 +305,12 @@ from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import HMAC
 from time import time
+import subprocess
 
 try:
     from urllib import (urlencode, quote_plus)
 except ImportError:
     from urllib.parse import (urlencode, quote_plus)
-
-try:
-    from azure.cli.core.util import CLIError
-    from azure.cli.core._profile import Profile
-    from azure.common.cloud import get_cli_active_cloud
-except ImportError:
-    HAS_AZURE_CLI_CORE = False
-    HAS_AZURE_CLI_CORE_EXC = None
-    CLIError = Exception
-
 
 def azure_id_to_dict(id):
     pieces = re.sub(r'^\/', '', id).split('/')
@@ -1808,13 +1800,22 @@ class AzureRMAuth(object):
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
-                subscription_id = Profile().get_subscription_id()
+                cmd = ["az", "account", "show", "--query", "id", "-o", "tsv"]
+                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
             except Exception as ec:
                 self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
+
+        try:
+            cmd = ["az", "cloud", "show", "--query", "name", "-o", "tsv"]
+            cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
+            _cloud_environment = azure_cloud.HARD_CODED_CLOUD_DICT[cloud_name]
+        except Exception as ec:
+            self.fail("Obtain the az login's active cloud occurred exception, exception information {0}".format(ec))
+
         cli_credentials = {
             'credentials': AzureCliCredential(),
             'subscription_id': subscription_id,
-            'cloud_environment': get_cli_active_cloud(),
+            'cloud_environment': _cloud_environment
         }
         return cli_credentials
 
@@ -1853,7 +1854,7 @@ class AzureRMAuth(object):
                 self.log('Retrieving credentials from Azure CLI profile')
                 cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
                 return cli_credentials
-            except CLIError as err:
+            except Exception as err:
                 self.fail("Azure CLI profile cannot be loaded - {0}".format(err))
 
         if auth_source == 'env':
@@ -1895,7 +1896,7 @@ class AzureRMAuth(object):
                 self.log('Retrieving credentials from AzureCLI profile')
             cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
             return cli_credentials
-        except CLIError as ce:
+        except Exception as ce:
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
 
         return None
