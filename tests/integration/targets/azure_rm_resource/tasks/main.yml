@@ -1,5 +1,5 @@
 - name: Create a new resource group for test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}"
     location: eastus
 
@@ -13,7 +13,7 @@
       run_once: true
 
     - name: Call REST API
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         api_version: '2018-02-01'
         resource_group: "{{ resource_group }}"
         provider: network
@@ -29,7 +29,7 @@
         that: output is changed
 
     - name: Call REST API
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         api_version: '2018-02-01'
         resource_group: "{{ resource_group }}"
         provider: network
@@ -45,7 +45,7 @@
         that: output is not changed
 
     - name: Call REST API
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         api_version: '2018-02-01'
         resource_group: "{{ resource_group }}"
         provider: network
@@ -64,7 +64,7 @@
         that: output is changed
 
     - name: Try to get information about account
-      azure_rm_resource_info:
+      azure.azcollection.azure_rm_resource_info:
         api_version: '2018-02-01'
         resource_group: "{{ resource_group }}"
         provider: network
@@ -80,7 +80,7 @@
           - output.response | length == 1
 
     - name: Try to query a list
-      azure_rm_resource_info:
+      azure.azcollection.azure_rm_resource_info:
         api_version: '2018-02-01'
         resource_group: "{{ resource_group }}"
         provider: network
@@ -94,7 +94,7 @@
           - output.response | length >= 1
 
     - name: Try to query a list - same without API version
-      azure_rm_resource_info:
+      azure.azcollection.azure_rm_resource_info:
         resource_group: "{{ resource_group }}"
         provider: network
         resource_type: networksecuritygroups
@@ -107,7 +107,7 @@
           - output.response | length >= 1
 
     - name: Query all the resources in the resource group
-      azure_rm_resource_info:
+      azure.azcollection.azure_rm_resource_info:
         resource_group: "{{ resource_group }}"
         resource_type: resources
       register: output
@@ -118,7 +118,7 @@
           - output.response | length >= 1
 
     - name: Create storage account that requires LRO polling
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         polling_timeout: 600
         polling_interval: 60
         api_version: '2018-07-01'
@@ -139,7 +139,7 @@
 
 
     - name: Try to storage keys -- special case when subresource part has no name
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         resource_group: "{{ resource_group }}"
         provider: storage
         resource_type: storageAccounts
@@ -155,7 +155,7 @@
         that: keys['response']['keys'][0]['value'] | length > 0
 
     - name: Delete storage - without API version
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         polling_timeout: 600
         polling_interval: 60
         method: DELETE
@@ -165,7 +165,7 @@
         resource_name: "{{ storageaccountname }}"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}"
         force_delete_nonempty: true
         state: absent

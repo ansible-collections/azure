@@ -1,5 +1,5 @@
 - name: Create a new resource group for private endpoint dns zone group test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-privateendpointdnszonegroup"
     location: eastus
 
@@ -12,14 +12,14 @@
       run_once: true
 
     - name: "Create virtual network"
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "vnet-{{ rpfx }}"
         address_prefixes_cidr:
           - "10.1.0.0/16"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
 
     - name: "Create the subnet"
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: "subnet-{{ rpfx }}"
         virtual_network_name: "vnet-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -29,7 +29,7 @@
       register: subnet_output
 
     - name: "Create instance of PostgreSQL Flexible Server"
-      azure_rm_postgresqlflexibleserver:
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
         name: "postgresqlsrv-{{ rpfx }}"
         sku:
@@ -56,7 +56,7 @@
       register: post_output
 
     - name: Create zone group for non-existant private endpoint
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "does-not-exist-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -68,7 +68,7 @@
           - output.msg is match("Could not load the private endpoint", ignorecase=True)
 
     - name: Create private endpoint
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint-{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
         private_link_service_connections:
@@ -80,19 +80,19 @@
           id: "{{ subnet_output.state.id }}"
 
     - name: Create private DNS zone for postgres
-      azure_rm_privatednszone:
+      azure.azcollection.azure_rm_privatednszone:
         name: "privatelink.postgres.database.azure.com"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
 
     - name: Create virtual network link
-      azure_rm_privatednszonelink:
+      azure.azcollection.azure_rm_privatednszonelink:
         name: "private-link-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
         zone_name: "privatelink.postgres.database.azure.com"
         virtual_network: "vnet-{{ rpfx }}"
 
     - name: Get zone groups for private endpoint
-      azure_rm_privateendpointdnszonegroup_info:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup_info:
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
       register: output
@@ -103,7 +103,7 @@
           - output.groups | length == 0
 
     - name: Create zone group for private endpoint - check mode
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -118,7 +118,7 @@
           - output is changed
 
     - name: Create zone group for private endpoint
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -146,7 +146,7 @@
           - output.state.private_dns_zone_configs[0].record_sets[0].ttl
 
     - name: Create zone group for private endpoint - idempotent
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -160,7 +160,7 @@
           - output is not changed
 
     - name: Get specific zone group for private endpoint
-      azure_rm_privateendpointdnszonegroup_info:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup_info:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -186,7 +186,7 @@
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
 
     - name: Get all zone groups for private endpoint
-      azure_rm_privateendpointdnszonegroup_info:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup_info:
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
       register: output
@@ -211,7 +211,7 @@
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
 
     - name: Update zone group for private endpoint
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -239,7 +239,7 @@
           - output.state.private_dns_zone_configs[0].record_sets[0].ttl
 
     - name: Delete zone group for private endpoint - check mode
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -252,7 +252,7 @@
           - output is changed
 
     - name: Delete zone group for private endpoint
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -264,7 +264,7 @@
           - output is changed
 
     - name: Delete non-existant zone group for private endpoint
-      azure_rm_privateendpointdnszonegroup:
+      azure.azcollection.azure_rm_privateendpointdnszonegroup:
         name: "zone-group-{{ rpfx }}"
         private_endpoint: "privateendpoint-{{ rpfx }}"
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
@@ -276,7 +276,7 @@
           - output is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-privateendpointdnszonegroup"
         force_delete_nonempty: true
         state: absent

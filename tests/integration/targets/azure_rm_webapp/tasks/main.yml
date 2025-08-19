@@ -1,5 +1,5 @@
 - name: Create the first resource group for webapp test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item['name'] }}"
     location: "{{ item['location'] }}"
   loop:
@@ -48,7 +48,7 @@
         - '2'
 
     - name: Create a windows web app with non-exist app service plan
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}1"
         plan:
@@ -58,14 +58,14 @@
           sku: B1
 
     - name: Create a windows web app with existing app service plan
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}2"
         plan: "{{ win_plan_name }}"
       register: output
 
     - name: Stop the web app
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}2"
         plan: "{{ win_plan_name }}"
@@ -78,7 +78,7 @@
           output is changed
 
     - name: Get the web app
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}2"
       register: stopped
@@ -89,7 +89,7 @@
           - stopped.webapps[0].app_state == "Stopped"
 
     - name: Create a windows web app with existing app service plan, try to update some root level params
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}3"
         plan: "{{ win_plan_name }}"
@@ -99,7 +99,7 @@
       register: output
 
     - name: Get web app with resource group and tag
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}3"
         tags:
@@ -112,7 +112,7 @@
           - output.webapps | length == 1
 
     - name: Create a win web app with java run time specific
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
         plan: "{{ win_plan_name }}"
@@ -131,7 +131,7 @@
         that: output is changed
 
     - name: Get web app with name
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
       register: output
@@ -144,7 +144,7 @@
           - output.webapps[0].frameworks | length > 1  # there's default frameworks eg net_framework
 
     - name: Update app settings and framework
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
         plan: "{{ win_plan_name }}"
@@ -164,7 +164,7 @@
           - output is changed
 
     - name: Get web app with name
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
       register: output
@@ -177,7 +177,7 @@
           - output.webapps[0].app_settings['testkey2'] == 'testvalue2'
 
     - name: Get web app with return publishing profile
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
         return_publish_profile: true
@@ -191,7 +191,7 @@
           - output.webapps[0].publishing_password != ""
 
     - name: Purge all existing app settings
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
         plan: "{{ win_plan_name }}"
@@ -203,7 +203,7 @@
         that: output is changed
 
     - name: Create a win web app with python run time and php run time
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}5"
         plan: "{{ win_plan_name }}"
@@ -221,7 +221,7 @@
         that: output is changed
 
     - name: Create a docker web app with some app settings
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}6"
         location: "{{ location }}"
@@ -240,7 +240,7 @@
         that: output is changed
 
     - name: Create a docker web app with private acr registry
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}7"
         location: "{{ location }}"
@@ -259,7 +259,7 @@
         that: output is changed
 
     - name: Create a linux web app with nodejs framework
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}8"
         location: "{{ location }}"
@@ -272,7 +272,7 @@
       register: output
 
     - name: Should be idempotent with linux web app created
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}8"
         location: "{{ location }}"
@@ -289,7 +289,7 @@
         that: output is not changed
 
     - name: Update nodejs framework
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}8"
         location: "{{ location }}"
@@ -306,7 +306,7 @@
         that: output is changed
 
     - name: Create a linux web app with deployment source github
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}10"
         location: "{{ location }}"
@@ -324,7 +324,7 @@
         that: output is changed
 
     - name: Assert error that java is mutually exclusive with frameworks
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}11"
         plan: "{{ win_plan_name }}"
@@ -337,7 +337,7 @@
       failed_when: 'fail_win_java_version_mutual_exclusive.msg != "Java is mutually exclusive with other frameworks."'
 
     - name: Assert error when linux web app, only can specify one framework
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ linux_plan_name }}12"
         location: "{{ location }}"
@@ -353,7 +353,7 @@
       failed_when: fail_linux_one_framework_only.msg != "Can specify one framework only for Linux web app."
 
     - name: Create a linux web app with java tomcat container
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}13"
         location: "{{ location }}"
@@ -373,7 +373,7 @@
         that: output is changed
 
     - name: Get facts with publish profile
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}13"
       no_log: true
@@ -385,7 +385,7 @@
           - facts.webapps[0].ftp_publish_url != ''
 
     - name: Create a web app with various site config params
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-siteconfig"
         location: "{{ location }}"
@@ -411,7 +411,7 @@
         that: output is changed
 
     - name: Create a web app with various site config params - idempotent
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-siteconfig"
         location: "{{ location }}"
@@ -437,7 +437,7 @@
         that: output is not changed
 
     - name: Get facts for site config params
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-siteconfig"
       register: facts
@@ -450,7 +450,7 @@
           - not facts.webapps[0].http20_enabled
 
     - name: Update web app with various site config params - single change
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-siteconfig"
         location: "{{ location }}"
@@ -476,7 +476,7 @@
         that: output is changed
 
     - name: Get facts for site config params
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-siteconfig"
       register: facts
@@ -489,7 +489,7 @@
           - not facts.webapps[0].http20_enabled
 
     - name: Create a web app with HTTP 2.0
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-http20"
         location: "{{ location }}"
@@ -516,7 +516,7 @@
         that: output is changed
 
     - name: Create a web app with HTTP 2.0 - idempotent
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-http20"
         location: "{{ location }}"
@@ -543,7 +543,7 @@
         that: output is not changed
 
     - name: Get facts for HTTP 2.0 appp
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-http20"
       register: facts
@@ -556,7 +556,7 @@
           - facts.webapps[0].http20_enabled
 
     - name: Update web app to disable HTTP 2.0
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-http20"
         location: "{{ location }}"
@@ -583,7 +583,7 @@
         that: output is changed
 
     - name: Get facts for HTTP 2.0 appp
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_app_name }}-http20"
       register: facts
@@ -596,7 +596,7 @@
           - not facts.webapps[0].http20_enabled
 
     - name: Create a windows web app with site_auth_settings
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
         plan:
@@ -622,7 +622,7 @@
           output is changed
 
     - name: Update the web app with site_auth_settings
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
         plan:
@@ -648,7 +648,7 @@
           output is changed
 
     - name: Get the web app facts
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
       register: output
@@ -664,7 +664,7 @@
           - output.webapps[0].site_auth_settings.unauthenticated_client_action == 'RedirectToLoginPage'
 
     - name: Create a windows web app with UserAssigned Identity
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
         plan:
@@ -685,7 +685,7 @@
           output is changed
 
     - name: Get the web app facts
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
       register: output
@@ -697,7 +697,7 @@
           - managed_identity_ids[0] in output.webapps[0].identity.user_assigned_identities
 
     - name: Update web app with SystemAssigned and UserAssigned Identity
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
         plan:
@@ -718,7 +718,7 @@
           output is changed
 
     - name: Get the web app facts
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
       register: output
@@ -731,7 +731,7 @@
           - managed_identity_ids[1] in output.webapps[0].identity.user_assigned_identities
 
     - name: Update web app with SystemAssigned and UserAssigned Identity - idempotent
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
         plan:
@@ -752,7 +752,7 @@
           output is not changed
 
     - name: Get the web app facts
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
       register: output
@@ -765,7 +765,7 @@
           - managed_identity_ids[1] in output.webapps[0].identity.user_assigned_identities
 
     - name: Update web app with SystemAssigned
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
         plan:
@@ -783,7 +783,7 @@
           output is changed
 
     - name: Get the web app facts
-      azure_rm_webapp_info:
+      azure.azcollection.azure_rm_webapp_info:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
       register: output
@@ -795,7 +795,7 @@
           - '"user_assigned_identities" not in output.webapps[0].identity'
 
     - name: Update app service plan I(sku=P0v3)
-      azure_rm_appserviceplan:
+      azure.azcollection.azure_rm_appserviceplan:
         resource_group: "{{ linux_app_plan_resource_group }}"
         name: "{{ linux_plan_name }}"
         sku: P0v3
@@ -803,7 +803,7 @@
         number_of_workers: 1
 
     - name: Create a webapp slot (Check mode)
-      azure_rm_webappslot:
+      azure.azcollection.azure_rm_webappslot:
         resource_group: "{{ resource_group }}-webapp01"
         webapp_name: "{{ win_app_name }}13"
         name: "{{ slot1_name }}"
@@ -820,7 +820,7 @@
           - output is changed
 
     - name: Create a webapp slot
-      azure_rm_webappslot:
+      azure.azcollection.azure_rm_webappslot:
         resource_group: "{{ resource_group }}-webapp01"
         webapp_name: "{{ win_app_name }}13"
         name: "{{ slot1_name }}"
@@ -836,7 +836,7 @@
           - output is changed
 
     - name: Update webapp slot (idempotence)
-      azure_rm_webappslot:
+      azure.azcollection.azure_rm_webappslot:
         resource_group: "{{ resource_group }}-webapp01"
         webapp_name: "{{ win_app_name }}13"
         location: "{{ location }}"
@@ -851,7 +851,7 @@
           - output is not changed
 
     - name: Update webapp slot
-      azure_rm_webappslot:
+      azure.azcollection.azure_rm_webappslot:
         resource_group: "{{ resource_group }}-webapp01"
         webapp_name: "{{ win_app_name }}13"
         location: "{{ location }}"
@@ -869,7 +869,7 @@
           - output is changed
 
     - name: Swap webapp slot
-      azure_rm_webappslot:
+      azure.azcollection.azure_rm_webappslot:
         resource_group: "{{ resource_group }}-webapp01"
         webapp_name: "{{ win_app_name }}13"
         location: "{{ location }}"
@@ -884,7 +884,7 @@
           - output is changed
 
     - name: Stop webapp slot
-      azure_rm_webappslot:
+      azure.azcollection.azure_rm_webappslot:
         resource_group: "{{ resource_group }}-webapp01"
         location: "{{ location }}"
         webapp_name: "{{ win_app_name }}13"
@@ -898,7 +898,7 @@
           - output is changed
 
     - name: Delete the webapp resource
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ item }}"
         state: absent
@@ -929,7 +929,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent

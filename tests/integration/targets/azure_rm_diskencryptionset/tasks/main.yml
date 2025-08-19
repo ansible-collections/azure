@@ -1,5 +1,5 @@
 - name: Create a new resource group for disk encrypiton set test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-diskencryptionset"
     location: eastus
 
@@ -65,7 +65,7 @@
           - purge
 
     - name: Create a key vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-diskencryptionset"
         vault_name: "myvault{{ rpfx }}"
         enabled_for_disk_encryption: true
@@ -86,12 +86,12 @@
         enable_purge_protection: true
 
     - name: Create a key in key vault
-      azure_rm_keyvaultkey:
+      azure.azcollection.azure_rm_keyvaultkey:
         key_name: testkey
         keyvault_uri: https://myvault{{ rpfx }}.vault.azure.net
 
     - name: Get latest version of key
-      azure_rm_keyvaultkey_info:
+      azure.azcollection.azure_rm_keyvaultkey_info:
         vault_uri: https://myvault{{ rpfx }}.vault.azure.net
         name: testkey
       register: results
@@ -101,7 +101,7 @@
         key_url: "{{ results['keys'][0]['kid'] }}"
 
     - name: Create disk encryption set
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -114,7 +114,7 @@
         that: results is changed
 
     - name: Create disk encryption set (Idempotent test)
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -127,7 +127,7 @@
         that: results is not changed
 
     - name: Update disk encryption set
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -142,7 +142,7 @@
         that: results is changed
 
     - name: Get disk encryption set facts
-      azure_rm_diskencryptionset_info:
+      azure.azcollection.azure_rm_diskencryptionset_info:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
       register: results
@@ -159,7 +159,7 @@
           - results.diskencryptionsets[0].identity.type == 'SystemAssigned'
 
     - name: Update disk encryption set with first UserAssigned Identity
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -177,7 +177,7 @@
         that: results is changed
 
     - name: Create disk encryption set with first UserAssigned Identity (Idempotent test)
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -195,7 +195,7 @@
         that: results is not changed
 
     - name: Get disk encryption set with first UserAssigned Identity facts
-      azure_rm_diskencryptionset_info:
+      azure.azcollection.azure_rm_diskencryptionset_info:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
       register: results
@@ -214,7 +214,7 @@
           - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
     - name: Update disk encryption set with second UserAssigned
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -232,7 +232,7 @@
         that: results is changed
 
     - name: Get disk encryption set with UserAssigned Identity facts
-      azure_rm_diskencryptionset_info:
+      azure.azcollection.azure_rm_diskencryptionset_info:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
       register: results
@@ -251,7 +251,7 @@
           - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Update disk encryption set with SystemAssigned, UserAssigned
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         source_vault: "myvault{{ rpfx }}"
@@ -269,7 +269,7 @@
         that: results is changed
 
     - name: Get disk encryption set with (SystemAssigned, UserAssigned) facts
-      azure_rm_diskencryptionset_info:
+      azure.azcollection.azure_rm_diskencryptionset_info:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
       register: results
@@ -288,7 +288,7 @@
           - results.diskencryptionsets[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
     - name: Delete disk encryption set
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         state: absent
@@ -299,7 +299,7 @@
         that: results is changed
 
     - name: Delete disk encryption set (Idempotent test)
-      azure_rm_diskencryptionset:
+      azure.azcollection.azure_rm_diskencryptionset:
         resource_group: "{{ resource_group }}-diskencryptionset"
         name: "{{ set_name }}"
         state: absent
@@ -310,7 +310,7 @@
         that: results is not changed
 
     - name: Delete the Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-diskencryptionset"
         vault_name: "myvault{{ rpfx }}"
         state: absent
@@ -328,7 +328,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-diskencryptionset"
         force_delete_nonempty: true
         state: absent

@@ -1,5 +1,5 @@
 - name: Create a new resource group for Azure Front Door endpoint test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-afdendpoint"
     location: eastus
 
@@ -11,7 +11,7 @@
         endpoint: "endpoint-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
 
     - name: Create Standard Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -19,7 +19,7 @@
         state: "present"
 
     - name: Create EndPoint
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -38,7 +38,7 @@
           - output.host_name
 
     - name: Update EndPoint (idempotent test)
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -55,7 +55,7 @@
           - output is not changed
 
     - name: Load Endpoint info
-      azure_rm_afdendpoint_info:
+      azure.azcollection.azure_rm_afdendpoint_info:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -74,7 +74,7 @@
           - output is not changed
 
     - name: Update EndPoint (with different values)
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -91,7 +91,7 @@
           - output is changed
 
     - name: Update EndPoint (idempotent test)
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -108,7 +108,7 @@
           - output is not changed
 
     - name: Update EndPoint (replace tags)
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -125,7 +125,7 @@
           - output is changed
 
     - name: Load Endpoint info
-      azure_rm_afdendpoint_info:
+      azure.azcollection.azure_rm_afdendpoint_info:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -142,7 +142,7 @@
           - output is not changed
 
     - name: Delete EndPoint
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -155,7 +155,7 @@
           - output is changed
 
     - name: Delete EndPoint (idempotent test)
-      azure_rm_afdendpoint:
+      azure.azcollection.azure_rm_afdendpoint:
         name: "{{ endpoint }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdendpoint"
@@ -168,14 +168,14 @@
           - output is not changed
 
     - name: Delete Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
         resource_group: "{{ resource_group }}-afdendpoint"
         state: "absent"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-afdendpoint"
         force_delete_nonempty: true
         state: absent

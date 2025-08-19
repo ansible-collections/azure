@@ -1,5 +1,5 @@
 - name: Create a new resource group for subnet test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
     location: eastus
   loop:
@@ -9,7 +9,7 @@
 - name: For subnet test
   block:
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: My_Virtual_Network
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -24,20 +24,20 @@
         resource_group: "{{ resource_group }}-sub01"
 
     - name: Create route table
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: routetableforsubnet
         resource_group: "{{ resource_group }}-sub01"
       register: route_table
 
     - name: Remove subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         state: absent
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
 
     - name: Catch invalid cidr
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -50,7 +50,7 @@
         that: output is failed
 
     - name: Add the subnet back
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -64,7 +64,7 @@
           - output.state.address_prefix == "10.1.0.0/24"
 
     - name: Add the subnet back (idempontent)
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -75,14 +75,14 @@
         that: output is not changed
 
     - name: Create network security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         name: secgroupfoo
         resource_group: "{{ resource_group }}-sub01"
         tags:
           testing: testing
 
     - name: Update the subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -95,7 +95,7 @@
               - westus
 
     - name: Should be idempotent
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -112,7 +112,7 @@
         that: output is not changed
 
     - name: Able to completely remove service endpoints
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -125,13 +125,13 @@
         that: output.state.service_endpoints is not defined
 
     - name: Create network security group in another resource group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         name: secgroupfoo
         resource_group: "{{ resource_group }}-sub02"
       register: nsg
 
     - name: Update the subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -149,7 +149,7 @@
           - output.state.network_security_group.id == nsg.state.id
 
     - name: Update the subnet (idempotent)
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -163,7 +163,7 @@
         that: output is not changed
 
     - name: Create subnet with IPv4 and IPv6
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -180,7 +180,7 @@
           - output.state.address_prefixes | length > 0
 
     - name: Update the subnet to IPv4 and IPv6 (idempotent)
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -194,7 +194,7 @@
         that: output is not changed
 
     - name: Update the subnet's IPv4 and IPv6 address
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -210,7 +210,7 @@
           - output is changed
 
     - name: Update the subnet with network policies
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -223,7 +223,7 @@
         that: output is changed
 
     - name: The subnet with network policies should be idempotent
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -236,7 +236,7 @@
         that: output is not changed
 
     - name: Update the subnet with delegations
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -250,7 +250,7 @@
         that: output is changed
 
     - name: The subnet with delegations should be idempotent
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -264,7 +264,7 @@
         that: output is not changed
 
     - name: Get subnet facts
-      azure_rm_subnet_info:
+      azure.azcollection.azure_rm_subnet_info:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -287,7 +287,7 @@
           - output.subnets[0]['delegations'] != None
 
     - name: Get subnet facts
-      azure_rm_subnet_info:
+      azure.azcollection.azure_rm_subnet_info:
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
@@ -307,14 +307,14 @@
           - output.subnets[0]['provisioning_state'] != None
 
     - name: Remove subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         state: absent
         name: foobar
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
 
     - name: Remove subnet (idempotent)
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         state: absent
         name: foobar
         virtual_network_name: My_Virtual_Network
@@ -326,26 +326,26 @@
         that: output is not changed
 
     - name: Remove subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         state: absent
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
 
     - name: Remove security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-sub01"
         name: secgroupfoo
         state: absent
 
     - name: Remove virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent

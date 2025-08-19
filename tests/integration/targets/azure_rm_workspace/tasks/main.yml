@@ -1,5 +1,5 @@
 - name: Create a new resource group for workspace test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-workspace"
     location: eastus
 
@@ -10,7 +10,7 @@
         name_rpfx: "workspace{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
     - name: Create workspace (check mode)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         retention_in_days: 40
@@ -23,7 +23,7 @@
           - output is changed
 
     - name: Get workspace
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
       register: facts
@@ -34,7 +34,7 @@
           - facts.workspaces | length == 0
 
     - name: Create workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         retention_in_days: 40
@@ -48,7 +48,7 @@
           - output.intelligence_packs
 
     - name: Create workspace (idempontent)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         retention_in_days: 40
@@ -60,7 +60,7 @@
           - output is not changed
 
     - name: Get workspace
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
       register: facts
@@ -76,7 +76,7 @@
         pack: "{{ pack | default({}) | combine({output.intelligence_packs[0].name: not output.intelligence_packs[0].enabled}) }}"
 
     - name: Update intelligence pack
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         intelligence_packs: "{{ pack }}"
@@ -88,7 +88,7 @@
           - intelligence.intelligence_packs[0].enabled != output.intelligence_packs[0].enabled
 
     - name: Remove workspace (check mode)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         state: absent
@@ -101,7 +101,7 @@
           - output is changed
 
     - name: Get workspace
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
       register: facts
@@ -112,7 +112,7 @@
           - facts.workspaces | length == 1
 
     - name: Remove workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         state: absent
@@ -124,7 +124,7 @@
           - output is changed
 
     - name: Get workspace
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
       register: facts
@@ -135,7 +135,7 @@
           - facts.workspaces | length == 0
 
     - name: Remove workspace (idempontent)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-workspace"
         state: absent
@@ -147,7 +147,7 @@
           - output is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-workspace"
         force_delete_nonempty: true
         state: absent

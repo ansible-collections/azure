@@ -1,5 +1,5 @@
 - name: Create a new resource group for disk access test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-diskaccess"
     location: eastus
 
@@ -10,7 +10,7 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
 
     - name: Create a new disk access (Checkmode Test)
-      azure_rm_diskaccess:
+      azure.azcollection.azure_rm_diskaccess:
         resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
@@ -19,7 +19,7 @@
       check_mode: true
 
     - name: Create a new disk access
-      azure_rm_diskaccess:
+      azure.azcollection.azure_rm_diskaccess:
         resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
@@ -33,7 +33,7 @@
           - output is changed
 
     - name: Create a new disk access(Idempotent Test)
-      azure_rm_diskaccess:
+      azure.azcollection.azure_rm_diskaccess:
         resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
@@ -47,7 +47,7 @@
           - output is not changed
 
     - name: Update the disk access
-      azure_rm_diskaccess:
+      azure.azcollection.azure_rm_diskaccess:
         resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         location: westus
@@ -61,7 +61,7 @@
           - output is changed
 
     - name: Get the disk access facts
-      azure_rm_diskaccess_info:
+      azure.azcollection.azure_rm_diskaccess_info:
         resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
       register: output
@@ -72,7 +72,7 @@
           - output.disk_accesses[0].tags | length == 2
 
     - name: Delete the disk access
-      azure_rm_diskaccess:
+      azure.azcollection.azure_rm_diskaccess:
         resource_group: "{{ resource_group }}-diskaccess"
         name: 'test{{ rpfx }}'
         state: absent
@@ -84,7 +84,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-diskaccess"
         force_delete_nonempty: true
         state: absent

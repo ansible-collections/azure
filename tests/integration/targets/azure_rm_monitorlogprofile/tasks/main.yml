@@ -1,5 +1,5 @@
 - name: Create a new resource group for monitor log profile test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-monitorlogprofile"
     location: eastus
 
@@ -13,13 +13,13 @@
       run_once: true
 
     - name: Create Azure storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         name: '{{ storage_name }}'
         resource_group: "{{ resource_group }}-monitorlogprofile"
         account_type: Standard_LRS
 
     - name: Create log profile (check mode)
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         location: "{{ location }}"
         locations:
@@ -43,7 +43,7 @@
           - output is changed
 
     - name: Create log profile
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         location: "{{ location }}"
         locations:
@@ -66,7 +66,7 @@
           - output.id
 
     - name: Update log profile (idempotence)
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         location: "{{ location }}"
         locations:
@@ -88,7 +88,7 @@
           - output is not changed
 
     - name: Update log profile
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         location: "{{ location }}"
         locations:
@@ -109,7 +109,7 @@
           - output is changed
 
     - name: Delete log profile (check mode)
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         state: absent
       register: output
@@ -120,7 +120,7 @@
           - output is changed
 
     - name: Delete log profile
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         state: absent
       register: output
@@ -130,7 +130,7 @@
           - output is changed
 
     - name: Delete log profile (idempotence)
-      azure_rm_monitorlogprofile:
+      azure.azcollection.azure_rm_monitorlogprofile:
         name: "{{ profile_name }}"
         state: absent
       register: output
@@ -140,7 +140,7 @@
           - output is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-monitorlogprofile"
         force_delete_nonempty: true
         state: absent

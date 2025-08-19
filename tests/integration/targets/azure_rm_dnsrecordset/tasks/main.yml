@@ -1,5 +1,5 @@
 - name: Create a new resource group for dns recordset test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-dnsrecoerdset"
     location: eastus
 
@@ -10,7 +10,7 @@
         domain_name: "d{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
     - name: Create a DNS zone
-      azure_rm_dnszone:
+      azure.azcollection.azure_rm_dnszone:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}.com"
         state: present
@@ -21,7 +21,7 @@
         that: results is changed
 
     - name: Create public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}"
         allocation_method: Static
@@ -30,7 +30,7 @@
       register: pip_output
 
     - name: Create "A" record with target_resource
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: wwwa
         zone_name: "{{ domain_name }}.com"
@@ -44,7 +44,7 @@
         that: output is changed
 
     - name: Create "A" record set with multiple records
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -60,7 +60,7 @@
         that: results is changed
 
     - name: Re-run "A" record with same values
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -76,7 +76,7 @@
         that: results is not changed
 
     - name: Update "A" record set with additional record
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -92,7 +92,7 @@
           - results is changed
 
     - name: Re-update "A" record set with additional record
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -108,7 +108,7 @@
           - results is not changed
 
     - name: Remove 1 record from record set
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -125,7 +125,7 @@
           - results is changed
 
     - name: Check_mode test
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -143,7 +143,7 @@
     # FUTURE: add facts module calls to ensure that we really didn't touch anything
 
     - name: Delete a record set
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -156,7 +156,7 @@
         that: results is changed
 
     - name: Re-run record set absent(idempotence test)
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -169,7 +169,7 @@
         that: results is not changed
 
     - name: Create SRV records in a new record set
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: "_sip._tcp.{{ domain_name }}.com"
         zone_name: "{{ domain_name }}.com"
@@ -189,7 +189,7 @@
           - results is changed
 
     - name: Create TXT records in a new record set
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: "_txt.{{ domain_name }}.com"
         zone_name: "{{ domain_name }}.com"
@@ -209,7 +209,7 @@
           - results is changed
 
     - name: Update SOA record
-      azure_rm_dnsrecordset:
+      azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         relative_name: "@"
         zone_name: "{{ domain_name }}.com"
@@ -231,19 +231,19 @@
           - results is changed
 
     - name: Delete DNS zone
-      azure_rm_dnszone:
+      azure.azcollection.azure_rm_dnszone:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}.com"
         state: absent
 
     - name: Delete the public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
         name: "{{ domain_name }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-dnsrecoerdset"
         force_delete_nonempty: true
         state: absent

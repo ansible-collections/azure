@@ -5,13 +5,13 @@
   strategy: linear
   tasks:
     - name: Create the first resource group for Virtual machine test
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm01"
         location: eastus
       failed_when: false
 
     - name: Create the secondary resource group for Virtual machine test
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm02"
         location: eastus
       failed_when: false
@@ -23,7 +23,7 @@
 
       always:
         - name: Force delete the resource group
-          azure_rm_resourcegroup:
+          azure.azcollection.azure_rm_resourcegroup:
             name: "{{ resource_group }}-{{ item }}"
             force_delete_nonempty: true
             state: absent

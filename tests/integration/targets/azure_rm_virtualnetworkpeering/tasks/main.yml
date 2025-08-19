@@ -1,5 +1,5 @@
 - name: Create a new resource group for virtual network peering test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
     location: eastus
   loop:
@@ -15,7 +15,7 @@
         peering_name: "peering1{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 100 | random }}"
 
     - name: Create first virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "{{ vnetname1 }}"
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -26,7 +26,7 @@
       register: vnet1
 
     - name: Create second virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "{{ vnetname2 }}"
         address_prefixes_cidr:
           - 10.2.0.0/24
@@ -40,7 +40,7 @@
           - vnet2 is changed
 
     - name: Create virtual network peering (check mode)
-      azure_rm_virtualnetworkpeering:
+      azure.azcollection.azure_rm_virtualnetworkpeering:
         resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
@@ -57,7 +57,7 @@
         that: output is changed
 
     - name: Create virtual network peering
-      azure_rm_virtualnetworkpeering:
+      azure.azcollection.azure_rm_virtualnetworkpeering:
         resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
@@ -73,7 +73,7 @@
         that: output is changed
 
     - name: Update virtual network peering (idempotent)
-      azure_rm_virtualnetworkpeering:
+      azure.azcollection.azure_rm_virtualnetworkpeering:
         resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
@@ -89,7 +89,7 @@
         that: output is not changed
 
     - name: Update virtual network peering
-      azure_rm_virtualnetworkpeering:
+      azure.azcollection.azure_rm_virtualnetworkpeering:
         resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
@@ -105,7 +105,7 @@
         that: output is changed
 
     - name: Get facts
-      azure_rm_virtualnetworkpeering_info:
+      azure.azcollection.azure_rm_virtualnetworkpeering_info:
         resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
@@ -121,7 +121,7 @@
           - facts['vnetpeerings'][0]['provisioning_state']
 
     - name: Delete virtual network peering
-      azure_rm_virtualnetworkpeering:
+      azure.azcollection.azure_rm_virtualnetworkpeering:
         resource_group: "{{ resource_group }}-vnetpeer01"
         name: "{{ peering_name }}"
         virtual_network: "{{ vnetname1 }}"
@@ -129,19 +129,19 @@
       register: output
 
     - name: Delete first virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "{{ vnetname1 }}"
         resource_group: "{{ resource_group }}-vnetpeer01"
         state: absent
 
     - name: Delete virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "{{ vnetname2 }}"
         resource_group: "{{ resource_group }}-vnetpeer02"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent

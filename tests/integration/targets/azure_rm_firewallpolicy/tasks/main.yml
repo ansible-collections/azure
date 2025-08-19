@@ -1,5 +1,5 @@
 - name: Create a new resource group for firewall policy test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-firewallpolicy"
     location: eastus
 
@@ -10,7 +10,7 @@
         policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: Create firewall policy
-      azure_rm_firewallpolicy:
+      azure.azcollection.azure_rm_firewallpolicy:
         resource_group: "{{ resource_group }}-firewallpolicy"
         name: "{{ policy_name }}"
         threat_intel_mode: alert
@@ -29,7 +29,7 @@
         that: results is changed
 
     - name: Create a firewall policy again (Idempotent test)
-      azure_rm_firewallpolicy:
+      azure.azcollection.azure_rm_firewallpolicy:
         resource_group: "{{ resource_group }}-firewallpolicy"
         name: "{{ policy_name }}"
         threat_intel_mode: alert
@@ -48,7 +48,7 @@
         that: results is not changed
 
     - name: Update a firewall policy
-      azure_rm_firewallpolicy:
+      azure.azcollection.azure_rm_firewallpolicy:
         resource_group: "{{ resource_group }}-firewallpolicy"
         name: "{{ policy_name }}"
         threat_intel_mode: deny
@@ -69,7 +69,7 @@
         that: results is changed
 
     - name: Get firewall policy facts
-      azure_rm_firewallpolicy_info:
+      azure.azcollection.azure_rm_firewallpolicy_info:
         resource_group: "{{ resource_group }}-firewallpolicy"
         name: "{{ policy_name }}"
       register: results
@@ -86,7 +86,7 @@
           - results.firewallpolicies[0].tags | length > 0
 
     - name: Delete the firewall policy
-      azure_rm_firewallpolicy:
+      azure.azcollection.azure_rm_firewallpolicy:
         resource_group: "{{ resource_group }}-firewallpolicy"
         name: "{{ policy_name }}"
         state: absent
@@ -97,7 +97,7 @@
         that: results is changed
 
     - name: Delete firewall policy again (Idempotent test)
-      azure_rm_firewallpolicy:
+      azure.azcollection.azure_rm_firewallpolicy:
         resource_group: "{{ resource_group }}-firewallpolicy"
         name: "{{ policy_name }}"
         state: absent
@@ -108,7 +108,7 @@
         that: results is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-firewallpolicy"
         force_delete_nonempty: true
         state: absent

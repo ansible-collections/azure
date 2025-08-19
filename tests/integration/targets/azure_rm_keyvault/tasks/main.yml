@@ -1,5 +1,5 @@
 - name: Create a new resource group for key vault test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-keyvault"
     location: eastus
 
@@ -43,7 +43,7 @@
       register: object_id_facts
 
     - name: Create instance of Key Vault -- check mode
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
@@ -81,7 +81,7 @@
           - output is changed
 
     - name: Create instance of Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
@@ -109,7 +109,7 @@
           - output is changed
 
     - name: Create instance of Key Vault again
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
@@ -136,7 +136,7 @@
           - output is not changed
 
     - name: Update existing Key Vault (add a rule and tags)
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
@@ -175,7 +175,7 @@
           - output is changed
 
     - name: Get key vault facts
-      azure_rm_keyvault_info:
+      azure.azcollection.azure_rm_keyvault_info:
         resource_group: "{{ resource_group }}-keyvault"
         name: "vault{{ rpfx }}"
       register: facts
@@ -193,7 +193,7 @@
           - facts['keyvaults'][0]['soft_delete_retention_in_days'] == 7
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: vnet{{ rpfx }}
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -203,12 +203,12 @@
         resource_group: "{{ resource_group }}-keyvault"
 
     - name: Create network security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         name: secgroup{{ rpfx }}
         resource_group: "{{ resource_group }}-keyvault"
 
     - name: Create the subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: subnet{{ rpfx }}
         virtual_network_name: vnet{{ rpfx }}
         resource_group: "{{ resource_group }}-keyvault"
@@ -223,7 +223,7 @@
       register: subnet_output
 
     - name: Create a secodary instance of Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}-sec"
         enabled_for_deployment: false
@@ -259,7 +259,7 @@
         that: output is changed
 
     - name: Update instance of Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}-sec"
         enabled_for_deployment: false
@@ -297,7 +297,7 @@
         that: output is changed
 
     - name: Get key vault facts
-      azure_rm_keyvault_info:
+      azure.azcollection.azure_rm_keyvault_info:
         resource_group: "{{ resource_group }}-keyvault"
         name: "vault{{ rpfx }}-sec"
       register: facts
@@ -312,18 +312,18 @@
           - facts['keyvaults'][0]['network_acls']['virtual_network_rules'] | length == 1
 
     - name: Delete the secondary Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}-sec"
         state: absent
     #
-    # azure_rm_keyvaultkey tests
+    # azure.azcollection.azure_rm_keyvaultkey tests
     #
 
     - name: Create a keyvault key
       block:
         - name: Create a keyvault key
-          azure_rm_keyvaultkey:
+          azure.azcollection.azure_rm_keyvaultkey:
             keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
             key_name: testkey
             tags:
@@ -335,13 +335,13 @@
             that: output is changed
       rescue:
         - name: Delete the keyvault key
-          azure_rm_keyvaultkey:
+          azure.azcollection.azure_rm_keyvaultkey:
             keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
             state: absent
             key_name: testkey
 
     - name: Get key current version
-      azure_rm_keyvaultkey_info:
+      azure.azcollection.azure_rm_keyvaultkey_info:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
         name: testkey
       register: facts
@@ -356,7 +356,7 @@
           - facts['keys'][0]['version'] != ''
 
     - name: Delete a kevyault key
-      azure_rm_keyvaultkey:
+      azure.azcollection.azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         key_name: testkey
@@ -367,12 +367,12 @@
         that: output is changed
 
     #
-    # azure_rm_keyvaultsecret tests
+    # azure.azcollection.azure_rm_keyvaultsecret tests
     #
     - name: Create a keyvault secret
       block:
         - name: Create a keyvault secret
-          azure_rm_keyvaultsecret:
+          azure.azcollection.azure_rm_keyvaultsecret:
             keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
             secret_name: testsecret
             secret_value: 'mysecret'
@@ -385,13 +385,13 @@
             that: output is changed
       rescue:
         - name: Delete the keyvault secret
-          azure_rm_keyvaultsecret:
+          azure.azcollection.azure_rm_keyvaultsecret:
             keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
             state: absent
             secret_name: testsecret
 
     - name: Delete a keyvault secret
-      azure_rm_keyvaultsecret:
+      azure.azcollection.azure_rm_keyvaultsecret:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         secret_name: testsecret
@@ -402,11 +402,11 @@
         that: output is changed
 
     #
-    # azure_rm_keyvault finalize & clean up
+    # azure.azcollection.azure_rm_keyvault finalize & clean up
     #
 
     - name: Delete instance of Key Vault -- check mode
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         state: absent
@@ -418,7 +418,7 @@
           - output is changed
 
     - name: Delete instance of Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         state: absent
@@ -429,7 +429,7 @@
           - output is changed
 
     - name: Delete unexisting instance of Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         state: absent
@@ -440,14 +440,14 @@
           - output is not changed
 
     #
-    # azure_rm_keyvault hsm setup and test
+    # azure.azcollection.azure_rm_keyvault hsm setup and test
     #
 
     - name: HSM vault setup and test
       tags: [never]
       block:
         - name: Create instance of HSM -- check mode
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             tenant_id: "{{ tenant_id }}"
@@ -469,7 +469,7 @@
               - output is changed
 
         - name: Create instance of HSM
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             tenant_id: "{{ tenant_id }}"
@@ -490,7 +490,7 @@
               - output is changed
 
         - name: Create instance of HSM again
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             tenant_id: "{{ tenant_id }}"
@@ -511,7 +511,7 @@
               - output is not changed
 
         - name: Update existing HSM (add tags)
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             tenant_id: "{{ tenant_id }}"
@@ -534,7 +534,7 @@
               - output is changed
 
         - name: Get hsm facts
-          azure_rm_keyvault_info:
+          azure.azcollection.azure_rm_keyvault_info:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
           register: facts
@@ -551,7 +551,7 @@
               - facts['hsms'][0]['soft_delete_retention_in_days'] == 7
 
         - name: Download the security domain file
-          azure_rm_keyvaultsecuritydomain:
+          azure.azcollection.azure_rm_keyvaultsecuritydomain:
             keyvault_uri: https://hsm{{ rpfx }}.managedhsm.azure.net
             sd_quorum: 2
             sd_wrapping_keys:
@@ -566,11 +566,11 @@
             var: output["security_domain"]
 
         #
-        # azure_rm_keyvault finalize & clean up
+        # azure.azcollection.azure_rm_keyvault finalize & clean up
         #
 
         - name: Delete instance of HSM -- check mode
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             state: absent
@@ -583,7 +583,7 @@
               - output is changed
 
         - name: Delete instance of HSM
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             state: absent
@@ -595,7 +595,7 @@
               - output is changed
 
         - name: Delete unexisting instance of HSM
-          azure_rm_keyvault:
+          azure.azcollection.azure_rm_keyvault:
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
             state: absent
@@ -607,7 +607,7 @@
               - output is not changed
 
     - name: Purge the deleted vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "{{ item }}"
         is_purge_deleted: true
@@ -629,7 +629,7 @@
         - '1'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-keyvault"
         force_delete_nonempty: true
         state: absent

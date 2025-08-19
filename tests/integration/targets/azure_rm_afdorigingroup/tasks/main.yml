@@ -1,5 +1,5 @@
 - name: Create a new resource group for Azure Front Door original group test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-afdoriginalgroup"
     location: eastus
 
@@ -12,7 +12,7 @@
         origin_group2: "origin-group2-{{ resource_group | hash('md5') | truncate(4, True, '') }}{{ 100000 | random }}"
 
     - name: Create Standard Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         location: "Global"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -20,7 +20,7 @@
         state: "present"
 
     - name: Create Origin Group
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -43,7 +43,7 @@
           - output.id
 
     - name: Update Origin Group (idempotent test)
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -65,7 +65,7 @@
           - output is not changed
 
     - name: Create Origin Group 2
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group2 }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -88,7 +88,7 @@
           - output.id
 
     - name: Load info for all Origin Groups
-      azure_rm_afdorigingroup_info:
+      azure.azcollection.azure_rm_afdorigingroup_info:
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
       register: output
@@ -100,7 +100,7 @@
           - output is not changed
 
     - name: Delete Origin Group 2
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group2 }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -114,7 +114,7 @@
           - output.id
 
     - name: Load Origin Group info
-      azure_rm_afdorigingroup_info:
+      azure.azcollection.azure_rm_afdorigingroup_info:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -134,7 +134,7 @@
           - output is not changed
 
     - name: Update Origin Group (with different values)
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -156,7 +156,7 @@
           - output is changed
 
     - name: Update Origin Group (idempotent test)
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -178,7 +178,7 @@
           - output is not changed
 
     - name: Delete Origin Group
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -191,7 +191,7 @@
           - output is changed
 
     - name: Delete Origin Group (idempotent test)
-      azure_rm_afdorigingroup:
+      azure.azcollection.azure_rm_afdorigingroup:
         name: "{{ origin_group }}"
         profile_name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
@@ -204,13 +204,13 @@
           - output is not changed
 
     - name: Delete Frontdoor Profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         name: "{{ profile }}"
         resource_group: "{{ resource_group }}-afdoriginalgroup"
         state: "absent"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-afdoriginalgroup"
         force_delete_nonempty: true
         state: absent

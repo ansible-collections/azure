@@ -1,5 +1,5 @@
 - name: Create a new resource group for monitor diagnostic setting test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
     location: eastus
   loop:
@@ -16,14 +16,14 @@
     # ------ setup ------
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "vnet-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         address_prefixes: "10.0.0.0/16"
       register: vnet_output
 
     - name: Create web app
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         name: "webapp-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         plan:
@@ -34,7 +34,7 @@
       register: webapp_output
 
     - name: Create storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         name: "storage{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         account_type: Standard_LRS
@@ -42,7 +42,7 @@
       register: storage_output
 
     - name: Create second storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         name: "storagesecond{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         account_type: Standard_LRS
@@ -50,13 +50,13 @@
       register: storage2_output
 
     - name: Create event hub namespace
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         namespace_name: "hub-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         sku: "Basic"
 
     - name: Create log analytics workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "analytics-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         retention_in_days: 30
@@ -65,13 +65,13 @@
     # ------ tests ------
 
     - name: Get diagnostic settings for non-existant resource
-      azure_rm_monitordiagnosticsetting_info:
+      azure.azcollection.azure_rm_monitordiagnosticsetting_info:
         resource: "123abc"
       register: output
       failed_when: '"failed" not in output.msg | lower'
 
     - name: Get diagnostic settings for virtual network
-      azure_rm_monitordiagnosticsetting_info:
+      azure.azcollection.azure_rm_monitordiagnosticsetting_info:
         resource: "{{ vnet_output.state.id }}"
       register: output
     - name: Assert no settings
@@ -81,7 +81,7 @@
           - output.settings | length == 0
 
     - name: Create storage-based diagnostic setting for vnet (check mode)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         storage_account: "{{ storage_output.state.id }}"
@@ -97,7 +97,7 @@
           - output is changed
 
     - name: Create storage-based diagnostic setting for vnet (actually create)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         storage_account: "{{ storage_output.state.id }}"
@@ -122,7 +122,7 @@
           - not output.state.log_analytics
 
     - name: Create storage-based diagnostic setting for vnet (idempotent)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         storage_account: "{{ storage_output.state.id }}"
@@ -138,7 +138,7 @@
           - output is not changed
 
     - name: Create storage-based diagnostic setting for vnet by resource dict (idempotent)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource:
           name: "vnet-{{ rpfx }}"
@@ -156,7 +156,7 @@
           - output is not changed
 
     - name: Update storage-based diagnostic setting for vnet
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         storage_account: "{{ storage_output.state.id }}"
@@ -177,7 +177,7 @@
           - not output.state.log_analytics
 
     - name: Create second storage-based diagnostic setting for vnet
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage2"
         resource: "{{ vnet_output.state.id }}"
         storage_account:
@@ -204,7 +204,7 @@
           - not output.state.log_analytics
 
     - name: Update second storage-based diagnostic setting for vnet
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage2"
         resource: "{{ vnet_output.state.id }}"
         storage_account:
@@ -222,7 +222,7 @@
           - output.state.logs[0].retention_policy.days == 30
 
     - name: Update second storage-based diagnostic setting for vnet (idempotent)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage2"
         resource: "{{ vnet_output.state.id }}"
         storage_account:
@@ -239,7 +239,7 @@
           - output is not changed
 
     - name: Get diagnostic settings for virtual network
-      azure_rm_monitordiagnosticsetting_info:
+      azure.azcollection.azure_rm_monitordiagnosticsetting_info:
         resource: "{{ vnet_output.state.id }}"
       register: output
     - name: Assert output maches expectations
@@ -266,7 +266,7 @@
           - not output.settings[1].log_analytics
 
     - name: Get specific diagnostic settings for virtual network
-      azure_rm_monitordiagnosticsetting_info:
+      azure.azcollection.azure_rm_monitordiagnosticsetting_info:
         name: "logs-storage2"
         resource: "{{ vnet_output.state.id }}"
       register: output
@@ -286,7 +286,7 @@
           - not output.settings[0].log_analytics
 
     - name: Get non-existant diagnostic setting for virtual network
-      azure_rm_monitordiagnosticsetting_info:
+      azure.azcollection.azure_rm_monitordiagnosticsetting_info:
         name: "does-not-exist"
         resource: "{{ vnet_output.state.id }}"
       register: output
@@ -296,7 +296,7 @@
           - output.settings | length == 0
 
     - name: Create diagnostic setting for webapp with log analytics, event hub, and storage
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs"
         resource:
           name: "webapp-{{ rpfx }}"
@@ -337,7 +337,7 @@
           - output.state.metrics | length == 0
 
     - name: Create diagnostic setting for webapp with log analytics, event hub, and storage (idempotent)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs"
         resource:
           name: "webapp-{{ rpfx }}"
@@ -365,7 +365,7 @@
           - output is not changed
 
     - name: Update diagnostic setting to remove storage and log category
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs"
         resource:
           name: "webapp-{{ rpfx }}"
@@ -397,7 +397,7 @@
           - output.state.logs[4].category == 'AppServicePlatformLogs'
 
     - name: Delete diagnostic setting via resource dict
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs"
         resource:
           name: "webapp-{{ rpfx }}"
@@ -411,7 +411,7 @@
           - output is changed
 
     - name: Delete diagnostic setting via resource dict (idempotent)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs"
         resource:
           name: "webapp-{{ rpfx }}"
@@ -425,7 +425,7 @@
           - output is not changed
 
     - name: Delete diagnostic setting (check mode)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         state: "absent"
@@ -437,7 +437,7 @@
           - output is changed
 
     - name: Delete diagnostic setting (actually delete)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         state: "absent"
@@ -448,7 +448,7 @@
           - output is changed
 
     - name: Delete diagnostic setting (idempotent)
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage"
         resource: "{{ vnet_output.state.id }}"
         state: "absent"
@@ -459,7 +459,7 @@
           - output is not changed
 
     - name: Delete second diagnostic setting
-      azure_rm_monitordiagnosticsetting:
+      azure.azcollection.azure_rm_monitordiagnosticsetting:
         name: "logs-storage2"
         resource: "{{ vnet_output.state.id }}"
         state: "absent"
@@ -472,49 +472,49 @@
     # ------ teardown ------
 
     - name: Delete log analytics workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "analytics-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         state: "absent"
 
     - name: Delete event hub namespace
-      azure_rm_eventhub:
+      azure.azcollection.azure_rm_eventhub:
         namespace_name: "hub-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete second storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         name: "storagesecond{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting02"
         state: "absent"
 
     - name: Delete storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         name: "storage{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete web app
-      azure_rm_webapp:
+      azure.azcollection.azure_rm_webapp:
         name: "webapp-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete web app plan
-      azure_rm_appserviceplan:
+      azure.azcollection.azure_rm_appserviceplan:
         name: "webapp-{{ rpfx }}-plan"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
 
     - name: Delete virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: "vnet-{{ rpfx }}"
         resource_group: "{{ resource_group }}-monitordiagnosticsetting01"
         state: "absent"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent

@@ -1,9 +1,9 @@
 - name: Get list of all managementgroups
-  azure_rm_managementgroup_info:
+  azure.azcollection.azure_rm_managementgroup_info:
   register: az_all_managementgroups
 
 - name: Get a managementgroup by id
-  azure_rm_managementgroup_info:
+  azure.azcollection.azure_rm_managementgroup_info:
     id: "{{ az_all_managementgroups.management_groups[0].id }}"
     recurse: true
     flatten: true
@@ -11,13 +11,13 @@
   register: az_recursive_managementgroups
 
 - name: Get a managementgroup by name
-  azure_rm_managementgroup_info:
+  azure.azcollection.azure_rm_managementgroup_info:
     name: "{{ az_all_managementgroups.management_groups[0].name }}"
     recurse: true
     flatten: true
 
 - name: Test invalid name id combo
-  azure_rm_managementgroup_info:
+  azure.azcollection.azure_rm_managementgroup_info:
     name: "{{ az_all_managementgroups.management_groups[0].name }}"
     id: "{{ az_all_managementgroups.management_groups[0].id }}"
   register: invalid_name

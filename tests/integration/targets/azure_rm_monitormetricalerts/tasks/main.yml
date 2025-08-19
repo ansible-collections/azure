@@ -9,7 +9,7 @@
 
     # ------ prerequisite resources, existing resource group, new action group ------
     - name: Create a new resource group for monitor activity log alert test
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-metricalert"
         location: eastus
       register: resource_group_output
@@ -29,7 +29,7 @@
       register: action_group_output
 
     - name: Create Azure Recovery Service vault
-      azure_rm_recoveryservicesvault:
+      azure.azcollection.azure_rm_recoveryservicesvault:
         resource_group: "{{ resource_group }}-metricalert"
         name: "backup-{{ random_string }}"
         location: "{{ resource_group_output.state.location }}"
@@ -588,7 +588,7 @@
         state: absent
 
     - name: Delete Azure Recovery Service vault
-      azure_rm_recoveryservicesvault:
+      azure.azcollection.azure_rm_recoveryservicesvault:
         resource_group: "{{ resource_group }}-metricalert"
         name: "backup-{{ random_string }}"
         location: "{{ resource_group_output.state.location }}"
@@ -628,7 +628,7 @@
 
   always:
     - name: Force delete the log alert resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-metricalert"
         force_delete_nonempty: true
         state: absent

@@ -16,7 +16,7 @@
   when: managed_identity_action == 'create'
 
 - name: Create the user managed identity - {{ identity_name }}
-  azure_rm_resource:
+  azure.azcollection.azure_rm_resource:
     resource_group: "{{ resource_group }}-sqlmanagedinstance"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
@@ -28,7 +28,7 @@
   when: managed_identity_action == 'create'
 
 - name: Lookup service principal object id for identity {{ identity_name }}
-  azure_rm_resource_info:
+  azure.azcollection.azure_rm_resource_info:
     api_version: "2023-01-31"
     resource_group: "{{ resource_group }}-sqlmanagedinstance"
     provider: ManagedIdentity
@@ -47,7 +47,7 @@
     - managed_identity_action == 'create'
 
 - name: Destroy the user managed identity - {{ identity_name }}
-  azure_rm_resource:
+  azure.azcollection.azure_rm_resource:
     resource_group: "{{ resource_group }}-sqlmanagedinstance"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities

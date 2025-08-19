@@ -1,5 +1,5 @@
 - name: Create a new resource group for IP group test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-ipgroup"
     location: eastus
 
@@ -10,7 +10,7 @@
         group_name: "ipgroup{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: Create IP group (check mode)
-      azure_rm_ipgroup:
+      azure.azcollection.azure_rm_ipgroup:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -24,7 +24,7 @@
       check_mode: true
 
     - name: Create IP group
-      azure_rm_ipgroup:
+      azure.azcollection.azure_rm_ipgroup:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -42,7 +42,7 @@
         that: results is changed
 
     - name: Create same IP group again (Idempotent test)
-      azure_rm_ipgroup:
+      azure.azcollection.azure_rm_ipgroup:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -60,7 +60,7 @@
         that: results is not changed
 
     - name: Update IP group
-      azure_rm_ipgroup:
+      azure.azcollection.azure_rm_ipgroup:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         location: eastus
@@ -75,7 +75,7 @@
         that: results is changed
 
     - name: Get IP group facts
-      azure_rm_ipgroup_info:
+      azure.azcollection.azure_rm_ipgroup_info:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
       register: results
@@ -92,7 +92,7 @@
           - results.ipgroups[0].tags | length > 0
 
     - name: Delete IP group
-      azure_rm_ipgroup:
+      azure.azcollection.azure_rm_ipgroup:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         state: absent
@@ -103,7 +103,7 @@
         that: results is changed
 
     - name: Delete IP group again (Idempotent test)
-      azure_rm_ipgroup:
+      azure.azcollection.azure_rm_ipgroup:
         resource_group: "{{ resource_group }}-ipgroup"
         name: "{{ group_name }}"
         state: absent
@@ -114,7 +114,7 @@
         that: results is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-ipgroup"
         force_delete_nonempty: true
         state: absent

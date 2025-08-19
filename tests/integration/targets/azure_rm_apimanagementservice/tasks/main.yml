@@ -1,5 +1,5 @@
 - name: Create a new resource group for api management service test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-apimanagementservice"
     location: eastus
 
@@ -10,7 +10,7 @@
         name_rpfx: "myPolicy{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: To create api management service
-      azure_rm_apimanagementservice:
+      azure.azcollection.azure_rm_apimanagementservice:
         resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
         publisher_email: user@example.com
@@ -26,7 +26,7 @@
           - output is not failed
 
     - name: Recreate api management service idempotent test
-      azure_rm_apimanagementservice:
+      azure.azcollection.azure_rm_apimanagementservice:
         resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
         publisher_email: user@example.com
@@ -42,7 +42,7 @@
           - output is not failed
 
     - name: Get api management service information
-      azure_rm_apimanagementservice_info:
+      azure.azcollection.azure_rm_apimanagementservice_info:
         resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
       register: output
@@ -53,7 +53,7 @@
           - output.api_management_service.name == "{{ name_rpfx }}"
 
     - name: To delete an api management service
-      azure_rm_apimanagementservice:
+      azure.azcollection.azure_rm_apimanagementservice:
         resource_group: "{{ resource_group }}-apimanagementservice"
         name: "{{ name_rpfx }}"
         state: absent
@@ -65,7 +65,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-apimanagementservice"
         force_delete_nonempty: true
         state: absent

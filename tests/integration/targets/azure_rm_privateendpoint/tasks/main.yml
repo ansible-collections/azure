@@ -1,5 +1,5 @@
 - name: Create a new resource group for private endpoint test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-privateendpoint"
     location: eastus
 
@@ -11,7 +11,7 @@
         password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         name: vnet{{ rpfx }}
         address_prefixes_cidr:
           - 10.1.0.0/16
@@ -21,12 +21,12 @@
         resource_group: "{{ resource_group }}-privateendpoint"
 
     - name: Create network security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         name: secgroup{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
 
     - name: Create the subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         name: subnet{{ rpfx }}
         virtual_network_name: vnet{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
@@ -42,7 +42,7 @@
       register: subnet_output
 
     - name: Create instance of postgresql flexible server --- first
-      azure_rm_postgresqlflexibleserver:
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "postflexible{{ rpfx }}"
         sku:
@@ -69,7 +69,7 @@
       register: post_output
 
     - name: Create instance of postgresql flexible server --- secondary
-      azure_rm_postgresqlflexibleserver:
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "postflexible{{ rpfx }}02"
         sku:
@@ -96,7 +96,7 @@
       register: post_output02
 
     - name: Create instance of postgresql flexible server --- third
-      azure_rm_postgresqlflexibleserver:
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "postflexible{{ rpfx }}03"
         sku:
@@ -123,13 +123,13 @@
       register: post_output03
 
     - name: Delete private endpoint, makesure there is no private endpoint exist
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
         state: absent
 
     - name: Create private endpoint
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
         private_link_service_connections:
@@ -153,7 +153,7 @@
           - output.state.tags | length == 1
 
     - name: Create private endpoint ( Idempotent Test)
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
         private_link_service_connections:
@@ -175,7 +175,7 @@
       register: ignore_errors_register
 
     - name: Update private endpoint with tags
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
         private_link_service_connections:
@@ -197,7 +197,7 @@
           - output.state.tags | length == 2
 
     - name: Get private endpoint info
-      azure_rm_privateendpoint_info:
+      azure.azcollection.azure_rm_privateendpoint_info:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
       register: output
@@ -209,7 +209,7 @@
           - output.privateendpoints[0].tags | length == 2
 
     - name: Create secondary private endpoint with manual_private_link_service_connections parameters
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: "privateendpoint{{ rpfx }}02"
         resource_group: "{{ resource_group }}-privateendpoint"
         manual_private_link_service_connections:
@@ -227,19 +227,19 @@
           - output is changed
 
     - name: Create an application security group
-      azure_rm_applicationsecuritygroup:
+      azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "app{{ rpfx }}"
         location: eastus
 
     - name: Get the application security group facts
-      azure_rm_applicationsecuritygroup_info:
+      azure.azcollection.azure_rm_applicationsecuritygroup_info:
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "app{{ rpfx }}"
       register: app_group_output
 
     - name: Create third private endpoint with manual_private_link_service_connections parameters
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: "privateendpoint{{ rpfx }}03"
         resource_group: "{{ resource_group }}-privateendpoint"
         private_link_service_connections:
@@ -268,21 +268,21 @@
           - output is changed
 
     - name: Delete the third private endpoint
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: "privateendpoint{{ rpfx }}03"
         resource_group: "{{ resource_group }}-privateendpoint"
         state: absent
       register: output
 
     - name: Delete the secondary private endpoint
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: "privateendpoint{{ rpfx }}02"
         resource_group: "{{ resource_group }}-privateendpoint"
         state: absent
       register: output
 
     - name: Delete private endpoint
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
         state: absent
@@ -294,7 +294,7 @@
           - output is changed
 
     - name: Delete private endpoint ( Idempotent Test)
-      azure_rm_privateendpoint:
+      azure.azcollection.azure_rm_privateendpoint:
         name: privateendpoint{{ rpfx }}
         resource_group: "{{ resource_group }}-privateendpoint"
         state: absent
@@ -306,7 +306,7 @@
           - output is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-privateendpoint"
         force_delete_nonempty: true
         state: absent

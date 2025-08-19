@@ -7,7 +7,7 @@
   run_once: true
 
 - name: Create test user
-  azure_rm_aduser:
+  azure.azcollection.azure_rm_aduser:
     user_principal_name: "{{ user_name }}@{{ domain }}"
     state: "present"
     account_enabled: true
@@ -29,7 +29,7 @@
   register: create_user_should_pass
 
 - name: Try to update existing user - idempotent check
-  azure_rm_aduser:
+  azure.azcollection.azure_rm_aduser:
     user_principal_name: "{{ user_name }}@{{ domain }}"
     state: "present"
     account_enabled: true
@@ -55,12 +55,12 @@
       - attempted_update_with_no_changes_should_pass is not changed
 
 - name: User_principal_name Should Pass
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     user_principal_name: "{{ user_name }}@{{ domain }}"
   register: get_user_by_upn_should_pass
 
 - name: Attribute_name mail Should Pass
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     attribute_name: "mail"
     attribute_value: "{{ user_name }}@{{ domain }}"
   register: get_user_by_mail_should_pass
@@ -73,14 +73,14 @@
       - "get_user_by_mail_should_pass['ad_users'][0]['account_enabled'] == True"
 
 - name: Update test user
-  azure_rm_aduser:
+  azure.azcollection.azure_rm_aduser:
     user_principal_name: "{{ user_name }}@{{ domain }}"
     state: "present"
     account_enabled: false
   register: update_user_should_pass
 
 - name: User_principal_name on updated user Should Pass
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     user_principal_name: "{{ user_name }}@{{ domain }}"
   register: get_updated_user_should_pass
 
@@ -91,13 +91,13 @@
       - "get_updated_user_should_pass['ad_users'][0]['account_enabled'] == False"
 
 - name: Delete test user
-  azure_rm_aduser:
+  azure.azcollection.azure_rm_aduser:
     user_principal_name: "{{ user_name }}@{{ domain }}"
     state: "absent"
   register: delete_user_should_pass
 
 - name: User_principal_name Should Fail
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     user_principal_name: "{{ user_name }}@{{ domain }}"
   register: get_user_should_fail
   ignore_errors: true
@@ -108,7 +108,7 @@
       - "get_user_should_fail['failed'] == True"
 
 - name: Missing any identifiers Should Fail
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
   register: missing_any_identifiers
   ignore_errors: true
 
@@ -118,7 +118,7 @@
       - "missing_any_identifiers is defined"
 
 - name: Too many identifiers Should Fail
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     user_principal_name: "{{ user_name }}@{{ domain }}"
     object_id: "{{ on_premises_immutable_id }}"
   register: too_many_identifiers
@@ -130,7 +130,7 @@
       - "too_many_identifiers is defined"
 
 - name: Missing attribute_value Should Fail
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     attribute_name: proxyAddresses
   register: missing_attribute_value
   ignore_errors: true
@@ -141,7 +141,7 @@
       - "missing_attribute_value is defined"
 
 - name: Missing attribute_name Should Fail
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     attribute_value: SMTP:user@stadtluzern.ch
   register: missing_attribute_name
   ignore_errors: true
@@ -152,7 +152,7 @@
       - "missing_attribute_name is defined"
 
 - name: Using all with principal name should fail
-  azure_rm_aduser_info:
+  azure.azcollection.azure_rm_aduser_info:
     all: true
     user_principal_name: "{{ user_name }}@{{ domain }}"
   register: using_all_with_principal_name

@@ -1,5 +1,5 @@
 - name: Create a new resource group for cdn profile test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-cdnprofile"
     location: eastus
 
@@ -38,7 +38,7 @@
         - '2'
 
     - name: Create a CDN profile(check mode)
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
@@ -56,7 +56,7 @@
       register: output
 
     - name: Check there is no CDN profile created
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -67,7 +67,7 @@
           - fact.cdnprofiles | length == 0
 
     - name: Create a CDN profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
@@ -90,7 +90,7 @@
           - output.id != ''
 
     - name: Gather CDN profile facts
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -106,7 +106,7 @@
           - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[0]] is defined
 
     - name: Create a CDN profile (idempotent)
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
@@ -128,7 +128,7 @@
           - output is not changed
 
     - name: Update the CDN profile - replace user identity
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
@@ -152,7 +152,7 @@
           - output is changed
 
     - name: Gather CDN profile facts
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -168,7 +168,7 @@
           - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Update the CDN profile - append user identity
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
@@ -191,7 +191,7 @@
           - output is changed
 
     - name: Gather CDN profile facts
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -208,7 +208,7 @@
           - fact.cdnprofiles[0].identity.user_assigned_identities[managed_identity_ids[1]] is defined
 
     - name: Update the CDN profile - change to SystemAssigned identity
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         sku: standard_microsoft
@@ -228,7 +228,7 @@
           - output is changed
 
     - name: Gather CDN profile facts
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -243,14 +243,14 @@
           - fact.cdnprofiles[0].identity.user_assigned_identities is not defined
 
     - name: Delete the CDN profile(check mode)
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         state: absent
       check_mode: true
 
     - name: Gather CDN profile facts
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -264,7 +264,7 @@
           - fact.cdnprofiles[0].tags.baz == 'qux'
 
     - name: Create a Azure CDN endpoint(check mode)
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -278,7 +278,7 @@
       check_mode: true
 
     - name: Create a Azure CDN endpoint
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -298,7 +298,7 @@
           - output.id
 
     - name: Get facts of a Azure CDN endpoint
-      azure_rm_cdnendpoint_info:
+      azure.azcollection.azure_rm_cdnendpoint_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -317,7 +317,7 @@
           - facts['cdnendpoints'][0]['resource_state']
 
     - name: Create a Azure CDN endpoint(idempotent)
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -336,7 +336,7 @@
           - output is not changed
 
     - name: Stop a Azure CDN endpoint
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -349,7 +349,7 @@
           - output is changed
 
     - name: Stop a Azure CDN endpoint(idempotent)
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -362,7 +362,7 @@
           - output is not changed
 
     - name: Start a Azure CDN endpoint
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -375,7 +375,7 @@
           - output is changed
 
     - name: Update the Azure CDN endpoint
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -392,7 +392,7 @@
           - output is changed
 
     - name: Delete a Azure CDN endpoint(check mode)
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
@@ -400,14 +400,14 @@
       check_mode: true
 
     - name: Delete a Azure CDN endpoint
-      azure_rm_cdnendpoint:
+      azure.azcollection.azure_rm_cdnendpoint:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ endpointname }}"
         profile_name: "{{ cdnprofilename }}"
         state: absent
 
     - name: Delete the CDN profile
-      azure_rm_cdnprofile:
+      azure.azcollection.azure_rm_cdnprofile:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
         state: absent
@@ -419,7 +419,7 @@
           - output is changed
 
     - name: Get CDN profile fact
-      azure_rm_cdnprofile_info:
+      azure.azcollection.azure_rm_cdnprofile_info:
         resource_group: "{{ resource_group }}-cdnprofile"
         name: "{{ cdnprofilename }}"
       register: fact
@@ -442,7 +442,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-cdnprofile"
         force_delete_nonempty: true
         state: absent

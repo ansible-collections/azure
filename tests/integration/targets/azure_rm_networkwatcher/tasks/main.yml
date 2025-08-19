@@ -1,5 +1,5 @@
 - name: Create a new resource group for network watcher test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-networkwatcher"
     location: eastus
 
@@ -10,7 +10,7 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
 
     - name: Create a Network Watcher(Checkmode test)
-      azure_rm_networkwatcher:
+      azure.azcollection.azure_rm_networkwatcher:
         resource_group: "{{ resource_group }}-networkwatcher"
         name: "mynetwacher{{ rpfx }}"
         location: westus3
@@ -20,7 +20,7 @@
       check_mode: true
 
     - name: Create a new Network Watcher
-      azure_rm_networkwatcher:
+      azure.azcollection.azure_rm_networkwatcher:
         resource_group: "{{ resource_group }}-networkwatcher"
         name: "mynetwacher{{ rpfx }}"
         location: westus3
@@ -35,7 +35,7 @@
           - output is changed
 
     - name: Create a Network Watcher again(Idempotent test)
-      azure_rm_networkwatcher:
+      azure.azcollection.azure_rm_networkwatcher:
         resource_group: "{{ resource_group }}-networkwatcher"
         name: "mynetwacher{{ rpfx }}"
         location: westus3
@@ -50,7 +50,7 @@
           - output is not changed
 
     - name: Get the network watcher facts
-      azure_rm_networkwatcher_info:
+      azure.azcollection.azure_rm_networkwatcher_info:
         resource_group: "{{ resource_group }}-networkwatcher"
         name: "mynetwacher{{ rpfx }}"
       register: output
@@ -61,7 +61,7 @@
           - output.network_watchers[0].tags | length == 2
 
     - name: Get the network watcher facts and filter by tags
-      azure_rm_networkwatcher_info:
+      azure.azcollection.azure_rm_networkwatcher_info:
         resource_group: "{{ resource_group }}-networkwatcher"
         tags:
           - none-key
@@ -73,7 +73,7 @@
           - output.network_watchers[0] == None
 
     - name: Delete the Network Watcher
-      azure_rm_networkwatcher:
+      azure.azcollection.azure_rm_networkwatcher:
         resource_group: "{{ resource_group }}-networkwatcher"
         name: "mynetwacher{{ rpfx }}"
         state: absent
@@ -85,7 +85,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-networkwatcher"
         force_delete_nonempty: true
         state: absent

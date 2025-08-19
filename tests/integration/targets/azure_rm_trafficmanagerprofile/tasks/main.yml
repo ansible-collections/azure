@@ -1,5 +1,5 @@
 - name: Create a new resource group for traffic manager profile test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-tmp"
     location: eastus
 
@@ -14,7 +14,7 @@
 
 
     - name: Create a Traffic Manager profile(check mode)
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
         tags:
@@ -34,7 +34,7 @@
       check_mode: true
 
     - name: Check there is no Traffic Manager profile created
-      azure_rm_trafficmanagerprofile_info:
+      azure.azcollection.azure_rm_trafficmanagerprofile_info:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
       register: fact
@@ -45,7 +45,7 @@
           - fact.tms | length == 0
 
     - name: Create a Traffic Manager profile
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
         tags:
@@ -70,7 +70,7 @@
           - tm is changed
 
     - name: Gather Traffic Manager profile facts
-      azure_rm_trafficmanagerprofile_info:
+      azure.azcollection.azure_rm_trafficmanagerprofile_info:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
       register: fact
@@ -83,7 +83,7 @@
           - fact.tms[0].endpoints | length == 0
 
     - name: Create a Traffic Manager profile (idempotent)
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
         tags:
@@ -108,7 +108,7 @@
           - output is not changed
 
     - name: Update the Traffic Manager profile
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
         tags:
@@ -133,7 +133,7 @@
           - output is changed
 
     - name: Create the Seconday Traffic Manager profile
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}02"
         location: global
@@ -161,7 +161,7 @@
           - output is changed
 
     - name: Update the Seconday Traffic Manager profile
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}02"
         location: global
@@ -193,7 +193,7 @@
           - output is changed
 
     - name: Gather Seconday Traffic Manager profile facts
-      azure_rm_trafficmanagerprofile_info:
+      azure.azcollection.azure_rm_trafficmanagerprofile_info:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}02"
       register: fact
@@ -207,7 +207,7 @@
           - fact.tms[0].max_return == 12
 
     - name: Create Traffic Manager endpoint(check mode)
-      azure_rm_trafficmanagerendpoint:
+      azure.azcollection.azure_rm_trafficmanagerendpoint:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
         name: "{{ endpointname1 }}"
@@ -225,7 +225,7 @@
           - output is changed
 
     - name: Get endpoint
-      azure_rm_trafficmanagerendpoint_info:
+      azure.azcollection.azure_rm_trafficmanagerendpoint_info:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
       register: facts
@@ -236,7 +236,7 @@
           - facts.endpoints | length == 0
 
     - name: Create Traffic Manager endpoint
-      azure_rm_trafficmanagerendpoint:
+      azure.azcollection.azure_rm_trafficmanagerendpoint:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
         name: "{{ endpointname1 }}"
@@ -253,7 +253,7 @@
           - output is changed
 
     - name: Get endpoint
-      azure_rm_trafficmanagerendpoint_info:
+      azure.azcollection.azure_rm_trafficmanagerendpoint_info:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
       register: facts
@@ -265,7 +265,7 @@
           - facts.endpoints[0].name == "{{ endpointname1 }}"
 
     - name: Create second Traffic Manager endpoint
-      azure_rm_trafficmanagerendpoint:
+      azure.azcollection.azure_rm_trafficmanagerendpoint:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
         name: "{{ endpointname2 }}"
@@ -276,7 +276,7 @@
         target: 4.3.2.1
 
     - name: Get endpoint
-      azure_rm_trafficmanagerendpoint_info:
+      azure.azcollection.azure_rm_trafficmanagerendpoint_info:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
       register: facts
@@ -287,7 +287,7 @@
           - facts.endpoints | length == 2
 
     - name: Create endpoint (idempotent)
-      azure_rm_trafficmanagerendpoint:
+      azure.azcollection.azure_rm_trafficmanagerendpoint:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
         name: "{{ endpointname2 }}"
@@ -304,7 +304,7 @@
           - output is not changed
 
     - name: Delete second endpoint
-      azure_rm_trafficmanagerendpoint:
+      azure.azcollection.azure_rm_trafficmanagerendpoint:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
         name: "{{ endpointname2 }}"
@@ -318,7 +318,7 @@
           - output is changed
 
     - name: Get endpoint
-      azure_rm_trafficmanagerendpoint_info:
+      azure.azcollection.azure_rm_trafficmanagerendpoint_info:
         resource_group: "{{ resource_group }}-tmp"
         profile_name: "{{ tmname }}"
       register: facts
@@ -329,14 +329,14 @@
           - facts.endpoints | length == 1
 
     - name: Delete the Traffic Manager profile(check mode)
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
         state: absent
       check_mode: true
 
     - name: Gather Traffic Manager profile facts
-      azure_rm_trafficmanagerprofile_info:
+      azure.azcollection.azure_rm_trafficmanagerprofile_info:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
       register: fact
@@ -349,7 +349,7 @@
           - fact.tms[0].endpoints | length == 1
 
     - name: Delete the Traffic Manager profile
-      azure_rm_trafficmanagerprofile:
+      azure.azcollection.azure_rm_trafficmanagerprofile:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
         state: absent
@@ -361,7 +361,7 @@
           - output is changed
 
     - name: Get Traffic Manager profile fact
-      azure_rm_trafficmanagerprofile_info:
+      azure.azcollection.azure_rm_trafficmanagerprofile_info:
         resource_group: "{{ resource_group }}-tmp"
         name: "{{ tmname }}"
       register: fact
@@ -372,7 +372,7 @@
           - fact.tms | length == 0
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-tmp"
         force_delete_nonempty: true
         state: absent

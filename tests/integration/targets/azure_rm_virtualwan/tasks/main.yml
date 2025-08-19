@@ -1,5 +1,5 @@
 - name: Create a new resource group for virtual wan test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-virtualwan"
     location: eastus
 
@@ -11,7 +11,7 @@
       run_once: true
 
     - name: Create a VirtualWan
-      azure_rm_virtualwan:
+      azure.azcollection.azure_rm_virtualwan:
         resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
         office365_local_breakout_category: All
@@ -27,7 +27,7 @@
           - output is changed
 
     - name: Create a VirtualWan again (Idempotent test)
-      azure_rm_virtualwan:
+      azure.azcollection.azure_rm_virtualwan:
         resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
       register: output
@@ -38,7 +38,7 @@
           - output is not changed
 
     - name: Update the VirtualWan
-      azure_rm_virtualwan:
+      azure.azcollection.azure_rm_virtualwan:
         resource_group: "{{ resource_group }}-virtualwan"
         office365_local_breakout_category: All
         name: "virtualwan{{ rpfx }}"
@@ -54,7 +54,7 @@
           - output is changed
 
     - name: Get VirtualWan info
-      azure_rm_virtualwan_info:
+      azure.azcollection.azure_rm_virtualwan_info:
         resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
       register: output
@@ -66,13 +66,13 @@
           - output.virtual_wans[0]['disable_vpn_encryption'] == false
 
     - name: Delete the VirtualWan
-      azure_rm_virtualwan:
+      azure.azcollection.azure_rm_virtualwan:
         resource_group: "{{ resource_group }}-virtualwan"
         name: "virtualwan{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-virtualwan"
         force_delete_nonempty: true
         state: absent

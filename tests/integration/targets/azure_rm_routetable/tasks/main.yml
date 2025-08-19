@@ -1,5 +1,5 @@
 - name: Create a new resource group for route table test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-routetable"
     location: eastus
 
@@ -12,7 +12,7 @@
       run_once: true
 
     - name: Create a route table (check mode)
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
         tags:
@@ -27,7 +27,7 @@
           - output is changed
 
     - name: Create a route table
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
         tags:
@@ -41,7 +41,7 @@
           - output.id
 
     - name: Create a route table (idemponent)
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
         tags:
@@ -54,7 +54,7 @@
           - output is not changed
 
     - name: Get facts of the table
-      azure_rm_routetable_info:
+      azure.azcollection.azure_rm_routetable_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
       register: output
@@ -66,7 +66,7 @@
           - "output.route_tables[0].routes | length == 0"
 
     - name: Create route (check mode)
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         next_hop_type: virtual_network_gateway
@@ -82,7 +82,7 @@
           - not output.id
 
     - name: Create route
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         next_hop_type: virtual_network_gateway
@@ -97,7 +97,7 @@
           - output.id
 
     - name: Create route (idemponent)
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         next_hop_type: virtual_network_gateway
@@ -111,7 +111,7 @@
           - output is not changed
 
     - name: Update route
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         next_hop_type: virtual_network_gateway
@@ -125,7 +125,7 @@
           - output is changed
 
     - name: Get facts of the route
-      azure_rm_route_info:
+      azure.azcollection.azure_rm_route_info:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         route_table_name: "{{ name_rpfx }}"
@@ -138,7 +138,7 @@
           - output.routes[0].next_hop_type == "VirtualNetworkGateway"
 
     - name: Get facts of the table
-      azure_rm_routetable_info:
+      azure.azcollection.azure_rm_routetable_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
       register: output
@@ -151,7 +151,7 @@
           - output.route_tables[0].routes[0].address_prefix == '10.1.0.0/24'
 
     - name: Delete route (check mode)
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         route_table_name: "{{ name_rpfx }}"
@@ -159,7 +159,7 @@
       check_mode: true
 
     - name: Delete route
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         state: absent
@@ -172,7 +172,7 @@
           - output is changed
 
     - name: Delete route (idemponent)
-      azure_rm_route:
+      azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
         state: absent
@@ -185,14 +185,14 @@
           - output is not changed
 
     - name: Delete route table (check mode)
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
         state: absent
       check_mode: true
 
     - name: Delete route table
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
         state: absent
@@ -204,7 +204,7 @@
           - output is changed
 
     - name: Delete route table (idemponent)
-      azure_rm_routetable:
+      azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
         state: absent
@@ -216,7 +216,7 @@
           - output is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-routetable"
         force_delete_nonempty: true
         state: absent

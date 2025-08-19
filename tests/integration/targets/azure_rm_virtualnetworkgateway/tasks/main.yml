@@ -1,5 +1,5 @@
 - name: Create a new resource group for virtual network gateway test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-vnetgw"
     location: eastus
 
@@ -15,7 +15,7 @@
 
     - name: Create virtual network gateway without bgp settings (check mode)
       check_mode: true
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgw"
         name: "{{ vngname }}01"
         ip_configurations:
@@ -33,7 +33,7 @@
 
     - name: Create virtual network gateway Generation2 (check mode)
       check_mode: true
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgw"
         name: "{{ vngname }}02"
         sku: VpnGw2
@@ -53,7 +53,7 @@
     - name: Long-running virtualnetworkgateway tests
       block:
         - name: Create virtual network
-          azure_rm_virtualnetwork:
+          azure.azcollection.azure_rm_virtualnetwork:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ vnetname }}{{ item }}"
             address_prefixes: "10.0.0.0/16"
@@ -62,7 +62,7 @@
             - '02'
 
         - name: Add subnet
-          azure_rm_subnet:
+          azure.azcollection.azure_rm_subnet:
             resource_group: "{{ resource_group }}-vnetgw"
             name: GatewaySubnet
             address_prefix: "10.0.2.0/24"
@@ -72,7 +72,7 @@
             - '02'
 
         - name: Create public IP address
-          azure_rm_publicipaddress:
+          azure.azcollection.azure_rm_publicipaddress:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ pubipname }}{{ item }}"
             sku: Standard
@@ -82,7 +82,7 @@
             - '02'
 
         - name: Create virtual network gateway without bgp settings
-          azure_rm_virtualnetworkgateway:
+          azure.azcollection.azure_rm_virtualnetworkgateway:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ vngname }}{{ item['number'] }}"
             ip_configurations:
@@ -115,7 +115,7 @@
           loop: "{{ network_gateway_output.results }}"
 
         - name: Get the virtual network gateway facts
-          azure_rm_virtualnetworkgateway_info:
+          azure.azcollection.azure_rm_virtualnetworkgateway_info:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ vngname }}01"
           register: output
@@ -128,7 +128,7 @@
               - output.virtual_network_gatways[0].ip_configurations |length == 1
 
         - name: Create virtual network gateway without bgp settings - idempotent
-          azure_rm_virtualnetworkgateway:
+          azure.azcollection.azure_rm_virtualnetworkgateway:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ vngname }}01"
             ip_configurations:
@@ -147,7 +147,7 @@
             that: output is not changed
 
         - name: Update virtual network gateway
-          azure_rm_virtualnetworkgateway:
+          azure.azcollection.azure_rm_virtualnetworkgateway:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ vngname }}01"
             ip_configurations:
@@ -164,7 +164,7 @@
             that: output is changed
 
         - name: List the virtual network gateway and filter by tags
-          azure_rm_virtualnetworkgateway_info:
+          azure.azcollection.azure_rm_virtualnetworkgateway_info:
             resource_group: "{{ resource_group }}-vnetgw"
             tags:
               - newcommon
@@ -176,7 +176,7 @@
               - output.virtual_network_gatways |length == 1
 
         - name: Delete virtual network gateway
-          azure_rm_virtualnetworkgateway:
+          azure.azcollection.azure_rm_virtualnetworkgateway:
             resource_group: "{{ resource_group }}-vnetgw"
             name: "{{ vngname }}{{ item }}"
             state: absent
@@ -197,7 +197,7 @@
           loop: "{{ network_gateway_deleted.results }}"
 
     - name: Delete virtual network gateway - idempotent
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgw"
         name: "{{ vngname }}01"
         state: absent
@@ -209,7 +209,7 @@
 
     # Clean up networking components after test
     - name: Delete subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-vnetgw"
         name: GatewaySubnet
         virtual_network: "{{ vnetname }}{{ item }}"
@@ -219,7 +219,7 @@
         - '02'
 
     - name: Delete public IP address
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgw"
         allocation_method: Dynamic
         name: "{{ pubipname }}{{ item }}"
@@ -229,7 +229,7 @@
         - '02'
 
     - name: Delete virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-vnetgw"
         name: "{{ vnetname }}{{ item }}"
         state: absent
@@ -238,7 +238,7 @@
         - '02'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vnetgw"
         force_delete_nonempty: true
         state: absent
