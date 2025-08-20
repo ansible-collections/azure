@@ -294,7 +294,7 @@ try:
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
     from azure.mgmt.cdn import CdnManagementClient
     from ansible_collections.azure.azcollection.plugins.module_utils import azure_cloud
-    from azure.cli.core import cloud as azure_cloud
+    from azure.cli.core import cloud as azure_cloud1
 
 except ImportError as exc:
     Authentication = object
@@ -1655,10 +1655,9 @@ class AzureRMAuth(object):
             else:
                 if not urlparse.urlparse(raw_cloud_env).scheme:
                     self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
-                try:
-                    self._cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(raw_cloud_env)
-                except Exception as e:
-                    self.fail("cloud_environment {0} could not be resolved: {1}".format(raw_cloud_env, e.message), exception=traceback.format_exc())
+                self._cloud_environment = azure_cloud.get_cloud_from_endpoint(raw_cloud_env)
+                if not self._cloud_environment:
+                    self.fail("Azure SDK failure: there is no cloud matched for cloud_environment name '{0}'".format(raw_cloud_env))
 
         if self.credentials.get('subscription_id', None) is None and self.credentials.get('credentials') is None:
             self.fail("Credentials did not include a subscription_id value.")
@@ -1772,10 +1771,10 @@ class AzureRMAuth(object):
             else:
                 if not urlparse.urlparse(_cloud_environment).scheme:
                     self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
-                try:
-                    cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(_cloud_environment)
-                except Exception as exc:
-                    self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
+
+                self._cloud_environment = azure_cloud.get_cloud_from_endpoint(raw_cloud_env)
+                if not self._cloud_environment:
+                    self.fail("Azure SDK failure: there is no cloud matched for cloud_environment name '{0}'".format(raw_cloud_env))
 
         client_id = client_id or self._get_env('client_id')
         credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)

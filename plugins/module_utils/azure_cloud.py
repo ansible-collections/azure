@@ -332,3 +332,14 @@ HARD_CODED_CLOUD_DICT = dict(AzureCloud=AZURE_PUBLIC_CLOUD,
                              AzureChinaCloud=AZURE_CHINA_CLOUD,
                              AzureUSGovernment=AZURE_US_GOV_CLOUD,
                              AzureGermanCloud=AZURE_GERMAN_CLOUD)
+
+def get_cloud_from_endpoint(endpoint):
+    for cloud_key,cloud_value in HARD_CODED_CLOUD_DICT.items():
+        has_endpoint = False
+        for endpoint_key, endpoint_value in vars(cloud_value.endpoints).items():
+            if endpoint_value and endpoint.startswith(endpoint_value):
+                has_endpoint = True
+                break
+        if has_endpoint:
+            return cloud_value
+    return None
