@@ -218,8 +218,6 @@ AZURE_FAILED_STATE = "Failed"
 
 HAS_AZURE = True
 HAS_AZURE_EXC = None
-HAS_AZURE_CLI_CORE = True
-HAS_AZURE_CLI_CORE_EXC = None
 
 try:
     import importlib
@@ -294,7 +292,6 @@ try:
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
     from azure.mgmt.cdn import CdnManagementClient
     from ansible_collections.azure.azcollection.plugins.module_utils import azure_cloud
-    from azure.cli.core import cloud as azure_cloud1
 
 except ImportError as exc:
     Authentication = object
@@ -1616,11 +1613,7 @@ class AzureRMAuth(object):
             disable_instance_discovery=disable_instance_discovery)
 
         if not self.credentials:
-            if HAS_AZURE_CLI_CORE:
-                self.fail("Failed to get credentials. Either pass as parameters, set environment variables, "
-                          "define a profile in ~/.azure/credentials, or log in with Azure CLI (`az login`).")
-            else:
-                self.fail("Failed to get credentials. Either pass as parameters, set environment variables, "
+            self.fail("Failed to get credentials. Either pass as parameters, set environment variables, "
                           "define a profile in ~/.azure/credentials, or install Azure CLI and log in (`az login`).")
 
         # cert validation mode precedence: module-arg, credential profile, env, "validate"
@@ -1639,7 +1632,7 @@ class AzureRMAuth(object):
             False
 
         # if cloud_environment specified, look up/build Cloud object
-        raw_cloud_env = self.credentials.get('cloud_environment')
+        raw_cloud_env = self.credentials.get('cloud_environment') or cloud_environment
         if self.credentials.get('credentials') is not None and raw_cloud_env is not None:
             self._cloud_environment = raw_cloud_env
         elif not raw_cloud_env:
@@ -1846,9 +1839,6 @@ class AzureRMAuth(object):
                                              _cloud_environment=params.get('cloud_environment'))
 
         if auth_source == 'cli':
-            if not HAS_AZURE_CLI_CORE:
-                self.fail(msg=missing_required_lib('azure-cli', reason='for `cli` auth_source'),
-                          exception=HAS_AZURE_CLI_CORE_EXC)
             try:
                 self.log('Retrieving credentials from Azure CLI profile')
                 cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
@@ -1891,8 +1881,6 @@ class AzureRMAuth(object):
             return default_credentials
 
         try:
-            if HAS_AZURE_CLI_CORE:
-                self.log('Retrieving credentials from AzureCLI profile')
             cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
             return cli_credentials
         except Exception as ce:
