@@ -11,6 +11,7 @@ import os
 GLOBAL_CONFIG_DIR = os.getenv('AZURE_CONFIG_DIR', None) or os.path.expanduser(os.path.join('~', '.azure'))
 CLOUD_CONFIG_FILE = os.path.join(GLOBAL_CONFIG_DIR, 'clouds.config')
 
+
 class CloudEndpoints:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
     def __init__(self,  # pylint: disable=unused-argument
                  active_directory=None,
@@ -76,13 +77,13 @@ class CloudEndpoints:  # pylint: disable=too-few-public-methods,too-many-instanc
                             "and try again.".format(name, CLOUD_CONFIG_FILE))
         return val
 
+
 class Cloud:  # pylint: disable=too-few-public-methods
     """ Represents an Azure Cloud instance """
 
     def __init__(self, name, endpoints=None):
         self.name = name
         self.endpoints = endpoints or CloudEndpoints()
-
 
     def __str__(self):
         o = {
@@ -194,8 +195,9 @@ HARD_CODED_CLOUD_DICT = dict(AzureCloud=AZURE_PUBLIC_CLOUD,
                              AzureUSGovernment=AZURE_US_GOV_CLOUD,
                              AzureGermanCloud=AZURE_GERMAN_CLOUD)
 
+
 def get_cloud_from_endpoint(endpoint):
-    for cloud_key,cloud_value in HARD_CODED_CLOUD_DICT.items():
+    for cloud_key, cloud_value in HARD_CODED_CLOUD_DICT.items():
         has_endpoint = False
         for endpoint_key, endpoint_value in vars(cloud_value.endpoints).items():
             if endpoint_value and endpoint.startswith(endpoint_value):

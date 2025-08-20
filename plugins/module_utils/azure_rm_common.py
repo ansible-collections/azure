@@ -309,6 +309,7 @@ try:
 except ImportError:
     from urllib.parse import (urlencode, quote_plus)
 
+
 def azure_id_to_dict(id):
     pieces = re.sub(r'^\/', '', id).split('/')
     result = {}
@@ -1614,7 +1615,7 @@ class AzureRMAuth(object):
 
         if not self.credentials:
             self.fail("Failed to get credentials. Either pass as parameters, set environment variables, "
-                          "define a profile in ~/.azure/credentials, or install Azure CLI and log in (`az login`).")
+                      "define a profile in ~/.azure/credentials, or install Azure CLI and log in (`az login`).")
 
         # cert validation mode precedence: module-arg, credential profile, env, "validate"
         self._cert_validation_mode = cert_validation_mode or \
@@ -1765,9 +1766,9 @@ class AzureRMAuth(object):
                 if not urlparse.urlparse(_cloud_environment).scheme:
                     self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
 
-                self._cloud_environment = azure_cloud.get_cloud_from_endpoint(raw_cloud_env)
+                self._cloud_environment = azure_cloud.get_cloud_from_endpoint(_cloud_environment)
                 if not self._cloud_environment:
-                    self.fail("Azure SDK failure: there is no cloud matched for cloud_environment name '{0}'".format(raw_cloud_env))
+                    self.fail("Azure SDK failure: there is no cloud matched for cloud_environment name '{0}'".format(_cloud_environmen))
 
         client_id = client_id or self._get_env('client_id')
         credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
