@@ -54,7 +54,7 @@ try:
     import asyncio
     from msgraph import GraphServiceClient
     from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
-    from ansible_collections.azure.azcollection.plugins.module_utils import azure_cloud
+    from ansible.module_utils import azure_cloud
 except ImportError:
     pass
 

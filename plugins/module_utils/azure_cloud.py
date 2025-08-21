@@ -102,16 +102,6 @@ class CloudEndpoints:  # pylint: disable=too-few-public-methods,too-many-instanc
         self.vm_image_alias_doc = vm_image_alias_doc
         # Please keep the endpoints in alphabetical order
 
-    def has_endpoint_set(self, endpoint_name):
-        try:
-            # Can't simply use hasattr here as we override __getattribute__ below.
-            # Python 3 hasattr() only returns False if an AttributeError is raised but we raise
-            # CloudEndpointNotSetException. This exception is not a subclass of AttributeError.
-            getattr(self, endpoint_name)
-            return True
-        except Exception:  # pylint: disable=broad-except
-            return False
-
     def __getattribute__(self, name):
         val = object.__getattribute__(self, name)
         if val is None:
