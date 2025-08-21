@@ -617,7 +617,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                                                                                      '/providers/Microsoft.Storage' +
                                                                                                      '/storageAccounts/' +
                                                                                                      storage_account)
-                                    self.body['storage_profile']['os_diskImage']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
+                                    self.body['storage_profile']['os_disk_image']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")
 
