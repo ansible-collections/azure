@@ -31,7 +31,6 @@ options:
     description:
       - Azure cloud environment, default is C(AzureCloud), other optioins is C('AzureChinaCloud') and C('AzureUSGovernment').
       - Another option C(AzureGermanCloud) has deprecated on October 29th 2021.
-      - >- U(https://learn.microsoft.com/en-us/java/api/com.azure.identity.azureauthorityhosts?view=azure-java-stable&utm_source=chatgpt.com).
 """
 
 EXAMPLES = """
@@ -80,13 +79,17 @@ class LookupModule(LookupBase):
                                  AzureUSGovernment='https://login.microsoftonline.us',
                                  AzureGermanCloud='https://login.microsoftonline.de')
 
-        cloud_name = self.get_option('azure_cloud_environment', 'AzureCloud')
+        cloud_name = self.get_option('azure_cloud_environment', None)
+        if cloud_name:
+            _cloud_environment = cloud_environment[cloud_name]
+        else:
+            _cloud_environment = 'https://login.microsoftonline.com'
 
         try:
             azure_credential_track2 = ClientSecretCredential(client_id=credentials['azure_client_id'],
                                                              client_secret=credentials['azure_secret'],
                                                              tenant_id=credentials['azure_tenant'],
-                                                             authority=cloud_environment[cloud_name])
+                                                             authority=_cloud_environment)
 
             client = GraphServiceClient(azure_credential_track2)
 
