@@ -1768,7 +1768,7 @@ class AzureRMAuth(object):
 
                 self._cloud_environment = azure_cloud.get_cloud_from_endpoint(_cloud_environment)
                 if not self._cloud_environment:
-                    self.fail("Azure SDK failure: there is no cloud matched for cloud_environment name '{0}'".format(_cloud_environmen))
+                    self.fail("Azure SDK failure: there is no cloud matched for cloud_environment name '{0}'".format(_cloud_environment))
 
         client_id = client_id or self._get_env('client_id')
         credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)

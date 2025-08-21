@@ -12,7 +12,51 @@ GLOBAL_CONFIG_DIR = os.getenv('AZURE_CONFIG_DIR', None) or os.path.expanduser(os
 CLOUD_CONFIG_FILE = os.path.join(GLOBAL_CONFIG_DIR, 'clouds.config')
 
 
+class CloudSuffixes:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+
+    def __init__(self,  # pylint: disable=unused-argument
+                 acr_login_server_endpoint=None,
+                 attestation_endpoint=None,
+                 azure_datalake_analytics_catalog_and_job_endpoint=None,
+                 azure_datalake_store_file_system_endpoint=None,
+                 keyvault_dns=None,
+                 mariadb_server_endpoint=None,
+                 mhsm_dns=None,
+                 mysql_server_endpoint=None,
+                 postgresql_server_endpoint=None,
+                 sql_server_hostname=None,
+                 storage_endpoint=None,
+                 storage_sync_endpoint=None,
+                 synapse_analytics_endpoint=None,
+                 **kwargs):  # To support init with __dict__ for deserialization
+        # Attribute names are significant. They are used when storing/retrieving clouds from config
+        self.acr_login_server_endpoint = acr_login_server_endpoint
+        self.attestation_endpoint = attestation_endpoint
+        self.azure_datalake_analytics_catalog_and_job_endpoint = azure_datalake_analytics_catalog_and_job_endpoint
+        self.azure_datalake_store_file_system_endpoint = azure_datalake_store_file_system_endpoint
+        self.keyvault_dns = keyvault_dns
+        self.mariadb_server_endpoint = mariadb_server_endpoint
+        self.mhsm_dns = mhsm_dns
+        self.mysql_server_endpoint = mysql_server_endpoint
+        self.postgresql_server_endpoint = postgresql_server_endpoint
+        self.sql_server_hostname = sql_server_hostname
+        self.storage_endpoint = storage_endpoint
+        self.storage_sync_endpoint = storage_sync_endpoint
+        self.synapse_analytics_endpoint = synapse_analytics_endpoint
+        # Please keep the suffixes in alphabetical order
+
+    def __getattribute__(self, name):
+        val = object.__getattribute__(self, name)
+        if val is None:
+            raise CloudSuffixNotSetException("The suffix '{}' for this cloud "
+                                             "is not set but is used.\n"
+                                             "{} may be corrupt or invalid.\nResolve the error or delete this file "
+                                             "and try again.".format(name, CLOUD_CONFIG_FILE))
+        return val
+
+
 class CloudEndpoints:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+
     def __init__(self,  # pylint: disable=unused-argument
                  active_directory=None,
                  active_directory_data_lake_resource_id=None,
@@ -81,24 +125,27 @@ class CloudEndpoints:  # pylint: disable=too-few-public-methods,too-many-instanc
 class Cloud:  # pylint: disable=too-few-public-methods
     """ Represents an Azure Cloud instance """
 
-    def __init__(self, name, endpoints=None):
+    def __init__(self, name, endpoints=None, suffixes=None):
         self.name = name
         self.endpoints = endpoints or CloudEndpoints()
+        self.suffixes = suffixes or CloudSuffixes()
 
     def __str__(self):
         o = {
             'name': self.name,
             'endpoints': vars(self.endpoints),
+            'suffixes': vars(self.suffixes)
         }
         return pformat(o)
 
     def to_json(self):
-        return {'name': self.name, "endpoints": self.endpoints.__dict__}
+        return {'name': self.name, "endpoints": self.endpoints.__dict__, "suffixes": self.suffixes.__dict__}
 
     @classmethod
     def from_json(cls, json_str):
         return cls(json_str['name'],
-                   endpoints=CloudEndpoints(**json_str['endpoints']))
+                   endpoints=CloudEndpoints(**json_str['endpoints']),
+                   suffixes=CloudSuffixes(**json_str['suffixes']))
 
 
 class CloudNameEnum:  # pylint: disable=too-few-public-methods
@@ -129,7 +176,21 @@ AZURE_PUBLIC_CLOUD = Cloud(
         app_insights_telemetry_channel_resource_id='https://dc.applicationinsights.azure.com/v2/track',
         synapse_analytics_resource_id='https://dev.azuresynapse.net',
         attestation_resource_id='https://attest.azure.net',
-        portal='https://portal.azure.com'))
+        portal='https://portal.azure.com'),
+    suffixes=CloudSuffixes(
+        storage_endpoint='core.windows.net',
+        storage_sync_endpoint='afs.azure.net',
+        keyvault_dns='.vault.azure.net',
+        mhsm_dns='.managedhsm.azure.net',
+        sql_server_hostname='.database.windows.net',
+        mysql_server_endpoint='.mysql.database.azure.com',
+        postgresql_server_endpoint='.postgres.database.azure.com',
+        mariadb_server_endpoint='.mariadb.database.azure.com',
+        azure_datalake_store_file_system_endpoint='azuredatalakestore.net',
+        azure_datalake_analytics_catalog_and_job_endpoint='azuredatalakeanalytics.net',
+        acr_login_server_endpoint='.azurecr.io',
+        synapse_analytics_endpoint='.dev.azuresynapse.net',
+        attestation_endpoint='.attest.azure.net'))
 
 AZURE_CHINA_CLOUD = Cloud(
     CloudNameEnum.AzureChinaCloud,
@@ -150,7 +211,17 @@ AZURE_CHINA_CLOUD = Cloud(
         log_analytics_resource_id='https://api.loganalytics.azure.cn',
         app_insights_telemetry_channel_resource_id='https://dc.applicationinsights.azure.cn/v2/track',
         synapse_analytics_resource_id='https://dev.azuresynapse.azure.cn',
-        portal='https://portal.azure.cn'))
+        portal='https://portal.azure.cn'),
+    suffixes=CloudSuffixes(
+        storage_endpoint='core.chinacloudapi.cn',
+        keyvault_dns='.vault.azure.cn',
+        mhsm_dns='.managedhsm.azure.cn',
+        sql_server_hostname='.database.chinacloudapi.cn',
+        mysql_server_endpoint='.mysql.database.chinacloudapi.cn',
+        postgresql_server_endpoint='.postgres.database.chinacloudapi.cn',
+        mariadb_server_endpoint='.mariadb.database.chinacloudapi.cn',
+        acr_login_server_endpoint='.azurecr.cn',
+        synapse_analytics_endpoint='.dev.azuresynapse.azure.cn'))
 
 AZURE_US_GOV_CLOUD = Cloud(
     CloudNameEnum.AzureUSGovernment,
@@ -171,7 +242,18 @@ AZURE_US_GOV_CLOUD = Cloud(
         log_analytics_resource_id='https://api.loganalytics.us',
         app_insights_telemetry_channel_resource_id='https://dc.applicationinsights.us/v2/track',
         synapse_analytics_resource_id='https://dev.azuresynapse.usgovcloudapi.net',
-        portal='https://portal.azure.us'))
+        portal='https://portal.azure.us'),
+    suffixes=CloudSuffixes(
+        storage_endpoint='core.usgovcloudapi.net',
+        storage_sync_endpoint='afs.azure.us',
+        keyvault_dns='.vault.usgovcloudapi.net',
+        mhsm_dns='.managedhsm.usgovcloudapi.net',
+        sql_server_hostname='.database.usgovcloudapi.net',
+        mysql_server_endpoint='.mysql.database.usgovcloudapi.net',
+        postgresql_server_endpoint='.postgres.database.usgovcloudapi.net',
+        mariadb_server_endpoint='.mariadb.database.usgovcloudapi.net',
+        acr_login_server_endpoint='.azurecr.us',
+        synapse_analytics_endpoint='.dev.azuresynapse.usgovcloudapi.net'))
 
 AZURE_GERMAN_CLOUD = Cloud(
     CloudNameEnum.AzureGermanCloud,
@@ -188,7 +270,15 @@ AZURE_GERMAN_CLOUD = Cloud(
         vm_image_alias_doc='https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/arm-compute/quickstart-templates/aliases.json',
         media_resource_id='https://rest.media.cloudapi.de',
         ossrdbms_resource_id='https://ossrdbms-aad.database.cloudapi.de',
-        portal='https://portal.microsoftazure.de'))
+        portal='https://portal.microsoftazure.de'),
+    suffixes=CloudSuffixes(
+        storage_endpoint='core.cloudapi.de',
+        keyvault_dns='.vault.microsoftazure.de',
+        mhsm_dns='.managedhsm.microsoftazure.de',
+        sql_server_hostname='.database.cloudapi.de',
+        mysql_server_endpoint='.mysql.database.cloudapi.de',
+        postgresql_server_endpoint='.postgres.database.cloudapi.de',
+        mariadb_server_endpoint='.mariadb.database.cloudapi.de'))
 
 HARD_CODED_CLOUD_DICT = dict(AzureCloud=AZURE_PUBLIC_CLOUD,
                              AzureChinaCloud=AZURE_CHINA_CLOUD,
