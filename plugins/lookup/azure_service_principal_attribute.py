@@ -54,6 +54,7 @@ try:
     import asyncio
     from msgraph import GraphServiceClient
     from msgraph.generated.service_principals.service_principals_request_builder import ServicePrincipalsRequestBuilder
+    from ansible_collections.azure.azcollection.plugins.module_utils import azure_cloud
 except ImportError:
     pass
 
@@ -71,16 +72,14 @@ class LookupModule(LookupBase):
         if credentials['azure_client_id'] is None or credentials['azure_secret'] is None:
             raise AnsibleError("Must specify azure_client_id and azure_secret")
 
-        cloud_environment = dict(AzureCloud='https://login.microsoftonline.com',
-                                 AzureChinaCloud='https://login.chinacloudapi.cn',
-                                 AzureUSGovernment='https://login.microsoftonline.us')
-        azure_cloud = self.get_option('azure_cloud_environment', 'AzureCloud')
+        cloud_name = self.get_option('azure_cloud_environment', 'AzureCloud')
+        _cloud_environment = azure_cloud.HARD_CODED_CLOUD_DICT[cloud_name]
 
         try:
             azure_credential_track2 = ClientSecretCredential(client_id=credentials['azure_client_id'],
                                                              client_secret=credentials['azure_secret'],
                                                              tenant_id=credentials['azure_tenant'],
-                                                             authority=cloud_environment.get(azure_cloud))
+                                                             authority=_cloud_environment.endpoints.active_directory)
 
             client = GraphServiceClient(azure_credential_track2)
 

@@ -48,10 +48,10 @@ class CloudSuffixes:  # pylint: disable=too-few-public-methods,too-many-instance
     def __getattribute__(self, name):
         val = object.__getattribute__(self, name)
         if val is None:
-            raise CloudSuffixNotSetException("The suffix '{}' for this cloud "
-                                             "is not set but is used.\n"
-                                             "{} may be corrupt or invalid.\nResolve the error or delete this file "
-                                             "and try again.".format(name, CLOUD_CONFIG_FILE))
+            raise Exception("The suffix '{}' for this cloud "
+                            "is not set but is used.\n"
+                            "{} may be corrupt or invalid.\nResolve the error or delete this file "
+                            "and try again.".format(name, CLOUD_CONFIG_FILE))
         return val
 
 
