@@ -1817,7 +1817,7 @@ class AzureRMAuth(object):
             cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
             all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
             matched_clouds = [x for x in all_clouds if x.name == cloud_name]
-            if len(matchec_clouds) != 1:
+            if len(matched_clouds) != 1:
                 self.fail("Obtain the active cloud failed, there is no matching cloud.")
         except Exception as ec:
             self.fail("Obtain the az login's active cloud occurred exception, exception information {0}".format(ec))
