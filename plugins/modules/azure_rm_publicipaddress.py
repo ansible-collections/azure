@@ -411,7 +411,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
         self.results['changed'] = changed
 
         if self.check_mode:
-            return results
+            return dict(state=results)
 
         if changed:
             if self.state == 'present':
