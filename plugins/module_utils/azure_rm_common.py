@@ -1603,7 +1603,6 @@ class AzureRMAuth(object):
         else:
             self._fail_impl = self._default_fail_impl
         self.is_ad_resource = is_ad_resource
-        self.auth_source = auth_source
 
         # authenticate
         self.credentials = self._get_credentials(
@@ -1808,26 +1807,20 @@ class AzureRMAuth(object):
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
-                cmd = ["az", "account", "show", "--query", "id", "-o", "tsv"]
-                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
+                cmd = ["az", "account", "show", "--query", "id"]
+                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().replace('"', '')
             except Exception as ec:
-                if self.auth_source == 'auto':
-                    return None
-                self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
+                raise CLIError
 
         try:
-            cmd = ["az", "cloud", "show", "--query", "name", "-o", "tsv"]
-            cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
+            cmd = ["az", "cloud", "show", "--query", "name"]
+            cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().replace('"', '')
             all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
             matched_clouds = [x for x in all_clouds if x.name == cloud_name]
             if len(matched_clouds) != 1:
-                if self.auth_source == 'auto':
-                    return None
-                self.fail("Obtain the active cloud failed, there is no matching cloud.")
+                raise CLIError
         except Exception as ec:
-            if self.auth_source == 'auto':
-                return None
-            self.fail("Obtain the az login's active cloud occurred exception, exception information {0}".format(ec))
+            raise CLIError
 
         cli_credentials = {
             'credentials': AzureCliCredential(),
