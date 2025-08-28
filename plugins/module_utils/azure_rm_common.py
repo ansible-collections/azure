@@ -240,7 +240,6 @@ except ImportError:
 try:
     from enum import Enum
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
-    from azure.cli.core import cloud as azure_cloud
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.network import models as NetworkModels
     from azure.mgmt.resource.resources import ResourceManagementClient
@@ -304,6 +303,7 @@ from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import HMAC
 from time import time
+import subprocess
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -312,8 +312,7 @@ except ImportError:
 
 try:
     from azure.cli.core.util import CLIError
-    from azure.cli.core._profile import Profile
-    from azure.common.cloud import get_cli_active_cloud
+    from azure.cli.core import cloud as azure_cloud
 except ImportError:
     HAS_AZURE_CLI_CORE = False
     HAS_AZURE_CLI_CORE_EXC = None
@@ -1808,13 +1807,26 @@ class AzureRMAuth(object):
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
-                subscription_id = Profile().get_subscription_id()
+                cmd = ["az", "account", "show", "--query", "id"]
+                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
             except Exception as ec:
-                self.fail("Obtain the az login's subscription occurred exception, exception information {0}".format(ec))
+                raise CLIError("Obtain the az login's subscription occurred exception as {0}".format(ec))
+
+        try:
+            cmd = ["az", "cloud", "show", "--query", "name"]
+            cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
+            all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
+            matched_clouds = [x for x in all_clouds if x.name == cloud_name]
+        except Exception as ec:
+            raise CLIError("Obtain the az login's active cloud occurred exception as {0}".format(ec))
+
+        if len(matched_clouds) != 1:
+            raise CLIError("Obtain the active cloud failed, There is no or multiple matching clouds")
+
         cli_credentials = {
             'credentials': AzureCliCredential(),
             'subscription_id': subscription_id,
-            'cloud_environment': get_cli_active_cloud(),
+            'cloud_environment': matched_clouds[0],
         }
         return cli_credentials
 
