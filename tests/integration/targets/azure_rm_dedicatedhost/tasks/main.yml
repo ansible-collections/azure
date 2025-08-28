@@ -1,5 +1,5 @@
 - name: Creat a new resource group for dedicated host test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-dhost"
     location: eastus
 
@@ -10,7 +10,7 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
 
     - name: Create a host group
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-dhost"
         name: "group{{ rpfx }}"
         location: eastus
@@ -21,7 +21,7 @@
       register: results
 
     - name: Create a new dedicated host (Check mode test)
-      azure_rm_dedicatedhost:
+      azure.azcollection.azure_rm_dedicatedhost:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -41,7 +41,7 @@
           - output.changed
 
     - name: Create a new dedicated host
-      azure_rm_dedicatedhost:
+      azure.azcollection.azure_rm_dedicatedhost:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -60,7 +60,7 @@
           - output.changed
 
     - name: Create a new dedicated host(Idempotent tes)
-      azure_rm_dedicatedhost:
+      azure.azcollection.azure_rm_dedicatedhost:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -78,7 +78,7 @@
           - not output.changed
 
     - name: Update the dedicated host
-      azure_rm_dedicatedhost:
+      azure.azcollection.azure_rm_dedicatedhost:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -97,7 +97,7 @@
           - output.changed
 
     - name: Restart the dedicated host
-      azure_rm_dedicatedhost:
+      azure.azcollection.azure_rm_dedicatedhost:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -110,7 +110,7 @@
           - output.changed
 
     - name: Get the dedicate host facts
-      azure_rm_dedicatedhost_info:
+      azure.azcollection.azure_rm_dedicatedhost_info:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -125,7 +125,7 @@
           - output.dedicated_hosts[0].tags |length == 2
 
     - name: Deleted the dedicated host
-      azure_rm_dedicatedhost:
+      azure.azcollection.azure_rm_dedicatedhost:
         resource_group: "{{ resource_group }}-dhost"
         host_group_name: "group{{ rpfx }}"
         name: "host{{ rpfx }}"
@@ -138,14 +138,14 @@
           - output.changed
 
     - name: Deleted the host group
-      azure_rm_hostgroup:
+      azure.azcollection.azure_rm_hostgroup:
         resource_group: "{{ resource_group }}-dhost"
         name: "group{{ rpfx }}"
         state: absent
 
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-dhost"
         force_delete_nonempty: true
         state: absent
