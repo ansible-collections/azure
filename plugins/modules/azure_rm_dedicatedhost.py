@@ -9,7 +9,7 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_dedicatedhost
 
-version_added: "3.7.0"
+version_added: "3.8.0"
 
 short_description: Create, delete and update a dedicated host
 
