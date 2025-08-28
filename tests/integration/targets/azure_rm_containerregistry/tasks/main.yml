@@ -1,5 +1,5 @@
 - name: Create a new resource group for container registry test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-containerregistry"
     location: eastus
 
@@ -30,7 +30,7 @@
         - '2'
 
     - name: Create an container registry
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
@@ -55,7 +55,7 @@
           - output.credentials['password2'] is defined
 
     - name: Update the ACR instance sku, tags and admin_user_enabled
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
@@ -68,7 +68,7 @@
       register: output
 
     - name: Create second container registry (to test facts)
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
@@ -90,7 +90,7 @@
           - output.credentials['password2'] is not defined
 
     - name: Gather facts for single Container Registry
-      azure_rm_containerregistry_info:
+      azure.azcollection.azure_rm_containerregistry_info:
         resource_group: "{{ resource_group }}-containerregistry"
         name: "acr{{ rpfx }}"
       register: output
@@ -109,7 +109,7 @@
           - output.registries[0]['credentials'] != None
 
     - name: Gather facts for all Container Registries in the resource group
-      azure_rm_containerregistry_info:
+      azure.azcollection.azure_rm_containerregistry_info:
         resource_group: "{{ resource_group }}-containerregistry"
       register: output
 
@@ -135,7 +135,7 @@
           - output.registries[1]['credentials'] != None
 
     - name: Update second container registry to test identity
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
@@ -158,7 +158,7 @@
           - managed_identity_ids[0] in output.identity.user_assigned_identities
 
     - name: Update second container registry to test appending identity
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
@@ -182,7 +182,7 @@
           - managed_identity_ids[1] in output.identity.user_assigned_identities
 
     - name: Update second container registry to test System Identity
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         location: "{{ location }}"
@@ -202,7 +202,7 @@
           - '"user_assigned_identities" not in output.identity'
 
     - name: Create a new container registry scope map(Checkmode test)
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
@@ -210,7 +210,7 @@
       check_mode: true
 
     - name: Create a new container registry scope map
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
@@ -225,7 +225,7 @@
           - output is changed
 
     - name: Re-create the container registry scope map(Idempotent test)
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
@@ -240,7 +240,7 @@
           - output is not changed
 
     - name: Update the the container registry scope map
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
@@ -257,7 +257,7 @@
           - output is changed
 
     - name: Get the container registry scope map facts
-      azure_rm_containerregistryscopemap_info:
+      azure.azcollection.azure_rm_containerregistryscopemap_info:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
@@ -270,7 +270,7 @@
           - first_output.registry_scope_maps[0].description == 'description02'
 
     - name: Create a new container registry token (Checkmode test)
-      azure_rm_containerregistrytoken:
+      azure.azcollection.azure_rm_containerregistrytoken:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
@@ -279,7 +279,7 @@
       check_mode: true
 
     - name: Create a new container registry token
-      azure_rm_containerregistrytoken:
+      azure.azcollection.azure_rm_containerregistrytoken:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
@@ -293,7 +293,7 @@
           - output is changed
 
     - name: Re-create the container registry token(Idempotent test)
-      azure_rm_containerregistrytoken:
+      azure.azcollection.azure_rm_containerregistrytoken:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
@@ -307,7 +307,7 @@
           - output is not changed
 
     - name: Create the secondary container registry scope map
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}sec"
@@ -317,7 +317,7 @@
       register: secondary_output
 
     - name: Update the the container registry token
-      azure_rm_containerregistrytoken:
+      azure.azcollection.azure_rm_containerregistrytoken:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
@@ -331,7 +331,7 @@
           - output is changed
 
     - name: Get the container registry token facts
-      azure_rm_containerregistrytoken_info:
+      azure.azcollection.azure_rm_containerregistrytoken_info:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
@@ -344,7 +344,7 @@
           - token_output.registry_tokens[0].status == 'disabled'
 
     - name: The container registry token generate password1
-      azure_rm_containerregistrytokenpassword:
+      azure.azcollection.azure_rm_containerregistrytokenpassword:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: password1
@@ -359,7 +359,7 @@
           - output.passwords[0].name == 'password1'
 
     - name: The container registry token re-generate password1 and password2
-      azure_rm_containerregistrytokenpassword:
+      azure.azcollection.azure_rm_containerregistrytokenpassword:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         token_id: "{{ token_output.registry_tokens[0].id }}"
@@ -372,7 +372,7 @@
           - output.passwords |length == 2
 
     - name: Delete the container registry token
-      azure_rm_containerregistrytoken:
+      azure.azcollection.azure_rm_containerregistrytoken:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "token{{ rpfx }}"
@@ -385,14 +385,14 @@
           - output is changed
 
     - name: Delete the secondary container registry scope map
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}sec"
         state: absent
 
     - name: Delete the container registry scope map
-      azure_rm_containerregistryscopemap:
+      azure.azcollection.azure_rm_containerregistryscopemap:
         registry_name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         name: "scopemap{{ rpfx }}"
@@ -405,13 +405,13 @@
           - output is changed
 
     - name: Delete first container registry
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}"
         resource_group: "{{ resource_group }}-containerregistry"
         state: absent
 
     - name: Delete second container registry
-      azure_rm_containerregistry:
+      azure.azcollection.azure_rm_containerregistry:
         name: "acr{{ rpfx }}sec"
         resource_group: "{{ resource_group }}-containerregistry"
         state: absent
@@ -429,7 +429,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-containerregistry"
         force_delete_nonempty: true
         state: absent

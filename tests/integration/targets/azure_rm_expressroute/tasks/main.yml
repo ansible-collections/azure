@@ -1,5 +1,5 @@
 - name: Create a new resource group for express route test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-expressroute"
     location: eastus
 
@@ -10,7 +10,7 @@
         express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
     - name: Create Express route (check mode)
-      azure_rm_expressroute:
+      azure.azcollection.azure_rm_expressroute:
         location: eastus
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
@@ -36,7 +36,7 @@
 
 
     - name: Create Express route
-      azure_rm_expressroute:
+      azure.azcollection.azure_rm_expressroute:
         location: eastus
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
@@ -61,7 +61,7 @@
 
 
     - name: Update Express route
-      azure_rm_expressroute:
+      azure.azcollection.azure_rm_expressroute:
         location: eastus
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
@@ -88,7 +88,7 @@
 
 
     - name: Retrieve Express Route
-      azure_rm_expressroute_info:
+      azure.azcollection.azure_rm_expressroute_info:
         resource_group: "{{ resource_group }}-expressroute"
         name: "{{ express_route }}"
       register: results
@@ -100,7 +100,7 @@
           - results.expressroute[0].type == 'Microsoft.Network/expressRouteCircuits'
 
     - name: Test idempotent
-      azure_rm_expressroute:
+      azure.azcollection.azure_rm_expressroute:
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
       register: results
@@ -111,16 +111,16 @@
           - results is not changed
 
     #
-    # azure_rm_expressroute cleanup
+    # azure.azcollection.azure_rm_expressroute cleanup
     #
     - name: Delete Express Route
-      azure_rm_expressroute:
+      azure.azcollection.azure_rm_expressroute:
         resource_group: "{{ resource_group }}-expressroute"
         name: "{{ express_route }}"
         state: absent
 
     - name: Delete Express Route (idempotent)
-      azure_rm_expressroute:
+      azure.azcollection.azure_rm_expressroute:
         resource_group: "{{ resource_group }}-expressroute"
         name: "{{ express_route }}"
         state: absent
@@ -131,7 +131,7 @@
         that: results is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-expressroute"
         force_delete_nonempty: true
         state: absent

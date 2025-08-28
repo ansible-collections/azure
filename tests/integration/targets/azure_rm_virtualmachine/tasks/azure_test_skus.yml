@@ -51,21 +51,21 @@
       - skus_result | length > 0
 
 - name: SETUP | Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
     location: westus2
     address_prefixes: "{{ network }}"
 
 - name: SETUP | Create subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ subnet_name }}"
     address_prefix: "{{ subnet }}"
     virtual_network: "{{ network_name }}"
 
 - name: Create VM with first sku in avilable skus list
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -86,7 +86,7 @@
   register: vm_output
 
 - name: Query auto created security group before deleting
-  azure_rm_securitygroup_info:
+  azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}01"
   register: nsg_result
@@ -98,26 +98,26 @@
       - nsg_result.securitygroups[0].network_interfaces | length == 1
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Query auto created NIC
-  azure_rm_networkinterface_info:
+  azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}01"
   register: nic_result
 
 - name: Query auto created security group
-  azure_rm_securitygroup_info:
+  azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}01"
   register: nsg_result
 
 - name: Query auto created public IP
-  azure_rm_publicipaddress_info:
+  azure.azcollection.azure_rm_publicipaddress_info:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}01"
   register: pip_result
@@ -131,26 +131,26 @@
       - pip_result.publicipaddresses | length == 0
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
     state: absent
 
 - name: Destroy availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ storage_account }}"
     force_delete_nonempty: true

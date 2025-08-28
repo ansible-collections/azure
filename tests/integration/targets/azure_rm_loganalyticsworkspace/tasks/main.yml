@@ -1,5 +1,5 @@
 - name: Create a new resource group for log analystics workspace test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-loganalyticsworkspace"
     location: eastus
 
@@ -17,7 +17,7 @@
         location: "{{ __rg_info.resourcegroups.0.location }}"
 
     - name: Create User Managed Identities
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
@@ -35,7 +35,7 @@
         user_identity_1: "{{ user_assigned_id_creation.results.0.response.id }}"
 
     - name: Create Log Analytics Workspace (Check Mode On)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         intelligence_packs:
           Backup: true
@@ -53,7 +53,7 @@
           - output is changed
 
     - name: Get Log Analytics workspace information
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         show_intelligence_packs: true
@@ -68,7 +68,7 @@
           - facts.workspaces | length == 0
 
     - name: Create Log Analytics Workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         intelligence_packs:
           Backup: true
@@ -93,7 +93,7 @@
           - output.identity.type == 'SystemAssigned'
 
     - name: Update Log Analytics Workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         intelligence_packs:
           Backup: false
@@ -118,7 +118,7 @@
           - output.identity.user_assigned_identities | length == 1
 
     - name: Get Log Analytics workspace information (Show full information)
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         show_intelligence_packs: true
@@ -146,7 +146,7 @@
           - user_identity_1 in facts.workspaces[0].identity.user_assigned_identities
 
     - name: Get Log Analytics workspace information (Show default information)
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
@@ -164,7 +164,7 @@
           - facts.workspaces[0].sku == 'per_gb2018'
 
     - name: Create Log Analytics workspace (Test Idempotence)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         retention_in_days: "{{ retention_days }}"
@@ -578,7 +578,7 @@
           - output is changed
 
     - name: Remove Log Analytics workspace (Check Mode On)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
@@ -591,7 +591,7 @@
           - output is changed
 
     - name: Get Log Analytics workspace information(Check still exists after remove Check Mode On)
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
@@ -602,7 +602,7 @@
           - facts.workspaces | length == 1
 
     - name: List the Log Analytics workspace under specific resource group
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         tags:
           - key2
@@ -614,7 +614,7 @@
           - facts.workspaces | length == 1
 
     - name: List all Log Analytics workspaces and filter unexist tags
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         tags:
           - unexist
       register: facts
@@ -625,7 +625,7 @@
           - facts.workspaces | length == 0
 
     - name: Remove Log Analytics workspace
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
@@ -638,7 +638,7 @@
           - output is changed
 
     - name: Get Log Analytics workspace information
-      azure_rm_loganalyticsworkspace_info:
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
@@ -649,7 +649,7 @@
           - facts.workspaces | length == 0
 
     - name: Remove Log Analytics workspace (Test Idempotence)
-      azure_rm_loganalyticsworkspace:
+      azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         state: absent
@@ -662,7 +662,7 @@
           - output is not changed
 
     - name: Destroy User Managed Identities
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
@@ -673,7 +673,7 @@
         - "ansible-test-loganalyze-identity"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-loganalyticsworkspace"
         force_delete_nonempty: true
         state: absent

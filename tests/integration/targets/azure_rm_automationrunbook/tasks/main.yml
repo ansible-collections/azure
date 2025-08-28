@@ -1,5 +1,5 @@
 - name: Create a new resource group for automation runbook test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-automationrunbook"
     location: westus2
 
@@ -11,12 +11,12 @@
       run_once: true
 
     - name: Create automation account
-      azure_rm_automationaccount:
+      azure.azcollection.azure_rm_automationaccount:
         name: "account-{{ rpfx }}"
         resource_group: "{{ resource_group }}-automationrunbook"
 
     - name: Create automation runbook (check mode)
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}"
@@ -25,7 +25,7 @@
       check_mode: true
 
     - name: Create automation runbook with default parameters
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}"
@@ -39,7 +39,7 @@
           - output is changed
 
     - name: Create automation runbook with default parameters (idempotent)
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}"
@@ -53,7 +53,7 @@
           - output is not changed
 
     - name: Create automation runbook with more paramters
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}-secondary"
@@ -72,7 +72,7 @@
           - output is changed
 
     - name: Update automation runbook with more paramters
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}-secondary"
@@ -91,7 +91,7 @@
           - output is changed
 
     - name: Publish automation runbook
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}-secondary"
@@ -104,7 +104,7 @@
           - output is changed
 
     - name: Get automation runbook
-      azure_rm_automationrunbook_info:
+      azure.azcollection.azure_rm_automationrunbook_info:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}-secondary"
@@ -121,7 +121,7 @@
           - output.automation_runbook[0].state == 'Published'
 
     - name: Get all automation runbook
-      azure_rm_automationrunbook_info:
+      azure.azcollection.azure_rm_automationrunbook_info:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
       register: output
@@ -132,21 +132,21 @@
           - output.automation_runbook | length == 2
 
     - name: Delete automation runbook
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}"
         state: absent
 
     - name: Delete automation runbook
-      azure_rm_automationrunbook:
+      azure.azcollection.azure_rm_automationrunbook:
         resource_group: "{{ resource_group }}-automationrunbook"
         automation_account_name: "account-{{ rpfx }}"
         name: "runbook-{{ rpfx }}-secondary"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-automationrunbook"
         force_delete_nonempty: true
         state: absent

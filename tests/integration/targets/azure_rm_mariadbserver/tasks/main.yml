@@ -1,5 +1,5 @@
 - name: Create a new resource group for mariadb server test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-mariadbserver"
     location: eastus
 
@@ -12,7 +12,7 @@
       run_once: true
 
     - name: Create instance of MariaDB Server -- check mode
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
@@ -32,7 +32,7 @@
           - output is changed
 
     - name: Create instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
@@ -52,7 +52,7 @@
           - output.state == 'Ready'
 
     - name: Create again instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
@@ -72,7 +72,7 @@
           - output.state == 'Ready'
 
     - name: Update instance of MariaDB Server, change storage size
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         sku:
@@ -95,7 +95,7 @@
         var: output
 
     - name: Gather facts MariaDB Server
-      azure_rm_mariadbserver_info:
+      azure.azcollection.azure_rm_mariadbserver_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
       register: output
@@ -105,7 +105,7 @@
           - output.servers[0]['storage_mb'] == 128000
 
     - name: Create second instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
         sku:
@@ -121,7 +121,7 @@
           aaa: bbb
 
     - name: Create second instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
         sku:
@@ -137,7 +137,7 @@
           ccc: ddd
 
     - name: Gather facts MariaDB Server
-      azure_rm_mariadbserver_info:
+      azure.azcollection.azure_rm_mariadbserver_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
       register: output
@@ -159,7 +159,7 @@
           - output.servers[0]['tags']['ccc'] == 'ddd'
 
     - name: Gather facts MariaDB Server
-      azure_rm_mariadbserver_info:
+      azure.azcollection.azure_rm_mariadbserver_info:
         resource_group: "{{ resource_group }}-mariadbserver"
       register: output
     - name: Assert that facts are returned
@@ -186,10 +186,10 @@
           - output.servers[1]['fully_qualified_domain_name'] != None
 
     #
-    # azure_rm_mariadbdatabase tests below
+    # azure.azcollection.azure_rm_mariadbdatabase tests below
     #
     - name: Create instance of MariaDB Database -- check mode
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -201,7 +201,7 @@
           - output is changed
 
     - name: Create instance of MariaDB Database
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -215,7 +215,7 @@
           - output.name == 'testdatabase'
 
     - name: Create again instance of MariaDB Database
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -229,7 +229,7 @@
           - output.name == 'testdatabase'
 
     - name: Try to update database without force_update
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -243,7 +243,7 @@
           - output is not changed
 
     - name: Update instance of database using force_update
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -258,13 +258,13 @@
           - output.name == 'testdatabase'
 
     - name: Create second instance of MariaDB Database
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase2
 
     - name: Gather facts MariaDB Database
-      azure_rm_mariadbdatabase_info:
+      azure.azcollection.azure_rm_mariadbdatabase_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -280,7 +280,7 @@
           - output.databases[0]['collation'] != None
 
     - name: Gather facts MariaDB Database
-      azure_rm_mariadbdatabase_info:
+      azure.azcollection.azure_rm_mariadbdatabase_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
       register: output
@@ -298,7 +298,7 @@
           - output.databases[1]['collation'] != None
 
     - name: Delete instance of MariaDB Database -- check mode
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -311,7 +311,7 @@
           - output is changed
 
     - name: Delete instance of MariaDB Database
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -323,7 +323,7 @@
           - output is changed
 
     - name: Delete unexisting instance of MariaDB Database
-      azure_rm_mariadbdatabase:
+      azure.azcollection.azure_rm_mariadbdatabase:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: testdatabase
@@ -335,10 +335,10 @@
           - output is not changed
 
     #
-    # azure_rm_firewallrule tests below
+    # azure.azcollection.azure_rm_firewallrule tests below
     #
     - name: Create instance of Firewall Rule -- check mode
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -352,7 +352,7 @@
           - output is changed
 
     - name: Create instance of Firewall Rule
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -365,7 +365,7 @@
           - output is changed
 
     - name: Create again instance of Firewall Rule
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -378,7 +378,7 @@
           - output is not changed
 
     - name: Delete instance of Firewall Rule -- check mode
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -391,7 +391,7 @@
           - output is changed
 
     - name: Create instance of Firewall Rule -- second
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}second
@@ -404,7 +404,7 @@
           - output is changed
 
     - name: Gather facts MariaDB Firewall Rule
-      azure_rm_mariadbfirewallrule_info:
+      azure.azcollection.azure_rm_mariadbfirewallrule_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -421,7 +421,7 @@
           - output.rules | length == 1
 
     - name: Gather facts MariaDB Firewall Rule
-      azure_rm_mariadbfirewallrule_info:
+      azure.azcollection.azure_rm_mariadbfirewallrule_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
       register: output
@@ -441,7 +441,7 @@
           - output.rules | length == 2
 
     - name: Delete instance of Firewall Rule
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -453,7 +453,7 @@
           - output is changed
 
     - name: Delete unexisting instance of Firewall Rule
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -465,14 +465,14 @@
           - output is not changed == false
 
     - name: Delete instance of Firewall Rule - second
-      azure_rm_mariadbfirewallrule:
+      azure.azcollection.azure_rm_mariadbfirewallrule:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}second
         state: absent
 
     - name: Gather facts MariaDB Firewall Rule
-      azure_rm_mariadbfirewallrule_info:
+      azure.azcollection.azure_rm_mariadbfirewallrule_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: firewallrule{{ rpfx }}
@@ -487,7 +487,7 @@
     # configuration
     #
     - name: Create instance of Configuration -- check mode
-      azure_rm_mariadbconfiguration:
+      azure.azcollection.azure_rm_mariadbconfiguration:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -500,7 +500,7 @@
           - output is changed
 
     - name: Try to delete default configuraion
-      azure_rm_mariadbconfiguration_info:
+      azure.azcollection.azure_rm_mariadbconfiguration_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -510,7 +510,7 @@
         var: output
 
     - name: Try to delete default configuraion
-      azure_rm_mariadbconfiguration:
+      azure.azcollection.azure_rm_mariadbconfiguration:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -522,7 +522,7 @@
           - output is not changed
 
     - name: Try to change default configuraion
-      azure_rm_mariadbconfiguration:
+      azure.azcollection.azure_rm_mariadbconfiguration:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -534,7 +534,7 @@
           - output is changed
 
     - name: Try to change default configuration -- idempotent
-      azure_rm_mariadbconfiguration:
+      azure.azcollection.azure_rm_mariadbconfiguration:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -546,7 +546,7 @@
           - output is not changed
 
     - name: Try to reset configuration
-      azure_rm_mariadbconfiguration:
+      azure.azcollection.azure_rm_mariadbconfiguration:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -558,7 +558,7 @@
           - output is changed
 
     - name: Try to reset configuration -- idempotent
-      azure_rm_mariadbconfiguration:
+      azure.azcollection.azure_rm_mariadbconfiguration:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -570,7 +570,7 @@
           - output is not changed
 
     - name: Gather facts MariaDB Configuration
-      azure_rm_mariadbconfiguration_info:
+      azure.azcollection.azure_rm_mariadbconfiguration_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
         name: event_scheduler
@@ -587,7 +587,7 @@
           - output.settings | length == 1
 
     - name: Gather facts MariaDB Configuration
-      azure_rm_mariadbconfiguration_info:
+      azure.azcollection.azure_rm_mariadbconfiguration_info:
         resource_group: "{{ resource_group }}-mariadbserver"
         server_name: mariadbsrv{{ rpfx }}
       register: output
@@ -603,11 +603,11 @@
           - output.settings | length > 1
 
     #
-    # clean up azure_rm_mariadbserver test
+    # clean up azure.azcollection.azure_rm_mariadbserver test
     #
 
     - name: Delete instance of MariaDB Server -- check mode
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         state: absent
@@ -619,7 +619,7 @@
           - output is changed
 
     - name: Delete instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         state: absent
@@ -630,7 +630,7 @@
           - output is changed
 
     - name: Delete unexisting instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}
         state: absent
@@ -641,7 +641,7 @@
           - output is not changed == false
 
     - name: Delete second instance of MariaDB Server
-      azure_rm_mariadbserver:
+      azure.azcollection.azure_rm_mariadbserver:
         resource_group: "{{ resource_group }}-mariadbserver"
         name: mariadbsrv{{ rpfx }}second
         state: absent
@@ -649,7 +649,7 @@
       poll: 0
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-mariadbserver"
         force_delete_nonempty: true
         state: absent

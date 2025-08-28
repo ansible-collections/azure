@@ -1,5 +1,5 @@
 - name: Create a new resource group for image test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-image"
     location: eastus
 
@@ -13,32 +13,32 @@
         empty_disk_name: "emptydisk{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
         address_prefixes: "10.10.0.0/16"
 
     - name: Add subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
         address_prefix: "10.10.0.0/24"
         virtual_network: "{{ vm_name }}"
 
     - name: Create public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-image"
         allocation_method: Static
         sku: Standard
         name: "{{ public_ip_name }}"
 
     - name: Create security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-image"
         name: "{{ security_group_name }}"
 
     - name: Create NIC
-      azure_rm_networkinterface:
+      azure.azcollection.azure_rm_networkinterface:
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
         open_ports:
@@ -52,7 +52,7 @@
         security_group: "{{ security_group_name }}"
 
     - name: Create virtual machine
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
         vm_size: Standard_B1ms
@@ -74,7 +74,7 @@
       register: vm
 
     - name: Create new empty managed disk
-      azure_rm_manageddisk:
+      azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-image"
         name: "{{ empty_disk_name }}"
         storage_account_type: "Standard_LRS"
@@ -82,7 +82,7 @@
       register: emptydisk
 
     - name: Create an image from VM (check mode)
-      azure_rm_image:
+      azure.azcollection.azure_rm_image:
         resource_group: "{{ resource_group }}-image"
         source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
         name: testimage001
@@ -98,7 +98,7 @@
         that: output is changed
 
     - name: Create an image from VM
-      azure_rm_image:
+      azure.azcollection.azure_rm_image:
         resource_group: "{{ resource_group }}-image"
         source:
           name: "{{ vm_name }}"
@@ -115,7 +115,7 @@
           - output.id
 
     - name: Create an image from VM (idempotent)
-      azure_rm_image:
+      azure.azcollection.azure_rm_image:
         resource_group: "{{ resource_group }}-image"
         source: "{{ vm.ansible_facts.azure_vm.storage_profile.os_disk.managed_disk.id }}"
         name: testimage001
@@ -130,7 +130,7 @@
           - output.id
 
     - name: Gather information about image created
-      azure_rm_image_info:
+      azure.azcollection.azure_rm_image_info:
         resource_group: "{{ resource_group }}-image"
         name: testimage001
       register: output
@@ -142,7 +142,7 @@
           - output.images[0].hyper_v_generation == 'V1'
 
     - name: Delete image (check mode)
-      azure_rm_image:
+      azure.azcollection.azure_rm_image:
         resource_group: "{{ resource_group }}-image"
         name: testimage001
         state: absent
@@ -155,7 +155,7 @@
           - output is changed
 
     - name: Delete image
-      azure_rm_image:
+      azure.azcollection.azure_rm_image:
         resource_group: "{{ resource_group }}-image"
         name: testimage001
         state: absent
@@ -167,7 +167,7 @@
           - output is changed
 
     - name: Delete image (idempotent)
-      azure_rm_image:
+      azure.azcollection.azure_rm_image:
         resource_group: "{{ resource_group }}-image"
         name: testimage001
         state: absent
@@ -182,13 +182,13 @@
       ansible.builtin.include_tasks: azure_test_encrypted.yml
 
     - name: Delete empty disk
-      azure_rm_manageddisk:
+      azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-image"
         name: "{{ empty_disk_name }}"
         state: absent
 
     - name: Delete VM
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
         state: absent
@@ -196,14 +196,14 @@
       register: output
 
     - name: Delete public ip
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-image"
         allocation_method: Static
         name: "{{ public_ip_name }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-image"
         force_delete_nonempty: true
         state: absent

@@ -1,5 +1,5 @@
 - name: Create a new resource group for notification hub test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-notificationhub"
     location: eastus
 
@@ -11,7 +11,7 @@
         name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
     - name: Create Notification Hub Namespace (check mode)
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
@@ -24,7 +24,7 @@
         that: results is changed
 
     - name: Create Notification Hub  (check mode)
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -38,7 +38,7 @@
         that: results is changed
 
     - name: Create Namespace Hub
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
@@ -50,7 +50,7 @@
         that: results is changed
 
     - name: Create Notification Hub
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -63,7 +63,7 @@
         that: results is changed
 
     - name: Update Namespace
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
@@ -78,7 +78,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Update Notification Hub
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -94,7 +94,7 @@
           - results.state.tags.test == 'modified'
 
     - name: Retrieve Namespace
-      azure_rm_notificationhub_info:
+      azure.azcollection.azure_rm_notificationhub_info:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
       register: results
@@ -105,7 +105,7 @@
           - results.namespace[0].tags.test == 'modified'
 
     - name: Test idempotent
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
       register: results
@@ -116,11 +116,11 @@
           - results is not changed
 
     #
-    # azure_rm_ddos_notification hub and namspace cleanup
+    # azure.azcollection.azure_rm_ddos_notification hub and namspace cleanup
     #
 
     - name: Delete Namespace
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
@@ -132,7 +132,7 @@
       changed_when: true
 
     - name: Delete Namespace (idempotent)
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         resource_group: "{{ resource_group }}-notificationhub"
@@ -144,7 +144,7 @@
         that: results is not changed
 
     - name: Delete Notification Hub
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -157,7 +157,7 @@
       changed_when: true
 
     - name: Delete Notification Hub (idempotent)
-      azure_rm_notificationhub:
+      azure.azcollection.azure_rm_notificationhub:
         location: eastus2
         namespace_name: "{{ namespace_name }}"
         name: "{{ name_rpfx }}"
@@ -170,7 +170,7 @@
         that: results is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-notificationhub"
         force_delete_nonempty: true
         state: absent

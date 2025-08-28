@@ -1,22 +1,22 @@
 - name: Create a new resource group for tags test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-tags"
     location: eastus
 
 - name: For tags test
   block:
     - name: Gather Resource Group info
-      azure_rm_resourcegroup_info:
+      azure.azcollection.azure_rm_resourcegroup_info:
         name: "{{ resource_group }}-tags"
       register: __rg_info
 
     - name: List all the flags under the scope
-      azure_rm_tags_info:
+      azure.azcollection.azure_rm_tags_info:
         scope: "{{ __rg_info.resourcegroups.0.id }}"
       register: output
 
     - name: Create new tags with scope
-      azure_rm_tags:
+      azure.azcollection.azure_rm_tags:
         scope: "{{ __rg_info.resourcegroups.0.id }}"
         tags:
           key1: value1
@@ -28,7 +28,7 @@
           - output is changed
 
     - name: Create new tags with scope(Idempotent test)
-      azure_rm_tags:
+      azure.azcollection.azure_rm_tags:
         scope: "{{ __rg_info.resourcegroups.0.id }}"
         tags:
           key1: value1
@@ -40,7 +40,7 @@
           - output is not changed
 
     - name: Update the tags with scope
-      azure_rm_tags:
+      azure.azcollection.azure_rm_tags:
         scope: "{{ __rg_info.resourcegroups.0.id }}"
         operation: Merge
         tags:
@@ -53,7 +53,7 @@
           - output is changed
 
     - name: Get the tag info at thespecified resource
-      azure_rm_tags_info:
+      azure.azcollection.azure_rm_tags_info:
         scope: "{{ __rg_info.resourcegroups.0.id }}"
       register: output
 
@@ -64,7 +64,7 @@
           - output.tag_info[0].properties.tags | length == 2
 
     - name: Delete the tags by scope
-      azure_rm_tags:
+      azure.azcollection.azure_rm_tags:
         scope: "{{ __rg_info.resourcegroups.0.id }}"
         state: absent
       register: output
@@ -75,7 +75,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-tags"
         force_delete_nonempty: true
         state: absent

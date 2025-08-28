@@ -11,53 +11,53 @@
           ansible.builtin.include_vars: vars.yml
 
         - name: Delete VM
-          azure_rm_virtualmachine:
+          azure.azcollection.azure_rm_virtualmachine:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ vm_name }}"
             remove_on_absent: all_autocreated
             state: absent
 
         - name: Delete VM 2
-          azure_rm_virtualmachine:
+          azure.azcollection.azure_rm_virtualmachine:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ vm_name_2 }}"
             remove_on_absent: all_autocreated
             state: absent
 
         - name: Destroy subnet
-          azure_rm_subnet:
+          azure.azcollection.azure_rm_subnet:
             resource_group: "{{ resource_group }}-inventory"
             virtual_network: "{{ network_name }}"
             name: "{{ subnet_name }}"
             state: absent
 
         - name: Destroy virtual network
-          azure_rm_virtualnetwork:
+          azure.azcollection.azure_rm_virtualnetwork:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ network_name }}"
             state: absent
 
         - name: Destroy subnet ---- secondary
-          azure_rm_subnet:
+          azure.azcollection.azure_rm_subnet:
             resource_group: "{{ resource_group }}-inventory"
             virtual_network: "{{ network_name_2 }}"
             name: "{{ subnet_name_2 }}"
             state: absent
 
         - name: Destroy virtual network --- secondary
-          azure_rm_virtualnetwork:
+          azure.azcollection.azure_rm_virtualnetwork:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ network_name_2 }}"
             state: absent
 
         - name: Destroy availability set
-          azure_rm_availabilityset:
+          azure.azcollection.azure_rm_availabilityset:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ availability_set }}"
             state: absent
 
         - name: Destroy storage account
-          azure_rm_storageaccount:
+          azure.azcollection.azure_rm_storageaccount:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ storage_account }}"
             force_delete_nonempty: true
@@ -65,7 +65,7 @@
 
       always:
         - name: Force delete the resource group
-          azure_rm_resourcegroup:
+          azure.azcollection.azure_rm_resourcegroup:
             name: "{{ resource_group }}-inventory"
             force_delete_nonempty: true
             state: absent

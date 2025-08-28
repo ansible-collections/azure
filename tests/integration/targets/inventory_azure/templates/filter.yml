@@ -1,5 +1,5 @@
 ---
-plugin: azure.azcollection.azure_rm
+plugin: azure_rm
 conditional_groups:
   azure: true
 exclude_host_filters:

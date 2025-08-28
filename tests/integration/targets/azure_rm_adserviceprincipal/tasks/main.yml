@@ -3,12 +3,12 @@
     app_id: "e0a62513-1d81-480e-a6dc-5c99cdd58d9a"
 
 - name: Delete ad service principal
-  azure_rm_adserviceprincipal:
+  azure.azcollection.azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     state: absent
 
 - name: Create ad service principal
-  azure_rm_adserviceprincipal:
+  azure.azcollection.azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     state: present
   register: ad_fact
@@ -19,7 +19,7 @@
       - ad_fact is changed
 
 - name: Create ad service principal (idempontent)
-  azure_rm_adserviceprincipal:
+  azure.azcollection.azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     state: present
   register: output
@@ -30,7 +30,7 @@
       - output is not changed
 
 - name: Get ad service principal info by app_id
-  azure_rm_adserviceprincipal_info:
+  azure.azcollection.azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
   register: ad_info
 
@@ -41,14 +41,14 @@
       - ad_info.service_principals[0].app_role_assignment_required == False
 
 - name: Update ad service principal app_role_assignmentrequired to True
-  azure_rm_adserviceprincipal:
+  azure.azcollection.azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     app_role_assignment_required: true
     state: present
   register: output
 
 - name: Get ad service principal info by object_id
-  azure_rm_adserviceprincipal_info:
+  azure.azcollection.azure_rm_adserviceprincipal_info:
     object_id: "{{ ad_info.service_principals[0].object_id }}"
   register: ad_info
 
@@ -59,7 +59,7 @@
       - ad_info.service_principals[0].app_role_assignment_required == True
 
 - name: Delete ad service principal
-  azure_rm_adserviceprincipal:
+  azure.azcollection.azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     state: absent
   register: output

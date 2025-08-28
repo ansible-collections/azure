@@ -1,5 +1,5 @@
 - name: Create a new resource group for key vault secret test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-keyvaultsecret"
     location: eastus
 
@@ -20,7 +20,7 @@
       register: object_id_facts
 
     - name: Create instance of Key Vault
-      azure_rm_keyvault:
+      azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvaultsecret"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
@@ -54,7 +54,7 @@
     - name: Create a kevyault secret
       block:
         - name: Create a kevyault secret
-          azure_rm_keyvaultsecret:
+          azure.azcollection.azure_rm_keyvaultsecret:
             keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
             secret_name: testsecret
             secret_value: 'mysecret'
@@ -70,13 +70,13 @@
             that: output is changed
       rescue:
         - name: Delete the keyvault secret
-          azure_rm_keyvaultsecret:
+          azure.azcollection.azure_rm_keyvaultsecret:
             keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
             state: absent
             secret_name: testsecret
 
     - name: Get secret current version
-      azure_rm_keyvaultsecret_info:
+      azure.azcollection.azure_rm_keyvaultsecret_info:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
         name: testsecret
       register: facts
@@ -96,7 +96,7 @@
           - facts['secrets'][0]['attributes']['not_before'] == "2000-01-02T01:02:03+00:00"
 
     - name: Delete a kevyault secret
-      azure_rm_keyvaultsecret:
+      azure.azcollection.azure_rm_keyvaultsecret:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         state: absent
         secret_name: testsecret
@@ -107,7 +107,7 @@
         that: output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-keyvaultsecret"
         force_delete_nonempty: true
         state: absent

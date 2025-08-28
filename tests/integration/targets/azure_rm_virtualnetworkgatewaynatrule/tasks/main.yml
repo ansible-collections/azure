@@ -1,5 +1,5 @@
 - name: Create a new resource group for virtual network gateway natrule test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-vnetgwnatrule"
     location: eastus
 
@@ -13,27 +13,27 @@
         pubipname: "testPublicIP{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         name: "{{ vnetname }}"
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         name: GatewaySubnet
         address_prefix: "10.0.2.0/24"
         virtual_network: "{{ vnetname }}"
 
     - name: Create public IP address
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         allocation_method: Static
         sku: standard
         name: "{{ pubipname }}"
 
     - name: Create a virtual network gateway
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         name: "{{ vngname }}"
         sku: VpnGw2
@@ -45,7 +45,7 @@
         virtual_network: "{{ vnetname }}"
 
     - name: Create a virtual netowrk nat rule(check_mode test)
-      azure_rm_virtualnetworkgatewaynatrule:
+      azure.azcollection.azure_rm_virtualnetworkgatewaynatrule:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         virtual_network_gateway_name: "{{ vngname }}"
         name: "{{ natrulename }}"
@@ -58,7 +58,7 @@
       check_mode: true
 
     - name: Create a virtual netowrk nat rule
-      azure_rm_virtualnetworkgatewaynatrule:
+      azure.azcollection.azure_rm_virtualnetworkgatewaynatrule:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         virtual_network_gateway_name: "{{ vngname }}"
         name: "{{ natrulename }}"
@@ -76,7 +76,7 @@
           - output is changed
 
     - name: Create a virtual netowrk nat rule(Idempotent test)
-      azure_rm_virtualnetworkgatewaynatrule:
+      azure.azcollection.azure_rm_virtualnetworkgatewaynatrule:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         virtual_network_gateway_name: "{{ vngname }}"
         name: "{{ natrulename }}"
@@ -94,7 +94,7 @@
           - output is not changed
 
     - name: Create a new virtual netowrk nat rule (Update test)
-      azure_rm_virtualnetworkgatewaynatrule:
+      azure.azcollection.azure_rm_virtualnetworkgatewaynatrule:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         virtual_network_gateway_name: "{{ vngname }}"
         name: "{{ natrulename }}"
@@ -112,7 +112,7 @@
           - output is changed
 
     - name: Get the virtual netowrk nat rule facts
-      azure_rm_virtualnetworkgatewaynatrule_info:
+      azure.azcollection.azure_rm_virtualnetworkgatewaynatrule_info:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         virtual_network_gateway_name: "{{ vngname }}"
         name: "{{ natrulename }}"
@@ -126,7 +126,7 @@
           - output.state[0].external_mappings == ["192.168.2.0/24"]
 
     - name: Delete the virtual netowrk nat rule
-      azure_rm_virtualnetworkgatewaynatrule:
+      azure.azcollection.azure_rm_virtualnetworkgatewaynatrule:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         virtual_network_gateway_name: "{{ vngname }}"
         name: "{{ natrulename }}"
@@ -143,7 +143,7 @@
       changed_when: true
 
     - name: Delete the virtual network gateway
-      azure_rm_virtualnetworkgateway:
+      azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         name: "{{ vngname }}"
         state: absent
@@ -153,13 +153,13 @@
       changed_when: true
 
     - name: Delete the public IP address
-      azure_rm_publicipaddress:
+      azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         name: "{{ pubipname }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vnetgwnatrule"
         force_delete_nonempty: true
         state: absent

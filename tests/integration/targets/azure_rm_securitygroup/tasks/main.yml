@@ -1,5 +1,5 @@
 - name: Create a new resource group for test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
     location: eastus
   loop:
@@ -17,7 +17,7 @@
       run_once: true
 
     - name: Create security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
@@ -47,7 +47,7 @@
           - output.state.rules | length == 2
 
     - name: Gather facts by tags
-      azure_rm_securitygroup_info:
+      azure.azcollection.azure_rm_securitygroup_info:
         resource_group: "{{ resource_group }}-securitygroup01"
         tags:
           - testing
@@ -65,7 +65,7 @@
           - output.securitygroups[0].subnets | length == 0
 
     - name: Add/Update rules on existing security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         rules:
@@ -95,7 +95,7 @@
           - output.state.rules[0].source_address_prefix == '174.108.158.0/24'
 
     - name: Gather facts after update
-      azure_rm_securitygroup_info:
+      azure.azcollection.azure_rm_securitygroup_info:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
       register: output
@@ -105,7 +105,7 @@
           - output.securitygroups[0].rules | length == 4
 
     - name: Test idempotence
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         rules:
@@ -133,7 +133,7 @@
         that: output is not changed
 
     - name: Update tags
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
@@ -149,7 +149,7 @@
           - output.state.tags.delete == 'never'
 
     - name: Purge tags
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         append_tags: false
@@ -164,7 +164,7 @@
           - output.state.tags.delete == 'on-exit'
 
     - name: Gather facts for one accounts
-      azure_rm_securitygroup_info:
+      azure.azcollection.azure_rm_securitygroup_info:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
       register: output
@@ -174,7 +174,7 @@
           - output.securitygroups | length == 1
 
     - name: Gather facts for all accounts
-      azure_rm_securitygroup_info:
+      azure.azcollection.azure_rm_securitygroup_info:
         resource_group: "{{ resource_group }}-securitygroup01"
         tags:
           - testing:testing
@@ -185,7 +185,7 @@
           - output_groups.securitygroups | length > 0
 
     - name: Create security group with source_address_prefixes
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
@@ -213,7 +213,7 @@
           - not output.state.rules[0].source_address_prefix
 
     - name: Create security group with source_address_prefixes(idempotent)
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
@@ -238,7 +238,7 @@
         that: output is not changed
 
     - name: Add a single one group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         tags:
@@ -261,9 +261,9 @@
           - output is changed
           - output.state.rules | length == 2
 
-    # Use azure_rm_resource module to create with uppercase protocol name
+    # Use azure.azcollection.azure_rm_resource module to create with uppercase protocol name
     - name: Create security group with uppercase protocol name
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         resource_group: "{{ resource_group }}-securitygroup01"
         provider: network
         resource_type: networkSecurityGroups
@@ -285,7 +285,7 @@
                   direction: Inbound
 
     - name: Create security group with capitalized protocol name(idempotent)
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         rules:
@@ -302,7 +302,7 @@
           - output is not changed
 
     - name: Create Application security group 1
-      azure_rm_applicationsecuritygroup:
+      azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ asg_name1 }}"
         tags:
@@ -310,7 +310,7 @@
       register: asg1
 
     - name: Create Application security group 2
-      azure_rm_applicationsecuritygroup:
+      azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-securitygroup02"
         name: "{{ asg_name2 }}"
         tags:
@@ -318,7 +318,7 @@
       register: asg2
 
     - name: Create security group with application security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ sg_name1 }}"
         purge_rules: true
@@ -341,7 +341,7 @@
           - output is changed
 
     - name: Create security group with application security group - Idempotent
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ sg_name1 }}"
         purge_rules: true
@@ -364,31 +364,31 @@
           - output is not changed
 
     - name: Delete security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ sg_name1 }}"
         state: absent
 
     - name: Delete security group
-      azure_rm_securitygroup:
+      azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ secgroupname }}"
         state: absent
 
     - name: Clean up Application security group 2
-      azure_rm_applicationsecuritygroup:
+      azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-securitygroup01"
         name: "{{ asg_name1 }}"
         state: absent
 
     - name: Clean up Application security group 2
-      azure_rm_applicationsecuritygroup:
+      azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-securitygroup02"
         name: "{{ asg_name2 }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent

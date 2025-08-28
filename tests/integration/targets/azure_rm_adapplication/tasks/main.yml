@@ -5,11 +5,11 @@
   run_once: true
 
 - name: Get full list from ad app info
-  azure_rm_adapplication_info:
+  azure.azcollection.azure_rm_adapplication_info:
   register: app_info_output
 
 - name: Create application
-  azure_rm_adapplication:
+  azure.azcollection.azure_rm_adapplication:
     display_name: "{{ display_name }}"
   register: create_output
 
@@ -18,7 +18,7 @@
     that: create_output is changed
 
 - name: Create application by app_id again idempotent test
-  azure_rm_adapplication:
+  azure.azcollection.azure_rm_adapplication:
     app_id: "{{ create_output.app_id }}"
     display_name: "{{ display_name }}"
   register: output_app_id
@@ -28,7 +28,7 @@
     that: output_app_id is not changed
 
 - name: Create application with more parameters
-  azure_rm_adapplication:
+  azure.azcollection.azure_rm_adapplication:
     display_name: "{{ display_name }}"
     app_id: "{{ create_output.app_id }}"
     homepage: "https://{{ display_name }}.test.com"
@@ -59,17 +59,17 @@
     that: second_output is changed
 
 - name: Get ad app info by object id
-  azure_rm_adapplication_info:
+  azure.azcollection.azure_rm_adapplication_info:
     object_id: "{{ create_output.object_id }}"
   register: object_id_output
 
 - name: Get ad app info by app id
-  azure_rm_adapplication_info:
+  azure.azcollection.azure_rm_adapplication_info:
     app_id: "{{ create_output.app_id }}"
   register: app_id_output
 
 - name: Get ad app info by display name
-  azure_rm_adapplication_info:
+  azure.azcollection.azure_rm_adapplication_info:
     app_display_name: "{{ display_name }}"
   register: display_name_output
 
@@ -84,7 +84,7 @@
       - display_name_output.applications | length == 1
 
 - name: Get difference from app_info_output and current
-  azure_rm_adapplication_info:
+  azure.azcollection.azure_rm_adapplication_info:
     app_diff: "{{ app_info_output.applications }}"
   register: diff_output
 
@@ -93,7 +93,7 @@
     that: diff_output.app_diff[0].app_display_name == "{{ display_name }}"
 
 - name: Delete ad app by app_id
-  azure_rm_adapplication:
+  azure.azcollection.azure_rm_adapplication:
     app_id: "{{ create_output.app_id }}"
     display_name: "{{ display_name }}"
     state: absent
@@ -104,7 +104,7 @@
     that: output is changed
 
 - name: Delete ad app by app id again
-  azure_rm_adapplication:
+  azure.azcollection.azure_rm_adapplication:
     app_id: "{{ second_output.app_id }}"
     display_name: "{{ display_name }}"
     state: absent
@@ -115,7 +115,7 @@
     that: output is not changed
 
 - name: Get ad app info by app id
-  azure_rm_adapplication_info:
+  azure.azcollection.azure_rm_adapplication_info:
     app_id: "{{ create_output.app_id }}"
   register: output
 

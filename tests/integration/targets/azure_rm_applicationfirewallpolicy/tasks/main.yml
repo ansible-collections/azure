@@ -1,5 +1,5 @@
 - name: Create a new resource group for application firewall policytest
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-applicationfirewallpolicy"
     location: eastus
 
@@ -10,7 +10,7 @@
         rpfx: "{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
 
     - name: Create a new application firewall policy (Checkmode Test)
-      azure_rm_applicationfirewallpolicy:
+      azure.azcollection.azure_rm_applicationfirewallpolicy:
         resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
@@ -74,7 +74,7 @@
           - output is changed
 
     - name: Create a new application firewall policy
-      azure_rm_applicationfirewallpolicy:
+      azure.azcollection.azure_rm_applicationfirewallpolicy:
         resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
@@ -137,7 +137,7 @@
           - output is changed
 
     - name: Create a new application firewall policy (Idempotent Test)
-      azure_rm_applicationfirewallpolicy:
+      azure.azcollection.azure_rm_applicationfirewallpolicy:
         resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
@@ -200,7 +200,7 @@
           - output is not changed
 
     - name: Update the new application firewall policy
-      azure_rm_applicationfirewallpolicy:
+      azure.azcollection.azure_rm_applicationfirewallpolicy:
         resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         location: australiasoutheast
@@ -282,7 +282,7 @@
           - output is changed
 
     - name: Get the application gateway facts
-      azure_rm_applicationfirewallpolicy_info:
+      azure.azcollection.azure_rm_applicationfirewallpolicy_info:
         resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
       register: output
@@ -297,7 +297,7 @@
           - output.firewall_policy[0].tags |length == 2
 
     - name: Delete the application firewall policy
-      azure_rm_applicationfirewallpolicy:
+      azure.azcollection.azure_rm_applicationfirewallpolicy:
         resource_group: "{{ resource_group }}-applicationfirewallpolicy"
         name: "policy{{ rpfx }}"
         state: absent
@@ -309,7 +309,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-applicationfirewallpolicy"
         force_delete_nonempty: true
         state: absent

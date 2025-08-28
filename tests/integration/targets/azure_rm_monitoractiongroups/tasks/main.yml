@@ -1,5 +1,5 @@
 - name: Create a new resource group for monitor action group test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-monitoractiongroups"
     location: eastus
 
@@ -369,7 +369,7 @@
           - ('actiongroup-' + random_string) not in (output.actiongroups | map(attribute='name') | list)
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-monitoractiongroups"
         force_delete_nonempty: true
         state: absent

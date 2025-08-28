@@ -1,5 +1,5 @@
 - name: Create a new resource group for backup azure VM test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-backupazurevm"
     location: eastus
 
@@ -13,7 +13,7 @@
         backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/DefaultPolicy"
 
     - name: Enabling/Updating protection for the Azure VM
-      azure_rm_backupazurevm:
+      azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
         resource_id: "{{ resource_id }}"
@@ -27,7 +27,7 @@
           - output is changed
 
     - name: Trigger an on-demand backup for a protected Azure VM
-      azure_rm_backupazurevm:
+      azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
         resource_id: "{{ resource_id }}"
@@ -42,7 +42,7 @@
           - output is changed
 
     - name: Stop protection but retain existing data
-      azure_rm_backupazurevm:
+      azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
         resource_id: "{{ resource_id }}"
@@ -56,7 +56,7 @@
           - output is changed
 
     - name: Get backup azure vm info
-      azure_rm_backupazurevm_info:
+      azure.azcollection.azure_rm_backupazurevm_info:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
         resource_id: "{{ resource_id }}"
@@ -69,7 +69,7 @@
           - output.response.name != None
 
     - name: Stop protection and delete data
-      azure_rm_backupazurevm:
+      azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
         resource_id: "{{ resource_id }}"
@@ -83,7 +83,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-backupazurevm"
         force_delete_nonempty: true
         state: absent

@@ -8,50 +8,50 @@
       ansible.builtin.include_vars: vars.yml
 
     - name: Create a new resource group for iventory test
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-inventory"
         location: westus2
 
     - name: SETUP | Create storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ storage_account }}"
         account_type: Standard_LRS
 
     - name: SETUP | Create availability set
-      azure_rm_availabilityset:
+      azure.azcollection.azure_rm_availabilityset:
         name: "{{ availability_set }}"
         resource_group: "{{ resource_group }}-inventory"
 
     - name: SETUP | Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ network_name }}"
         address_prefixes: "{{ network }}"
 
     - name: SETUP | Create virtual network --- secondary
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ network_name_2 }}"
         address_prefixes: "{{ network_2 }}"
         location: eastus
 
     - name: SETUP | Create subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ subnet_name }}"
         address_prefix: "{{ subnet }}"
         virtual_network: "{{ network_name }}"
 
     - name: SETUP | Create subnet --- secondary
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ subnet_name_2 }}"
         address_prefix: "{{ subnet_2 }}"
         virtual_network: "{{ network_name_2 }}"
 
     - name: Create minimal VM with defaults
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ vm_name }}"
         admin_username: testuser
@@ -71,7 +71,7 @@
       register: vm_output
 
     - name: Create minimal VM 2 with defaults
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-inventory"
         name: "{{ vm_name_2 }}"
         started: true

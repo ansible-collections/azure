@@ -168,6 +168,9 @@ parameters:
       - "azure_rm_afdruleset"
       - "azure_rm_afdrules"
       - "azure_rm_tags"
+      - "azure_rm_dedicatedhost"
+      - "inventory_azure"
+      - "setup_azure"
 
 trigger: none
 pr:

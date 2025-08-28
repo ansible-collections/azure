@@ -1,5 +1,5 @@
 - name: Create a new resource group for snapshot test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-snapshot"
     location: eastus
 
@@ -11,20 +11,20 @@
       run_once: true
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-snapshot"
         name: "testVnet{{ rpfx }}"
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-snapshot"
         name: "testSubnet{{ rpfx }}"
         address_prefix: "10.0.1.0/24"
         virtual_network: "testVnet{{ rpfx }}"
 
     - name: Create gen1 VM
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-snapshot"
         name: "vmforimage{{ rpfx }}"
         location: eastus
@@ -43,13 +43,13 @@
           version: latest
 
     - name: Get VM facts
-      azure_rm_virtualmachine_info:
+      azure.azcollection.azure_rm_virtualmachine_info:
         resource_group: "{{ resource_group }}-snapshot"
         name: "vmforimage{{ rpfx }}"
       register: vm_output
 
     - name: Create a snapshot by importing an unmanaged blob from the same subscription.
-      azure_rm_snapshot:
+      azure.azcollection.azure_rm_snapshot:
         resource_group: "{{ resource_group }}-snapshot"
         name: "mySnapshot-{{ rpfx }}"
         location: eastus
@@ -64,14 +64,14 @@
           - output is changed
 
     - name: Create a managed disk
-      azure_rm_manageddisk:
+      azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-snapshot"
         name: "disk-{{ rpfx }}"
         disk_size_gb: 1
       register: disk_output
 
     - name: Create a snapshot with I(incremental=True)
-      azure_rm_snapshot:
+      azure.azcollection.azure_rm_snapshot:
         resource_group: "{{ resource_group }}-snapshot"
         name: "mySnapshot-{{ rpfx }}02"
         location: eastus
@@ -87,7 +87,7 @@
           - output is changed
 
     - name: List the snapshot instance by resource group
-      azure_rm_snapshot_info:
+      azure.azcollection.azure_rm_snapshot_info:
         resource_group: "{{ resource_group }}-snapshot"
       register: output
 
@@ -97,25 +97,25 @@
           - output.state |length == 2
 
     - name: Delete the first snapshot
-      azure_rm_snapshot:
+      azure.azcollection.azure_rm_snapshot:
         resource_group: "{{ resource_group }}-snapshot"
         name: "mySnapshot-{{ rpfx }}"
         state: absent
 
     - name: Delete the secondary snapshot
-      azure_rm_snapshot:
+      azure.azcollection.azure_rm_snapshot:
         resource_group: "{{ resource_group }}-snapshot"
         name: "mySnapshot-{{ rpfx }}02"
         state: absent
 
     - name: Delete the gen1 VM
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-snapshot"
         name: "vmforimage{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-snapshot"
         force_delete_nonempty: true
         state: absent

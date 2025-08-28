@@ -1,5 +1,5 @@
 - name: Create a new resource group for hdinsight cluster test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-hdinsightcluster"
     location: eastus
 
@@ -37,14 +37,14 @@
         - '2'
 
     - name: Create storage account
-      azure_rm_storageaccount:
+      azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "storage{{ rpfx }}"
         account_type: Standard_LRS
         location: eastus2
 
     - name: Sample for Azure REST API - StorageAccounts_ListKeys
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         api_version: '2018-07-01'
         method: POST
         resource_group: "{{ resource_group }}-hdinsightcluster"
@@ -60,7 +60,7 @@
         var: storage_output
 
     - name: Create instance of Cluster -- check mode
-      azure_rm_hdinsightcluster:
+      azure.azcollection.azure_rm_hdinsightcluster:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
         location: eastus2
@@ -109,7 +109,7 @@
           - output is changed
 
     - name: Create instance of Cluster
-      azure_rm_hdinsightcluster:
+      azure.azcollection.azure_rm_hdinsightcluster:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
         location: eastus2
@@ -158,7 +158,7 @@
           - output is changed
 
     - name: Wait for instance of Cluster provisioning to complete
-      azure_rm_hdinsightcluster_info:
+      azure.azcollection.azure_rm_hdinsightcluster_info:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
       register: facts
@@ -167,7 +167,7 @@
       delay: 60
 
     - name: Create again instance of Cluster -- idempotent
-      azure_rm_hdinsightcluster:
+      azure.azcollection.azure_rm_hdinsightcluster:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
         location: eastus2
@@ -215,7 +215,7 @@
           - output is not changed
 
     - name: Create again instance of Cluster -- resize and add tags
-      azure_rm_hdinsightcluster:
+      azure.azcollection.azure_rm_hdinsightcluster:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
         location: eastus2
@@ -268,7 +268,7 @@
           - output is changed
 
     - name: Get facts of Cluster
-      azure_rm_hdinsightcluster_info:
+      azure.azcollection.azure_rm_hdinsightcluster_info:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
       register: output
@@ -294,7 +294,7 @@
           - managed_identity_ids[1] | lower in output.clusters[0].identity.user_assigned_identities
 
     - name: Delete instance of Cluster -- check mode
-      azure_rm_hdinsightcluster:
+      azure.azcollection.azure_rm_hdinsightcluster:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
         state: absent
@@ -306,7 +306,7 @@
           - output is changed
 
     - name: Delete instance of Cluster
-      azure_rm_hdinsightcluster:
+      azure.azcollection.azure_rm_hdinsightcluster:
         resource_group: "{{ resource_group }}-hdinsightcluster"
         name: "cluster{{ rpfx }}"
         state: absent
@@ -328,7 +328,7 @@
         - '2'
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-hdinsightcluster"
         force_delete_nonempty: true
         state: absent

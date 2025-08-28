@@ -13,7 +13,7 @@
     publisher: Canonical
 
 - name: List available Image SKUs for 0001-com-ubuntu-server-focal
-  azure_rm_imagesku_info:
+  azure.azcollection.azure_rm_imagesku_info:
     location: "{{ location }}"
     offer: "{{ offer }}"
     publisher: "{{ publisher }}"
@@ -28,21 +28,21 @@
     first_image_sku_option: "{{ available_image_skus_results.available_skus[0] }}"
 
 - name: SETUP | Create virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
     location: "{{ location }}"
     address_prefixes: "{{ network }}"
 
 - name: SETUP | Create subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ subnet_name }}"
     address_prefix: "{{ subnet }}"
     virtual_network: "{{ network_name }}"
 
 - name: Create VM with first Image SKU result
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     admin_username: "testuser"
@@ -67,34 +67,34 @@
       - vm_output.ansible_facts.azure_vm.storage_profile.image_reference.sku == first_image_sku_option.name
 
 - name: Delete VM
-  azure_rm_virtualmachine:
+  azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     remove_on_absent: all_autocreated
     state: absent
 
 - name: Destroy subnet
-  azure_rm_subnet:
+  azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
     virtual_network: "{{ network_name }}"
     name: "{{ subnet_name }}"
     state: absent
 
 - name: Destroy availability set
-  azure_rm_availabilityset:
+  azure.azcollection.azure_rm_availabilityset:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ availability_set }}"
     state: absent
 
 - name: Destroy storage account
-  azure_rm_storageaccount:
+  azure.azcollection.azure_rm_storageaccount:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ storage_account }}"
     force_delete_nonempty: true
     state: absent
 
 - name: Destroy virtual network
-  azure_rm_virtualnetwork:
+  azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
     state: absent

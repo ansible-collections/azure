@@ -1,5 +1,5 @@
 - name: Create a new resource group for AKS test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-aks"
     location: eastus
 
@@ -17,7 +17,7 @@
         location: westus2
 
     - name: Create User Managed Identity
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         resource_group: "{{ resource_group }}-aks"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
@@ -39,12 +39,12 @@
       ansible.builtin.include_tasks: minimal-cluster.yml
 
     - name: Find available k8s version
-      azure_rm_aksversion_info:
+      azure.azcollection.azure_rm_aksversion_info:
         location: "{{ location }}"
       register: versions
 
     - name: Create an AKS instance (check mode)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -74,7 +74,7 @@
       check_mode: true
 
     - name: Check there is no AKS created
-      azure_rm_aks_info:
+      azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
       register: fact
@@ -85,7 +85,7 @@
           - "fact.aks | length == 0"
 
     - name: Create an AKS instance
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -121,7 +121,7 @@
           - output.provisioning_state == 'Succeeded'
 
     - name: Get AKS fact
-      azure_rm_aks_info:
+      azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
       register: fact
@@ -136,7 +136,7 @@
           - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
 
     - name: Update an AKS instance node_labels
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -171,7 +171,7 @@
           - output is changed
 
     - name: Get AKS fact
-      azure_rm_aks_info:
+      azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
       register: fact
@@ -184,7 +184,7 @@
           - fact.aks[0].agent_pool_profiles[0].node_labels | length == 2
 
     - name: Get AKS upgrade versions
-      azure_rm_aksupgrade_info:
+      azure.azcollection.azure_rm_aksupgrade_info:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
       register: upgrades
@@ -196,7 +196,7 @@
           - "upgrades.azure_aks_upgrades.control_plane_profile.upgrades | length > 0"
 
     - name: Create an AKS instance (idempotent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -229,13 +229,13 @@
           - output is not changed
 
     - name: Get available version
-      azure_rm_aksversion_info:
+      azure.azcollection.azure_rm_aksversion_info:
         location: "{{ location }}"
         version: "{{ versions.azure_aks_versions[0] }}"
       register: version1
 
     - name: Upgrade the AKS instance with addon
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -279,7 +279,7 @@
           - output.network_profile.network_plugin == 'azure'
 
     - name: Upgrade the AKS instance with addon (idempontent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -318,7 +318,7 @@
           - output is not changed
 
     - name: Upgrade the AKS instance with agent pool profiles
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -359,7 +359,7 @@
       register: ignore_errors_register
 
     - name: Upgrade the AKS instance with agent pool profiles (idempontent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -396,7 +396,7 @@
           - output is not changed
 
     - name: Upgrade the AKS instance with multiple agent pool profiles
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -444,7 +444,7 @@
       register: ignore_errors_register
 
     - name: Upgrade the AKS instance with multiple agent pool profiles (idempontent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -485,7 +485,7 @@
           - output is not changed
 
     - name: Update the default2 agent_pool mode from User to System
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -533,7 +533,7 @@
       register: ignore_errors_register
 
     - name: Update the default2 agent_pool mode from User to System (idempontent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
@@ -569,7 +569,7 @@
       register: output
 
     - name: Get AKS fact
-      azure_rm_aks_info:
+      azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         show_kubeconfig: user
@@ -582,7 +582,7 @@
           - fact.aks[0].kube_config == output.kube_config
 
     - name: Delete the AKS instance
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         state: absent
@@ -594,7 +594,7 @@
           - output is changed
 
     - name: Delete the AKS instance (idempotent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
         state: absent
@@ -606,7 +606,7 @@
           - output is not changed
 
     - name: Get AKS fact
-      azure_rm_aks_info:
+      azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
       register: fact
@@ -617,7 +617,7 @@
           - "fact.aks | length == 0"
 
     - name: Destroy User Managed Identity
-      azure_rm_resource:
+      azure.azcollection.azure_rm_resource:
         resource_group: "{{ resource_group }}-aks"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
@@ -629,7 +629,7 @@
         - "ansible-test-aks-identity-2"
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-aks"
         force_delete_nonempty: true
         state: absent

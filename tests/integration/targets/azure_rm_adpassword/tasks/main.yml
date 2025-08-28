@@ -4,7 +4,7 @@
     app_object_id: "b52e8275-a1ee-4c4a-86ff-15992e0920ed"
 
 - name: Create first ad password by app_id
-  azure_rm_adpassword:
+  azure.azcollection.azure_rm_adpassword:
     app_id: "{{ app_id }}"
     state: present
   register: ad_fact
@@ -15,7 +15,7 @@
       - ad_fact is changed
 
 - name: Create second ad password by app_object_id
-  azure_rm_adpassword:
+  azure.azcollection.azure_rm_adpassword:
     app_object_id: "{{ app_object_id }}"
     state: present
   register: ad_fact02
@@ -26,12 +26,12 @@
       - ad_fact02 is changed
 
 - name: Create ad service principal
-  azure_rm_adserviceprincipal:
+  azure.azcollection.azure_rm_adserviceprincipal:
     app_id: "{{ app_id }}"
     state: present
 
 - name: Get ad service principal info
-  azure_rm_adserviceprincipal_info:
+  azure.azcollection.azure_rm_adserviceprincipal_info:
     app_id: "{{ app_id }}"
   register: sp_info
 - name: Print Service principals facts
@@ -39,7 +39,7 @@
     var: sp_info
 
 - name: Create third ad password by service_principal_object_id
-  azure_rm_adpassword:
+  azure.azcollection.azure_rm_adpassword:
     service_principal_object_id: "{{ sp_info.service_principals[0].object_id }}"
     state: present
   register: ad_fact03
@@ -50,7 +50,7 @@
       - ad_fact03 is changed
 
 - name: Can't update ad password
-  azure_rm_adpassword:
+  azure.azcollection.azure_rm_adpassword:
     app_id: "{{ app_id }}"
     key_id: "{{ ad_fact.key_id }}"
     app_object_id: "{{ app_object_id }}"
@@ -59,7 +59,7 @@
   ignore_errors: true
 
 - name: Get ad password info
-  azure_rm_adpassword_info:
+  azure.azcollection.azure_rm_adpassword_info:
     app_id: "{{ app_id }}"
     key_id: "{{ ad_fact.key_id }}"
     app_object_id: "{{ app_object_id }}"
@@ -72,7 +72,7 @@
       - ad_info.passwords[0].end_date == ad_fact.end_date
 
 - name: Delete one ad password
-  azure_rm_adpassword:
+  azure.azcollection.azure_rm_adpassword:
     app_id: "{{ app_id }}"
     key_id: "{{ ad_fact.key_id }}"
     app_object_id: "{{ app_object_id }}"
@@ -85,7 +85,7 @@
       - output is changed
 
 - name: Delete all ad password
-  azure_rm_adpassword:
+  azure.azcollection.azure_rm_adpassword:
     app_id: "{{ app_id }}"
     app_object_id: "{{ app_object_id }}"
     state: absent

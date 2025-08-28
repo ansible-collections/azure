@@ -1,5 +1,5 @@
 - name: Create a new resource group for backup policy test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-backuppolicy"
     location: eastus
 
@@ -56,7 +56,7 @@
           - backup_policy_exists.type == daily_policy_output.type
 
     - name: Create a daily VM backup policy (idempotent)
-      azure_rm_backuppolicy:
+      azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_daily }}"
         resource_group: "{{ resource_group }}-backuppolicy"
@@ -257,7 +257,7 @@
           - weekly_policy_output_delete_idempotent is not changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-backuppolicy"
         force_delete_nonempty: true
         state: absent

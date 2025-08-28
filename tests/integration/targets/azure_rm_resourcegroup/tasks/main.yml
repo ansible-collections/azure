@@ -1,12 +1,12 @@
 - name: Create a new resource group for resource group test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-resource"
     location: eastus
 
 - name: For resoruce group test
   block:
     - name: Get resource group datalake info
-      azure_rm_resourcegroup_info:
+      azure.azcollection.azure_rm_resourcegroup_info:
         name: "{{ resource_group }}-resource"
         list_resources: true
       register: rg
@@ -18,7 +18,7 @@
           - rg.resourcegroups[0].resources | length >= 0
 
     - name: Get resource group info
-      azure_rm_resourcegroup_info:
+      azure.azcollection.azure_rm_resourcegroup_info:
       register: rg
 
     - name: Assert all resource group facts
@@ -27,7 +27,7 @@
           - rg.resourcegroups | length >= 1
 
     - name: Get resource group info
-      azure_rm_resourcegroup_info:
+      azure.azcollection.azure_rm_resourcegroup_info:
         name: "{{ resource_group }}-resource"
         list_resources: true
       register: rg
@@ -39,7 +39,7 @@
           - rg.resourcegroups[0].resources | length >= 0
 
     - name: Create resource group (idempontent)
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-resource"
         location: "{{ rg.resourcegroups[0].location }}"
       register: output
@@ -50,7 +50,7 @@
           - output is not changed
 
     - name: Delete resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-resource"
         state: absent
       check_mode: true
@@ -62,7 +62,7 @@
           - output is changed
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-resource"
         force_delete_nonempty: true
         state: absent

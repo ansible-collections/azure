@@ -1,5 +1,5 @@
 - name: Create a new resource group for private dns recordset test
-  azure_rm_resourcegroup:
+  azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-privatednsrecordset"
     location: eastus
 
@@ -10,7 +10,7 @@
         domain_name: "{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
 
     - name: Create a Private DNS zone
-      azure_rm_privatednszone:
+      azure.azcollection.azure_rm_privatednszone:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         name: "{{ domain_name }}.com"
         state: present
@@ -21,7 +21,7 @@
         that: results is changed
 
     - name: Create "A" record set with multiple records
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -37,7 +37,7 @@
         that: results is changed
 
     - name: Re-run "A" record with same values
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -53,7 +53,7 @@
         that: results is not changed
 
     - name: Update "A" record set with additional record
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -69,7 +69,7 @@
           - results is changed
 
     - name: Re-update "A" record set with additional record
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -85,7 +85,7 @@
           - results is not changed
 
     - name: Remove 1 record from record set
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -102,7 +102,7 @@
           - results is changed
 
     - name: Check_mode test
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -118,7 +118,7 @@
           - results is changed
 
     - name: Get information for A DNS recordset from Private DNS zone
-      azure_rm_privatednsrecordset_info:
+      azure.azcollection.azure_rm_privatednsrecordset_info:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         zone_name: "{{ domain_name }}.com"
         relative_name: www
@@ -137,7 +137,7 @@
           - results.dnsrecordsets[0].records | length > 0
 
     - name: Delete a record set
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -150,7 +150,7 @@
         that: results is changed
 
     - name: Re-run record set absent (idempotence test)
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: www
         zone_name: "{{ domain_name }}.com"
@@ -163,7 +163,7 @@
         that: results is not changed
 
     - name: Create SRV records in a new record set
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: "_sip._tcp.{{ domain_name }}.com"
         zone_name: "{{ domain_name }}.com"
@@ -183,7 +183,7 @@
           - results is changed
 
     - name: Get information for SRV DNS recordset from Private DNS zone
-      azure_rm_privatednsrecordset_info:
+      azure.azcollection.azure_rm_privatednsrecordset_info:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         zone_name: "{{ domain_name }}.com"
         relative_name: "_sip._tcp.{{ domain_name }}.com"
@@ -202,7 +202,7 @@
           - results.dnsrecordsets[0].records | length > 0
 
     - name: Create TXT records in a new record set
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: "_txt.{{ domain_name }}.com"
         zone_name: "{{ domain_name }}.com"
@@ -222,7 +222,7 @@
           - results is changed
 
     - name: Get information for TXT DNS recordset from Private DNS zone
-      azure_rm_privatednsrecordset_info:
+      azure.azcollection.azure_rm_privatednsrecordset_info:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         zone_name: "{{ domain_name }}.com"
         relative_name: "_txt.{{ domain_name }}.com"
@@ -241,7 +241,7 @@
           - results.dnsrecordsets[0].records | length > 0
 
     - name: Update SOA record
-      azure_rm_privatednsrecordset:
+      azure.azcollection.azure_rm_privatednsrecordset:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         relative_name: "@"
         zone_name: "{{ domain_name }}.com"
@@ -263,13 +263,13 @@
           - results is changed
 
     - name: Delete DNS zone
-      azure_rm_privatednszone:
+      azure.azcollection.azure_rm_privatednszone:
         resource_group: "{{ resource_group }}-privatednsrecordset"
         name: "{{ domain_name }}.com"
         state: absent
   always:
     - name: Force delete the resource group
-      azure_rm_resourcegroup:
+      azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-privatednsrecordset"
         force_delete_nonempty: true
         state: absent
