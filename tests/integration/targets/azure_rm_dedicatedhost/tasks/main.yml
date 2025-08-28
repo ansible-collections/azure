@@ -1,0 +1,151 @@
+- name: Creat a new resource group for dedicated host test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-dhost"
+    location: eastus
+
+- name: For dedicated host test
+  block:
+    - name: Create host group name
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
+
+    - name: Create a host group
+      azure.azcollection.azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}-dhost"
+        name: "group{{ rpfx }}"
+        location: eastus
+        zones:
+          - "1"
+        platform_fault_domain_count: 1
+        state: present
+      register: results
+
+    - name: Create a new dedicated host (Check mode test)
+      azure.azcollection.azure_rm_dedicatedhost:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+        platform_fault_domain: 0
+        auto_replace_on_failure: false
+        license_type: 'None'
+        sku:
+          name: "DCSv2-Type1"
+        tags:
+          key1: value1
+      check_mode: true
+      register: output
+
+    - name: Assert there is not dedicated host
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Create a new dedicated host
+      azure.azcollection.azure_rm_dedicatedhost:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+        platform_fault_domain: 0
+        auto_replace_on_failure: false
+        license_type: 'None'
+        sku:
+          name: "DCSv2-Type1"
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert create a new dedicated host
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Create a new dedicated host(Idempotent tes)
+      azure.azcollection.azure_rm_dedicatedhost:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+        platform_fault_domain: 0
+        auto_replace_on_failure: false
+        sku:
+          name: "DCSv2-Type1"
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert no changed with the dedicated host
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Update the dedicated host
+      azure.azcollection.azure_rm_dedicatedhost:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+        platform_fault_domain: 0
+        auto_replace_on_failure: true
+        license_type: Windows_Server_Hybrid
+        sku:
+          name: "DCSv2-Type1"
+        tags:
+          key2: value2
+      register: output
+
+    - name: Assert the dedicated host updated
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Restart the dedicated host
+      azure.azcollection.azure_rm_dedicatedhost:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+        is_restart: true
+      register: output
+
+    - name: Assert the dedicated host restarted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Get the dedicate host facts
+      azure.azcollection.azure_rm_dedicatedhost_info:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+      register: output
+
+    - name: Assert the facts
+      ansible.builtin.assert:
+        that:
+          - output.dedicated_hosts[0].auto_replace_on_failure is true
+          - output.dedicated_hosts[0].platform_fault_domain == 0
+          - output.dedicated_hosts[0].license_type == 'Windows_Server_Hybrid'
+          - output.dedicated_hosts[0].tags |length == 2
+
+    - name: Deleted the dedicated host
+      azure.azcollection.azure_rm_dedicatedhost:
+        resource_group: "{{ resource_group }}-dhost"
+        host_group_name: "group{{ rpfx }}"
+        name: "host{{ rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the dedicated host deleted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Deleted the host group
+      azure.azcollection.azure_rm_hostgroup:
+        resource_group: "{{ resource_group }}-dhost"
+        name: "group{{ rpfx }}"
+        state: absent
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-dhost"
+        force_delete_nonempty: true
+        state: absent
