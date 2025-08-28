@@ -1668,10 +1668,10 @@ class AzureRMAuth(object):
                 except Exception as e:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(raw_cloud_env, e.message), exception=traceback.format_exc())
 
-        if self.credentials.get('subscription_id', None) is None and self.credentials.get('credentials') is None:
+        if self.credentials.get('subscription_id', None) is None and not self.is_ad_resource:
             self.fail("Credentials did not include a subscription_id value.")
         self.log("setting subscription_id")
-        self.subscription_id = self.credentials['subscription_id']
+        self.subscription_id = self.credentials.get('subscription_id')
 
         # get authentication authority
         # for adfs, user could pass in authority or not.
@@ -1759,10 +1759,10 @@ class AzureRMAuth(object):
             except Exception:
                 pass
 
-        if credentials.get('subscription_id'):
+        if credentials.get('subscription_id') is None and not self.is_ad_resource:
+            return None
+        else:
             return credentials
-
-        return None
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, _cloud_environment=None, **kwargs):
         # Get object `cloud_environment` from string `_cloud_environment`
@@ -1827,10 +1827,10 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
 
-        if env_credentials.get('subscription_id') is not None:
+        if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
+            return None
+        else:
             return env_credentials
-
-        return None
 
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
