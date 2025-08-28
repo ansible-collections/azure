@@ -1759,10 +1759,10 @@ class AzureRMAuth(object):
             except Exception:
                 pass
 
-        if credentials.get('subscription_id') or self.is_ad_resource:
+        if credentials.get('subscription_id') is None and not self.is_ad_resource:
+            return None
+        else:
             return credentials
-
-        return None
 
     def _get_msi_credentials(self, subscription_id=None, client_id=None, _cloud_environment=None, **kwargs):
         # Get object `cloud_environment` from string `_cloud_environment`
@@ -1834,10 +1834,10 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
 
-        if env_credentials.get('subscription_id') is not None or self.is_ad_resource:
+        if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
+            return None
+        else:
             return env_credentials
-
-        return None
 
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
