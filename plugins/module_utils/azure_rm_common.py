@@ -1668,10 +1668,10 @@ class AzureRMAuth(object):
                 except Exception as e:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(raw_cloud_env, e.message), exception=traceback.format_exc())
 
-        if self.credentials.get('subscription_id', None) is None or self.is_ad_resource:
+        if self.credentials.get('subscription_id', None) is None and not self.is_ad_resource:
             self.fail("Credentials did not include a subscription_id value.")
         self.log("setting subscription_id")
-        self.subscription_id = self.credentials['subscription_id']
+        self.subscription_id = self.credentials.get('subscription_id')
 
         # get authentication authority
         # for adfs, user could pass in authority or not.
