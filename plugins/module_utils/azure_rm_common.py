@@ -1588,12 +1588,6 @@ class AzureRMAuthException(Exception):
     pass
 
 
-class CustomCLIError(CLIError):
-    def __init__(self, message, original_exception=None):
-        super().__init__(f"{message}. Original error: {original_exception}")
-        self.original_exception = original_exception
-
-
 class AzureRMAuth(object):
     _cloud_environment = None
     _adfs_authority_url = None
@@ -1816,7 +1810,7 @@ class AzureRMAuth(object):
                 cmd = ["az", "account", "show", "--query", "id"]
                 subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
             except Exception as ec:
-                raise CustomCLIError("Obtain the az login's subscription occurred exception", ec)
+                raise CLIError("Obtain the az login's subscription occurred exception as {0}".format(ec))
 
         try:
             cmd = ["az", "cloud", "show", "--query", "name"]
@@ -1824,10 +1818,10 @@ class AzureRMAuth(object):
             all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
             matched_clouds = [x for x in all_clouds if x.name == cloud_name]
         except Exception as ec:
-            raise CustomCLIError("Obtain the az login's active cloud occurred exception", ec)
+            raise CLIError("Obtain the az login's active cloud occurred exception as {0}".format(ec))
 
         if len(matched_clouds) != 1:
-            raise CustomCLIError("Obtain the active cloud failed", "There is no or multiple matching clouds")
+            raise CLIError("Obtain the active cloud failed, There is no or multiple matching clouds")
 
         cli_credentials = {
             'credentials': AzureCliCredential(),
@@ -1871,7 +1865,7 @@ class AzureRMAuth(object):
                 self.log('Retrieving credentials from Azure CLI profile')
                 cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
                 return cli_credentials
-            except CustomCLIError as err:
+            except CLIError as err:
                 self.fail("Azure CLI profile cannot be loaded - {0}".format(err))
 
         if auth_source == 'env':
@@ -1913,7 +1907,7 @@ class AzureRMAuth(object):
                 self.log('Retrieving credentials from AzureCLI profile')
             cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
             return cli_credentials
-        except CustomCLIError as ce:
+        except CLIError as ce:
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
 
         return None
