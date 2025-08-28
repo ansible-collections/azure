@@ -1668,7 +1668,7 @@ class AzureRMAuth(object):
                 except Exception as e:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(raw_cloud_env, e.message), exception=traceback.format_exc())
 
-        if self.credentials.get('subscription_id', None) is None or not self.is_ad_resource:
+        if self.credentials.get('subscription_id', None) is None or self.is_ad_resource:
             self.fail("Credentials did not include a subscription_id value.")
         self.log("setting subscription_id")
         self.subscription_id = self.credentials['subscription_id']
@@ -1759,7 +1759,7 @@ class AzureRMAuth(object):
             except Exception:
                 pass
 
-        if credentials.get('subscription_id') or not self.is_ad_resource:
+        if credentials.get('subscription_id') or self.is_ad_resource:
             return credentials
 
         return None
@@ -1834,8 +1834,7 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
 
-
-        if env_credentials.get('subscription_id') is not None or not self.is_ad_resource:
+        if env_credentials.get('subscription_id') is not None or self.is_ad_resource:
             return env_credentials
 
         return None
