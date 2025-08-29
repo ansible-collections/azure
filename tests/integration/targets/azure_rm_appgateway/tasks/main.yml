@@ -1236,7 +1236,6 @@
       azure.azcollection.azure_rm_applicationfirewallpolicy:
         resource_group: "{{ resource_group }}"
         name: "wafpolicy{{ rpfx }}"
-        #location: australiasoutheast
         policy_settings:
           file_upload_enforcement: true
           file_upload_limit_in_mb: 88
