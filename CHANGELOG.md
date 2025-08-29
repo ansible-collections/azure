@@ -1,4 +1,35 @@
 # Change Log
+## v3.8.0 (2025-08-29)
+
+### NEW MODULES
+  - azure_rm_monitormetricalerts.py: ([#1952](https://github.com/ansible-collections/azure/pull/2016))
+  - azure_rm_monitormetricalerts_info.py: ([#1952](https://github.com/ansible-collections/azure/pull/2016))
+  - azure_rm_monitoractivitylogalerts.py: ([#1971](https://github.com/ansible-collections/azure/pull/1971))
+  - azure_rm_monitoractivitylogalerts_info.py: ([#1971](https://github.com/ansible-collections/azure/pull/1971))
+  - azure_rm_dedicatedhost.py: ([#1955](https://github.com/ansible-collections/azure/pull/1955))
+  - azure_rm_dedicatedhost_info.py: ([#1955](https://github.com/ansible-collections/azure/pull/1955))
+
+### FEATURE ENHANCEMENT
+  - plugins/module_utils/azure_rm_common.py:
+    - Set monitor management client for metric alert ([#1952](https://github.com/ansible-collections/azure/pull/2016))
+    - Set monitor management client for activity log alert ([#1971](https://github.com/ansible-collections/azure/pull/1971))
+    - Delete import get cli profile ([#2030](https://github.com/ansible-collections/azure/pull/2030))
+    - Get 'subscription_id' when configuring the authentication parameter ([#2033](https://github.com/ansible-collections/azure/pull/2033))
+    - Replacement will send raw.githubusercontent.com request method ([#2039](https://github.com/ansible-collections/azure/pull/2039))
+  - plugins/module_utils/azure_rm_common_ext.py: Enhance default_compare ([1971](https://github.com/ansible-collections/azure/pull/1971))
+  - azure_rm_aks.py: Add support addon's wqazureKeyvaultSecretsProvider ([#2026](https://github.com/ansible-collections/azure/pull/2026))
+  - README.md: Update readme.md per https://access.redhat.com/articles/7068606 ([#2029](https://github.com/ansible-collections/azure/pull/2029))
+  - azure_rm_azurefirewall.py: Add supportr 'destination_fqdns' ([#2031](https://github.com/ansible-collections/azure/pull/2031))
+  - azure_rm_azurefirewall_info.py: Support return 'destination_fqdns' ([#2031](https://github.com/ansible-collections/azure/pull/2031))
+  - requirements.txt: Update azure-cli-core to v2.75.0 ([#2032](https://github.com/ansible-collections/azure/pull/2032))
+  - tests/utils/ado/ado.sh: Specify the ansible-lint version to v25.8.1 ([#2038](https://github.com/ansible-collections/azure/pull/2038))
+
+### BUG FIXING
+  - azure_rm_keyvaultcertificate.py: Convert the certificate data of type bytearray to base64 ([#1996](https://github.com/ansible-collections/azure/pull/1996))
+  - azure_rm_galleryimageversion.py: Fix the keyword input error when assigning values to a dictionary ([#2037](https://github.com/ansible-collections/azure/pull/2037))
+  - azure_rm_publicipaddress.py: Keep the check mode consistent with the print output ([#2043](https://github.com/ansible-collections/azure/pull/2043))
+
+
 ## v3.7.0 (2025-07-29)
 
 ### NEW MODULES
