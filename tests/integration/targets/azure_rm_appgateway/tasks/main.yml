@@ -1234,7 +1234,7 @@
 
     - name: Create a new application firewall policy
       azure.azcollection.azure_rm_applicationfirewallpolicy:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ resource_group }}-appgateway"
         name: "wafpolicy{{ rpfx }}"
         policy_settings:
           file_upload_enforcement: true
