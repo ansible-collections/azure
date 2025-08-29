@@ -41,11 +41,13 @@
 
     - name: Load app gateways
       azure.azcollection.azure_rm_appgateway_info:
+        resource_group: "{{ resource_group }}-appgateway"
       register: appgw_output
+
     - name: Assert there are no gateways
       ansible.builtin.assert:
         that:
-          - appgw_output.gateways | community.general.json_query(query_pattern) | length == 0
+          - appgw_output.gateways | length == 0
 
     - name: Create a virtual network
       azure.azcollection.azure_rm_virtualnetwork:
