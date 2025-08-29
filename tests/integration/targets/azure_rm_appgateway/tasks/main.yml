@@ -14,10 +14,9 @@
     - name: Prepare random number
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
-        cert1_file: "cert1.txt"
-        cert1_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+        # The password and certificate must match
         cert2_file: "cert2.txt"
-        cert2_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_letters', 'digits', 'punctuation'], length=12) }}"
+        cert2_password: "Test1234!"
         cert3b64_file: "cert3b64.txt"
         location: "{{ __rg_info.resourcegroups.0.location }}"
         new_resource_group: "{{ resource_group }}-appgateway"
@@ -1231,6 +1230,63 @@
         sku: "standard"
         allocation_method: "static"
 
+    - name: Create a new application firewall policy
+      azure.azcollection.azure_rm_applicationfirewallpolicy:
+        resource_group: "{{ resource_group }}"
+        name: "wafpolicy{{ rpfx }}"
+        #location: australiasoutheast
+        policy_settings:
+          file_upload_enforcement: true
+          file_upload_limit_in_mb: 88
+          js_challenge_cookie_expiration_in_mins: 30
+          max_request_body_size_in_kb: 128
+          mode: Detection
+          request_body_check: true
+          request_body_enforcement: true
+          request_body_inspect_limit_in_kb: 128
+          state: Enabled
+          custom_block_response_status_code: 200
+          custom_block_response_body: Fredtest
+          log_scrubbing:
+            state: Enabled
+            scrubbing_rules:
+              - match_variable: RequestHeaderNames
+                selector_match_operator: Equals
+                selector: '*'
+                state: Enabled
+        custom_rules:
+          - action: Block
+            match_conditions:
+              - match_values:
+                  - 10.1.0.0/24
+                  - 10.2.0.0/24
+                match_variables:
+                  - variable_name: RemoteAddr
+                negation_conditon: true
+                operator: IPMatch
+                transforms:
+                  - Uppercase
+                  - Lowercase
+            name: ruledefine01
+            priority: 21
+            rule_type: MatchRule
+            state: Enabled
+        managed_rules:
+          exclusions:
+            - match_variable: RequestHeaderNames
+              selector_match_operator: Equals
+              selector: IPMatch
+              exclusion_managed_rule_sets:
+                - rule_set_type: Microsoft_DefaultRuleSet
+                  rule_set_version: 2.1
+          managed_rule_sets:
+            - rule_set_type: Microsoft_BotManagerRuleSet
+              rule_set_version: 1.0
+            - rule_set_type: Microsoft_DefaultRuleSet
+              rule_set_version: 2.1
+        tags:
+          key1: value1
+
     - name: Try to create waf_v2 instance of Application Gateway with waf configuration
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
@@ -1391,6 +1447,8 @@
           request_body_check: true
           max_request_body_size_in_kb: 128
           file_upload_limit_in_mb: 100
+          firewall_policy:
+            name: "wafpolicy{{ rpfx }}"
       register: output
 
     - name: Assert the resource instance is well created
@@ -1558,6 +1616,8 @@
           request_body_check: true
           max_request_body_size_in_kb: 128
           file_upload_limit_in_mb: 100
+          firewall_policy:
+            name: "wafpolicy{{ rpfx }}"
       register: output
 
     - name: Assert the resource instance is not updated
