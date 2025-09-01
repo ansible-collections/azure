@@ -593,7 +593,7 @@ def compare_rules_change(old_list, new_list, purge_list):
 
 def compare_rules(old_rule, rule):
     def compare_list_rule(old_rule, rule, key):
-        return set(map(str, rule.get(key) or [])) != set(map(str, old_rule.get(key) or []))
+        return set(map(lambda x: str(x).lower(), rule.get(key) or [])) != set(map(lambda x: str(x).lower(), old_rule.get(key) or []))
     changed = False
     if old_rule['name'].lower() != rule['name'].lower():
         changed = True
