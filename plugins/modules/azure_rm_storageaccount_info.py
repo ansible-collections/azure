@@ -229,10 +229,12 @@ storageaccounts:
                         - The identity to be used with service-side encryption at rest.
                     type: dict
                     returned: always
-                    sample: {"encryption_user_assigned_identity": "/subscriptions/xxxx/resourcegroups/testRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-11"}
+                    sample: {"encryption_user_assigned_identity": \
+                        "/subscriptions/xxxx/resourcegroups/testRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-11"}
                 key_vault_properties:
                     description:
-                        - Dictt of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                        - Dict of Microsoft Keyvault properties.
+                        - Create the Storage account with encryption enabled with Microsoft KeyVault for CMK.
                     type: dict
                     returned: always
                     sample: {"key_name": "testkey",
@@ -860,7 +862,8 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 if account_obj.encryption.services.blob:
                     account_dict['encryption']['services']['blob'] = dict(enabled=True)
             if account_obj.encryption.encryption_identity:
-                account_dict['encryption']['encryption_identity'] = dict(encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
+                account_dict['encryption']['encryption_identity'] = dict(
+                    encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
             else:
                 account_dict['encryption']['encryption_identity'] = None
             if account_obj.encryption.key_vault_properties:

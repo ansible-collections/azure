@@ -15,7 +15,8 @@
         location: "{{ __rg_info.resourcegroups.0.location }}"
         storage_account_name_default: "sa{{ resource_group | hash('md5') | truncate(20, True, '') }}"
         storage_account_name_explicit: "sa{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
-        rpfx: "vault{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
+        tenant_id: "{{ azure_tenant }}"
         new_resource_group: "{{ resource_group }}-storageaccount"
 
     - name: Create identities array

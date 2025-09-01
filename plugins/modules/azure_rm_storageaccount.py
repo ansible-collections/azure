@@ -600,10 +600,12 @@ state:
                         - The identity to be used with service-side encryption at rest.
                     type: dict
                     returned: always
-                    sample: {"encryption_user_assigned_identity": "/subscriptions/xxxx/resourcegroups/testRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-11"}
+                    sample: {"encryption_user_assigned_identity": \
+                             "/subscriptions/xxxx/resourcegroups/testRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-11"}
                 key_vault_properties:
                     description:
-                        - Dictt of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                        - Dict of Microsoft Keyvault properties.
+                        - Create the Storage account with encryption enabled with Microsoft KeyVault for CMK.
                     type: dict
                     returned: always
                     sample: {"key_name": "testkey",
@@ -1239,7 +1241,8 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                         account_dict['encryption']['services']['blob'] = dict(enabled=True)
 
                 if account_obj.encryption.encryption_identity:
-                    account_dict['encryption']['encryption_identity'] = dict(encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
+                    account_dict['encryption']['encryption_identity'] = dict(
+                        encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
                 else:
                     account_dict['encryption']['encryption_identity'] = None
                 if account_obj.encryption.key_vault_properties:
@@ -1546,9 +1549,11 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                     encryption_changed = True
                 if self.encryption.get('blob') is not None and self.account_dict['encryption']['services'].get('blob') is not None:
                     encryption_changed = True
-            if not self.default_compare({}, self.encryption.get('key_vault_properties'), self.account_dict['encryption'].get('key_vault_properties'), '', dict(compare=[])):
+            if not self.default_compare({}, self.encryption.get('key_vault_properties'),
+                                        self.account_dict['encryption'].get('key_vault_properties'), '', dict(compare=[])):
                 encryption_changed = True
-            if not self.default_compare({}, self.encryption.get('encryption_identity'), self.account_dict['encryption'].get('encryption_identity'), '', dict(compare=[])):
+            if not self.default_compare({}, self.encryption.get('encryption_identity'),
+                                        self.account_dict['encryption'].get('encryption_identity'), '', dict(compare=[])):
                 encryption_changed = True
 
             if encryption_changed and not self.check_mode:
