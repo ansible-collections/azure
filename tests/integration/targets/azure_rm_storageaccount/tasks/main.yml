@@ -772,7 +772,7 @@
           require_infrastructure_encryption: false
           key_source: Microsoft.Keyvault
           key_vault_properties:
-            key_vault_uri: https://vaultestfred001.vault.azure.net
+            key_vault_uri: https://vault{{ rpfx }}.vault.azure.net
             key_name: testkey
           encryption_identity:
             encryption_user_assigned_identity: "{{ managed_identity_ids[0] }}"
