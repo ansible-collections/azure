@@ -746,13 +746,11 @@
               - get
               - wrapkey
               - unwrapkey
-      register: output
 
     - name: Create a new keyvault key
       azure.azcollection.azure_rm_keyvaultkey:
         keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
         key_name: testkey
-      register: output
 
     - name: Create new storage account with (require_infrastructure_encryption=false) and (key_source=Microsoft.Keyvault)
       azure.azcollection.azure_rm_storageaccount:
@@ -787,7 +785,7 @@
       azure.azcollection.azure_rm_storageaccount_info:
         resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}05"
-      register: encryption_output
+      register: output
 
     - name: Assert the storage account facts
       ansible.builtin.assert:
