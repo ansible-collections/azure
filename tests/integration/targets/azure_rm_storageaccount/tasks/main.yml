@@ -717,7 +717,7 @@
         resource_group: "{{ resource_group }}-storageaccount"
         provider: ManagedIdentity
         resource_type: userAssignedIdentities
-        resource_name: "ansible-test-{{ managed_identity_test_unique }}-identity-1"
+        resource_name: "ansible-test-storageaccount-identity-1"
         api_version: "2023-01-31"
       register: identity_output
 
