@@ -712,6 +712,15 @@
                        azure_tenant=tenant_id) }}"
       register: object_id_facts
 
+    - name: Get the user managed identity object_id
+      azure.azcollection.azure_rm_resource_info:
+        resource_group: "{{ resource_group }}-storageaccount"
+        provider: ManagedIdentity
+        resource_type: userAssignedIdentities
+        resource_name: "ansible-test-{{ managed_identity_test_unique }}-identity-1"
+        api_version: "2023-01-31"
+      register: identity_output
+
     - name: Create instance of Key Vault
       azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-storageaccount"
@@ -719,15 +728,20 @@
         enabled_for_deployment: true
         enable_purge_protection: true
         vault_tenant: "{{ tenant_id }}"
-        identity:
-          type: UserAssigned
-          user_assigned_identity: "{{ managed_identity_ids[0] }}"
         sku:
           name: standard
           family: A
         access_policies:
           - tenant_id: "{{ tenant_id }}"
             object_id: '{{ object_id }}'
+            keys:
+              - get
+              - wrapkey
+              - unwrapkey
+              - list
+              - create
+          - tenant_id: "{{ tenant_id }}"
+            object_id: '{{ identity_output.response[0].properties.principalId }}'
             keys:
               - get
               - wrapkey
