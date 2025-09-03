@@ -104,12 +104,17 @@ options:
     sku:
         description:
             - The reference of the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
-        default: VpnGw1
+        default: VpnGw1AZ
         type: str
         choices:
             - VpnGw1
             - VpnGw2
             - VpnGw3
+            - VpnGw1AZ
+            - VpnGw2AZ
+            - VpnGw3AZ
+            - VpnGw4AZ
+            - VpnGw5AZ
             - Standard
             - Basic
             - HighPerformance
@@ -273,7 +278,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             vpn_type=dict(type='str', default='route_based', choices=['route_based', 'policy_based']),
             vpn_gateway_generation=dict(type='str', default='Generation1', choices=['None', 'Generation1', 'Generation2']),
             enable_bgp=dict(type='bool', default=False),
-            sku=dict(type='str', default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
+            sku=dict(type='str', default='VpnGw1AZ', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'VpnGw1AZ', 'VpnGw2AZ', 'VpnGw3AZ', 'VpnGw4AZ', 'VpnGw5AZ', 'Standard', 'Basic', 'HighPerformance']),
             bgp_settings=dict(type='dict', options=bgp_spec),
             virtual_network=dict(type='raw', aliases=['virtual_network_name'])
         )
