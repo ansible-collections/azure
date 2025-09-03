@@ -392,7 +392,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         if self.present_owners or self.absent_owners:
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_owners(group_id))
-            current_owners = [object.id for object in ret.value]
+            current_owners = [object.id for object in ret]
 
         if self.present_owners:
 
