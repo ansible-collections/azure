@@ -497,6 +497,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         return await self._client.groups.by_group_id(group_id).get()
 
     async def get_group_list(self, filter=None):
+        kwargs = {}
         if filter:
             request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
                 query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
@@ -504,13 +505,16 @@ class AzureRMADGroup(AzureRMModuleBase):
                     filter=filter,
                 ),
             )
-            groups = await self._client.groups.get(request_configuration=request_configuration)
-        else:
-            groups = await self._client.groups.get()
-
-        if groups and groups.value:
-            return groups.value
-        return []
+            kwargs["request_configuration"] = request_configuration
+        response = await self._client.groups.get(**kwargs)
+        groups = []
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.with_url(response.odata_next_link).get(**kwargs)
+            if response:
+                groups += response.value
+        return groups
 
     async def get_group_members(self, group_id, filters=None):
         if self.raw_membership:
@@ -528,7 +532,16 @@ class AzureRMADGroup(AzureRMModuleBase):
             request_configuration.query_parameters.filter = filters
         response = await self._client.groups.by_group_id(group_id).transitive_members.get(
             request_configuration=request_configuration)
-        return response.value
+
+        groups = []
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.by_group_id(group_id).transitive_members.with_url(response.odata_next_link).get(
+                request_configuration=request_configuration)
+            if response:
+                groups += response.value
+        return groups
 
     async def get_raw_group_members(self, group_id, filters=None):
         request_configuration = GroupItemRequestBuilder.GroupItemRequestBuilderGetRequestConfiguration(
@@ -540,8 +553,16 @@ class AzureRMADGroup(AzureRMModuleBase):
         )
         if filters:
             request_configuration.query_parameters.filter = filters
-        group = await self._client.groups.by_group_id(group_id).get(request_configuration=request_configuration)
-        return group.members
+        groups = []
+        response  = await self._client.groups.by_group_id(group_id).get(request_configuration=request_configuration)
+        if response:
+            groups += response.members
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.by_group_id(group_id).members.with_url(response.odata_next_link).get(
+                request_configuration=request_configuration)
+            if response:
+                groups += response.members
+        return groups
 
     async def add_group_member(self, group_id, obj_id):
         request_body = ReferenceCreate(
@@ -558,7 +579,16 @@ class AzureRMADGroup(AzureRMModuleBase):
                 count=True,
             ),
         )
-        return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
+        response = await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
+        groups = []
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.by_group_id(group_id).owners.with_url(response.odata_next_link).get(
+                request_configuration=request_configuration)
+            if response:
+                groups += response.value
+        return groups
 
     async def add_group_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
