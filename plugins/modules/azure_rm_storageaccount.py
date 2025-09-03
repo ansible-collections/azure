@@ -320,6 +320,34 @@ options:
                 choices:
                     - Microsoft.Storage
                     - Microsoft.Keyvault
+            key_vault_properties:
+                description:
+                  - list of Microsoft Keyvault properties needed in order to create Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                type: dict
+                suboptions:
+                  key_vault_uri:
+                    description:
+                        - The Uri of KeyVault.
+                    type: str
+                    required: true
+                  key_name:
+                    description:
+                      - The name of KeyVault key.
+                    type: str
+                    required: true
+                  key_version:
+                    description:
+                      - The version of KeyVault key.
+                    type: str
+            encryption_identity:
+                description:
+                    - The identity to be used with service-side encryption at rest.
+                type: dict
+                suboptions:
+                  encryption_user_assigned_identity:
+                    description:
+                      - Resource identifier of the UserAssigned identity to be associated with server-side encryption on the storage account.
+                    type: str
             require_infrastructure_encryption:
                 description:
                     - A boolean indicating whether or not the service applies a secondary layer of encryption with platform managed keys for data at rest.
@@ -442,6 +470,30 @@ EXAMPLES = '''
         exposed_headers:
           - x-ms-meta-*
         max_age_in_seconds: 200
+
+- name: Create new storage account with (key_source=Microsoft.Keyvault)
+  azure.azcollection.azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}"
+    name: "{{ storage_account_name }}"
+    account_type: Standard_RAGRS
+    kind: StorageV2
+    identity:
+      type: UserAssigned
+      user_assigned_identity: "{{ managed_identity_ids[0] }}"
+    encryption:
+      services:
+        blob:
+          enabled: true
+        file:
+          enabled: true
+      require_infrastructure_encryption: false
+      key_source: Microsoft.Keyvault
+      key_vault_properties:
+        key_vault_uri: "https://vaultestfred001.vault.azure.net/"
+        key_name: testkey
+        key_version: 0bd2556671c64fc998095603878beb12
+      encryption_identity:
+        encryption_user_assigned_identity: "{{ managed_identity_ids[0] }}"
 '''
 
 
@@ -543,6 +595,22 @@ state:
                             type: dict
                             returned: always
                             sample: {'enabled': true}
+                encryption_identity:
+                    description:
+                        - The identity to be used with service-side encryption at rest.
+                    type: dict
+                    returned: always
+                    sample: {"encryption_user_assigned_identity": \
+                             "/subscriptions/xxxx/resourcegroups/testRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-11"}
+                key_vault_properties:
+                    description:
+                        - Dict of Microsoft Keyvault properties.
+                        - Create the Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                    type: dict
+                    returned: always
+                    sample: {"key_name": "testkey",
+                             "key_vault_uri": "https://vxxxxxxx01.vault.azure.net/",
+                             "key_version": "0bd2556671c64fc998xxxxeb12"}
         id:
             description:
                 - Resource ID.
@@ -897,7 +965,21 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                         )
                     ),
                     require_infrastructure_encryption=dict(type='bool'),
-                    key_source=dict(type='str', choices=["Microsoft.Storage", "Microsoft.Keyvault"], default='Microsoft.Storage')
+                    key_source=dict(type='str', choices=["Microsoft.Storage", "Microsoft.Keyvault"], default='Microsoft.Storage'),
+                    key_vault_properties=dict(
+                        type='dict',
+                        options=dict(
+                            key_vault_uri=dict(type='str', required=True, no_log=True),
+                            key_name=dict(type='str', required=True),
+                            key_version=dict(type='str', no_log=True)
+                        ), no_log=True
+                    ),
+                    encryption_identity=dict(
+                        type='dict',
+                        options=dict(
+                            encryption_user_assigned_identity=dict(type='str', required=False)  # This will hold the resource ID of the user-assigned identity
+                        )
+                    )
                 )
             ),
             identity=dict(
@@ -1157,6 +1239,18 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                         account_dict['encryption']['services']['queue'] = dict(enabled=True)
                     if account_obj.encryption.services.blob:
                         account_dict['encryption']['services']['blob'] = dict(enabled=True)
+
+                if account_obj.encryption.encryption_identity:
+                    account_dict['encryption']['encryption_identity'] = dict(
+                        encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
+                else:
+                    account_dict['encryption']['encryption_identity'] = None
+                if account_obj.encryption.key_vault_properties:
+                    account_dict['encryption']['key_vault_properties'] = dict(key_vault_uri=account_obj.encryption.key_vault_properties.key_vault_uri,
+                                                                              key_name=account_obj.encryption.key_vault_properties.key_name,
+                                                                              key_version=account_obj.encryption.key_vault_properties.key_version)
+                else:
+                    account_dict['encryption']['key_vault_properties'] = None
 
             account_dict['identity'] = dict()
             if account_obj.identity:
@@ -1455,6 +1549,12 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                     encryption_changed = True
                 if self.encryption.get('blob') is not None and self.account_dict['encryption']['services'].get('blob') is not None:
                     encryption_changed = True
+            if not self.default_compare({}, self.encryption.get('key_vault_properties'),
+                                        self.account_dict['encryption'].get('key_vault_properties'), '', dict(compare=[])):
+                encryption_changed = True
+            if not self.default_compare({}, self.encryption.get('encryption_identity'),
+                                        self.account_dict['encryption'].get('encryption_identity'), '', dict(compare=[])):
+                encryption_changed = True
 
             if encryption_changed and not self.check_mode:
                 self.fail("The encryption can't update encryption, encryption info as {0}".format(self.account_dict['encryption']))

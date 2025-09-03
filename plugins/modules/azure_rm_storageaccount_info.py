@@ -224,6 +224,22 @@ storageaccounts:
                             type: dict
                             returned: always
                             sample: {'enabled': true}
+                encryption_identity:
+                    description:
+                        - The identity to be used with service-side encryption at rest.
+                    type: dict
+                    returned: always
+                    sample: {"encryption_user_assigned_identity": \
+                        "/subscriptions/xxxx/resourcegroups/testRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-11"}
+                key_vault_properties:
+                    description:
+                        - Dict of Microsoft Keyvault properties.
+                        - Create the Storage account with encryption enabled with Microsoft KeyVault for CMK.
+                    type: dict
+                    returned: always
+                    sample: {"key_name": "testkey",
+                             "key_vault_uri": "https://vxxxxxxx01.vault.azure.net/",
+                             "key_version": "0bd2556671c64fc998xxxxeb12"}
         is_hns_enabled:
             description:
                 - Account HierarchicalNamespace enabled if sets to true.
@@ -845,6 +861,17 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                     account_dict['encryption']['services']['queue'] = dict(enabled=True)
                 if account_obj.encryption.services.blob:
                     account_dict['encryption']['services']['blob'] = dict(enabled=True)
+            if account_obj.encryption.encryption_identity:
+                account_dict['encryption']['encryption_identity'] = dict(
+                    encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
+            else:
+                account_dict['encryption']['encryption_identity'] = None
+            if account_obj.encryption.key_vault_properties:
+                account_dict['encryption']['key_vault_properties'] = dict(key_vault_uri=account_obj.encryption.key_vault_properties.key_vault_uri,
+                                                                          key_name=account_obj.encryption.key_vault_properties.key_name,
+                                                                          key_version=account_obj.encryption.key_vault_properties.key_version)
+            else:
+                account_dict['encryption']['key_vault_properties'] = None
 
         account_dict['identity'] = dict()
         if account_obj.identity:

@@ -15,6 +15,8 @@
         location: "{{ __rg_info.resourcegroups.0.location }}"
         storage_account_name_default: "sa{{ resource_group | hash('md5') | truncate(20, True, '') }}"
         storage_account_name_explicit: "sa{{ resource_group | hash('sha1') | truncate(20, True, '') }}"
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
+        tenant_id: "{{ azure_tenant }}"
         new_resource_group: "{{ resource_group }}-storageaccount"
 
     - name: Create identities array
@@ -702,11 +704,63 @@
           - output.storageaccounts[0].static_website.index_document == None
           - output.storageaccounts[0].static_website.error_document404_path == None
 
-    - name: Create new storage account with (require_infrastructure_encryption=false)
+    - name: Lookup service principal object id
+      ansible.builtin.set_fact:
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=tenant_id) }}"
+      register: object_id_facts
+
+    - name: Get the user managed identity object_id
+      azure.azcollection.azure_rm_resource_info:
+        resource_group: "{{ resource_group }}-storageaccount"
+        provider: ManagedIdentity
+        resource_type: userAssignedIdentities
+        resource_name: "ansible-test-storageaccount-identity-1"
+        api_version: "2023-01-31"
+      register: identity_output
+
+    - name: Create instance of Key Vault
+      azure.azcollection.azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-storageaccount"
+        vault_name: "vault{{ rpfx }}"
+        enabled_for_deployment: true
+        enable_purge_protection: true
+        vault_tenant: "{{ tenant_id }}"
+        sku:
+          name: standard
+          family: A
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: '{{ object_id }}'
+            keys:
+              - get
+              - wrapkey
+              - unwrapkey
+              - list
+              - create
+          - tenant_id: "{{ tenant_id }}"
+            object_id: '{{ identity_output.response[0].properties.principalId }}'
+            keys:
+              - get
+              - wrapkey
+              - unwrapkey
+
+    - name: Create a new keyvault key
+      azure.azcollection.azure_rm_keyvaultkey:
+        keyvault_uri: https://vault{{ rpfx }}.vault.azure.net
+        key_name: testkey
+
+    - name: Create new storage account with (require_infrastructure_encryption=false) and (key_source=Microsoft.Keyvault)
       azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}05"
         account_type: Standard_RAGRS
+        kind: StorageV2
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
         encryption:
           services:
             blob:
@@ -714,27 +768,34 @@
             file:
               enabled: true
           require_infrastructure_encryption: false
-          key_source: Microsoft.Storage
+          key_source: Microsoft.Keyvault
+          key_vault_properties:
+            key_vault_uri: https://vault{{ rpfx }}.vault.azure.net
+            key_name: testkey
+          encryption_identity:
+            encryption_user_assigned_identity: "{{ managed_identity_ids[0] }}"
       register: encryption_output
 
-    - name: Assert storage account with (require_infrastructure_encryption=false) created
+    - name: Assert storage account with (require_infrastructure_encryption=false) and (key_source=Microsoft.Keyvault) created
       ansible.builtin.assert:
         that:
           - encryption_output is changed
 
-    - name: Get account with (require_infrastructure_encryption=false)
+    - name: Get account with (require_infrastructure_encryption=false) and (key_source=Microsoft.Keyvault)
       azure.azcollection.azure_rm_storageaccount_info:
         resource_group: "{{ resource_group }}-storageaccount"
         name: "{{ storage_account_name_default }}05"
-      register: encryption_output
+      register: output
 
     - name: Assert the storage account facts
       ansible.builtin.assert:
         that:
           - output.storageaccounts | length == 1
-          - output.storageaccounts[0].encryption.key_source == 'Microsoft.Storage'
+          - output.storageaccounts[0].encryption.key_source == 'Microsoft.Keyvault'
           - not output.storageaccounts[0].encryption.require_infrastructure_encryption
           - output.storageaccounts[0].encryption.services | length == 2
+          - output.storageaccounts[0].encryption.key_vault_properties.key_name == 'testkey'
+          - output.storageaccounts[0].encryption.encryption_identity |length == 1
 
     - name: Create a storage account with allow_shared_key_access
       azure.azcollection.azure_rm_storageaccount:
