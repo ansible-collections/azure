@@ -476,7 +476,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
         if results["object_id"] and (self.present_owners or self.absent_owners):
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_owners(results["object_id"]))
-            results["group_owners"] = [self.result_to_dict(object) for object in ret.value]
+            results["group_owners"] = [self.result_to_dict(object) for object in ret]
 
         if results["object_id"] and (self.present_members or self.absent_members):
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))
@@ -548,20 +548,20 @@ class AzureRMADGroup(AzureRMModuleBase):
             query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
                 # this ensures service principals are returned
                 # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
-                expand=["members"]
+                # expand=["members"]
             ),
         )
         if filters:
             request_configuration.query_parameters.filter = filters
+        response  = await self._client.groups.by_group_id(group_id).members.get(request_configuration=request_configuration)
         groups = []
-        response  = await self._client.groups.by_group_id(group_id).get(request_configuration=request_configuration)
         if response:
-            groups += response.members
+            groups += response.value
         while response is not None and response.odata_next_link is not None:
             response = await self._client.groups.by_group_id(group_id).members.with_url(response.odata_next_link).get(
                 request_configuration=request_configuration)
             if response:
-                groups += response.members
+                groups += response.value
         return groups
 
     async def add_group_member(self, group_id, obj_id):

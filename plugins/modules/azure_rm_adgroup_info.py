@@ -410,7 +410,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
                 # this ensures service principals are returned
                 # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
-                expand=["members"]
+                # expand=["members"]
             ),
         )
         if filters:
@@ -432,7 +432,6 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         request_body = GetMemberGroupsPostRequestBody(security_enabled_only=False)
         response = await self._client.groups.by_group_id(obj_id).get_member_groups.post(body=request_body)
         groups = []
-
         if response:
             groups += response.value
         while response is not None and response.odata_next_link is not None:
