@@ -553,7 +553,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         )
         if filters:
             request_configuration.query_parameters.filter = filters
-        response  = await self._client.groups.by_group_id(group_id).members.get(request_configuration=request_configuration)
+        response = await self._client.groups.by_group_id(group_id).members.get(request_configuration=request_configuration)
         groups = []
         if response:
             groups += response.value
