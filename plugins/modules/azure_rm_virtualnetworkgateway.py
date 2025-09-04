@@ -104,7 +104,7 @@ options:
     sku:
         description:
             - The reference of the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
-        default: VpnGw1AZ
+        default: VpnGw1
         type: str
         choices:
             - VpnGw1
