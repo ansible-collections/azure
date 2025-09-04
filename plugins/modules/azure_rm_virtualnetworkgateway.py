@@ -110,14 +110,18 @@ options:
             - VpnGw1
             - VpnGw2
             - VpnGw3
+            - Standard
+            - Basic
+            - HighPerformance
             - VpnGw1AZ
             - VpnGw2AZ
             - VpnGw3AZ
             - VpnGw4AZ
             - VpnGw5AZ
-            - Standard
-            - Basic
-            - HighPerformance
+            - ErGw1AZ
+            - ErGw2AZ
+            - ErGw3AZ
+            - ErGwScale
     vpn_gateway_generation:
         description:
             - The generation for this VirtualNetworkGateway. Must be C(None) if C(gateway_type) is not VPN.
