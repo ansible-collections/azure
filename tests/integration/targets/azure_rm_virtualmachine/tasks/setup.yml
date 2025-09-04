@@ -25,3 +25,12 @@
     name: "{{ subnet_name }}"
     address_prefix: "{{ subnet }}"
     virtual_network: "{{ network_name }}"
+
+- name: Create network interface
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    open_ports:
+      - 33
+    virtual_network: "{{ network_name }}"
+    subnet: "{{ subnet_name }}"

@@ -21,6 +21,16 @@
         virtual_network: "{{ async_virtual_network }}-{{ item }}"
       with_sequence: start=1 end="{{ async_number_virtual_machine }}"
 
+    - name: Create network interface
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-multidisk"
+        name: "{{ async_interface }}-{{ item }}"
+        open_ports:
+          - 33
+        virtual_network: "{{ async_virtual_network }}-{{ item }}"
+        subnet: "{{ async_subnet }}-{{ item }}"
+      with_sequence: start=1 end="{{ async_number_virtual_machine }}"
+
     - name: Create virtual machines
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-multidisk"
@@ -28,6 +38,7 @@
         vm_size: Standard_B1ms
         managed_disk_type: Standard_LRS
         virtual_network: "{{ async_virtual_network }}-{{ item }}"
+        network_interfaces: "{{ async_interface }}-{{ item }}"
         admin_username: adminuser
         admin_password: "{{ password }}"
         open_ports:
