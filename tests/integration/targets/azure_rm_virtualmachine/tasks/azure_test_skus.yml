@@ -99,7 +99,7 @@
 - name: Query auto created security group before deleting
   azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
   register: nsg_result
 
 - name: Assert that security group were exist before deleting
@@ -118,20 +118,14 @@
 - name: Query auto created NIC
   azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
   register: nic_result
 
 - name: Query auto created security group
   azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
   register: nsg_result
-
-- name: Query auto created public IP
-  azure.azcollection.azure_rm_publicipaddress_info:
-    resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
-  register: pip_result
 
 - name: Assert that autocreated resources were deleted
   ansible.builtin.assert:
@@ -139,7 +133,12 @@
       # what about the default storage group?
       - nic_result.networkinterfaces | length == 0
       - nsg_result.securitygroups | length == 0
-      - pip_result.publicipaddresses | length == 0
+
+- name: Delete the network interface
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    state: absent
 
 - name: Destroy subnet
   azure.azcollection.azure_rm_subnet:

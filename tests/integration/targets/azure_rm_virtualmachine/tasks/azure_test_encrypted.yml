@@ -30,7 +30,7 @@
 - name: Query auto created security group before deleting
   azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
   register: nsg_result
 
 - name: Assert that security group were exist before deleting
@@ -52,23 +52,16 @@
     name: "{{ vm_name }}"
     state: absent
 
-- name: Destroy auto created NIC
+- name: Delete the network interface
   azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
     state: absent
-  register: nic_result
 
 - name: Destroy security group
   azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
-    state: absent
-
-- name: Destroy auto created public IP
-  azure.azcollection.azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
     state: absent
 
 - name: Destroy subnet

@@ -77,6 +77,12 @@
     state: absent
     remove_on_absent: all_autocreated
 
+- name: Delete the network interface
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    state: absent
+
 - name: Destroy subnet
   azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"

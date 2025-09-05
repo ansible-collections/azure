@@ -24,6 +24,12 @@
             remove_on_absent: all_autocreated
             state: absent
 
+        - name: Delete the network interface
+          azure.azcollection.azure_rm_networkinterface:
+            resource_group: "{{ resource_group }}-inventory"
+            name: "{{ interface_name }}"
+            state: absent
+
         - name: Destroy subnet
           azure.azcollection.azure_rm_subnet:
             resource_group: "{{ resource_group }}-inventory"
@@ -35,6 +41,12 @@
           azure.azcollection.azure_rm_virtualnetwork:
             resource_group: "{{ resource_group }}-inventory"
             name: "{{ network_name }}"
+            state: absent
+
+        - name: Delete the network interface --- secondary
+          azure.azcollection.azure_rm_networkinterface:
+            resource_group: "{{ resource_group }}-inventory"
+            name: "{{ interface_name_2 }}"
             state: absent
 
         - name: Destroy subnet ---- secondary
