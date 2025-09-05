@@ -58,6 +58,7 @@
           - 33
         virtual_network: "{{ network_name }}"
         subnet: "{{ subnet_name }}"
+        location: eastus
 
     - name: Create network interface --- secondary
       azure.azcollection.azure_rm_networkinterface:
