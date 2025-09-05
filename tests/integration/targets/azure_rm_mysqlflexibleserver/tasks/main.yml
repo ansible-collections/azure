@@ -8,6 +8,7 @@
     - name: Prepare random number
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+        location: westeurope
       run_once: true
 
     - name: Create mysql flexible server (Checkmode test)
@@ -19,14 +20,14 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
+        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
           iops: 684
           auto_grow: Enabled
         high_availability:
-          mode: ZoneRedundant
+          mode: Disabled
           standby_availability_zone: 3
         backup:
           backup_retention_days: 6
@@ -45,14 +46,14 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
+        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
           iops: 684
           auto_grow: Enabled
         high_availability:
-          mode: ZoneRedundant
+          mode: Disabled
           standby_availability_zone: 3
         backup:
           backup_retention_days: 6
@@ -76,14 +77,14 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
+        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
           iops: 684
           auto_grow: Enabled
         high_availability:
-          mode: ZoneRedundant
+          mode: Disabled
           standby_availability_zone: 3
         backup:
           backup_retention_days: 6
@@ -107,14 +108,14 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
+        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
           iops: 684
           auto_grow: Enabled
         high_availability:
-          mode: ZoneRedundant
+          mode: Disabled
           standby_availability_zone: 3
         backup:
           backup_retention_days: 7
