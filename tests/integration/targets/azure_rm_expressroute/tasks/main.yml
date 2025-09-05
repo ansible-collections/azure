@@ -1,17 +1,18 @@
 - name: Create a new resource group for express route test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-expressroute"
-    location: eastus
+    location: westus2
 
 - name: For express route test
   block:
     - name: Create random express route
       ansible.builtin.set_fact:
         express_route: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+        location: westus2
 
     - name: Create Express route (check mode)
       azure.azcollection.azure_rm_expressroute:
-        location: eastus
+        location: "{{ location }}"
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
         allow_classic_operations: true
@@ -37,7 +38,7 @@
 
     - name: Create Express route
       azure.azcollection.azure_rm_expressroute:
-        location: eastus
+        location: "{{ location }}"
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
         allow_classic_operations: true
@@ -62,7 +63,7 @@
 
     - name: Update Express route
       azure.azcollection.azure_rm_expressroute:
-        location: eastus
+        location: "{{ location }}"
         name: "{{ express_route }}"
         resource_group: "{{ resource_group }}-expressroute"
         allow_classic_operations: true
