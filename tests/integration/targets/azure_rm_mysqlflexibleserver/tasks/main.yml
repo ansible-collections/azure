@@ -1,14 +1,13 @@
 - name: Create a new resource group for mysql flexible server test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-mysqlflexibleserver"
-    location: eastus
+    location: southeastasia
 
 - name: For mysql flexible server test
   block:
     - name: Prepare random number
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
-        location: southeastasia
       run_once: true
 
     - name: Create mysql flexible server (Checkmode test)
@@ -20,7 +19,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
@@ -46,7 +44,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
@@ -77,7 +74,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128
@@ -108,7 +104,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: "{{ location }}"
         version: 5.7
         storage:
           storage_size_gb: 128

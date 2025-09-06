@@ -1,7 +1,7 @@
 - name: Create a new resource group for cosmosdb account test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
-    location: eastus
+    location: westus2
   loop:
     - cosmosdbaccount01
     - cosmosdbaccount02
