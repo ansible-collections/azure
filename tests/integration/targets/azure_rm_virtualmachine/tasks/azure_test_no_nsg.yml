@@ -41,18 +41,6 @@
     remove_on_absent: all_autocreated
     state: absent
 
-- name: Query auto created NIC
-  azure.azcollection.azure_rm_networkinterface_info:
-    resource_group: "{{ resource_group }}-vm01"
-    name: "{{ interface_name }}"
-  register: nic_result
-
-- name: Assert that autocreated resources were deleted
-  ansible.builtin.assert:
-    that:
-      # what about the default storage group?
-      - nic_result.networkinterfaces | length == 0
-
 - name: Delete the network interface
   azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}-vm01"

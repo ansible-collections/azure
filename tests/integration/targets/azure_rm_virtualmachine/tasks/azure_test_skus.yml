@@ -73,6 +73,7 @@
       - 33
     virtual_network: "{{ network_name }}"
     subnet: "{{ subnet_name }}"
+    location: westus2
 
 - name: Create VM with first sku in avilable skus list
   azure.azcollection.azure_rm_virtualmachine:

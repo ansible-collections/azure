@@ -50,6 +50,7 @@
       - 33
     virtual_network: "{{ network_name }}"
     subnet: "{{ subnet_name }}"
+    location: "{{ location }}"
 
 - name: Create VM with first Image SKU result
   azure.azcollection.azure_rm_virtualmachine:
