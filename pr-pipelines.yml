@@ -177,7 +177,7 @@ pr:
   - dev
 
 pool:
-  name: pool-ubuntu-2004
+  name: pool-ubuntu-2404
 
 jobs:
   - job: InitializationTest
