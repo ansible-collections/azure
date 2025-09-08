@@ -24,7 +24,7 @@
         service_provider_properties:
           service_provider_name: Coresite
           peering_location: Denver
-          bandwidth_in_mbps: 1000
+          bandwidth_in_mbps: 50
         sku:
           tier: standard
           family: metereddata
@@ -50,7 +50,7 @@
         service_provider_properties:
           service_provider_name: Coresite
           peering_location: Denver
-          bandwidth_in_mbps: 1000
+          bandwidth_in_mbps: 50
         sku:
           tier: standard
           family: metereddata
@@ -75,7 +75,7 @@
         service_provider_properties:
           service_provider_name: Coresite
           peering_location: Denver
-          bandwidth_in_mbps: 1000
+          bandwidth_in_mbps: 50
         sku:
           tier: standard
           family: metereddata
