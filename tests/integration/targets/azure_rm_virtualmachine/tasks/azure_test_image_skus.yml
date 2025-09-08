@@ -51,6 +51,7 @@
     virtual_network: "{{ network_name }}"
     subnet: "{{ subnet_name }}"
     location: "{{ location }}"
+    create_with_security_group: false
 
 - name: Create VM with first Image SKU result
   azure.azcollection.azure_rm_virtualmachine:
@@ -110,4 +111,10 @@
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ storage_account }}"
     force_delete_nonempty: true
+    state: absent
+
+- name: Destroy virtual network
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ network_name }}"
     state: absent
