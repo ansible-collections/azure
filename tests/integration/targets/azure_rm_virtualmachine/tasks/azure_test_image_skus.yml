@@ -66,6 +66,7 @@
     vm_size: Standard_B1ms
     network_interfaces: "{{ interface_name }}"
     virtual_network: "{{ network_name }}"
+    location: "{{ location }}"
     image:
       offer: "{{ offer }}"
       publisher: "{{ publisher }}"
