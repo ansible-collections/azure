@@ -113,6 +113,15 @@ options:
             - Standard
             - Basic
             - HighPerformance
+            - VpnGw1AZ
+            - VpnGw2AZ
+            - VpnGw3AZ
+            - VpnGw4AZ
+            - VpnGw5AZ
+            - ErGw1AZ
+            - ErGw2AZ
+            - ErGw3AZ
+            - ErGwScale
     vpn_gateway_generation:
         description:
             - The generation for this VirtualNetworkGateway. Must be C(None) if C(gateway_type) is not VPN.
@@ -273,7 +282,11 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             vpn_type=dict(type='str', default='route_based', choices=['route_based', 'policy_based']),
             vpn_gateway_generation=dict(type='str', default='Generation1', choices=['None', 'Generation1', 'Generation2']),
             enable_bgp=dict(type='bool', default=False),
-            sku=dict(type='str', default='VpnGw1', choices=['VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance']),
+            sku=dict(type='str', default='VpnGw1', choices=[
+                'VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance',
+                'VpnGw1AZ', 'VpnGw2AZ', 'VpnGw3AZ', 'VpnGw4AZ', 'VpnGw5AZ',
+                'ErGw1AZ', 'ErGw2AZ', 'ErGw3AZ', 'ErGwScale'
+            ]),
             bgp_settings=dict(type='dict', options=bgp_spec),
             virtual_network=dict(type='raw', aliases=['virtual_network_name'])
         )
