@@ -1,7 +1,7 @@
 - name: Create a new resource group for cosmosdb account test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
-    location: eastus
+    location: westus
   loop:
     - cosmosdbaccount01
     - cosmosdbaccount02
@@ -20,7 +20,7 @@
 
     - name: Set secondary location if not already defined
       ansible.builtin.set_fact:
-        location_secondary: westus
+        location_secondary: westus2
       when: location_secondary is undefined
 
     - name: Create identities array

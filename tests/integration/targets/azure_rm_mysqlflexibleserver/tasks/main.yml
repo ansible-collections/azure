@@ -1,7 +1,7 @@
 - name: Create a new resource group for mysql flexible server test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-mysqlflexibleserver"
-    location: eastus
+    location: southeastasia
 
 - name: For mysql flexible server test
   block:
@@ -19,7 +19,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
         version: 5.7
         storage:
           storage_size_gb: 128
@@ -45,7 +44,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
         version: 5.7
         storage:
           storage_size_gb: 128
@@ -76,7 +74,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
         version: 5.7
         storage:
           storage_size_gb: 128
@@ -107,7 +104,6 @@
           tier: GeneralPurpose
         administrator_login: azureuser
         administrator_login_password: Fred@0329
-        location: northeurope
         version: 5.7
         storage:
           storage_size_gb: 128

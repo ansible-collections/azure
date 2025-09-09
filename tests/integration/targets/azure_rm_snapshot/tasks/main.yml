@@ -23,6 +23,15 @@
         address_prefix: "10.0.1.0/24"
         virtual_network: "testVnet{{ rpfx }}"
 
+    - name: Create network interface
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-snapshot"
+        name: "interface{{ rpfx }}"
+        open_ports:
+          - 33
+        virtual_network: "testVnet{{ rpfx }}"
+        subnet: "testSubnet{{ rpfx }}"
+
     - name: Create gen1 VM
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-snapshot"
@@ -30,6 +39,7 @@
         location: eastus
         admin_username: testuser
         ssh_password_enabled: false
+        network_interfaces: "interface{{ rpfx }}"
         open_ports:
           - 33
         ssh_public_keys:

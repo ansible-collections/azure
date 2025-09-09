@@ -16,6 +16,7 @@
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
     vm_size: Standard_B1ms
+    network_interfaces: "{{ interface_name }}"
     virtual_network: "{{ network_name }}"
     os_disk_encryption_set: "{{ des_results.state.id }}"
     managed_disk_type: Standard_LRS
@@ -29,7 +30,7 @@
 - name: Query auto created security group before deleting
   azure.azcollection.azure_rm_securitygroup_info:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
   register: nsg_result
 
 - name: Assert that security group were exist before deleting
@@ -51,23 +52,16 @@
     name: "{{ vm_name }}"
     state: absent
 
-- name: Destroy auto created NIC
+- name: Delete the network interface
   azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
     state: absent
-  register: nic_result
 
 - name: Destroy security group
   azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
-    state: absent
-
-- name: Destroy auto created public IP
-  azure.azcollection.azure_rm_publicipaddress:
-    resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}01"
+    name: "{{ interface_name }}"
     state: absent
 
 - name: Destroy subnet

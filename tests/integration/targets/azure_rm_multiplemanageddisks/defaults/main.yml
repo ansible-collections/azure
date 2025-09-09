@@ -1,6 +1,7 @@
 ---
 async_virtual_network: "async-vnet"
 async_subnet: "async-subnet"
+async_interface: "async-interface"
 async_virtual_network_cidr: "172.10.0.0/16"
 async_subnet_cidr: "172.10.0.0/24"
 async_virtual_machine_prefix: "async-vm"
@@ -9,6 +10,7 @@ async_number_disk_to_attach: 3
 
 shared_virtual_network: "shareddisk-vnet"
 shared_subnet: "shareddisk-subnet"
+shared_interface: "shareddisk-interface"
 shared_virtual_network_cidr: "10.10.0.0/16"
 shared_subnet_cidr: "10.10.0.0/24"
 shared_virtual_machine_prefix: "shareddisk-vm"
