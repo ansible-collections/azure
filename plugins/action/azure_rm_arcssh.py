@@ -14,6 +14,10 @@ from ansible_collections.azure.azcollection.plugins.plugin_utils import (file_ut
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AZURE_COMMON_ARGS
+try:
+    from azure.core.exceptions import ClientAuthenticationError, ResourceExistsError, ResourceNotFoundError
+except ImportError:
+    pass
 
 
 display = Display()
@@ -101,6 +105,12 @@ class ActionModule(ActionBase):
                                         azure_auth.subscription_id,
                                         azure_auth._cloud_environment.endpoints.resource_manager,
                                         credential_scopes=[azure_auth._cloud_environment.endpoints.resource_manager + ".default"])
+        # Define error_map with common http error codes
+        rest_client.error_map = {
+            401: ClientAuthenticationError,
+            404: ResourceNotFoundError,
+            409: ResourceExistsError,
+        }
 
         config_session = ssh_info.ConfigSession(ssh_config_file,
                                                 ssh_relay_file,
