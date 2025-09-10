@@ -10,11 +10,14 @@ import os
 from ansible.errors import AnsibleActionFail
 from ansible.plugins.action import ActionBase
 from ansible.utils.display import Display
-from azure.core.exceptions import ClientAuthenticationError, ResourceExistsError, ResourceNotFoundError
 from ansible_collections.azure.azcollection.plugins.plugin_utils import (file_utils, ssh_info, connectivity_utils)
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AZURE_COMMON_ARGS
+try:
+    from azure.core.exceptions import ClientAuthenticationError, ResourceExistsError, ResourceNotFoundError
+except ImportError:
+    pass
 
 
 display = Display()
