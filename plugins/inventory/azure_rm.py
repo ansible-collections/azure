@@ -885,10 +885,13 @@ class AzureHost(object):
 
             new_hostvars['network_interface_properties'].append(nic._nic_model)
 
-        # Set os compute name
+        # Set os compute name, os name, os version and hyper V generation
         compute_client = ComputeManagementClient(self._inventory_client.azure_auth.azure_credential_track2, self._inventory_client.azure_auth.subscription_id)
         instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
         new_hostvars['os_compute_name'] = instance_view.computer_name
+        new_hostvars['os_name'] = instance_view.os_name
+        new_hostvars['os_version'] = instance_view.os_version
+        new_hostvars['hyper_v_generation'] =  instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
