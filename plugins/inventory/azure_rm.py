@@ -852,20 +852,22 @@ class AzureHost(object):
         if len(self.nics) == 0:
             # Set the attribute information related to the Uniform VMSS instance
             # Set os compute name, os name, os version and hyper V generation
-            compute_client = ComputeManagementClient(self._inventory_client.azure_auth.azure_credential_track2, self._inventory_client.azure_auth.subscription_id)
+            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
             instance_view = compute_client.virtual_machine_scale_set_vms.get_instance_view(resource_group_name=new_hostvars['resource_group'],
                                                                                            vm_scale_set_name=new_hostvars['vmss']['name'],
                                                                                            instance_id=self._vm_model.get('instanceId'))
             new_hostvars['os_compute_name'] = instance_view.computer_name
             new_hostvars['os_name'] = instance_view.os_name
             new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] =  instance_view.hyper_v_generation
+            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
             # Set Uniform VMSS instance's nic-related values
-            network_client = NetworkManagementClient(self._inventory_client.azure_auth.azure_credential_track2, self._inventory_client.azure_auth.subscription_id)
+            network_client = NetworkManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
             nics = network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=new_hostvars['resource_group'],
-                                                                                                          vm_scale_set_name=new_hostvars['vmss']['name'],
-                                                                                                          instance_id=self._vm_model.get('instanceId'))
+                                                                                                          virtual_machine_scale_set_name=new_hostvars['vmss']['name'],
+                                                                                                          virtualmachine_index=self._vm_model.get('instanceId'))
             for nic in nics:
                 nic = nic.serialize()
                 new_hostvars['network_interface'].append(nic.get('name'))
@@ -920,12 +922,13 @@ class AzureHost(object):
                 new_hostvars['network_interface_properties'].append(nic._nic_model)
 
             # Set os compute name, os name, os version and hyper V generation
-            compute_client = ComputeManagementClient(self._inventory_client.azure_auth.azure_credential_track2, self._inventory_client.azure_auth.subscription_id)
+            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
             instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
             new_hostvars['os_compute_name'] = instance_view.computer_name
             new_hostvars['os_name'] = instance_view.os_name
             new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] =  instance_view.hyper_v_generation
+            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
