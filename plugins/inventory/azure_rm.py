@@ -872,20 +872,28 @@ class AzureHost(object):
                                                                                                           virtual_machine_scale_set_name=vmss_name,
                                                                                                           virtualmachine_index=instance_id)
             for nic in nics:
-                nic = nic.serialize()
+                nic = nic.as_dict()
                 new_hostvars['network_interface'].append(nic.get('name'))
                 new_hostvars['network_interface_id'].append(nic.get('id'))
                 new_hostvars['network_interface_properties'].append(nic)
-                if nic.get('macAddress'):
-                    new_hostvars['mac_address'].append(nic['macAddress'])
-                if nic['properties'].get('networkSecurityGroup'):
-                    new_hostvars['security_group_id'].append(nic['properties']['networkSecurityGroup']['id'])
-                    new_hostvars['security_group'].append(parse_resource_id(nic['properties']['networkSecurityGroup']['id'])['resource_name'])
-                for ipc in nic['properties']['ipConfigurations']:
-                    if ipc['properties'].get('subnet'):
-                        new_hostvars['subnet'].append(ipc['properties'].get('subnet'))
-                    if ipc['properties'].get('privateIPAddress'):
-                        new_hostvars['private_ipv4_addresses'].append(ipc['properties'].get('privateIPAddress'))
+                if nic.get('dns_settings'):
+                    new_hostvars['public_dns_hostnames'].append(nic['dns_settings'].get('internal_fqdn'))
+                if nic.get('mac_address'):
+                    new_hostvars['mac_address'].append(nic['mac_address'])
+                if nic.get('network_security_group'):
+                    new_hostvars['security_group_id'].append(nic['network_security_group']['id'])
+                    new_hostvars['security_group'].append(parse_resource_id(nic['network_security_group']['id'])['resource_name'])
+                for ipc in nic['ip_configurations']:
+                    if ipc.get('subnet'):
+                        new_hostvars['subnet'].append(ipc.get('subnet'))
+                    if ipc.get('private_ip_address'):
+                        new_hostvars['private_ipv4_addresses'].append(ipc.get('private_ip_address'))
+                    if ipc.get('public_ip_address'):
+                        new_hostvars['public_ip_address'].append(dict(id=ipc['public_ip_address'].get('id'),
+                                                                      name=ipc['public_ip_address'].get('name'),
+                                                                      ipv4_address=ipc['public_ip_address'].get('ip_address')))
+                        new_hostvars['public_ipv4_address'].append(ipc['public_ip_address'].get('ip_address'))
+
         else:
             # set nic-related values from the primary NIC first
             for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
