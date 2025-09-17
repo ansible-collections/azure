@@ -23,6 +23,11 @@ options:
         description:
             - The name of the resource group in which the data collection endpoint is (if you use name)
         type: str
+    tags:
+        description:
+            - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
+        type: list
+        elements: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -94,13 +99,6 @@ datacollectionendpoints:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    from azure.core.exceptions import HttpResponseError
-
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
     """Information class for an Azure RM Data Collection Rules"""
@@ -108,7 +106,8 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
             name=dict(type='str'),
-            resource_group=dict(type='str')
+            resource_group=dict(type='str'),
+            tags=dict(type='list', elements='str')
         )
 
         self.required_by = {
@@ -117,6 +116,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
 
         self.resource_group = None
         self.name = None
+        self.tags = None
         self.log_path = None
         self.log_mode = None
 
@@ -145,6 +145,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         self.results['datacollectionendpoints'] = result
 
         return self.results
+        return [item for item in self.results if self.has_tags(item.get('tags'), self.tags)]
 
     def get_endpoint(self):
         '''
@@ -155,13 +156,12 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
 
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.get(resource_group_name=self.resource_group,
-                                                                                                          data_collection_endpoint_name=self.name)
+                                                                                                              data_collection_endpoint_name=self.name)
         except Exception as ex:
-            self.log("Could not find data collection endpoint {0} in resource group {1}".format(self.name, self.resource_group))
+            self.log("Could not find data collection endpoint {0} in resource group {1}, Exception as {2}".format(self.name, self.resource_group, ex))
             return []
-        if response:
+        if response and self.has_tags(response.tags, self.tags):
             result = [response.as_dict()]
-
         return result
 
     def list_endpoints(self):
@@ -175,17 +175,18 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
             try:
                 response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_resource_group(resource_group_name=self.resource_group)
             except Exception as ex:
-                self.log("Could not list data collection endponts in resource group {0}".format(self.resource_uri))
+                self.log("Could not list data collection endponts in resource group {0}, Exception as {1}".format(self.resource_uri, ex))
                 return []
         else:
             try:
                 response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_subscription()
             except Exception as ex:
-                self.log("Could not list data collection endpoint in the subscription_id")
+                self.log("Could not list data collection endpoint in the subscription_id, Exception as {0}".format(ex))
                 return []
         if response:
             for item in response:
-                result.append(item.as_dict())
+                if self.has_tags(item.tags, self.tags):
+                    result.append(item.as_dict())
 
         return result
 

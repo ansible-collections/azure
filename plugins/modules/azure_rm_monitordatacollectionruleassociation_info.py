@@ -11,7 +11,7 @@ module: azure_rm_monitordatacollectionrulesassociation_info
 version_added: "3.9.0"
 short_description: Get or list Data Collection Rule Association
 description:
-    - Get Data Collection Rule Association.
+    - Get or list Data Collection Rule Association.
 
 options:
     data_collection_endpoint_name:
@@ -95,12 +95,6 @@ datacollectionruleassociations:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-try:
-    from azure.core.exceptions import HttpResponseError
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
-
 
 class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
     """Information class for an Azure RM Data Collection Rules"""
@@ -170,7 +164,7 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.get(resource_uri=resource_uri,
                                                                                                                   association_name=association_name)
-        except Exception as ex:
+        except Exception:
             self.log("Could not find data collection rule assoication {0} in resource uri {1}".format(self.association_name, self.resource_uri))
             return []
         if response:
@@ -188,7 +182,7 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_resource(resource_uri=self.resource_uri)
         except Exception as ex:
-            self.log("Could not list data collection rule assoication in resource uri {0}".format(self.resource_uri))
+            self.log("Could not list data collection rule assoication in resource uri {0}, Exception as {1}".format(self.resource_uri, ex))
             return []
         if response:
             for item in response:
@@ -202,12 +196,11 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         '''
         result = []
         response = None
-
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_rule(resource_group_name=self.resource_group,
                                                                                                                            data_collection_rule_name=self.data_collection_rule_name)
         except Exception as ex:
-            self.log("Could not list assoication in data collection rule {0}".format(self.data_collection_rule_name))
+            self.log("Could not list assoication in data collection rule {0}, Exception as {1}".format(self.data_collection_rule_name, ex))
             return []
         if response:
             for item in response:
@@ -227,7 +220,7 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_data_collection_endpoint(resource_group_name=self.resource_group,
                                                                                                                                                data_collection_endpoint_name=self.data_collection_endpoint_name)
         except Exception as ex:
-            self.log("Could not list associations for the data collection rule endpoint {0}".format(self.data_collection_endpoint_name))
+            self.log("Could not list associations for the data collection rule endpoint {0}, Exception as {1}".format(self.data_collection_endpoint_name, ex))
             return []
         if response:
             for item in response:

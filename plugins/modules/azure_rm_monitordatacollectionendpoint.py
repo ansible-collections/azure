@@ -9,12 +9,12 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_monitordatacollectionendpoint
 version_added: "3.9.0"
-short_description: Get or list Data Collection Endpoints
+short_description: Managed Data Collection Endpoints
 description:
-    - Get or list Data Collection Rules Endpoints.
+    - Create, update or delete the Data Collection Rules Endpoints.
 
 options:
-    endpoint_name:
+    name:
         description:
             - The name of the data collection endpoint.
             - The name is case insensitive.
@@ -23,6 +23,45 @@ options:
         description:
             - The name of the resource group in which the data collection endpoint is (if you use name)
         type: str
+    location:
+        description:
+            - The geo-location where the resource lives.
+            - Default is resource group's location.
+        type: str
+    kind:
+        description:
+            - The kind of the resource.
+        type: str
+        choices:
+            - Linux
+            - Windows
+    description:
+        description:
+            - Description of the data collection endpoint.
+        type: str
+    network_acls:
+        description:
+            - Network access control rules for the endpoints.
+        type: dict
+        suboptions:
+            public_network_access:
+                description:
+                    - The configuration to set whether network access from public internet to the endpoints are allowed.
+                type: str
+                choices:
+                    - Enabled
+                    - Disabled
+                    - SecuredByPerimeter
+    state:
+        description:
+            - State of the data colleciton endpoint.
+            - Set to C(present) to create a new endpoint.
+            - Set to C(absent) to remove a endpoint.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -97,19 +136,18 @@ datacollectionendpoint:
     }
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
-try:
-    from azure.core.exceptions import HttpResponseError
-    import logging
-    logging.basicConfig(filename='log.log', level=logging.INFO)
-
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 
-class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBase):
+network_acls_spec = dict(
+    public_network_access=dict(
+        type='str',
+        choices=["Enabled", "Disabled", "SecuredByPerimeter"]
+    )
+)
+
+
+class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBaseExt):
     """Information class for an Azure RM Data Collection Rules"""
 
     def __init__(self):
@@ -118,26 +156,21 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBase):
             resource_group=dict(type='str', required=True),
             location=dict(type='str'),
             kind=dict(type='str', choices=['Linux', 'Windows']),
-            identity=dict(type='dict',
-                          options=dict(type=dict(type='str',  choices=["None", "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned"]),
-                                       user_assigned_identities=dict(type='str'))),
             description=dict(type='str'),
-            network_acls=dict(type='dict',
-                              options=dict(public_network_access=dict(type='str', choices=["Enabled", "Disabled", "SecuredByPerimeter"]))),
-            state=dict(type='str', default='present', choices=['present', 'absent'])
+            state=dict(type='str', default='present', choices=['present', 'absent']),
+            network_acls=dict(
+                type='dict',
+                options=network_acls_spec
+            )
         )
-
-        self.required_by = {
-            'endpoint_name': 'resource_group'
-        }
 
         self.resource_group = None
         self.name = None
         self.location = None
         self.kind = None
-        self.identity = None
         self.description = None
         self.network_acls = None
+        self.tags = None
         self.state = None
         self.log_path = None
         self.log_mode = None
@@ -151,8 +184,7 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBase):
         super(AzureRMDataCollectionRuleEndpoint, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                 supports_check_mode=True,
                                                                 supports_tags=True,
-                                                                facts_module=True,
-                                                                required_by=self.required_by)
+                                                                facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -168,17 +200,35 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBase):
             # Set default location
             self.body['location'] = resource_group.location
 
+        self.tags = self.body.get('tags')
         response = self.get_endpoint()
         changed = False
         if self.state == 'present':
             if response:
-                pass
+                self.log("The monitor data collection endpoint already exist")
+                update_tags, self.body['tags'] = self.update_tags(response.get('tags', dict()))
+                if update_tags:
+                    changed = True
+                if self.body.get('description') and self.body['description'] != response.get('description'):
+                    changed = True
+                else:
+                    self.body['description'] = response.get('description')
+                if self.body.get('kind') and self.body.get('kind') != response.get('kind'):
+                    changed = True
+                else:
+                    self.body['kind'] = response.get('kind')
+                if self.body.get('network_acls') and self.body['network_acls'] != response.get('network_acls'):
+                    changed = True
+                else:
+                    self.body['network_acls'] = response.get('network_acls')
             else:
                 changed = True
-                if self.check_mode:
-                    self.log("There is no monitor data collection endpoint, will create a new")
-                else:
-                    response = self.create_endpoint(self.body)
+                self.log("There is no monitor data collection endpoint, will create a new")
+
+            if self.check_mode:
+                self.log("Check mode test")
+            elif changed:
+                response = self.create_endpoint(self.body)
         else:
             if response:
                 changed = True
@@ -203,7 +253,7 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBase):
             response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.get(resource_group_name=self.resource_group,
                                                                                                           data_collection_endpoint_name=self.name)
         except Exception as ex:
-            self.log("Could not find data collection endpoint {0} in resource group {1}".format(self.name, self.resource_group))
+            self.log("Could not find data collection endpoint {0} in resource group {1}, Exception as {2}".format(self.name, self.resource_group, ex))
         if response:
             return response.as_dict()
 
@@ -218,22 +268,6 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBase):
                                                                                                              body=body)
         except Exception as ex:
             self.fail("Create the data collection endponts occured exception, Exception as {0}".format(ex))
-
-        if response:
-            return response.as_dict()
-
-    def update_endpoint(self):
-        '''
-        Update the Data Collection Endpoint
-        '''
-        body = dict()
-        response = None
-        try:
-            response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.update(resource_group_name=self.resource_group,
-                                                                                                             data_collection_endpoint_name=self.name,
-                                                                                                             body=body)
-        except Exception as ex:
-            self.fail("Update the data collection endponts occured exception, Exception as {0}".format(ex))
 
         if response:
             return response.as_dict()

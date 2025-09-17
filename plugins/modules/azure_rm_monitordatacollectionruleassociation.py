@@ -9,9 +9,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_monitordatacollectionrulesassociation
 version_added: "3.9.0"
-short_description: Get or list Data Collection Rule Association
+short_description: Managed Data Collection Rule Association
 description:
-    - Get Data Collection Rule Association.
+    - Create, update or delete the Data Collection Rule Association.
 
 options:
     data_collection_endpoint_name:
@@ -37,6 +37,16 @@ options:
         description:
             - Description of the association.
         type: str
+    state:
+        description:
+            - State of the data colleciton rule association.
+            - Set to C(present) to create a new association.
+            - Set to C(absent) to remove a association.
+        default: present
+        type: str
+        choices:
+            - absent
+            - present
 extends_documentation_fragment:
     - azure.azcollection.azure
 
@@ -87,13 +97,6 @@ datacollectionruleassociations:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-
-try:
-    from azure.core.exceptions import HttpResponseError
-
-except ImportError:
-    # This is handled in azure_rm_common
-    pass
 
 
 class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
@@ -176,13 +179,11 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
         '''
         Gets the specified association
         '''
-        result = []
         response = None
-
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.get(resource_uri=self.resource_uri,
                                                                                                                   association_name=self.association_name)
-        except Exception as ex:
+        except Exception:
             self.log("Could not find data collection rule assoication {0} in resource uri {1}".format(self.association_name, self.resource_uri))
         if response:
             return response.as_dict()
