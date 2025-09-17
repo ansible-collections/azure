@@ -1,0 +1,223 @@
+#!/usr/bin/python
+#
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
+DOCUMENTATION = '''
+---
+module: azure_rm_monitordatacollectionrulesassociation
+version_added: "3.9.0"
+short_description: Get or list Data Collection Rule Association
+description:
+    - Get Data Collection Rule Association.
+
+options:
+    data_collection_endpoint_name:
+        description:
+            - The name of the data collection endpoint.
+            - The name is case insensitive.
+        type: str
+    data_collection_rule_name:
+        description:
+            - The name of the data collection rule.
+            - The name is case insensitive.
+        type: str
+    resource_uri:
+        description:
+            - The identifier of the resource.
+        type: str
+    association_name:
+        description:
+            - The name of the association.
+            - The name is case insensitive.
+        type: str
+    description:
+        description:
+            - Description of the association.
+        type: str
+extends_documentation_fragment:
+    - azure.azcollection.azure
+
+author:
+    - magodo (@magodo)
+    - Fred Sun (@Fred-sun)
+'''
+
+EXAMPLES = '''
+- name: Create a new data collection rule association
+  azure.azcollection.azure_rm_monitordatacollectionrulesassociation:
+    resource_uri: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM"
+    association_name: association01
+    data_collection_rule_id: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR"
+    description: fredtest
+
+- name: Delete the data collection rule association
+  azure.azcollection.azure_rm_monitordatacollectionrulesassociation:
+    resource_uri: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM"
+    association_name: association01
+    state: absent
+'''
+
+RETURN = '''
+datacollectionruleassociations:
+    description:
+        - The facts of the data collection rule association.
+    type: dict
+    returned: always
+    sample: {
+            "data_collection_rule_id": "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
+            "description": "fredtest",
+            "etag": "\"0c00c2b5-0000-0800-0000-68ca0de80000\"",
+            "id": "/subscriptions/xxxxxxxxxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
+            "name": "association01",
+            "system_data": {
+                "created_at": "2025-09-17T01:24:56.450551Z",
+                "created_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                "created_by_type": "Application",
+                "last_modified_at": "2025-09-17T01:24:56.450551Z",
+                "last_modified_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                "last_modified_by_type": "Application"
+            },
+            "type": "Microsoft.Insights/dataCollectionRuleAssociations"
+        },
+        "failed": false
+    }
+'''
+
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+
+try:
+    from azure.core.exceptions import HttpResponseError
+
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
+
+
+class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
+    """Information class for an Azure RM Data Collection Rules"""
+
+    def __init__(self):
+        self.module_arg_spec = dict(
+            resource_uri=dict(type='str', required=True),
+            association_name=dict(type='str', required=True),
+            data_collection_endpoint_id=dict(type='str'),
+            data_collection_rule_id=dict(type='str'),
+            description=dict(type='str'),
+            state=dict(type='str', default='present', choices=['present',  'absent'])
+        )
+
+        self.resource_uri = None
+        self.association_name = None
+        self.data_collection_endpoint_id = None
+        self.data_collection_rule_id = None
+        self.state = None
+        self.description = None
+        self.log_path = None
+        self.log_mode = None
+
+        self.results = dict(
+            changed=False,
+            datacollectionruleassociation=None
+        )
+
+        super(AzureRMDataCollectionRuleAssociation, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                                                   supports_check_mode=True,
+                                                                   supports_tags=False,
+                                                                   facts_module=True)
+    def exec_module(self, **kwargs):
+        """Main module execution method"""
+
+        for key in self.module_arg_spec:
+            setattr(self, key, kwargs[key])
+
+        response = self.get_association()
+        changed = False
+        if self.state == 'present':
+            if response:
+                if self.description and self.description != response.get('description'):
+                    changed = True
+                else:
+                    self.description = response.get('description')
+                if self.data_collection_rule_id and self.data_collection_rule_id != response.get('data_collection_rule_id'):
+                    self.fail("Already associated with {0}. If need to udpate, please delete it and recreate it".format(response['data_collection_rule_id']))
+                else:
+                    self.data_collection_rule_id = response['data_collection_rule_id']
+                if self.check_mode:
+                    self.log("The monitor data collection rule association already exist")
+                else:
+                    if changed:
+                        response = self.create_association()
+            else:
+                changed = True
+                if self.check_mode:
+                    self.log("There is no monitor data collection rule association, will create a new")
+                else:
+                    response = self.create_association()
+        else:
+            if response:
+                changed = True
+                if self.check_mode:
+                    self.log("The monitor data collection rule association already exist, will be delete")
+                else:
+                    response = self.delete_association()
+            else:
+                if self.check_mode:
+                    self.log("There is no monitor data collection rule association.")
+
+        self.results['datacollectionruleassociation'] = response
+        self.results['changed'] = changed
+
+        return self.results
+
+    def get_association(self):
+        '''
+        Gets the specified association
+        '''
+        result = []
+        response = None
+
+        try:
+            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.get(resource_uri=self.resource_uri,
+                                                                                                                  association_name=self.association_name)
+        except Exception as ex:
+            self.log("Could not find data collection rule assoication {0} in resource uri {1}".format(self.association_name, self.resource_uri))
+        if response:
+            return response.as_dict()
+
+    def create_association(self):
+        '''
+        Creates or updates an association.
+        '''
+        response = None
+        try:
+            body = dict(description=self.description,
+                        data_collection_rule_id=self.data_collection_rule_id,
+                        data_collection_endpoint_id=self.data_collection_endpoint_id)
+            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.create(resource_uri=self.resource_uri,
+                                                                                                                     association_name=self.association_name,
+                                                                                                                     body=body)
+        except Exception as ex:
+            self.fail("Creates or update the association occured exception, Exception as {0}".format(ex))
+        return response.as_dict()
+
+    def delete_association(self):
+        '''
+        Deletes an association
+        '''
+        try:
+            self.monitor_management_client_data_collection_rules.data_collection_rule_associations.delete(resource_uri=self.resource_uri,
+                                                                                                          association_name=self.association_name)
+        except Exception as ex:
+            self.fail("Deletes the association occured exception, Exception as {0}".format(ex))
+
+
+def main():
+    """Main execution"""
+    AzureRMDataCollectionRuleAssociation()
+
+
+if __name__ == '__main__':
+    main()

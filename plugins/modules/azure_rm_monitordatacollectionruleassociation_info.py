@@ -48,22 +48,22 @@ author:
 EXAMPLES = '''
 - name: Get data collection rule association details
   azure.azcollection.azure_rm_monitordatacollectionrulesassociation_info:
-    association_name: 
-    resource_group: Resource_Group_Name
+    association_name: association01
+    resource_uri: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM"
 
 - name: List all data collection rule associations with data_collection_endpoint_name
   azure.azcollection.azure_rm_monitordatacollectionrulesassociation_info:
     resource_group: Resource_Group_Name
-    data_collection_endpoint_name:
+    data_collection_endpoint_name: fredrpfx001-DCE
 
 - name: List all data collection rule associations with data_collection_rule_name
   azure.azcollection.azure_rm_monitordatacollectionrulesassociation_info:
     resource_group: Resource_Group_Name
-    data_collection_rule_name:
+    data_collection_rule_name: fredrpfx001-DCR
 
 - name: List all data collection rule associations with the resource_uri
   azure.azcollection.azure_rm_monitordatacollectionrulesassociation_info:
-    resource_uri: pass
+    resource_uri: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM"
 '''
 
 RETURN = '''
@@ -73,14 +73,30 @@ datacollectionruleassociations:
         - Can be empty if listing data collection rule association.
     type: list
     returned: always
-    sample:
+    sample: [
+            {
+                "data_collection_rule_id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
+                "description": "fredtest001",
+                "etag": "\"0c0056f9-0000-0800-0000-68ca149c0000\"",
+                "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
+                "name": "association01",
+                "system_data": {
+                    "created_at": "2025-09-17T01:53:31.695099Z",
+                    "created_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                    "created_by_type": "Application",
+                    "last_modified_at": "2025-09-17T01:53:31.695099Z",
+                    "last_modified_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                    "last_modified_by_type": "Application"
+                },
+                "type": "Microsoft.Insights/dataCollectionRuleAssociations"
+            }
+        ]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.core.exceptions import HttpResponseError
-
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -130,7 +146,7 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.association_name:
-            result = self.get_association()
+            result = self.get_association(self.resource_uri, self.association_name)
         elif self.data_collection_rule_name:
             result = self.list_by_rule()
         elif self.data_collection_endpoint_name:
@@ -144,7 +160,7 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
 
         return self.results
 
-    def get_association(self):
+    def get_association(self, resource_uri, association_name):
         '''
         Gets the specified association
         '''
@@ -152,8 +168,8 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.get(resource_uri=self.resource_uri,
-                                                                                                                  association_name=self.association_name)
+            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.get(resource_uri=resource_uri,
+                                                                                                                  association_name=association_name)
         except Exception as ex:
             self.log("Could not find data collection rule assoication {0} in resource uri {1}".format(self.association_name, self.resource_uri))
             return []
@@ -175,7 +191,8 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
             self.log("Could not list data collection rule assoication in resource uri {0}".format(self.resource_uri))
             return []
         if response:
-            result.append(item.as_dict() for item in response)
+            for item in response:
+                result.append(item.as_dict())
 
         return result
 
@@ -193,7 +210,9 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
             self.log("Could not list assoication in data collection rule {0}".format(self.data_collection_rule_name))
             return []
         if response:
-            result.append(item.as_dict() for item in response)
+            for item in response:
+                association = item.as_dict()
+                result += self.get_association(association['id'].split('providers/microsoft.insights')[0], association['name'])
 
         return result
 
@@ -211,7 +230,8 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
             self.log("Could not list associations for the data collection rule endpoint {0}".format(self.data_collection_endpoint_name))
             return []
         if response:
-            result.append(item.as_dict() for item in response)
+            for item in response:
+                result.append(item.as_dict())
 
         return result
 
