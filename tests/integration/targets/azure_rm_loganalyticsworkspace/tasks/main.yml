@@ -577,6 +577,95 @@
         that:
           - output is changed
 
+    - name: Create a new monitor data collection endpoint(Checkmode test)
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: Create
+        kind: Linux
+        tags:
+          key1: value1
+        network_acls:
+          public_network_access: Disabled
+      check_mode: true
+      register: output
+
+    - name: Assert there is no data collection endpoint
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: Create
+        kind: Linux
+        tags:
+          key1: value1
+        network_acls:
+          public_network_access: Disabled
+      register: output
+
+    - name: Assert the data collection endpoint is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new monitor data collection endpoint(Idempotent test)
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: Create
+        kind: Linux
+        tags:
+          key1: value1
+        network_acls:
+          public_network_access: Disabled
+      register: output
+
+    - name: Assert the data collection endpoint is already created
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: "Update"
+        kind: Windows
+        tags:
+          key2: value2
+        network_acls:
+          public_network_access: Enabled
+      register: output
+
+    - name: Assert the data collection endpoint is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get the monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint_info:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+      register: output
+
+    - name: Assert the data collection endpoint facts
+      ansible.builtin.assert:
+        that:
+          - output.datacollectionendpoints[0].tags |length == 2
+          - output.datacollectionendpoints[0].description == 'Update'
+          - output.datacollectionendpoints[0].kind == 'Windows'
+          - output.datacollectionendpoints[0].network_acls.public_network_access == 'Enabled'
+
+    - name: Delete the monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        state: absent
+
     - name: Remove Log Analytics workspace (Check Mode On)
       azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"

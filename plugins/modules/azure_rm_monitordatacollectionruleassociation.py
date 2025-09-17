@@ -14,15 +14,13 @@ description:
     - Create, update or delete the Data Collection Rule Association.
 
 options:
-    data_collection_endpoint_name:
+    data_collection_endpoint_id:
         description:
-            - The name of the data collection endpoint.
-            - The name is case insensitive.
+            - The ID of the data collection endpoint.
         type: str
-    data_collection_rule_name:
+    data_collection_rule_id:
         description:
-            - The name of the data collection rule.
-            - The name is case insensitive.
+            - The ID of the data collection rule.
         type: str
     resource_uri:
         description:
@@ -32,6 +30,7 @@ options:
         description:
             - The name of the association.
             - The name is case insensitive.
+            - An association of data collection endpoint must be named 'configurationAccessEndpoint.
         type: str
     description:
         description:
