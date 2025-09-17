@@ -14,7 +14,7 @@ description:
     - Get or list Data Collection Rules Endpoints.
 
 options:
-    endpoint_name:
+    name:
         description:
             - The name of the data collection endpoint.
             - The name is case insensitive.
@@ -35,7 +35,7 @@ author:
 EXAMPLES = '''
 - name: Get data collection endpoint details
   azure.azcollection.azure_rm_monitordatacollectionendpoint_info:
-    endpoint_name: 
+    name: fredendpoint01
     resource_group: Resource_Group_Name
 
 - name: List all data collection endpoints in specific resource group
@@ -53,7 +53,43 @@ datacollectionendpoints:
         - Can be empty if listing data collection rule association.
     type: list
     returned: always
-    sample:
+    sample: [
+            {
+                "configuration_access": {
+                    "endpoint": "https://fredendpoint1-tdt8.eastus-1.handler.control.monitor.azure.com"
+                },
+                "description": "fredtestend",
+                "etag": "\"3d00ef18-0000-0100-0000-68ca28010000\"",
+                "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint1",
+                "immutable_id": "dce-703ef7fab85d4391af585d91c2b0b5a7",
+                "kind": "Linux",
+                "location": "eastus",
+                "logs_ingestion": {
+                    "endpoint": "https://fredendpoint1-tdt8.eastus-1.ingest.monitor.azure.com"
+                },
+                "metrics_ingestion": {
+                    "endpoint": "https://fredendpoint1-tdt8.eastus-1.metrics.ingest.monitor.azure.com"
+                },
+                "name": "fredendpoint1",
+                "network_acls": {
+                    "public_network_access": "Enabled"
+                },
+                "provisioning_state": "Succeeded",
+                "system_data": {
+                    "created_at": "2025-09-17T03:16:17.037276Z",
+                    "created_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                    "created_by_type": "Application",
+                    "last_modified_at": "2025-09-17T03:16:17.037276Z",
+                    "last_modified_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                    "last_modified_by_type": "Application"
+                },
+                "tags": {
+                    "key1": "value1",
+                    "key2": "value2"
+                },
+                "type": "Microsoft.Insights/dataCollectionEndpoints"
+            }
+        ]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -71,7 +107,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
 
     def __init__(self):
         self.module_arg_spec = dict(
-            endpoint_name=dict(type='str'),
+            name=dict(type='str'),
             resource_group=dict(type='str')
         )
 
@@ -80,7 +116,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         }
 
         self.resource_group = None
-        self.endpoint_name = None
+        self.name = None
         self.log_path = None
         self.log_mode = None
 
@@ -101,12 +137,12 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        if self.endpoint_name:
+        if self.name:
             result = self.get_endpoint()
         else:
             result = self.list_endpoints()
 
-        self.results['datacollectionruleendpoints'] = result
+        self.results['datacollectionendpoints'] = result
 
         return self.results
 
@@ -118,10 +154,10 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.monitor_management_client_data_collection_endpoints.data_collection_endpoints.get(resource_group_name=self.resource_group,
-                                                                                                              data_collection_endpoint_name=self.endpoint_name)
+            response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.get(resource_group_name=self.resource_group,
+                                                                                                          data_collection_endpoint_name=self.name)
         except Exception as ex:
-            self.log("Could not find data collection endpoint {0} in resource group {1}".format(self.endpoint_name, self.resource_group))
+            self.log("Could not find data collection endpoint {0} in resource group {1}".format(self.name, self.resource_group))
             return []
         if response:
             result = [response.as_dict()]
@@ -135,20 +171,21 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         result = []
         response = None
 
-        if self.resource_gorup:
+        if self.resource_group:
             try:
-                response = self.monitor_management_client_data_collection_endpoints.data_collection_endpoints.list_by_resource_group(resource_group_name=self.resource_group)
+                response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_resource_group(resource_group_name=self.resource_group)
             except Exception as ex:
                 self.log("Could not list data collection endponts in resource group {0}".format(self.resource_uri))
                 return []
         else:
             try:
-                response = self.monitor_management_client_data_collection_endpoints.data_collection_endpoints.list_by_subscription()
+                response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_subscription()
             except Exception as ex:
                 self.log("Could not list data collection endpoint in the subscription_id")
                 return []
         if response:
-            result.append(item.as_dict() for item in response)
+            for item in response:
+                result.append(item.as_dict())
 
         return result
 
