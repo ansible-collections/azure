@@ -582,20 +582,29 @@
           - endpoint_output.datacollectionendpoints[0].network_acls.public_network_access == 'Enabled'
 
     - name: Create virtual network
-      azure_rm_virtualnetwork:
+      azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         name: "vnet-{{ name_rpfx }}"
         address_prefixes: 10.42.8.0/24
 
     - name: Create subnet
-      azure_rm_subnet:
+      azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         name: "subnet-{{ name_rpfx }}"
         address_prefix: 10.42.8.0/28
         virtual_network: "vnet-{{ name_rpfx }}"
 
+    - name: Create network interface
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "interface-{{ name_rpfx }}"
+        open_ports:
+          - 33
+        virtual_network: "vnet-{{ name_rpfx }}"
+        subnet: "subnet-{{ name_rpfx }}"
+
     - name: Create VM
-      azure_rm_virtualmachine:
+      azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         name: "vm-{{ name_rpfx }}"
         admin_username: "testuser"
@@ -607,6 +616,8 @@
             key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
         vm_size: Standard_B1ms
         managed_disk_type: Standard_LRS
+        network_interfaces: "interface-{{ name_rpfx }}"
+        virtual_network: "vnet-{{ name_rpfx }}"
         image:
           offer: 0001-com-ubuntu-server-focal
           publisher: Canonical
@@ -614,13 +625,13 @@
           version: latest
 
     - name: Cet the VM facts
-      azure_rm_virtualmachine_info:
+      azure.azcollection.azure_rm_virtualmachine_info:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         name: "vm-{{ name_rpfx }}"
       register: vm_output
 
     - name: Create a new monitor data collection association with endpoint(Checkmode test)
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
@@ -634,7 +645,7 @@
           - output is changed
 
     - name: Create a new monitor data collection association with endpoint
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
@@ -647,7 +658,7 @@
           - output is changed
 
     - name: Create a new monitor data collection association with endpoint(Idempotent test)
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
@@ -660,7 +671,7 @@
           - output is not changed
 
     - name: Update the monitor data collection association with endpoint
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
@@ -673,7 +684,7 @@
           - output is changed
 
     - name: Create the secondary monitor data collection association with rule
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: "rule-{{ name_rpfx }}"
         data_collection_rule_id: "{{ rule_output.datacollectionrules[0].id }}"
@@ -686,7 +697,7 @@
           - output is changed
 
     - name: Get the monitor data collection association facts by association_name
-      azure_rm_monitordatacollectionruleassociation_info:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation_info:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
       register: output
@@ -698,7 +709,7 @@
           - output.datacollectionruleassociations[0].description == "Update the collection endpoint association"
 
     - name: List all monitor data collection association facts by resource_uri
-      azure_rm_monitordatacollectionruleassociation_info:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation_info:
         resource_uri: "{{ vm_output.vms[0].id }}"
       register: output
 
@@ -708,7 +719,7 @@
           - output.datacollectionruleassociations |length == 2
 
     - name: List monitor data collection association by rule
-      azure_rm_monitordatacollectionruleassociation_info:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation_info:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         data_collection_rule_name: "{{ rule_output.datacollectionrules[0].name }}"
       register: output
@@ -719,7 +730,7 @@
           - output.datacollectionruleassociations |length == 1
 
     - name: Get the monitor data collection association by endpoint
-      azure_rm_monitordatacollectionruleassociation_info:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation_info:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         data_collection_endpoint_name: "{{ endpoint_output.datacollectionendpoints[0].name }}"
       register: output
@@ -730,7 +741,7 @@
           - output.datacollectionruleassociations |length == 1
 
     - name: Delete the first monitor data collection association
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         state: absent
@@ -742,7 +753,7 @@
           - output is changed
 
     - name: Delete the secondary monitor data collection association
-      azure_rm_monitordatacollectionruleassociation:
+      azure.azcollection.azure_rm_monitordatacollectionruleassociation:
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: "rule-{{ name_rpfx }}"
         state: absent
@@ -754,7 +765,7 @@
           - output is changed
 
     - name: Delete the monitor data collection endpoint
-      azure_rm_monitordatacollectionendpoint:
+      azure.azcollection.azure_rm_monitordatacollectionendpoint:
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
         name: "{{ name_rpfx }}-DCE"
         state: absent
