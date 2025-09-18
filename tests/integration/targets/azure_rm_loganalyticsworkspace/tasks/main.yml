@@ -1,7 +1,7 @@
 - name: Create a new resource group for log analystics workspace test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-loganalyticsworkspace"
-    location: eastus
+    location: westeurope
 
 - name: For log analystics workspace test
   block:
@@ -472,12 +472,12 @@
       azure.azcollection.azure_rm_monitordatacollectionrules_info:
         name: "{{ name_rpfx }}-DCR"
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
-      register: output
+      register: rule_output
 
     - name: Assert that data collection rule is present (direct match)
       ansible.builtin.assert:
         that:
-          - output.datacollectionrules.0.name == name_rpfx + '-DCR'
+          - rule_output.datacollectionrules.0.name == name_rpfx + '-DCR'
 
     - name: Use info module to gather information on data collection rules in resource group (list resource group)
       azure.azcollection.azure_rm_monitordatacollectionrules_info:
@@ -497,6 +497,273 @@
       ansible.builtin.assert:
         that:
           - name_rpfx + '-DCR' in (output.datacollectionrules | map(attribute='name') | list)
+
+    - name: Create a new monitor data collection endpoint(Checkmode test)
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: Create
+        kind: Linux
+        tags:
+          key1: value1
+        network_acls:
+          public_network_access: Disabled
+      check_mode: true
+      register: output
+
+    - name: Assert there is no data collection endpoint
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: Create
+        kind: Linux
+        tags:
+          key1: value1
+        network_acls:
+          public_network_access: Disabled
+      register: output
+
+    - name: Assert the data collection endpoint is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new monitor data collection endpoint(Idempotent test)
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: Create
+        kind: Linux
+        tags:
+          key1: value1
+        network_acls:
+          public_network_access: Disabled
+      register: output
+
+    - name: Assert the data collection endpoint is already created
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        description: "Update"
+        kind: Windows
+        tags:
+          key2: value2
+        network_acls:
+          public_network_access: Enabled
+      register: output
+
+    - name: Assert the data collection endpoint is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get the monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint_info:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+      register: endpoint_output
+
+    - name: Assert the data collection endpoint facts
+      ansible.builtin.assert:
+        that:
+          - endpoint_output.datacollectionendpoints[0].tags |length == 2
+          - endpoint_output.datacollectionendpoints[0].description == 'Update'
+          - endpoint_output.datacollectionendpoints[0].kind == 'Windows'
+          - endpoint_output.datacollectionendpoints[0].network_acls.public_network_access == 'Enabled'
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "vnet-{{ name_rpfx }}"
+        address_prefixes: 10.42.8.0/24
+
+    - name: Create subnet
+      azure_rm_subnet:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "subnet-{{ name_rpfx }}"
+        address_prefix: 10.42.8.0/28
+        virtual_network: "vnet-{{ name_rpfx }}"
+
+    - name: Create VM
+      azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "vm-{{ name_rpfx }}"
+        admin_username: "testuser"
+        ssh_password_enabled: false
+        open_ports:
+          - 33
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        vm_size: Standard_B1ms
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+
+    - name: Cet the VM facts
+      azure_rm_virtualmachine_info:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "vm-{{ name_rpfx }}"
+      register: vm_output
+
+    - name: Create a new monitor data collection association with endpoint(Checkmode test)
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: configurationAccessEndpoint
+        data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
+        description: "Create a data collection endpoint association"
+      register: output
+      check_mode: true
+
+    - name: Assert the data collection rule association is created(Checkmode test)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new monitor data collection association with endpoint
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: configurationAccessEndpoint
+        data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
+        description: "Create a collection endpoint association"
+      register: output
+
+    - name: Assert the data collection rule association is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new monitor data collection association with endpoint(Idempotent test)
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: configurationAccessEndpoint
+        data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
+        description: "Create collection endpoint association"
+      register: output
+
+    - name: Assert the data collection rule association is no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the monitor data collection association with endpoint
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: configurationAccessEndpoint
+        data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
+        description: "Update the collection endpoint association"
+      register: output
+
+    - name: Assert the data collection rule association is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create the secondary monitor data collection association with rule
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: "rule-{{ name_rpfx }}"
+        data_collection_rule_id: "{{ rule_output.datacollectionrules[0].id }}"
+        description: "Update the collection endpoint association"
+      register: output
+
+    - name: Assert the secondary data collection rule association is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get the monitor data collection association facts by association_name
+      azure_rm_monitordatacollectionruleassociation_info:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: configurationAccessEndpoint
+      register: output
+
+    - name: Assert the specify association facts
+      ansible.builtin.assert:
+        that:
+          - output.datacollectionruleassociations |length == 1
+          - output.datacollectionruleassociations[0].description == "Update the collection endpoint association"
+
+    - name: List all monitor data collection association facts by resource_uri
+      azure_rm_monitordatacollectionruleassociation_info:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+      register: output
+
+    - name: Assert the association facts
+      ansible.builtin.assert:
+        that:
+          - output.datacollectionruleassociations |length == 2
+
+    - name: List monitor data collection association by rule
+      azure_rm_monitordatacollectionruleassociation_info:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        data_collection_rule_name: "{{ rule_output.datacollectionrules[0].name }}"
+      register: output
+
+    - name: Assert the DCR association facts
+      ansible.builtin.assert:
+        that:
+          - output.datacollectionruleassociations |length == 1
+
+    - name: Get the monitor data collection association by endpoint
+      azure_rm_monitordatacollectionruleassociation_info:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        data_collection_endpoint_name: "{{ endpoint_output.datacollectionendpoints[0].name }}"
+      register: output
+
+    - name: Assert the DCE association facts
+      ansible.builtin.assert:
+        that:
+          - output.datacollectionruleassociations |length == 1
+
+    - name: Delete the first monitor data collection association
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: configurationAccessEndpoint
+        state: absent
+      register: output
+
+    - name: Assert the first data collection rule association is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the secondary monitor data collection association
+      azure_rm_monitordatacollectionruleassociation:
+        resource_uri: "{{ vm_output.vms[0].id }}"
+        association_name: "rule-{{ name_rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the secondary data collection rule association is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the monitor data collection endpoint
+      azure_rm_monitordatacollectionendpoint:
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        name: "{{ name_rpfx }}-DCE"
+        state: absent
+      register: output
+
+    - name: Assert the data collection endpoint is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
     - name: Remove data collection rule (Check Mode On)
       azure.azcollection.azure_rm_monitordatacollectionrules:
@@ -576,95 +843,6 @@
       ansible.builtin.assert:
         that:
           - output is changed
-
-    - name: Create a new monitor data collection endpoint(Checkmode test)
-      azure_rm_monitordatacollectionendpoint:
-        resource_group: "{{ resource_group }}-loganalyticsworkspace"
-        name: "{{ name_rpfx }}-DCE"
-        description: Create
-        kind: Linux
-        tags:
-          key1: value1
-        network_acls:
-          public_network_access: Disabled
-      check_mode: true
-      register: output
-
-    - name: Assert there is no data collection endpoint
-      ansible.builtin.assert:
-        that:
-          - output is changed
-
-    - name: Create a new monitor data collection endpoint
-      azure_rm_monitordatacollectionendpoint:
-        resource_group: "{{ resource_group }}-loganalyticsworkspace"
-        name: "{{ name_rpfx }}-DCE"
-        description: Create
-        kind: Linux
-        tags:
-          key1: value1
-        network_acls:
-          public_network_access: Disabled
-      register: output
-
-    - name: Assert the data collection endpoint is created
-      ansible.builtin.assert:
-        that:
-          - output is changed
-
-    - name: Create a new monitor data collection endpoint(Idempotent test)
-      azure_rm_monitordatacollectionendpoint:
-        resource_group: "{{ resource_group }}-loganalyticsworkspace"
-        name: "{{ name_rpfx }}-DCE"
-        description: Create
-        kind: Linux
-        tags:
-          key1: value1
-        network_acls:
-          public_network_access: Disabled
-      register: output
-
-    - name: Assert the data collection endpoint is already created
-      ansible.builtin.assert:
-        that:
-          - output is not changed
-
-    - name: Update the monitor data collection endpoint
-      azure_rm_monitordatacollectionendpoint:
-        resource_group: "{{ resource_group }}-loganalyticsworkspace"
-        name: "{{ name_rpfx }}-DCE"
-        description: "Update"
-        kind: Windows
-        tags:
-          key2: value2
-        network_acls:
-          public_network_access: Enabled
-      register: output
-
-    - name: Assert the data collection endpoint is updated
-      ansible.builtin.assert:
-        that:
-          - output is changed
-
-    - name: Get the monitor data collection endpoint
-      azure_rm_monitordatacollectionendpoint_info:
-        resource_group: "{{ resource_group }}-loganalyticsworkspace"
-        name: "{{ name_rpfx }}-DCE"
-      register: output
-
-    - name: Assert the data collection endpoint facts
-      ansible.builtin.assert:
-        that:
-          - output.datacollectionendpoints[0].tags |length == 2
-          - output.datacollectionendpoints[0].description == 'Update'
-          - output.datacollectionendpoints[0].kind == 'Windows'
-          - output.datacollectionendpoints[0].network_acls.public_network_access == 'Enabled'
-
-    - name: Delete the monitor data collection endpoint
-      azure_rm_monitordatacollectionendpoint:
-        resource_group: "{{ resource_group }}-loganalyticsworkspace"
-        name: "{{ name_rpfx }}-DCE"
-        state: absent
 
     - name: Remove Log Analytics workspace (Check Mode On)
       azure.azcollection.azure_rm_loganalyticsworkspace:
