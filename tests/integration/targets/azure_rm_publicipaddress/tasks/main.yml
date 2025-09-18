@@ -17,7 +17,7 @@
         state: absent
 
     - name: Create public ip prefix
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicip"
         name: "prefix{{ rpfx }}"
         zones:
@@ -27,7 +27,7 @@
         sku:
           name: Standard
           tier: Regional
-       register: output
+      register: output
 
     - name: Create the first public ip with public_ip_prefix
       azure.azcollection.azure_rm_publicipaddress:
@@ -41,7 +41,7 @@
       register: output
 
     - name: Get the first public ip
-      azure_rm_publicipaddress_info:
+      azure.azcollection.azure_rm_publicipaddress_info:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-first"
       register: output
@@ -185,7 +185,7 @@
         state: absent
 
     - name: Remove the public ip prefix
-      azure_rm_publicipprefix:
+      azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-publicip"
         name: "prefix{{ rpfx }}"
         state: absent
