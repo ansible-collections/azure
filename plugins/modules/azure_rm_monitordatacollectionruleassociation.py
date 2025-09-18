@@ -120,6 +120,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
         self.description = None
         self.log_path = None
         self.log_mode = None
+        mutually_exclusive = [('data_collection_endpoint_id', 'data_collection_rule_id')]
 
         self.results = dict(
             changed=False,
@@ -129,6 +130,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
         super(AzureRMDataCollectionRuleAssociation, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                    supports_check_mode=True,
                                                                    supports_tags=False,
+                                                                   mutually_exclusive=mutually_exclusive,
                                                                    facts_module=True)
 
     def exec_module(self, **kwargs):
@@ -146,20 +148,18 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
                 else:
                     self.description = response.get('description')
                 if self.data_collection_rule_id and self.data_collection_rule_id != response.get('data_collection_rule_id'):
-                    self.fail("Already associated with {0}. If need to udpate, please delete it and recreate it".format(response['data_collection_rule_id']))
+                    self.fail("Already exist assciation with {0}. If need to udpate, please delete it and recreate it".format(self.data_collection_rule_id))
                 else:
-                    self.data_collection_rule_id = response['data_collection_rule_id']
-                if self.check_mode:
-                    self.log("The monitor data collection rule association already exist")
+                    self.data_collection_rule_id = response.get('data_collection_rule_id')
+                if self.data_collection_endpoint_id and self.data_collection_endpoint_id != response.get('data_collection_endpoint_id'):
+                    self.fail("Already exist associat with {0}. If need to udpate, please delete it and recreate it".format(self.data_collection_endpoint_id))
                 else:
-                    if changed:
-                        response = self.create_association()
+                    self.data_collection_endpoint_id = response.get('data_collection_endpoint_id')
             else:
                 changed = True
-                if self.check_mode:
-                    self.log("There is no monitor data collection rule association, will create a new")
-                else:
-                    response = self.create_association()
+
+            if not self.check_mode and changed:
+                 response = self.create_association()
         else:
             if response:
                 changed = True
