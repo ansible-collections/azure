@@ -14,3 +14,7 @@
       ansible.builtin.assert:
         that:
           - vm_name in hostvars
+          - hostvars[vm_name].hyper_v_generation is defined
+          - hostvars[vm_name].os_name is defined
+          - hostvars[vm_name].os_version is defined
+          - hostvars[vm_name].os_compute_name is defined

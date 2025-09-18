@@ -177,6 +177,8 @@ try:
     from azure.mgmt.core.polling.arm_polling import ARMPolling
     from azure.core.polling import LROPoller
     from netaddr import IPAddress
+    from azure.mgmt.network import NetworkManagementClient
+    from azure.mgmt.compute import ComputeManagementClient
 except ImportError:
     Configuration = object
     parse_resource_id = object
@@ -847,42 +849,97 @@ class AzureHost(object):
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        # set nic-related values from the primary NIC first
-        for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
-            # and from the primary IP config per NIC first
-            for ipc in sorted(nic._nic_model.get('properties', {}).get('ipConfigurations', []),
-                              key=lambda i: i.get('properties', {}).get('primary', False), reverse=True):
-                try:
-                    subnet = ipc['properties'].get('subnet')
-                    if subnet:
-                        new_hostvars['subnet'].append(subnet)
-                    private_ip = ipc['properties'].get('privateIPAddress')
-                    if private_ip:
-                        new_hostvars['private_ipv4_addresses'].append(private_ip)
-                    pip_id = ipc['properties'].get('publicIPAddress', {}).get('id')
-                    if pip_id and pip_id in nic.public_ips:
-                        pip = nic.public_ips[pip_id]
-                        new_hostvars['public_ipv4_address'].append(pip._pip_model['properties'].get('ipAddress', None))
-                        new_hostvars['public_ip_address'].append({
-                            'id': pip_id,
-                            'name': pip._pip_model['name'],
-                            'ipv4_address': pip._pip_model['properties'].get('ipAddress', None),
-                        })
-                        pip_fqdn = pip._pip_model['properties'].get('dnsSettings', {}).get('fqdn')
-                        if pip_fqdn:
-                            new_hostvars['public_dns_hostnames'].append(pip_fqdn)
-                except Exception:
-                    continue
+        if len(self.nics) == 0:
+            # Set the attribute information related to the Uniform VMSS instance
+            # Set os compute name, os name, os version and hyper V generation
+            resource_group = new_hostvars['resource_group']
+            vmss_name = new_hostvars['vmss']['name']
+            instance_id = self._vm_model.get('instanceId')
+            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
+            instance_view = compute_client.virtual_machine_scale_set_vms.get_instance_view(resource_group_name=resource_group,
+                                                                                           vm_scale_set_name=vmss_name,
+                                                                                           instance_id=instance_id)
+            new_hostvars['os_compute_name'] = instance_view.computer_name
+            new_hostvars['os_name'] = instance_view.os_name
+            new_hostvars['os_version'] = instance_view.os_version
+            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
-            new_hostvars['mac_address'].append(nic._nic_model['properties'].get('macAddress'))
-            new_hostvars['network_interface'].append(nic._nic_model['name'])
-            new_hostvars['network_interface_id'].append(nic._nic_model['id'])
-            new_hostvars['security_group_id'].append(nic._nic_model['properties']['networkSecurityGroup']['id']) \
-                if nic._nic_model['properties'].get('networkSecurityGroup') else None
-            new_hostvars['security_group'].append(parse_resource_id(nic._nic_model['properties']['networkSecurityGroup']['id'])['resource_name']) \
-                if nic._nic_model['properties'].get('networkSecurityGroup') else None
+            # Set Uniform VMSS instance's nic-related values
+            network_client = NetworkManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
+            nics = network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=resource_group,
+                                                                                                          virtual_machine_scale_set_name=vmss_name,
+                                                                                                          virtualmachine_index=instance_id)
+            for nic in nics:
+                nic = nic.as_dict()
+                new_hostvars['network_interface'].append(nic.get('name'))
+                new_hostvars['network_interface_id'].append(nic.get('id'))
+                new_hostvars['network_interface_properties'].append(nic)
+                if nic.get('dns_settings'):
+                    new_hostvars['public_dns_hostnames'].append(nic['dns_settings'].get('internal_fqdn'))
+                if nic.get('mac_address'):
+                    new_hostvars['mac_address'].append(nic['mac_address'])
+                if nic.get('network_security_group'):
+                    new_hostvars['security_group_id'].append(nic['network_security_group']['id'])
+                    new_hostvars['security_group'].append(parse_resource_id(nic['network_security_group']['id'])['resource_name'])
+                for ipc in nic['ip_configurations']:
+                    if ipc.get('subnet'):
+                        new_hostvars['subnet'].append(ipc.get('subnet'))
+                    if ipc.get('private_ip_address'):
+                        new_hostvars['private_ipv4_addresses'].append(ipc.get('private_ip_address'))
+                    if ipc.get('public_ip_address'):
+                        new_hostvars['public_ip_address'].append(dict(id=ipc['public_ip_address'].get('id'),
+                                                                      name=ipc['public_ip_address'].get('name'),
+                                                                      ipv4_address=ipc['public_ip_address'].get('ip_address')))
+                        new_hostvars['public_ipv4_address'].append(ipc['public_ip_address'].get('ip_address'))
 
-            new_hostvars['network_interface_properties'].append(nic._nic_model)
+        else:
+            # set nic-related values from the primary NIC first
+            for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
+                # and from the primary IP config per NIC first
+                for ipc in sorted(nic._nic_model.get('properties', {}).get('ipConfigurations', []),
+                                  key=lambda i: i.get('properties', {}).get('primary', False), reverse=True):
+                    try:
+                        subnet = ipc['properties'].get('subnet')
+                        if subnet:
+                            new_hostvars['subnet'].append(subnet)
+                        private_ip = ipc['properties'].get('privateIPAddress')
+                        if private_ip:
+                            new_hostvars['private_ipv4_addresses'].append(private_ip)
+                        pip_id = ipc['properties'].get('publicIPAddress', {}).get('id')
+                        if pip_id and pip_id in nic.public_ips:
+                            pip = nic.public_ips[pip_id]
+                            new_hostvars['public_ipv4_address'].append(pip._pip_model['properties'].get('ipAddress', None))
+                            new_hostvars['public_ip_address'].append({
+                                'id': pip_id,
+                                'name': pip._pip_model['name'],
+                                'ipv4_address': pip._pip_model['properties'].get('ipAddress', None),
+                            })
+                            pip_fqdn = pip._pip_model['properties'].get('dnsSettings', {}).get('fqdn')
+                            if pip_fqdn:
+                                new_hostvars['public_dns_hostnames'].append(pip_fqdn)
+                    except Exception:
+                        continue
+
+                new_hostvars['mac_address'].append(nic._nic_model['properties'].get('macAddress'))
+                new_hostvars['network_interface'].append(nic._nic_model['name'])
+                new_hostvars['network_interface_id'].append(nic._nic_model['id'])
+                new_hostvars['security_group_id'].append(nic._nic_model['properties']['networkSecurityGroup']['id']) \
+                    if nic._nic_model['properties'].get('networkSecurityGroup') else None
+                new_hostvars['security_group'].append(parse_resource_id(nic._nic_model['properties']['networkSecurityGroup']['id'])['resource_name']) \
+                    if nic._nic_model['properties'].get('networkSecurityGroup') else None
+
+                new_hostvars['network_interface_properties'].append(nic._nic_model)
+
+            # Set os compute name, os name, os version and hyper V generation
+            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
+            instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
+            new_hostvars['os_compute_name'] = instance_view.computer_name
+            new_hostvars['os_name'] = instance_view.os_name
+            new_hostvars['os_version'] = instance_view.os_version
+            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
