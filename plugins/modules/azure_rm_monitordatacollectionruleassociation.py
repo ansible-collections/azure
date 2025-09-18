@@ -159,7 +159,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
                 changed = True
 
             if not self.check_mode and changed:
-                 response = self.create_association()
+                response = self.create_association()
         else:
             if response:
                 changed = True

@@ -649,7 +649,7 @@
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
-        description: "Create a collection endpoint association"
+        description: "Create a data collection endpoint association"
       register: output
 
     - name: Assert the data collection rule association is created
@@ -662,7 +662,7 @@
         resource_uri: "{{ vm_output.vms[0].id }}"
         association_name: configurationAccessEndpoint
         data_collection_endpoint_id: "{{ endpoint_output.datacollectionendpoints[0].id }}"
-        description: "Create collection endpoint association"
+        description: "Create a data collection endpoint association"
       register: output
 
     - name: Assert the data collection rule association is no change
