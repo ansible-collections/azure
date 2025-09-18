@@ -126,10 +126,10 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         )
 
         super(AzureRMDataCollectionRuleEndpointInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                             supports_check_mode=True,
-                                                             supports_tags=False,
-                                                             facts_module=True,
-                                                             required_by=self.required_by)
+                                                                    supports_check_mode=True,
+                                                                    supports_tags=False,
+                                                                    facts_module=True,
+                                                                    required_by=self.required_by)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -145,7 +145,6 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         self.results['datacollectionendpoints'] = result
 
         return self.results
-        return [item for item in self.results if self.has_tags(item.get('tags'), self.tags)]
 
     def get_endpoint(self):
         '''
@@ -156,7 +155,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
 
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.get(resource_group_name=self.resource_group,
-                                                                                                              data_collection_endpoint_name=self.name)
+                                                                                                          data_collection_endpoint_name=self.name)
         except Exception as ex:
             self.log("Could not find data collection endpoint {0} in resource group {1}, Exception as {2}".format(self.name, self.resource_group, ex))
             return []
@@ -173,7 +172,8 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
 
         if self.resource_group:
             try:
-                response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_resource_group(resource_group_name=self.resource_group)
+                response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_resource_group(
+                        resource_group_name=self.resource_group)
             except Exception as ex:
                 self.log("Could not list data collection endponts in resource group {0}, Exception as {1}".format(self.resource_uri, ex))
                 return []

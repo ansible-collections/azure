@@ -26,12 +26,14 @@ options:
         description:
             - The identifier of the resource.
         type: str
+        required: true
     association_name:
         description:
             - The name of the association.
             - The name is case insensitive.
             - An association of data collection endpoint must be named 'configurationAccessEndpoint.
         type: str
+        required: true
     description:
         description:
             - Description of the association.
@@ -79,7 +81,8 @@ datacollectionruleassociations:
             "data_collection_rule_id": "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
             "description": "fredtest",
             "etag": "\"0c00c2b5-0000-0800-0000-68ca0de80000\"",
-            "id": "/subscriptions/xxxxxxxxxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
+            "id": "/subscriptions/xxxxxxxxxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/\
+                   fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
             "name": "association01",
             "system_data": {
                 "created_at": "2025-09-17T01:24:56.450551Z",
@@ -108,7 +111,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
             data_collection_endpoint_id=dict(type='str'),
             data_collection_rule_id=dict(type='str'),
             description=dict(type='str'),
-            state=dict(type='str', default='present', choices=['present',  'absent'])
+            state=dict(type='str', default='present', choices=['present', 'absent'])
         )
 
         self.resource_uri = None
@@ -129,6 +132,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
                                                                    supports_check_mode=True,
                                                                    supports_tags=False,
                                                                    facts_module=True)
+
     def exec_module(self, **kwargs):
         """Main module execution method"""
 

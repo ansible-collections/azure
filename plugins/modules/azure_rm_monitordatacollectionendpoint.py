@@ -19,10 +19,12 @@ options:
             - The name of the data collection endpoint.
             - The name is case insensitive.
         type: str
+        required: true
     resource_group:
         description:
             - The name of the resource group in which the data collection endpoint is (if you use name)
         type: str
+        required: true
     location:
         description:
             - The geo-location where the resource lives.

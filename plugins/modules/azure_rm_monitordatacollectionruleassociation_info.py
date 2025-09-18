@@ -78,7 +78,8 @@ datacollectionruleassociations:
                 "data_collection_rule_id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
                 "description": "fredtest001",
                 "etag": "\"0c0056f9-0000-0800-0000-68ca149c0000\"",
-                "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
+                "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/\
+                       virtualMachines/fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
                 "name": "association01",
                 "system_data": {
                     "created_at": "2025-09-17T01:53:31.695099Z",
@@ -128,10 +129,10 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         )
 
         super(AzureRMDataCollectionRuleAssociationInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                             supports_check_mode=True,
-                                                             supports_tags=False,
-                                                             facts_module=True,
-                                                             required_by=self.required_by)
+                                                                       supports_check_mode=True,
+                                                                       supports_tags=False,
+                                                                       facts_module=True,
+                                                                       required_by=self.required_by)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -139,6 +140,7 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
+        result = []
         if self.association_name:
             result = self.get_association(self.resource_uri, self.association_name)
         elif self.data_collection_rule_name:
@@ -197,8 +199,9 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         result = []
         response = None
         try:
-            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_rule(resource_group_name=self.resource_group,
-                                                                                                                           data_collection_rule_name=self.data_collection_rule_name)
+            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_rule(
+                    resource_group_name=self.resource_group,
+                    data_collection_rule_name=self.data_collection_rule_name)
         except Exception as ex:
             self.log("Could not list assoication in data collection rule {0}, Exception as {1}".format(self.data_collection_rule_name, ex))
             return []
@@ -217,8 +220,9 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         response = None
 
         try:
-            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_data_collection_endpoint(resource_group_name=self.resource_group,
-                                                                                                                                               data_collection_endpoint_name=self.data_collection_endpoint_name)
+            response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_data_collection_endpoint(
+                    resource_group_name=self.resource_group,
+                    data_collection_endpoint_name=self.data_collection_endpoint_name)
         except Exception as ex:
             self.log("Could not list associations for the data collection rule endpoint {0}, Exception as {1}".format(self.data_collection_endpoint_name, ex))
             return []
