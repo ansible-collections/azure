@@ -64,7 +64,7 @@ datacollectionendpoints:
                     "endpoint": "https://fredendpoint1-tdt8.eastus-1.handler.control.monitor.azure.com"
                 },
                 "description": "fredtestend",
-                "etag": "\"3d00ef18-0000-0100-0000-68ca28010000\"",
+                "etag": "3d00ef18-0000-0100-0000-68ca28010000",
                 "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint1",
                 "immutable_id": "dce-703ef7fab85d4391af585d91c2b0b5a7",
                 "kind": "Linux",
@@ -111,7 +111,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         )
 
         self.required_by = {
-            'endpoint_name': 'resource_group'
+            'name': 'resource_group'
         }
 
         self.resource_group = None
@@ -173,7 +173,7 @@ class AzureRMDataCollectionRuleEndpointInfo(AzureRMModuleBase):
         if self.resource_group:
             try:
                 response = self.monitor_management_client_data_collection_rules.data_collection_endpoints.list_by_resource_group(
-                        resource_group_name=self.resource_group)
+                    resource_group_name=self.resource_group)
             except Exception as ex:
                 self.log("Could not list data collection endponts in resource group {0}, Exception as {1}".format(self.resource_uri, ex))
                 return []

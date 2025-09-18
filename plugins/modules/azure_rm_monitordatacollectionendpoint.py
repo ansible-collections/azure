@@ -104,7 +104,7 @@ datacollectionendpoint:
                 "endpoint": "https://fredendpoint-q7lu.eastus-1.handler.control.monitor.azure.com"
             },
             "description": "fredtestend",
-            "etag": "\"3d001f14-0000-0100-0000-68ca270a0000\"",
+            "etag": "3d001f14-0000-0100-0000-68ca270a0000",
             "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint",
             "immutable_id": "dce-9897a7cde9b54676a1c07ab3ea222768",
             "kind": "Linux",
@@ -133,9 +133,7 @@ datacollectionendpoint:
                 "key2": "value2"
             },
             "type": "Microsoft.Insights/dataCollectionEndpoints"
-        },
-        "failed": false
-    }
+        }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt

@@ -7,7 +7,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_monitordatacollectionrulesassociation
+module: azure_rm_monitordatacollectionruleassociation
 version_added: "3.9.0"
 short_description: Managed Data Collection Rule Association
 description:
@@ -80,7 +80,7 @@ datacollectionruleassociations:
     sample: {
             "data_collection_rule_id": "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
             "description": "fredtest",
-            "etag": "\"0c00c2b5-0000-0800-0000-68ca0de80000\"",
+            "etag": "0c00c2b5-0000-0800-0000-68ca0de80000",
             "id": "/subscriptions/xxxxxxxxxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/\
                    fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
             "name": "association01",
@@ -93,9 +93,7 @@ datacollectionruleassociations:
                 "last_modified_by_type": "Application"
             },
             "type": "Microsoft.Insights/dataCollectionRuleAssociations"
-        },
-        "failed": false
-    }
+        }
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

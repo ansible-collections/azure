@@ -7,7 +7,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_monitordatacollectionrulesassociation_info
+module: azure_rm_monitordatacollectionruleassociation_info
 version_added: "3.9.0"
 short_description: Get or list Data Collection Rule Association
 description:
@@ -77,7 +77,7 @@ datacollectionruleassociations:
             {
                 "data_collection_rule_id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
                 "description": "fredtest001",
-                "etag": "\"0c0056f9-0000-0800-0000-68ca149c0000\"",
+                "etag": "0c0056f9-0000-0800-0000-68ca149c0000",
                 "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/\
                        virtualMachines/fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
                 "name": "association01",
@@ -200,8 +200,8 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
         response = None
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_rule(
-                    resource_group_name=self.resource_group,
-                    data_collection_rule_name=self.data_collection_rule_name)
+                resource_group_name=self.resource_group,
+                data_collection_rule_name=self.data_collection_rule_name)
         except Exception as ex:
             self.log("Could not list assoication in data collection rule {0}, Exception as {1}".format(self.data_collection_rule_name, ex))
             return []
@@ -221,8 +221,8 @@ class AzureRMDataCollectionRuleAssociationInfo(AzureRMModuleBase):
 
         try:
             response = self.monitor_management_client_data_collection_rules.data_collection_rule_associations.list_by_data_collection_endpoint(
-                    resource_group_name=self.resource_group,
-                    data_collection_endpoint_name=self.data_collection_endpoint_name)
+                resource_group_name=self.resource_group,
+                data_collection_endpoint_name=self.data_collection_endpoint_name)
         except Exception as ex:
             self.log("Could not list associations for the data collection rule endpoint {0}, Exception as {1}".format(self.data_collection_endpoint_name, ex))
             return []
