@@ -171,6 +171,12 @@ publicipaddresses:
             returned: always
             type: str
             sample: Succeeded
+        public_ip_prefix:
+            description:
+                - The Public IP Prefix this Public IP Address should be allocated from.
+            type: dict
+            returned: when-used
+            sample: {"id": "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPPrefixes/prefix01"}
         etag:
             description:
                 - A unique read-only string that changes whenever the resource is updated.
@@ -278,7 +284,8 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
             provisioning_state=pip.provisioning_state,
             etag=pip.etag,
             sku=pip.sku.name,
-            zones=pip.zones
+            zones=pip.zones,
+            public_ip_prefix=None
         )
         if pip.dns_settings:
             result['dns_settings']['domain_name_label'] = pip.dns_settings.domain_name_label
@@ -286,6 +293,8 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
             result['dns_settings']['reverse_fqdn'] = pip.dns_settings.reverse_fqdn
         if pip.ip_tags:
             result['ip_tags'] = [dict(type=x.ip_tag_type, value=x.tag) for x in pip.ip_tags]
+        if pip.public_ip_prefix:
+            result['public_ip_prefix'] = dict(id=pip.public_ip_prefix.id)
         return result
 
     def get_item(self):

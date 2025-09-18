@@ -57,6 +57,16 @@ options:
             - Name of the Public IP.
         type: str
         required: true
+    public_ip_prefix:
+        description:
+            - The Public IP Prefix this Public IP Address should be allocated from.
+            - Once set, it cannot be updated.
+        type: dict
+        suboptions:
+            id:
+                description:
+                    - The Public IP Prefix ID.
+                type: str
     state:
         description:
             - Assert the state of the Public IP. Use C(present) to create or update a and C(absent) to delete.
@@ -214,6 +224,12 @@ state:
              returned: always
              type: str
              sample: ipv4
+        public_ip_prefix:
+            description:
+                - The Public IP Prefix this Public IP Address should be allocated from.
+            type: dict
+            returned: when-used
+            sample: {"id": "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPPrefixes/prefix01"}
         sku:
             description:
                 - The public IP address SKU.
@@ -268,7 +284,8 @@ def pip_to_dict(pip):
         provisioning_state=pip.provisioning_state,
         etag=pip.etag,
         sku=pip.sku.name,
-        zones=pip.zones
+        zones=pip.zones,
+        public_ip_prefix=None
     )
     if pip.dns_settings:
         result['dns_settings']['domain_name_label'] = pip.dns_settings.domain_name_label
@@ -276,6 +293,9 @@ def pip_to_dict(pip):
         result['dns_settings']['reverse_fqdn'] = pip.dns_settings.reverse_fqdn
     if pip.ip_tags:
         result['ip_tags'] = [dict(type=to_native(x.ip_tag_type), value=to_native(x.tag)) for x in pip.ip_tags]
+    if pip.public_ip_prefix:
+        result['public_ip_prefix'] = dict(id=pip.public_ip_prefix.id)
+
     return result
 
 
@@ -301,6 +321,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             sku=dict(type='str', choices=['Standard', 'standard']),
             ip_tags=dict(type='list', elements='dict', options=ip_tag_spec),
             idle_timeout=dict(type='int'),
+            public_ip_prefix=dict(type='dict', options=dict(id=dict(type='str'))),
             zones=dict(type='list', elements='str', choices=['1', '2', '3'])
         )
 
@@ -317,6 +338,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
         self.version = None
         self.ip_tags = None
         self.idle_timeout = None
+        self.public_ip_prefix = None
 
         self.results = dict(
             changed=False,
@@ -420,6 +442,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                     pip = self.network_models.PublicIPAddress(
                         location=self.location,
                         public_ip_address_version=self.version,
+                        public_ip_prefix=self.public_ip_prefix,
                         public_ip_allocation_method=self.allocation_method,
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
                         idle_timeout_in_minutes=self.idle_timeout if self.idle_timeout and self.idle_timeout > 0 else None,
@@ -441,6 +464,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
                         public_ip_allocation_method=results['public_ip_allocation_method'],
                         sku=self.network_models.PublicIPAddressSku(name=self.sku) if self.sku else None,
                         tags=results['tags'],
+                        public_ip_prefix=self.public_ip_prefix,
                         zones=results['zones']
                     )
                     if self.domain_name or self.reverse_fqdn:

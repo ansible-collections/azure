@@ -16,14 +16,40 @@
         name: "pip{{ rpfx }}"
         state: absent
 
-    - name: Create the first public ip
+    - name: Create public ip prefix
+      azure.azcollection.azure_rm_publicipprefix:
+        resource_group: "{{ resource_group }}-publicip"
+        name: "prefix{{ rpfx }}"
+        zones:
+          - 1
+        public_ip_address_version: IPV4
+        prefix_length: 29
+        sku:
+          name: Standard
+          tier: Regional
+      register: output
+
+    - name: Create the first public ip with public_ip_prefix
       azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-first"
         allocation_method: Static
+        public_ip_prefix:
+          id: "{{ output.state.id }}"
         sku: Standard
         domain_name: "{{ domain_name }}-first"
       register: output
+
+    - name: Get the first public ip
+      azure.azcollection.azure_rm_publicipaddress_info:
+        resource_group: "{{ resource_group }}-publicip"
+        name: "pip{{ rpfx }}-first"
+      register: pip_output
+
+    - name: Assert the public ip facts
+      ansible.builtin.assert:
+        that:
+          - pip_output.publicipaddresses[0].public_ip_prefix.id is defined
 
     - name: Create public ip
       azure.azcollection.azure_rm_publicipaddress:
@@ -156,6 +182,12 @@
       azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-first"
+        state: absent
+
+    - name: Remove the public ip prefix
+      azure.azcollection.azure_rm_publicipprefix:
+        resource_group: "{{ resource_group }}-publicip"
+        name: "prefix{{ rpfx }}"
         state: absent
 
     - name: Remove public ip
