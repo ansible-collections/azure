@@ -229,7 +229,7 @@ state:
                 - The Public IP Prefix this Public IP Address should be allocated from.
             type: dict
             returned: when-used
-            sample: {id: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPPrefixes/prefix01}
+            sample: {"id": "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPPrefixes/prefix01"}
         sku:
             description:
                 - The public IP address SKU.
@@ -321,7 +321,7 @@ class AzureRMPublicIPAddress(AzureRMModuleBase):
             sku=dict(type='str', choices=['Standard', 'standard']),
             ip_tags=dict(type='list', elements='dict', options=ip_tag_spec),
             idle_timeout=dict(type='int'),
-            public_ip_prefix=dict(type='dict',options=dict(id=dict(type='str'))),
+            public_ip_prefix=dict(type='dict', options=dict(id=dict(type='str'))),
             zones=dict(type='list', elements='str', choices=['1', '2', '3'])
         )
 

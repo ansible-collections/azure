@@ -176,7 +176,7 @@ publicipaddresses:
                 - The Public IP Prefix this Public IP Address should be allocated from.
             type: dict
             returned: when-used
-            sample: {id: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPPrefixes/prefix01}
+            sample: {"id": "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/publicIPPrefixes/prefix01"}
         etag:
             description:
                 - A unique read-only string that changes whenever the resource is updated.
