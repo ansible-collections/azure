@@ -44,12 +44,12 @@
       azure.azcollection.azure_rm_publicipaddress_info:
         resource_group: "{{ resource_group }}-publicip"
         name: "pip{{ rpfx }}-first"
-      register: output
+      register: pip_output
 
     - name: Assert the public ip facts
       ansible.builtin.assert:
         that:
-          - output.publicipaddresses[0].public_ip_prefix.id is defined
+          - pip_output.publicipaddresses[0].public_ip_prefix.id is defined
 
     - name: Create public ip
       azure.azcollection.azure_rm_publicipaddress:
