@@ -78,7 +78,11 @@ datacollectionendpoints:
             returned: always
             sample: "3d001f14-0000-0100-0000-68ca270a0000"
         id:
-            description:                                                                                                                - Fully qualified ID of the resource.                                                                               type: str                                                                                                               returned: always                                                                                                        sample: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint"
+            description:
+                - Fully qualified ID of the resource.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint"
         immutable_id:
             description:
                 - The immutable ID of this data collection endpoint resource.

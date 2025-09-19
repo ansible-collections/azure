@@ -75,8 +75,17 @@ datacollectionruleassociations:
     returned: always
     contains:
         data_collection_rule_id:
-            description:                                                                                                                - The resource ID of the data collection endpoint that is to be associated.                                         type: str                                                                                                               returned: when-used                                                                                                     sample: "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR"                                                                                                                   data_collection_endpoint_id:
-            description:                                                                                                                - The resource ID of the data collection endpoint that is to be associated.                                         type: str                                                                                                               returned: when-used                                                                                                     sample: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint"
+            description:
+                - The resource ID of the data collection endpoint that is to be associated.
+            type: str
+            returned: when-used
+            sample: "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR"
+        data_collection_endpoint_id:
+            description:
+                - The resource ID of the data collection endpoint that is to be associated.
+            type: str
+            returned: when-used
+            sample: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint"
         description:
             description:
                 - Description of the association.
