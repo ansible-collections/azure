@@ -80,6 +80,8 @@ parameters:
       - "azure_rm_monitoractiongroups"
       - "azure_rm_monitoractivitylogalerts"
       - "azure_rm_monitordatacollectionrules"
+      - "azure_rm_monitordatacollectionendpoint"
+      - "azure_rm_monitordatacollectionruleassociation"
       - "azure_rm_monitordiagnosticsetting"
       - "azure_rm_monitorlogprofile"
       - "azure_rm_monitormetricalerts"
