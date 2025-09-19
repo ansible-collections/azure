@@ -54,6 +54,9 @@ class GenericRestClient(object):
         self._client = PipelineClient(base_url, config=self._config)
         self.models = None
 
+        # Support http errors by status code
+        self.error_map = {}
+
     def query(self, url, method, query_parameters, header_parameters, body, expected_status_codes, polling_timeout, polling_interval):
         # Construct and send request
         operation_config = {}
@@ -83,8 +86,8 @@ class GenericRestClient(object):
         response = self._client.send_request(request, **operation_config)
 
         if response.status_code not in expected_status_codes:
-            exp = SendRequestException(response.text(), response.status_code)
-            raise exp
+            return self.on_error(response)
+
         elif response.status_code == 202 and polling_timeout > 0:
             def get_long_running_output(response):
                 return response
@@ -102,6 +105,15 @@ class GenericRestClient(object):
             return poller.result()
         except Exception as exc:
             raise
+
+    def on_error(self, response):
+        """ handle errors in response
+        """
+        # raise common http errors
+        error_type = self.error_map.get(response.status_code)
+        if error_type:
+            raise error_type(response=response)
+        raise SendRequestException(response.text(), response.status_code)
 
 
 class SendRequestException(Exception):
