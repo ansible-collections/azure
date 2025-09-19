@@ -72,28 +72,68 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-datacollectionruleassociations:
+datacollectionruleassociation:
     description:
         - The facts of the data collection rule association.
-    type: dict
+    type: complex
     returned: always
-    sample: {
-            "data_collection_rule_id": "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR",
-            "description": "fredtest",
-            "etag": "0c00c2b5-0000-0800-0000-68ca0de80000",
-            "id": "/subscriptions/xxxxxxxxxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/\
-                   fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01",
-            "name": "association01",
-            "system_data": {
+    contains:
+        data_collection_rule_id:
+            description:
+                - The resource ID of the data collection endpoint that is to be associated.
+            type: str
+            returned: when-used
+            sample: "/subscriptions/xxxxx/resourceGroups/v-xisuRG02/providers/Microsoft.Insights/dataCollectionRules/fredrpfx001-DCR"
+        data_collection_endpoint_id:
+            description:
+                - The resource ID of the data collection endpoint that is to be associated.
+            type: str
+            returned: when-used
+            sample: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint"
+        description:
+            description:
+                - Description of the association.
+            type: str
+            returned: always
+            sample: Create
+        etag:
+            description:
+                - Description of the association.
+            returned: always
+            type: str
+            sample: "0c00c2b5-0000-0800-0000-68ca0de80000"
+        id:
+            description:
+                - Fully qualified ID of the resource.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxxxxxxxxx/resourceGroups/v-xisuRG/providers/Microsoft.Compute/virtualMachines/\
+                     fredVM/providers/Microsoft.Insights/dataCollectionRuleAssociations/association01"
+        name:
+            description:
+                - Description of the association.
+            type: str
+            returned: always
+            sample: associationname
+        system_data:
+            description:
+                - Metadata pertaining to creation and last modification of the resource.
+            type: dict
+            returned: always
+            sample: {
                 "created_at": "2025-09-17T01:24:56.450551Z",
                 "created_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
                 "created_by_type": "Application",
                 "last_modified_at": "2025-09-17T01:24:56.450551Z",
                 "last_modified_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
                 "last_modified_by_type": "Application"
-            },
-            "type": "Microsoft.Insights/dataCollectionRuleAssociations"
-        }
+            }
+        type:
+            description:
+                - The type of the resource.
+            type: str
+            returned: always
+            sample: "Microsoft.Insights/dataCollectionRuleAssociations"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase

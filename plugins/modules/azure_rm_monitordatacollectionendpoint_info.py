@@ -56,45 +56,97 @@ datacollectionendpoints:
     description:
         - List of data collection rule association.
         - Can be empty if listing data collection rule association.
-    type: list
+    type: complex
     returned: always
-    sample: [
-            {
-                "configuration_access": {
-                    "endpoint": "https://fredendpoint1-tdt8.eastus-1.handler.control.monitor.azure.com"
-                },
-                "description": "fredtestend",
-                "etag": "3d00ef18-0000-0100-0000-68ca28010000",
-                "id": "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint1",
-                "immutable_id": "dce-703ef7fab85d4391af585d91c2b0b5a7",
-                "kind": "Linux",
-                "location": "eastus",
-                "logs_ingestion": {
-                    "endpoint": "https://fredendpoint1-tdt8.eastus-1.ingest.monitor.azure.com"
-                },
-                "metrics_ingestion": {
-                    "endpoint": "https://fredendpoint1-tdt8.eastus-1.metrics.ingest.monitor.azure.com"
-                },
-                "name": "fredendpoint1",
-                "network_acls": {
-                    "public_network_access": "Enabled"
-                },
-                "provisioning_state": "Succeeded",
-                "system_data": {
-                    "created_at": "2025-09-17T03:16:17.037276Z",
-                    "created_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
-                    "created_by_type": "Application",
-                    "last_modified_at": "2025-09-17T03:16:17.037276Z",
-                    "last_modified_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
-                    "last_modified_by_type": "Application"
-                },
-                "tags": {
-                    "key1": "value1",
-                    "key2": "value2"
-                },
-                "type": "Microsoft.Insights/dataCollectionEndpoints"
+    contains:
+        configuration_access:
+            description:
+                - The endpoint used by clients to access their configuration.
+            type: dict
+            returned: always
+            sample: {"endpoint": "https://fredendpoint-q7lu.eastus-1.handler.control.monitor.azure.com"}
+        description:
+            description:
+                - Description of the data collection endpoint.
+            type: str
+            returned: always
+            sample: Created
+        etag:
+            description:
+                - Resource entity tag (ETag).
+            type: str
+            returned: always
+            sample: "3d001f14-0000-0100-0000-68ca270a0000"
+        id:
+            description:                                                                                                                - Fully qualified ID of the resource.                                                                               type: str                                                                                                               returned: always                                                                                                        sample: "/subscriptions/xxx-xxx/resourceGroups/v-xisuRG/providers/Microsoft.Insights/dataCollectionEndpoints/fredendpoint"
+        immutable_id:
+            description:
+                - The immutable ID of this data collection endpoint resource.
+                - This property is READ-ONLY.
+            type: str
+            returned: always
+            sample: dce-9897a7cde9b54676a1c07ab3ea222768
+        kind:
+            description:
+                - The kind of the resource.
+            type: str
+            returned: always
+            sample: Linux
+        logs_ingestion:
+            description:
+                - The endpoint used by clients to ingest logs.
+            type: dict
+            returned: always
+            sample: {"endpoint": "https://fredendpoint-q7lu.eastus-1.ingest.monitor.azure.com"}
+        metrics_ingestion:
+            description:
+                - The endpoint used by clients to ingest metrics.
+            type: dict
+            returned: always
+            sample: {"endpoint": "https://fredendpoint-q7lu.eastus-1.metrics.ingest.monitor.azure.com"}
+        name:
+            description:
+                - The name of the resource.
+            type: str
+            returned: always
+            sample: testendpoint
+        network_acls:
+            description:
+                - Network access control rules for the endpoints.
+            type: dict
+            returned: always
+            sample: {"public_network_access": "Enabled"}
+        provisioning_state:
+            description:
+                - The resource provisioning state. This property is READ-ONLY.
+            type: str
+            returned: always
+            sample: Succeeded
+        system_data:
+            description:
+                - Metadata pertaining to creation and last modification of the resource.
+            type: dict
+            returned: always
+            sample: {
+                "created_at": "2025-09-17T03:12:08.743499Z",
+                "created_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                "created_by_type": "Application",
+                "last_modified_at": "2025-09-17T03:12:08.743499Z",
+                "last_modified_by": "00867800-0fa3-4d02-8bc8-35edac3a0d32",
+                "last_modified_by_type": "Application"
             }
-        ]
+        tags:
+            description:
+                - Resource tags.
+            returned: always
+            type: dict
+            sample: {'key1': 'value1'}
+        type:
+            description:
+                - The type of the resource.
+            returned: always
+            type: str
+            sample: "Microsoft.Insights/dataCollectionEndpoints"
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
