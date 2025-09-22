@@ -168,6 +168,10 @@ options:
             - Can be the resource ID of the NAT Gateway.
             - Can be a dict containing the I(name) and I(resource_group) of the NAT Gateway.
         type: str
+    default_outbound_access:
+        description:
+            - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
+        type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -301,6 +305,12 @@ state:
             returned: always
             type: str
             sample: "Disabled"
+        default_outbound_access:
+            description:
+                - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
+            type: bool
+            returned: always
+            sample: false
         delegations:
             description:
                 - Associated delegation of subnets
@@ -376,7 +386,8 @@ def subnet_to_dict(subnet):
         route_table=dict(),
         private_endpoint_network_policies=subnet.private_endpoint_network_policies,
         private_link_service_network_policies=subnet.private_link_service_network_policies,
-        nat_gateway=None
+        nat_gateway=None,
+        default_outbound_access=subnet.default_outbound_access
     )
     if subnet.network_security_group:
         id_keys = azure_id_to_dict(subnet.network_security_group.id)
@@ -408,6 +419,7 @@ class AzureRMSubnet(AzureRMModuleBase):
             virtual_network_name=dict(type='str', required=True, aliases=['virtual_network']),
             address_prefix_cidr=dict(type='str', aliases=['address_prefix']),
             address_prefixes_cidr=dict(type='list', aliases=['address_prefixes'], elements='str'),
+            default_outbound_access=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             route_table=dict(type='raw'),
             service_endpoints=dict(
@@ -456,6 +468,7 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.private_endpoint_network_policies = None
         self.delegations = None
         self.nat_gateway = None
+        self.default_outbound_access = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
                                             supports_check_mode=True,
@@ -586,6 +599,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                         changed = True
                         # Disassociate NAT Gateway
                         results['nat_gateway'] = None
+                if self.default_outbound_access is not None and bool(self.default_outbound_access != results.get('default_outbound_access')):
+                    changed = True
+                else:
+                    self.default_outbound_access = results.get('default_outbound_access')
 
             elif self.state == 'absent':
                 changed = True
@@ -646,6 +663,7 @@ class AzureRMSubnet(AzureRMModuleBase):
                     if results.get('nat_gateway') is not None:
                         subnet.nat_gateway = self.network_models.SubResource(id=results['nat_gateway'])
 
+                subnet.default_outbound_access = self.default_outbound_access
                 self.results['state'] = self.create_or_update_subnet(subnet)
             elif self.state == 'absent' and changed:
                 # delete subnet
