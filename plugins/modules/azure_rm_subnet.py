@@ -325,6 +325,18 @@ state:
                     returned : when delegation is present
                     type: list
                     sample: ["Microsoft.Network/virtualNetworks/subnets/action"]
+        sharing_scope:
+            description:
+                - Set this property to Tenant to allow sharing subnet with other  subscriptions in your AAD tenant.
+            type: str
+            returned: always
+            sample: None
+        service_endpoint_policies:
+            description:
+                - An array of service endpoint policies.
+            type: list
+            returned: always
+            sample: []
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
@@ -376,7 +388,9 @@ def subnet_to_dict(subnet):
         route_table=dict(),
         private_endpoint_network_policies=subnet.private_endpoint_network_policies,
         private_link_service_network_policies=subnet.private_link_service_network_policies,
-        nat_gateway=None
+        nat_gateway=None,
+        sharing_scope=subnet.sharing_scope,
+        service_endpoint_policies=list()
     )
     if subnet.network_security_group:
         id_keys = azure_id_to_dict(subnet.network_security_group.id)
@@ -394,6 +408,8 @@ def subnet_to_dict(subnet):
         result['delegations'] = [{'name': item.name, 'serviceName': item.service_name, 'actions': item.actions or []} for item in subnet.delegations]
     if subnet.nat_gateway:
         result['nat_gateway'] = subnet.nat_gateway.id
+    if subnet.service_endpoint_policies:
+        result['service_endpoint_policies'] = [item.id for item in subnet.service_endpoint_policies]
     return result
 
 
@@ -433,7 +449,9 @@ class AzureRMSubnet(AzureRMModuleBase):
                 elements='dict',
                 options=delegations_spec
             ),
-            nat_gateway=dict(type='str')
+            nat_gateway=dict(type='str'),
+            sharing_scope=dict(type='str', choices=[None, 'Tenant']),
+            service_endpoint_policies=dict(type='list', elements='str')
         )
 
         mutually_exclusive = [['address_prefix_cidr', 'address_prefixes_cidr']]
@@ -456,6 +474,8 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.private_endpoint_network_policies = None
         self.delegations = None
         self.nat_gateway = None
+        self.service_endpoint_policies = None
+        self.sharing_scope = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
                                             supports_check_mode=True,
@@ -587,6 +607,18 @@ class AzureRMSubnet(AzureRMModuleBase):
                         # Disassociate NAT Gateway
                         results['nat_gateway'] = None
 
+                if self.sharing_scope and self.sharing_scope != results['sharing_scope']:
+                    changed = True
+                else:
+                    results['sharing_scope'] = results['sharing_scope']
+                if self.service_endpoint_policies:
+                    for item in results['service_endpoint_policies']:
+                        if item not in self.service_endpoint_policies:
+                            changed = True
+                            self.service_endpoint_policies.append(item)
+                else:
+                    self.service_endpoint_policies = results['service_endpoint_policies'] if results['service_endpoint_policies'] else None
+
             elif self.state == 'absent':
                 changed = True
         except ResourceNotFoundError:
@@ -623,6 +655,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.delegations = self.delegations
                     if nat_gateway:
                         subnet.nat_gateway = self.network_models.SubResource(id=nat_gateway)
+                    if self.sharing_scope:
+                        subnet.sharing_scope = self.sharing_scope
+                    if self.service_endpoint_policies:
+                        subnet.service_endpoint_policies = self.service_endpoint_policies
                 else:
                     # update subnet
                     self.log('Updating subnet {0}'.format(self.name))
@@ -645,6 +681,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.delegations = results['delegations']
                     if results.get('nat_gateway') is not None:
                         subnet.nat_gateway = self.network_models.SubResource(id=results['nat_gateway'])
+                    if self.sharing_scope:
+                        subnet.sharing_scope = self.sharing_scope
+                    if self.service_endpoint_policies:
+                        subnet.service_endpoint_policies = self.service_endpoint_policies
 
                 self.results['state'] = self.create_or_update_subnet(subnet)
             elif self.state == 'absent' and changed:

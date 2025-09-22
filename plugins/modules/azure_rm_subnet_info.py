@@ -189,6 +189,18 @@ subnets:
             returned: when available
             type: str
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/natGateways/myGw"
+        sharing_scope:
+            description:
+                - Set this property to Tenant to allow sharing subnet with other  subscriptions in your AAD tenant.
+            type: str
+            returned: always
+            sample: None
+        service_endpoint_policies:
+            description:
+                - An array of service endpoint policies.
+            type: list
+            returned: always
+            sample: []
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -285,8 +297,11 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
             'private_link_service_network_policies': d.get('private_link_service_network_policies'),
             'delegations': d.get('delegations'),
-            'nat_gateway': d.get('nat_gateway', {}).get('id')
+            'nat_gateway': d.get('nat_gateway', {}).get('id'),
+            'sharing_scope': d.get('sharing_scope'),
+            'service_endpoint_policies': [item for item in response['service_endpoint_policy']] if response.get('service_endpoint_policy') else []
         }
+
         return d
 
 
