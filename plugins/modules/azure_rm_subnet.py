@@ -182,6 +182,9 @@ options:
         description:
             - Set this property to Tenant to allow sharing subnet with other subscriptions in your AAD tenant.
         type: str
+        choices:
+            - DelegatedServices
+            - Tenant
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -464,7 +467,7 @@ class AzureRMSubnet(AzureRMModuleBase):
                 options=delegations_spec
             ),
             nat_gateway=dict(type='str'),
-            sharing_scope=dict(type='str', choices=[None, 'Tenant']),
+            sharing_scope=dict(type='str', choices=['DelegatedServices', 'Tenant']),
             service_endpoint_policies=dict(
                 type='list',
                 elements='dict',
