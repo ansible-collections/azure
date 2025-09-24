@@ -24,19 +24,10 @@ options:
             - The name of the service endpoint policy name.
         type: str
         required: true
-    description:
+    location:
         description:
-            - A description for this rule. Restricted to 140 chars.
+            - THe resource's location.
         type: str
-    service:
-        description:
-            - Service endpoint name.
-        type: str
-    service_resources:
-        description:
-            - A list of service resources.
-        type: list
-        elements: str
     state:
         description:
             - Set to C(present) to create or update the service endpoint policy.
@@ -167,9 +158,9 @@ class AzureRMServiceEndpointPolicy(AzureRMModuleBase):
         )
 
         super(AzureRMServiceEndpointPolicy, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                                         supports_check_mode=True,
-                                                                         supports_tags=True,
-                                                                         facts_module=True)
+                                                           supports_check_mode=True,
+                                                           supports_tags=True,
+                                                           facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""

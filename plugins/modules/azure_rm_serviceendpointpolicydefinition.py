@@ -68,7 +68,7 @@ EXAMPLES = '''
     description: definition-test
     service: Microsoft.Storage
     service_resources:
-      - "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Storage/storageAccounts/account01"
+          - "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Storage/storageAccounts/account01"
 
 - name: Delete the service endpoint policy definition
   azure.azcollection.azure_rm_serviceendpointpolicydefinition:
@@ -86,7 +86,12 @@ serviceendpointpolicydefinition:
     returned: always
     contains:
         id:
-            description:                                                                                                                                                          - Fully qualified ID of the resource.                                                                                                                         type: str                                                                                                                                                         returned: always                                                                                                                                                  sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/serviceEndpointPolicies/policy01/serviceEndpointPolicyDefinitions/definition01"
+            description:
+                - Fully qualified ID of the resource.
+            type: str
+            returned: always
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/serviceEndpointPolicies/\
+                     policy01/serviceEndpointPolicyDefinitions/definition01"
         name:
             description:
                 - The name of the resource that is unique within a resource group.
@@ -181,9 +186,9 @@ class AzureRMServiceEndpointPolicyDefinition(AzureRMModuleBase):
         )
 
         super(AzureRMServiceEndpointPolicyDefinition, self).__init__(derived_arg_spec=self.module_arg_spec,
-                                                                         supports_check_mode=True,
-                                                                         supports_tags=False,
-                                                                         facts_module=True)
+                                                                     supports_check_mode=True,
+                                                                     supports_tags=False,
+                                                                     facts_module=True)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -248,13 +253,12 @@ class AzureRMServiceEndpointPolicyDefinition(AzureRMModuleBase):
         '''
         response = None
         try:
-            response = self.network_client.service_endpoint_policy_definitions.begin_create_or_update(resource_group_name=self.resource_group,
-                    service_endpoint_policy_name=self.service_endpoint_policy_name,
-                    service_endpoint_policy_definition_name=self.name,
-                    service_endpoint_policy_definitions=dict(description=self.description,
-                                                             service=self.service,
-                                                             service_resources=self.service_resources)
-            )
+            response = self.network_client.service_endpoint_policy_definitions.begin_create_or_update(self.resource_group,
+                                                                                                      self.service_endpoint_policy_name,
+                                                                                                      self.name,
+                                                                                                      dict(description=self.description,
+                                                                                                           service=self.service,
+                                                                                                           service_resources=self.service_resources))
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
         except Exception as ex:

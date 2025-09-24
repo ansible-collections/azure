@@ -198,7 +198,7 @@ class AzureRMServiceEndpointPolicyInfo(AzureRMModuleBase):
 
     def format_item(self, item):
         response = item.as_dict()
-        response['resource_group'] = resource_group=self.parse_resource_to_dict(response['id']).get('resource_group')
+        response['resource_group'] = self.parse_resource_to_dict(response['id']).get('resource_group')
         return response
 
 

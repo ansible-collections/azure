@@ -61,7 +61,8 @@ serviceendpointpolicydefinitions:
                 - Fully qualified ID of the resource.
             type: str
             returned: always
-            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/serviceEndpointPolicies/policy01/serviceEndpointPolicyDefinitions/definition01"
+            sample: "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Network/serviceEndpointPolicies/\
+                     policy01/serviceEndpointPolicyDefinitions/definition01"
         name:
             description:
                 - The name of the resource that is unique within a resource group.
