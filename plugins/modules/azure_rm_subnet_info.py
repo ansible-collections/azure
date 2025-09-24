@@ -299,7 +299,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'delegations': d.get('delegations'),
             'nat_gateway': d.get('nat_gateway', {}).get('id'),
             'sharing_scope': d.get('sharing_scope'),
-            'service_endpoint_policies': [item for item in response['service_endpoint_policy']] if response.get('service_endpoint_policy') else []
+            'service_endpoint_policies': [item for item in d['service_endpoint_policy']] if d.get('service_endpoint_policy') else []
         }
 
         return d

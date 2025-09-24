@@ -68,7 +68,7 @@ EXAMPLES = '''
     description: definition-test
     service: Microsoft.Storage
     service_resources:
-          - "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Storage/storageAccounts/account01"
+      - "/subscriptions/xxx-xxx/resourceGroups/testRG/providers/Microsoft.Storage/storageAccounts/account01"
 
 - name: Delete the service endpoint policy definition
   azure.azcollection.azure_rm_serviceendpointpolicydefinition:
