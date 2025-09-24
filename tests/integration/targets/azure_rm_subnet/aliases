@@ -1,3 +1,7 @@
 cloud/azure
 shippable/azure/group2
 destructive
+azure_rm_serviceendpointpolicy
+azure_rm_serviceendpointpolicy_info
+azure_rm_serviceendpointpolicydefinition
+azure_rm_serviceendpointpolicydefinition_info

@@ -253,7 +253,6 @@ class AzureRMServiceEndpointPolicy(AzureRMModuleBase):
                 self.get_poller_result(response)
         except Exception as ex:
             self.fail("Could not delete the service endpoint policy, Exception as {0}".format(ex))
-        return self.format_item(response) if response else None
 
     def format_item(self, item):
         response = item.as_dict()

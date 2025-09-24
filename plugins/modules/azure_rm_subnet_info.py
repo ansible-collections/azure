@@ -200,7 +200,7 @@ subnets:
                 - An array of service endpoint policies.
             type: list
             returned: always
-            sample: []
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/TestRG/providers/Microsoft.Network/serviceEndpointPolicies/testpolicy"]
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -299,7 +299,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'delegations': d.get('delegations'),
             'nat_gateway': d.get('nat_gateway', {}).get('id'),
             'sharing_scope': d.get('sharing_scope'),
-            'service_endpoint_policies': [item for item in d['service_endpoint_policy']] if d.get('service_endpoint_policy') else []
+            'service_endpoint_policies': [item for item in d['service_endpoint_policies']] if d.get('service_endpoint_policies') else []
         }
 
         return d

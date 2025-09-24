@@ -307,6 +307,10 @@ action_groups:
     - azure.azcollection.azure_rm_storageshare_info
     - azure.azcollection.azure_rm_subnet
     - azure.azcollection.azure_rm_subnet_info
+    - azure.azcollection.azure_rm_serviceendpointpolicy
+    - azure.azcollection.azure_rm_serviceendpointpolicy_info
+    - azure.azcollection.azure_rm_serviceendpointpolicydefinition
+    - azure.azcollection.azure_rm_serviceendpointpolicydefinition_info
     - azure.azcollection.azure_rm_subscription_info
     - azure.azcollection.azure_rm_trafficmanager
     - azure.azcollection.azure_rm_trafficmanagerendpoint

@@ -168,6 +168,20 @@ options:
             - Can be the resource ID of the NAT Gateway.
             - Can be a dict containing the I(name) and I(resource_group) of the NAT Gateway.
         type: str
+    service_endpoint_policies:
+        description:
+            - An array of service endpoint policies.
+        type: list
+        elements: dict
+        suboptions:
+            id:
+                description:
+                    - Resource ID of the service endpoint policy.
+                type: str
+    sharing_scope:
+        description:
+            - Set this property to Tenant to allow sharing subnet with other subscriptions in your AAD tenant.
+        type: str
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -336,7 +350,7 @@ state:
                 - An array of service endpoint policies.
             type: list
             returned: always
-            sample: []
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/TestRG/providers/Microsoft.Network/serviceEndpointPolicies/testpolicy"]
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
@@ -451,7 +465,13 @@ class AzureRMSubnet(AzureRMModuleBase):
             ),
             nat_gateway=dict(type='str'),
             sharing_scope=dict(type='str', choices=[None, 'Tenant']),
-            service_endpoint_policies=dict(type='list', elements='str')
+            service_endpoint_policies=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    id=dict(type='str')
+                )
+            )
         )
 
         mutually_exclusive = [['address_prefix_cidr', 'address_prefixes_cidr']]
@@ -612,10 +632,12 @@ class AzureRMSubnet(AzureRMModuleBase):
                 else:
                     results['sharing_scope'] = results['sharing_scope']
                 if self.service_endpoint_policies:
-                    for item in results['service_endpoint_policies']:
-                        if item not in self.service_endpoint_policies:
+                    new_policies = [dict(id=item) for item in results['service_endpoint_policies']]
+                    for item in self.service_endpoint_policies:
+                        if item['id'] not in results['service_endpoint_policies']:
+                            new_policies.append(item)
                             changed = True
-                            self.service_endpoint_policies.append(item)
+                    self.service_endpoint_policies = new_policies
                 else:
                     self.service_endpoint_policies = results['service_endpoint_policies'] if results['service_endpoint_policies'] else None
 
