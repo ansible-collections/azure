@@ -185,6 +185,10 @@ options:
         choices:
             - DelegatedServices
             - Tenant
+    default_outbound_access:
+        description:
+            - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
+        type: bool
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -318,6 +322,12 @@ state:
             returned: always
             type: str
             sample: "Disabled"
+        default_outbound_access:
+            description:
+                - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
+            type: bool
+            returned: always
+            sample: false
         delegations:
             description:
                 - Associated delegation of subnets
@@ -408,6 +418,7 @@ def subnet_to_dict(subnet):
         nat_gateway=None,
         sharing_scope=subnet.sharing_scope,
         service_endpoint_policies=list()
+        default_outbound_access=subnet.default_outbound_access
     )
     if subnet.network_security_group:
         id_keys = azure_id_to_dict(subnet.network_security_group.id)
@@ -441,6 +452,7 @@ class AzureRMSubnet(AzureRMModuleBase):
             virtual_network_name=dict(type='str', required=True, aliases=['virtual_network']),
             address_prefix_cidr=dict(type='str', aliases=['address_prefix']),
             address_prefixes_cidr=dict(type='list', aliases=['address_prefixes'], elements='str'),
+            default_outbound_access=dict(type='bool'),
             security_group=dict(type='raw', aliases=['security_group_name']),
             route_table=dict(type='raw'),
             service_endpoints=dict(
@@ -499,6 +511,7 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.nat_gateway = None
         self.service_endpoint_policies = None
         self.sharing_scope = None
+        self.default_outbound_access = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
                                             supports_check_mode=True,
@@ -629,6 +642,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                         changed = True
                         # Disassociate NAT Gateway
                         results['nat_gateway'] = None
+                if self.default_outbound_access is not None and bool(self.default_outbound_access != results.get('default_outbound_access')):
+                    changed = True
+                else:
+                    self.default_outbound_access = results.get('default_outbound_access')
 
                 if self.sharing_scope and self.sharing_scope != results['sharing_scope']:
                     changed = True
@@ -711,6 +728,7 @@ class AzureRMSubnet(AzureRMModuleBase):
                     if self.service_endpoint_policies:
                         subnet.service_endpoint_policies = self.service_endpoint_policies
 
+                subnet.default_outbound_access = self.default_outbound_access
                 self.results['state'] = self.create_or_update_subnet(subnet)
             elif self.state == 'absent' and changed:
                 # delete subnet

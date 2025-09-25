@@ -172,6 +172,7 @@
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
+        default_outbound_access: false
         address_prefixes_cidr:
           - "172.100.0.0/16"
           - "fdda:e69b:1587:495e::/64"
@@ -183,12 +184,14 @@
           - output is changed
           - not output.state.address_prefix
           - output.state.address_prefixes | length > 0
+          - output.state.default_outbound_access is false
 
     - name: Update the subnet to IPv4 and IPv6 (idempotent)
       azure.azcollection.azure_rm_subnet:
         name: foobar01
         virtual_network_name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
+        default_outbound_access: false
         address_prefixes_cidr:
           - "172.100.0.0/16"
           - "fdda:e69b:1587:495e::/64"
@@ -206,6 +209,7 @@
         address_prefixes_cidr:
           - "172.100.0.0/24"
           - "fdda:e69b:1587:495e::/64"
+        default_outbound_access: true
         security_group: "{{ nsg.state.id }}"
       register: output
 
@@ -213,6 +217,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
+          - output.state.default_outbound_access is true
 
     - name: Update the subnet with network policies
       azure.azcollection.azure_rm_subnet:
@@ -290,6 +295,7 @@
           - output.subnets[0]['private_endpoint_network_policies'] != None
           - output.subnets[0]['private_link_service_network_policies'] != None
           - output.subnets[0]['delegations'] != None
+          - output.subnets[0]['default_outbound_access'] is true
 
     - name: Get subnet facts
       azure.azcollection.azure_rm_subnet_info:

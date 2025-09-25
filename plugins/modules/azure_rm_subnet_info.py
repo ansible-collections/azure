@@ -201,6 +201,12 @@ subnets:
             type: list
             returned: always
             sample: ["/subscriptions/xxx-xxx/resourceGroups/TestRG/providers/Microsoft.Network/serviceEndpointPolicies/testpolicy"]
+        default_outbound_access:
+            description:
+                - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
+            type: bool
+            returned: always
+            sample: false
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -300,6 +306,7 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'nat_gateway': d.get('nat_gateway', {}).get('id'),
             'sharing_scope': d.get('sharing_scope'),
             'service_endpoint_policies': [item['id'] for item in d['service_endpoint_policies']] if d.get('service_endpoint_policies') else []
+            'default_outbound_access': d.get('default_outbound_access')
         }
 
         return d
