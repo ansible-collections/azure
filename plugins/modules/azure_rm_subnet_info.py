@@ -189,6 +189,12 @@ subnets:
             returned: when available
             type: str
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/natGateways/myGw"
+        default_outbound_access:
+            description:
+                - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
+            type: bool
+            returned: always
+            sample: false
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
@@ -285,7 +291,8 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'private_endpoint_network_policies': d.get('private_endpoint_network_policies'),
             'private_link_service_network_policies': d.get('private_link_service_network_policies'),
             'delegations': d.get('delegations'),
-            'nat_gateway': d.get('nat_gateway', {}).get('id')
+            'nat_gateway': d.get('nat_gateway', {}).get('id'),
+            'default_outbound_access': d.get('default_outbound_access')
         }
         return d
 
