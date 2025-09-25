@@ -1,0 +1,10 @@
+---
+- name: Get azcmagent status
+  become: true
+  ansible.builtin.command:
+    cmd: azcmagent show --json
+  register: azure_arc_show_json
+  # This command never changes anything, we get a config setting to verify it's already set properly
+  changed_when: false
+  # Always run in execute mode, even when checking
+  check_mode: false

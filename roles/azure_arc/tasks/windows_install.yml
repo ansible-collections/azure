@@ -1,0 +1,24 @@
+---
+- name: Check if Connected Machine Agent is Downloaded
+  ansible.windows.win_stat:
+    path: C:\AzureConnectedMachineAgent.msi
+    get_checksum: false
+  register: azure_arc_azcmagent_win_downloaded
+
+- name: Download the Connected Machine Agent on Windows servers
+  ansible.windows.win_get_url:
+    url: https://aka.ms/AzureConnectedMachineAgent
+    dest: C:\AzureConnectedMachineAgent.msi
+  register: _azure_arc_response
+  delay: 5
+  retries: 50
+  ignore_errors: false
+  until:
+    - _azure_arc_response.status_code is defined
+    - _azure_arc_response.status_code == 200
+  when: not azure_arc_azcmagent_win_downloaded.stat.exists
+
+- name: Install the Connected Machine Agent on Windows servers
+  ansible.windows.win_package:
+    path: C:\AzureConnectedMachineAgent.msi
+  when: not azure_arc_azcmagent_win_downloaded.stat.exists

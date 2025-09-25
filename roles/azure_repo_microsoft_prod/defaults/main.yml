@@ -1,0 +1,14 @@
+---
+# proxy is an optional variable, only set when needed, example:
+# proxy:
+#   hostname: proxy.company.tld
+#   port: 8080
+
+# This hash is being used to create the package download url
+azure_repo_microsoft_prod_os_family_transformation:
+   RedHat:
+      dirname: rhel
+      filename: packages-microsoft-prod.rpm
+
+# This is the default URL based on the above hash
+azure_repo_microsoft_prod_package_url: https://packages.microsoft.com/config/{{ azure_repo_microsoft_prod_os_family_transformation[ansible_os_family].dirname }}/{{ ansible_distribution_major_version }}/{{ azure_repo_microsoft_prod_os_family_transformation[ansible_os_family].filename }}

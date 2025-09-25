@@ -1,0 +1,10 @@
+---
+- name: Include repo_microsoft_prod role to configure repository
+  ansible.builtin.include_role:
+    name: azure.azure_repo_microsoft_prod
+
+- name: Install azcmagent
+  become: true
+  ansible.builtin.package:
+    name: azcmagent
+    state: present

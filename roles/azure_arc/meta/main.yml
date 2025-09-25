@@ -1,0 +1,26 @@
+---
+galaxy_info:
+  author: Bill Peck and Klaas Demter
+  description: Role to setup ARC on an existing host.
+
+  license: GPL-3.0-or-later
+
+  min_ansible_version: 2.15.0
+
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+
+  galaxy_tags:
+    - linux
+    - system
+    - ansible
+    - microsoft
+    - azure
+    - arc
+
+dependencies: []
+collections: []
+...

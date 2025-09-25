@@ -1,0 +1,12 @@
+---
+- name: Set azcmagent proxy setting
+  become: true
+  ansible.builtin.command:
+    argv:
+      - azcmagent
+      - config
+      - set
+      - proxy.url
+      - "{{ azure_arc_proxy_url }}"
+  register: azure_arc_proxy_set
+  changed_when: azure_arc_proxy_set.rc == 0

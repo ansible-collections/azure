@@ -1,0 +1,22 @@
+---
+argument_specs:
+  main:
+    version_added: 6.1.0
+    short_description: A role to Configure Microsoft prod repo.
+    description:
+      - A role to Configure Microsoft prod repo.
+    options:
+      azure_repo_microsoft_prod_package_url:
+        description:
+          - URL for the package repo to install.
+        default: "https://packages.microsoft.com/config/{{ azure_repo_microsoft_prod_os_family_transformation[ansible_os_family].dirname }}/{{ ansible_distribution_major_version }}/{{ azure_repo_microsoft_prod_os_family_transformation[ansible_os_family].filename }}"
+      proxy:
+        description:
+          - Define proxy if your host needs to use a proxy to get to the Internet.
+        options:
+          hostname:
+            description:
+              - Hostname of the proxy server.
+          port:
+            description:
+              - Port that the proxy is listening on.
