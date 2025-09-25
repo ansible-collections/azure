@@ -305,8 +305,8 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'delegations': d.get('delegations'),
             'nat_gateway': d.get('nat_gateway', {}).get('id'),
             'sharing_scope': d.get('sharing_scope'),
+            'default_outbound_access': d.get('default_outbound_access'),
             'service_endpoint_policies': [item['id'] for item in d['service_endpoint_policies']] if d.get('service_endpoint_policies') else []
-            'default_outbound_access': d.get('default_outbound_access')
         }
 
         return d

@@ -417,7 +417,7 @@ def subnet_to_dict(subnet):
         private_link_service_network_policies=subnet.private_link_service_network_policies,
         nat_gateway=None,
         sharing_scope=subnet.sharing_scope,
-        service_endpoint_policies=list()
+        service_endpoint_policies=list(),
         default_outbound_access=subnet.default_outbound_access
     )
     if subnet.network_security_group:
