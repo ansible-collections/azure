@@ -189,6 +189,18 @@ subnets:
             returned: when available
             type: str
             sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/natGateways/myGw"
+        sharing_scope:
+            description:
+                - Set this property to Tenant to allow sharing subnet with other  subscriptions in your AAD tenant.
+            type: str
+            returned: always
+            sample: None
+        service_endpoint_policies:
+            description:
+                - An array of service endpoint policies.
+            type: list
+            returned: always
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/TestRG/providers/Microsoft.Network/serviceEndpointPolicies/testpolicy"]
         default_outbound_access:
             description:
                 - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
@@ -292,8 +304,11 @@ class AzureRMSubnetInfo(AzureRMModuleBase):
             'private_link_service_network_policies': d.get('private_link_service_network_policies'),
             'delegations': d.get('delegations'),
             'nat_gateway': d.get('nat_gateway', {}).get('id'),
-            'default_outbound_access': d.get('default_outbound_access')
+            'sharing_scope': d.get('sharing_scope'),
+            'default_outbound_access': d.get('default_outbound_access'),
+            'service_endpoint_policies': [item['id'] for item in d['service_endpoint_policies']] if d.get('service_endpoint_policies') else []
         }
+
         return d
 
 

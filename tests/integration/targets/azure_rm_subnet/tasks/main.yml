@@ -8,11 +8,16 @@
 
 - name: For subnet test
   block:
+    - name: Set variable
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+
     - name: Create virtual network
       azure.azcollection.azure_rm_virtualnetwork:
         name: My_Virtual_Network
         address_prefixes_cidr:
           - 10.1.0.0/16
+          - 10.2.0.0/16
           - 172.100.0.0/16
           - fdda:e69b:1587:495e::/64
         dns_servers:
@@ -312,6 +317,230 @@
           - output.subnets[0]['security_group'] != None
           - output.subnets[0]['provisioning_state'] != None
 
+    - name: Create a new Service Endpoint Policy(Checkmode test)
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-first"
+        location: eastus
+        tags:
+          key: value
+      check_mode: true
+      register: output
+
+    - name: Assert there is no Service Endpoint Policy
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new Service Endpoint Policy
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-first"
+        location: eastus
+        tags:
+          key: value
+      register: output
+
+    - name: Assert the Service Endpoint Policy created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Recreate the Service Endpoint Policy(Idempotent test)
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-first"
+        location: eastus
+        tags:
+          key: value
+      register: output
+
+    - name: Assert the Service Endpoint Policy no update
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the Service Endpoint Policy(Update test)
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-first"
+        location: eastus
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert the Service Endpoint Policy updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create the secondary Service Endpoint Policy
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-secondary"
+        location: eastus
+        tags:
+          key: value
+      register: output
+
+    - name: Assert the secondary Service Endpoint Policy created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get the first Service Endpoint Policy
+      azure_rm_serviceendpointpolicy_info:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-first"
+      register: output
+
+    - name: Assert the data collection endpoint facts
+      ansible.builtin.assert:
+        that:
+          - output.serviceendpointpolicies[0].tags |length == 2
+
+    - name: List all Service Endpoint Policy in same resource_group
+      azure_rm_serviceendpointpolicy_info:
+        resource_group: "{{ resource_group }}-sub01"
+      register: sep_output
+
+    - name: Create the first storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "s{{ rpfx }}01"
+        account_type: Standard_LRS
+        kind: StorageV2
+      register: storage_output1
+
+    - name: Create the secondary storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "s{{ rpfx }}02"
+        account_type: Standard_LRS
+        kind: StorageV2
+      register: storage_output2
+
+    - name: Create a new Service Endpoint Policy Definition(Checkmode test)
+      azure_rm_serviceendpointpolicydefinition:
+        resource_group: "{{ resource_group }}-sub01"
+        service_endpoint_policy_name: "policy-{{ rpfx }}-first"
+        name: "definition-{{ rpfx }}"
+        description: "Create a new SEP definition"
+        service: "Microsoft.Storage"
+        service_resources:
+          - "{{ storage_output1.state.id }}"
+      register: output
+      check_mode: true
+
+    - name: Assert there is no Service Endpoint Policy Definition
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a new Service Endpoint Policy Definition
+      azure_rm_serviceendpointpolicydefinition:
+        resource_group: "{{ resource_group }}-sub01"
+        service_endpoint_policy_name: "policy-{{ rpfx }}-first"
+        name: "definition-{{ rpfx }}"
+        description: "Create a new SEP definition"
+        service: "Microsoft.Storage"
+        service_resources:
+          - "{{ storage_output1.state.id }}"
+      register: output
+
+    - name: Assert the Service Endpoint Policy Definition created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Re-Create the Service Endpoint Policy Definition(Idempotent test)
+      azure_rm_serviceendpointpolicydefinition:
+        resource_group: "{{ resource_group }}-sub01"
+        service_endpoint_policy_name: "policy-{{ rpfx }}-first"
+        name: "definition-{{ rpfx }}"
+        description: "Create a new SEP definition"
+        service: "Microsoft.Storage"
+        service_resources:
+          - "{{ storage_output1.state.id }}"
+      register: output
+
+    - name: Assert the Service Endpoint Policy Definition no change
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the Service Endpoint Policy Definition
+      azure_rm_serviceendpointpolicydefinition:
+        resource_group: "{{ resource_group }}-sub01"
+        service_endpoint_policy_name: "policy-{{ rpfx }}-first"
+        name: "definition-{{ rpfx }}"
+        description: "Update the SEP definition"
+        service: "Microsoft.Storage"
+        service_resources:
+          - "{{ storage_output2.state.id }}"
+      register: output
+
+    - name: Assert the Service Endpoint Policy Definition updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get the Service Endpoint Policy facts
+      azure_rm_serviceendpointpolicydefinition_info:
+        resource_group: "{{ resource_group }}-sub01"
+        service_endpoint_policy_name: "policy-{{ rpfx }}-first"
+        name: "definition-{{ rpfx }}"
+      register: output
+
+    - name: Assert the Service Endpoint Policy Definition facts
+      ansible.builtin.assert:
+        that:
+          - output.serviceendpointpolicydefinitions[0].service_resources |length == 2
+          - output.serviceendpointpolicydefinitions[0].description == "Update the SEP definition"
+
+    - name: Add the third subnet back
+      azure.azcollection.azure_rm_subnet:
+        name: foobar02
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.2.0.0/24"
+        service_endpoint_policies:
+          - id: "{{ sep_output.serviceendpointpolicies[0].id }}"
+        service_endpoints:
+          - service: Microsoft.Storage
+            locations:
+              - eastus
+              - westus
+      register: output
+
+    - name: Update the third subnet back with SEP
+      azure.azcollection.azure_rm_subnet:
+        name: foobar02
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        address_prefix_cidr: "10.2.0.0/24"
+        service_endpoint_policies:
+          - id: "{{ sep_output.serviceendpointpolicies[1].id }}"
+        service_endpoints:
+          - service: Microsoft.Storage
+            locations:
+              - eastus
+              - westus
+      register: output
+
+    - name: Get the third subnet facts
+      azure.azcollection.azure_rm_subnet_info:
+        name: foobar02
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+      register: output
+
+    - name: Assert the third subnet facts are returned
+      ansible.builtin.assert:
+        that:
+          - output.subnets[0]['id'] != None
+          - output.subnets[0]['service_endpoint_policies'] |length == 2
+
     - name: Remove subnet
       azure.azcollection.azure_rm_subnet:
         state: absent
@@ -344,11 +573,50 @@
         name: secgroupfoo
         state: absent
 
+    - name: Remove the third subnet
+      azure.azcollection.azure_rm_subnet:
+        state: absent
+        name: foobar02
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+
+    - name: Remove the Service Endpoint Policy Definition
+      azure_rm_serviceendpointpolicydefinition:
+        resource_group: "{{ resource_group }}-sub01"
+        service_endpoint_policy_name: "policy-{{ rpfx }}-first"
+        name: "definition-{{ rpfx }}"
+        state: absent
+
+    - name: Remove the fist storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "s{{ rpfx }}01"
+        state: absent
+
+    - name: Remove the secondary storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "s{{ rpfx }}02"
+        state: absent
+
+    - name: Remove the first Service Endpoint Policy
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-first"
+        state: absent
+
+    - name: Remove the secondary Service Endpoint Policy
+      azure_rm_serviceendpointpolicy:
+        resource_group: "{{ resource_group }}-sub01"
+        name: "policy-{{ rpfx }}-secondary"
+        state: absent
+
     - name: Remove virtual network
       azure.azcollection.azure_rm_virtualnetwork:
         name: My_Virtual_Network
         resource_group: "{{ resource_group }}-sub01"
         state: absent
+
   always:
     - name: Force delete the resource group
       azure.azcollection.azure_rm_resourcegroup:

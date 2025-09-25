@@ -168,6 +168,23 @@ options:
             - Can be the resource ID of the NAT Gateway.
             - Can be a dict containing the I(name) and I(resource_group) of the NAT Gateway.
         type: str
+    service_endpoint_policies:
+        description:
+            - An array of service endpoint policies.
+        type: list
+        elements: dict
+        suboptions:
+            id:
+                description:
+                    - Resource ID of the service endpoint policy.
+                type: str
+    sharing_scope:
+        description:
+            - Set this property to Tenant to allow sharing subnet with other subscriptions in your AAD tenant.
+        type: str
+        choices:
+            - DelegatedServices
+            - Tenant
     default_outbound_access:
         description:
             - Set this property to false to disable default outbound connectivity for all VMs in the subnet.
@@ -335,6 +352,18 @@ state:
                     returned : when delegation is present
                     type: list
                     sample: ["Microsoft.Network/virtualNetworks/subnets/action"]
+        sharing_scope:
+            description:
+                - Set this property to Tenant to allow sharing subnet with other  subscriptions in your AAD tenant.
+            type: str
+            returned: always
+            sample: None
+        service_endpoint_policies:
+            description:
+                - An array of service endpoint policies.
+            type: list
+            returned: always
+            sample: ["/subscriptions/xxx-xxx/resourceGroups/TestRG/providers/Microsoft.Network/serviceEndpointPolicies/testpolicy"]
 '''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, CIDR_PATTERN, azure_id_to_dict, format_resource_id
@@ -387,6 +416,8 @@ def subnet_to_dict(subnet):
         private_endpoint_network_policies=subnet.private_endpoint_network_policies,
         private_link_service_network_policies=subnet.private_link_service_network_policies,
         nat_gateway=None,
+        sharing_scope=subnet.sharing_scope,
+        service_endpoint_policies=list(),
         default_outbound_access=subnet.default_outbound_access
     )
     if subnet.network_security_group:
@@ -405,6 +436,8 @@ def subnet_to_dict(subnet):
         result['delegations'] = [{'name': item.name, 'serviceName': item.service_name, 'actions': item.actions or []} for item in subnet.delegations]
     if subnet.nat_gateway:
         result['nat_gateway'] = subnet.nat_gateway.id
+    if subnet.service_endpoint_policies:
+        result['service_endpoint_policies'] = [item.id for item in subnet.service_endpoint_policies]
     return result
 
 
@@ -445,7 +478,15 @@ class AzureRMSubnet(AzureRMModuleBase):
                 elements='dict',
                 options=delegations_spec
             ),
-            nat_gateway=dict(type='str')
+            nat_gateway=dict(type='str'),
+            sharing_scope=dict(type='str', choices=['DelegatedServices', 'Tenant']),
+            service_endpoint_policies=dict(
+                type='list',
+                elements='dict',
+                options=dict(
+                    id=dict(type='str')
+                )
+            )
         )
 
         mutually_exclusive = [['address_prefix_cidr', 'address_prefixes_cidr']]
@@ -468,6 +509,8 @@ class AzureRMSubnet(AzureRMModuleBase):
         self.private_endpoint_network_policies = None
         self.delegations = None
         self.nat_gateway = None
+        self.service_endpoint_policies = None
+        self.sharing_scope = None
         self.default_outbound_access = None
 
         super(AzureRMSubnet, self).__init__(self.module_arg_spec,
@@ -604,6 +647,20 @@ class AzureRMSubnet(AzureRMModuleBase):
                 else:
                     self.default_outbound_access = results.get('default_outbound_access')
 
+                if self.sharing_scope and self.sharing_scope != results['sharing_scope']:
+                    changed = True
+                else:
+                    results['sharing_scope'] = results['sharing_scope']
+                if self.service_endpoint_policies:
+                    new_policies = [dict(id=item) for item in results['service_endpoint_policies']]
+                    for item in self.service_endpoint_policies:
+                        if item['id'] not in results['service_endpoint_policies']:
+                            new_policies.append(item)
+                            changed = True
+                    self.service_endpoint_policies = new_policies
+                else:
+                    self.service_endpoint_policies = results['service_endpoint_policies'] if results['service_endpoint_policies'] else None
+
             elif self.state == 'absent':
                 changed = True
         except ResourceNotFoundError:
@@ -640,6 +697,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.delegations = self.delegations
                     if nat_gateway:
                         subnet.nat_gateway = self.network_models.SubResource(id=nat_gateway)
+                    if self.sharing_scope:
+                        subnet.sharing_scope = self.sharing_scope
+                    if self.service_endpoint_policies:
+                        subnet.service_endpoint_policies = self.service_endpoint_policies
                 else:
                     # update subnet
                     self.log('Updating subnet {0}'.format(self.name))
@@ -662,6 +723,10 @@ class AzureRMSubnet(AzureRMModuleBase):
                         subnet.delegations = results['delegations']
                     if results.get('nat_gateway') is not None:
                         subnet.nat_gateway = self.network_models.SubResource(id=results['nat_gateway'])
+                    if self.sharing_scope:
+                        subnet.sharing_scope = self.sharing_scope
+                    if self.service_endpoint_policies:
+                        subnet.service_endpoint_policies = self.service_endpoint_policies
 
                 subnet.default_outbound_access = self.default_outbound_access
                 self.results['state'] = self.create_or_update_subnet(subnet)
