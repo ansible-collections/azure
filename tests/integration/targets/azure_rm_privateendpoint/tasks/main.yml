@@ -1,7 +1,7 @@
 - name: Create a new resource group for private endpoint test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-privateendpoint"
-    location: eastus
+    location: westus2
 
 - name: For private endpoint test
   block:
