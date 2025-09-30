@@ -1,6 +1,39 @@
 # Change Log
-## v3.8.0 (2025-08-29)
+## v3.9.0 (2025-09-29)
 
+### NEW MODULES
+  - azure_rm_monitordatacollectionendpoint.py:([#2058](https://github.com/ansible-collections/azure/pull/2058))
+  - azure_rm_monitordatacollectionendpoint_info.py:([#2058](https://github.com/ansible-collections/azure/pull/2058))
+  - azure_rm_monitordatacollectionruleassociation.py:([#2058](https://github.com/ansible-collections/azure/pull/2058))
+  - azure_rm_monitordatacollectionruleassociation_info.py:([#2058](https://github.com/ansible-collections/azure/pull/2058))
+  - azure_rm_serviceendpointpolicy.py: ([#2064](https://github.com/ansible-collections/azure/pull/2064))
+  - azure_rm_serviceendpointpolicy_info.py: ([#2064](https://github.com/ansible-collections/azure/pull/2064))
+  - azure_rm_serviceendpointpolicydefinitionfo.py: ([#2064](https://github.com/ansible-collections/azure/pull/2064))
+  - azure_rm_serviceendpointpolicydefinition_info.py: ([#2064](https://github.com/ansible-collections/azure/pull/2064))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_storageaccount.py: Add support for 'key_vault_properties' and 'encryption_identity' ([#2049](https://github.com/ansible-collections/azure/pull/2049))
+  - azure_rm_storageaccount_info.py: Support return 'key_vault_properties' and 'encryption_identity' ([#2049](https://github.com/ansible-collections/azure/pull/2049))
+  - pr-pipelines.yml: [Infra]: update ado yamls to use pool-ubuntu-2404 ([#2046](https://github.com/ansible-collections/azure/pull/2046))
+  - azure_rm_virtualnetworkgateway.py: Add some SKU type options ([#2051](https://github.com/ansible-collections/azure/pull/2051))
+  - plugins/inventory/azure_rm.py: Support gather virtual machine instance view info ([#2055](https://github.com/ansible-collections/azure/pull/2055))
+  - azure_rm_publicipaddress.py: Add support for 'public_ip_prefix' ([#2059](https://github.com/ansible-collections/azure/pull/2059))
+  - azure_rm_publicipaddress_info.py: Support return 'public_ip_prefix' ([#2059](https://github.com/ansible-collections/azure/pull/2059))
+  - meta/extensions.yml: Update meta/extensions.yml to include eda path ([#2056](https://github.com/ansible-collections/azure/pull/2056))
+  - azure_rm_subnet.py:
+    - Add support for default_outbound_access ([#2062](https://github.com/ansible-collections/azure/pull/2062))
+    - Add support for 'sharing_scopes' and 'service_endpoint_policies' ([#2064](https://github.com/ansible-collections/azure/pull/2064))
+  - azure_rm_subnet_info.py:
+    - Support return 'default_outbound_access' ([#2062](https://github.com/ansible-collections/azure/pull/2062))
+    - Support return 'sharing_scopes' and 'service_endpoint_policies' ([#2064](https://github.com/ansible-collections/azure/pull/2064))
+
+### BUG FIXING
+  - azure_rm_securitygroup.py: Fix compare error where the returned ID is in uppercase ([#2048](https://github.com/ansible-collections/azure/pull/2048))
+  - plugins/action/azure_rm_arcssh.py: Fix exception handling in azure_rm_arcssh ([#2053](https://github.com/ansible-collections/azure/pull/2053))
+  - plugins/module_utils/azure_rm_common_rest.py: Distinguish Exception([#2053](https://github.com/ansible-collections/azure/pull/2053))
+
+
+## v3.8.0 (2025-08-29)
 ### NEW MODULES
   - azure_rm_monitormetricalerts.py: ([#1952](https://github.com/ansible-collections/azure/pull/2016))
   - azure_rm_monitormetricalerts_info.py: ([#1952](https://github.com/ansible-collections/azure/pull/2016))
