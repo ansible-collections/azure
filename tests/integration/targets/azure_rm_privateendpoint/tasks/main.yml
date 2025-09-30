@@ -230,7 +230,7 @@
       azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "app{{ rpfx }}"
-        location: eastus
+        location: westus2
 
     - name: Get the application security group facts
       azure.azcollection.azure_rm_applicationsecuritygroup_info:
