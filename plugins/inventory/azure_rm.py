@@ -753,7 +753,7 @@ class AzureHost(object):
         self._vm_model = vm_model
         self._vmss = vmss
         self._arcvm = arcvm
-        self._type = vm_model['type']
+        self._type = vm_model['type'].lower()
 
         self._instanceview = None
 
@@ -849,12 +849,13 @@ class AzureHost(object):
             creation_time=createdAt if createdAt else self._vm_model['properties'].get('timeCreated'),
             license_type=self._vm_model['properties'].get('licenseType', 'Unknown')
         )
-        if self._arcvm:
+
+        if self._type == "microsoft.azurestackhci/virtualmachineinstances":
             new_hostvars['customLocation'] = self._vm_model.get('extendedLocation', {}).get('name', '').split('/')[-1]
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        if len(self.nics) == 0:
+        elif self._type == 'microsoft.compute/virtualmachinescalesets':
             # Set the attribute information related to the Uniform VMSS instance
             # Set os compute name, os name, os version and hyper V generation
             resource_group = new_hostvars['resource_group']
@@ -899,7 +900,7 @@ class AzureHost(object):
                                                                       ipv4_address=ipc['public_ip_address'].get('ip_address')))
                         new_hostvars['public_ipv4_address'].append(ipc['public_ip_address'].get('ip_address'))
 
-        else:
+        elif self._type == 'microsoft.compute/virtualmachines':
             # set nic-related values from the primary NIC first
             for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
                 # and from the primary IP config per NIC first
@@ -937,16 +938,14 @@ class AzureHost(object):
 
                 new_hostvars['network_interface_properties'].append(nic._nic_model)
 
-
-            if self._type.lower() == 'microsoft.compute/virtualmachines':
-                # Set os compute name, os name, os version and hyper V generation
-                compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                        subscription_id=self._inventory_client.azure_auth.subscription_id)
-                instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
-                new_hostvars['os_compute_name'] = instance_view.computer_name
-                new_hostvars['os_name'] = instance_view.os_name
-                new_hostvars['os_version'] = instance_view.os_version
-                new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
+            # Set os compute name, os name, os version and hyper V generation
+            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                    subscription_id=self._inventory_client.azure_auth.subscription_id)
+            instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
+            new_hostvars['os_compute_name'] = instance_view.computer_name
+            new_hostvars['os_name'] = instance_view.os_name
+            new_hostvars['os_version'] = instance_view.os_version
+            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
