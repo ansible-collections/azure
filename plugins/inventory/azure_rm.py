@@ -41,7 +41,7 @@ EXAMPLES = '''
 # powerstate: the VM's current power state, eg: 'running', 'stopped', 'deallocated'
 # provisioning_state: the VM's current provisioning state, eg: 'succeeded'
 # tags: dictionary of the VM's defined tag values
-# resource_type: the VM's resource type, eg: 'Microsoft.Compute/virtualMachine', 'Microsoft.Compute/virtualMachineScaleSets/virtualMachines',
+# resource_type: the VM's resource type, eg: 'Microsoft.Compute/virtualMachines', 'Microsoft.Compute/virtualMachineScaleSets/virtualMachines',
 # 'microsoft.azurestackhci/virtualmachineinstances'
 # vmid: the VM's internal SMBIOS ID, eg: '36bca69d-c365-4584-8c06-a62f4a1dc5d2'
 # vmss: if the VM is a member of a scaleset (vmss), a dictionary including the id and name of the parent scaleset
@@ -508,6 +508,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         if 'value' in response:
             for h in response['value']:
+                # print("AzureHost raw response:")
+                # print(h)
                 # FUTURE: add direct VM filtering by tag here (performance optimization)?
                 self._hosts.append(AzureHost(h, self, vmss=vmss, arcvm=arcvm, legacy_name=self._legacy_hostnames))
 
@@ -518,6 +520,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self._enqueue_get(url=next_link, api_version=self._hybridcompute_api_version, handler=self._on_arc_page_response)
 
         for arcvm in response['value']:
+            # print("ArcHost raw response:")
+            # print(arcvm)
             self._hosts.append(ArcHost(arcvm, self, legacy_name=self._legacy_hostnames))
 
     def _on_arcvm_page_response(self, response):
@@ -749,6 +753,7 @@ class AzureHost(object):
         self._vm_model = vm_model
         self._vmss = vmss
         self._arcvm = arcvm
+        self._type = vm_model['type']
 
         self._instanceview = None
 
@@ -932,14 +937,16 @@ class AzureHost(object):
 
                 new_hostvars['network_interface_properties'].append(nic._nic_model)
 
-            # Set os compute name, os name, os version and hyper V generation
-            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
-            instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
-            new_hostvars['os_compute_name'] = instance_view.computer_name
-            new_hostvars['os_name'] = instance_view.os_name
-            new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
+
+            if self._type.lower() == 'microsoft.compute/virtualmachines':
+                # Set os compute name, os name, os version and hyper V generation
+                compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
+                                                        subscription_id=self._inventory_client.azure_auth.subscription_id)
+                instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
+                new_hostvars['os_compute_name'] = instance_view.computer_name
+                new_hostvars['os_name'] = instance_view.os_name
+                new_hostvars['os_version'] = instance_view.os_version
+                new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
