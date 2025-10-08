@@ -177,7 +177,6 @@ try:
     from azure.mgmt.core.polling.arm_polling import ARMPolling
     from azure.core.polling import LROPoller
     from netaddr import IPAddress
-    from azure.mgmt.network import NetworkManagementClient
 except ImportError:
     Configuration = object
     parse_resource_id = object
@@ -221,6 +220,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         # FUTURE: use API profiles with defaults
         self._compute_api_version = '2024-07-01'
         self._network_api_version = '2024-05-01'
+        self._scaleSet_network_api_version = '2025-04-01'
         self._hybridcompute_api_version = '2024-05-20-preview'
         self._stackhci_api_version = '2024-01-01'
 
@@ -781,7 +781,13 @@ class AzureHost(object):
         for nic in nic_refs:
             # single-nic instances don't set primary, so figure it out...
             is_primary = nic.get('properties', {}).get('primary', len(nic_refs) == 1)
-            api_version = self._inventory_client._stackhci_api_version if self._arcvm else self._inventory_client._network_api_version
+
+            api_version = self._inventory_client._network_api_version
+            if self._arcvm:
+                api_version = self._inventory_client._stackhci_api_version
+            elif self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
+                api_version = self._inventory_client._scaleSet_network_api_version
+
             inventory_client._enqueue_get(url=nic['id'],
                                           api_version=api_version,
                                           handler=self._on_nic_response,
@@ -863,38 +869,29 @@ class AzureHost(object):
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
         elif self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
-            resource_group = new_hostvars['resource_group']
-            vmss_name = new_hostvars['vmss']['name']
-            instance_id = self._vm_model.get('instanceId')
-
-            # Set Uniform VMSS instance's nic-related values
-            network_client = NetworkManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
-            nics = network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=resource_group,
-                                                                                                          virtual_machine_scale_set_name=vmss_name,
-                                                                                                          virtualmachine_index=instance_id)
-            for nic in nics:
-                nic = nic.as_dict()
-                new_hostvars['network_interface'].append(nic.get('name'))
-                new_hostvars['network_interface_id'].append(nic.get('id'))
-                new_hostvars['network_interface_properties'].append(nic)
-                if nic.get('dns_settings'):
-                    new_hostvars['public_dns_hostnames'].append(nic['dns_settings'].get('internal_fqdn'))
-                if nic.get('mac_address'):
-                    new_hostvars['mac_address'].append(nic['mac_address'])
-                if nic.get('network_security_group'):
-                    new_hostvars['security_group_id'].append(nic['network_security_group']['id'])
-                    new_hostvars['security_group'].append(parse_resource_id(nic['network_security_group']['id'])['resource_name'])
-                for ipc in nic['ip_configurations']:
-                    if ipc.get('subnet'):
-                        new_hostvars['subnet'].append(ipc.get('subnet'))
-                    if ipc.get('private_ip_address'):
-                        new_hostvars['private_ipv4_addresses'].append(ipc.get('private_ip_address'))
-                    if ipc.get('public_ip_address'):
-                        new_hostvars['public_ip_address'].append(dict(id=ipc['public_ip_address'].get('id'),
-                                                                      name=ipc['public_ip_address'].get('name'),
-                                                                      ipv4_address=ipc['public_ip_address'].get('ip_address')))
-                        new_hostvars['public_ipv4_address'].append(ipc['public_ip_address'].get('ip_address'))
+            for nic in self.nics:
+                new_hostvars['network_interface'].append(nic._nic_model['name'])
+                new_hostvars['network_interface_id'].append(nic._nic_model['id'])
+                new_hostvars['network_interface_properties'].append(nic._nic_model)
+                props = nic._nic_model['properties']
+                if props.get('dnsSettings'):
+                    new_hostvars['public_dns_hostnames'].append(props['dnsSettings'].get('internalDomainNameSuffix'))
+                if props.get('macAddress'):
+                    new_hostvars['mac_address'].append(props['macAddress'])
+                if props.get('networkSecurityGroup'):
+                    new_hostvars['security_group_id'].append(props['networkSecurityGroup']['id'])
+                    new_hostvars['security_group'].append(parse_resource_id(props['networkSecurityGroup']['id'])['resource_name'])
+                for ipc in props['ipConfigurations']:
+                    ipcProps = ipc['properties']
+                    if ipcProps.get('subnet'):
+                        new_hostvars['subnet'].append(ipcProps.get('subnet'))
+                    if ipcProps.get('privateIPAddress'):
+                        new_hostvars['private_ipv4_addresses'].append(ipc.get('privateIPAddress'))
+                    if ipcProps.get('publicIPAddress'):
+                        new_hostvars['public_ip_address'].append(dict(id=ipcProps['publicIPAddress'].get('id'),
+                                                                      name=ipcProps['publicIPAddress'].get('name'),
+                                                                      ipv4_address=ipcProps['publicIPAddress'].get('ipAddress')))
+                        new_hostvars['public_ipv4_address'].append(ipcProps['publicIPAddress'].get('ipAddress'))
 
         elif self._type == 'microsoft.compute/virtualmachines':
             # set nic-related values from the primary NIC first
