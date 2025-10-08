@@ -868,32 +868,7 @@ class AzureHost(object):
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        elif self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
-            for nic in self.nics:
-                new_hostvars['network_interface'].append(nic._nic_model['name'])
-                new_hostvars['network_interface_id'].append(nic._nic_model['id'])
-                new_hostvars['network_interface_properties'].append(nic._nic_model)
-                props = nic._nic_model['properties']
-                if props.get('dnsSettings'):
-                    new_hostvars['public_dns_hostnames'].append(props['dnsSettings'].get('internalDomainNameSuffix'))
-                if props.get('macAddress'):
-                    new_hostvars['mac_address'].append(props['macAddress'])
-                if props.get('networkSecurityGroup'):
-                    new_hostvars['security_group_id'].append(props['networkSecurityGroup']['id'])
-                    new_hostvars['security_group'].append(parse_resource_id(props['networkSecurityGroup']['id'])['resource_name'])
-                for ipc in props['ipConfigurations']:
-                    ipcProps = ipc['properties']
-                    if ipcProps.get('subnet'):
-                        new_hostvars['subnet'].append(ipcProps.get('subnet'))
-                    if ipcProps.get('privateIPAddress'):
-                        new_hostvars['private_ipv4_addresses'].append(ipc.get('privateIPAddress'))
-                    if ipcProps.get('publicIPAddress'):
-                        new_hostvars['public_ip_address'].append(dict(id=ipcProps['publicIPAddress'].get('id'),
-                                                                      name=ipcProps['publicIPAddress'].get('name'),
-                                                                      ipv4_address=ipcProps['publicIPAddress'].get('ipAddress')))
-                        new_hostvars['public_ipv4_address'].append(ipcProps['publicIPAddress'].get('ipAddress'))
-
-        elif self._type == 'microsoft.compute/virtualmachines':
+        elif self._type == 'microsoft.compute/virtualmachines' or self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
             # set nic-related values from the primary NIC first
             for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
                 # and from the primary IP config per NIC first
