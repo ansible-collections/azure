@@ -49,7 +49,7 @@ EXAMPLES = '''
 # creation_time: datetime object of when the VM was created, eg '2023-07-21T09:30:30.4710164+00:00'
 #
 # The following host variables are sometimes available:
-# computer_name: the Operating System's hostname. Will not be available if azure agent is not available and picking it up.
+# computer_name: the Operating System's hostname. Will be available if azure agent is available and picking it up.
 # The following host variables are available for Azure Stack HCI vms:
 # customLocation: the azure arc custom location.
 # virtual_machine_memoryMB: RAM allowed (static)
@@ -178,7 +178,6 @@ try:
     from azure.core.polling import LROPoller
     from netaddr import IPAddress
     from azure.mgmt.network import NetworkManagementClient
-    from azure.mgmt.compute import ComputeManagementClient
 except ImportError:
     Configuration = object
     parse_resource_id = object
@@ -828,7 +827,7 @@ class AzureHost(object):
             id=self._vm_model['id'],
             location=self._arcvm['location'] if self._arcvm else self._vm_model['location'],
             name=self._arcvm['name'] if self._arcvm else self._vm_model['name'],
-            computer_name=self._vm_model['properties'].get('osProfile', {}).get('computerName'),
+            computer_name=self._instanceview['computerName'] if self._instanceview.get('computerName') else self._vm_model['properties'].get('osProfile', {}).get('computerName'),
             availability_zone=av_zone,
             powerstate=self._powerstate,
             provisioning_state=self._vm_model['properties']['provisioningState'].lower(),
@@ -850,6 +849,14 @@ class AzureHost(object):
             license_type=self._vm_model['properties'].get('licenseType', 'Unknown')
         )
 
+        # Instance view
+        if self._instanceview.get('osName'):
+            new_hostvars['os_name'] = self._instanceview['osName']
+        if self._instanceview.get('osVersion'):
+            new_hostvars['os_version'] = self._instanceview['osVersion']
+        if self._instanceview.get('hyperVGeneration'):
+            new_hostvars['hyper_v_generation'] = self._instanceview['hyperVGeneration']
+
         if self._type == 'microsoft.azurestackhci/virtualmachineinstances':
             new_hostvars['customLocation'] = self._vm_model.get('extendedLocation', {}).get('name', '').split('/')[-1]
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
@@ -859,15 +866,6 @@ class AzureHost(object):
             resource_group = new_hostvars['resource_group']
             vmss_name = new_hostvars['vmss']['name']
             instance_id = self._vm_model.get('instanceId')
-            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
-            instance_view = compute_client.virtual_machine_scale_set_vms.get_instance_view(resource_group_name=resource_group,
-                                                                                           vm_scale_set_name=vmss_name,
-                                                                                           instance_id=instance_id)
-            new_hostvars['os_compute_name'] = instance_view.computer_name
-            new_hostvars['os_name'] = instance_view.os_name
-            new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
             # Set Uniform VMSS instance's nic-related values
             network_client = NetworkManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
@@ -935,15 +933,6 @@ class AzureHost(object):
                     if nic._nic_model['properties'].get('networkSecurityGroup') else None
 
                 new_hostvars['network_interface_properties'].append(nic._nic_model)
-
-            # Set os compute name, os name, os version and hyper V generation
-            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                    subscription_id=self._inventory_client.azure_auth.subscription_id)
-            instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
-            new_hostvars['os_compute_name'] = instance_view.computer_name
-            new_hostvars['os_name'] = instance_view.os_name
-            new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
