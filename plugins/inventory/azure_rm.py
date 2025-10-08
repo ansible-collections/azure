@@ -850,14 +850,12 @@ class AzureHost(object):
             license_type=self._vm_model['properties'].get('licenseType', 'Unknown')
         )
 
-        if self._type == "microsoft.azurestackhci/virtualmachineinstances":
+        if self._type == 'microsoft.azurestackhci/virtualmachineinstances':
             new_hostvars['customLocation'] = self._vm_model.get('extendedLocation', {}).get('name', '').split('/')[-1]
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        elif self._type == 'microsoft.compute/virtualmachinescalesets':
-            # Set the attribute information related to the Uniform VMSS instance
-            # Set os compute name, os name, os version and hyper V generation
+        elif self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
             resource_group = new_hostvars['resource_group']
             vmss_name = new_hostvars['vmss']['name']
             instance_id = self._vm_model.get('instanceId')
