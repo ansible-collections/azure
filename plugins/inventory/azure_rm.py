@@ -830,6 +830,11 @@ class AzureHost(object):
 
         createdAt = self._vm_model.get('systemData', {}).get('createdAt')  # hci specific
 
+        if self._instanceview.get('computerName'):
+            computer_name = self._instanceview['computerName']
+        else:
+            computer_name = self._vm_model['properties'].get('osProfile', {}).get('computerName')
+
         new_hostvars = dict(
             network_interface=[],
             network_interface_properties=[],
@@ -845,7 +850,7 @@ class AzureHost(object):
             id=self._vm_model['id'],
             location=self._arcvm['location'] if self._arcvm else self._vm_model['location'],
             name=self._arcvm['name'] if self._arcvm else self._vm_model['name'],
-            computer_name=self._instanceview['computerName'] if self._instanceview.get('computerName') else self._vm_model['properties'].get('osProfile', {}).get('computerName'),
+            computer_name=computer_name,
             availability_zone=av_zone,
             powerstate=self._powerstate,
             provisioning_state=self._vm_model['properties']['provisioningState'].lower(),
