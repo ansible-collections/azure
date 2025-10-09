@@ -161,6 +161,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils._text import to_native, to_bytes, to_text
+from ansible.utils.display import Display
 from itertools import chain
 from os import environ
 try:
@@ -184,6 +185,8 @@ except ImportError:
     BearerTokenCredentialPolicy = object
     pass
 
+
+display = Display()
 
 class AzureRMRestConfiguration(Configuration):
     def __init__(self, credentials, subscription_id, base_url=None):
@@ -493,8 +496,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         try:
             while True:
                 item = self._request_queue.get_nowait()
+                display.vvvv(item.url)
                 resp = self.send_request(item.url, item.api_version)
-                item.handler(resp, **item.handler_args)
+                if resp.status_code == 200:
+                    item.handler(json.loads(resp.body()), **item.handler_args)
+                else:
+                    display.error(resp.text())
         except Empty:
             pass
 
@@ -507,8 +514,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         if 'value' in response:
             for h in response['value']:
-                # print("AzureHost raw response:")
-                # print(h)
+                display.debug("AzureHost raw response:")
+                display.debug(h)
                 # FUTURE: add direct VM filtering by tag here (performance optimization)?
                 self._hosts.append(AzureHost(h, self, vmss=vmss, arcvm=arcvm, legacy_name=self._legacy_hostnames))
 
@@ -519,8 +526,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self._enqueue_get(url=next_link, api_version=self._hybridcompute_api_version, handler=self._on_arc_page_response)
 
         for arcvm in response['value']:
-            # print("ArcHost raw response:")
-            # print(arcvm)
+            display.debug("ArcHost raw response:")
+            display.debug(arcvm)
             self._hosts.append(ArcHost(arcvm, self, legacy_name=self._legacy_hostnames))
 
     def _on_arcvm_page_response(self, response):
@@ -603,6 +610,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 elif status_code in _RETRY_CODES:
                     # 429: Too many requests Error, Backoff and Retry
                     batch_retry = True
+                else:
+                    display.error(r['content'])
             if batch_retry:
                 time.sleep(backoff_factor * (2 ** (retry_count)))
                 retry_count += 1
@@ -626,6 +635,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         header = {'x-ms-client-request-id': str(uuid.uuid4())}
         header.update(self._default_header_parameters)
 
+        display.vvvv("Batch:")
+        for r in batched_requests:
+            display.vvvv("  " + r['url'])
+        display.vvvv("EndBatch")
         request_new = self.new_client.post(url, query_parameters, header_parameters, body_content)
         response = self.new_client.send_request(request_new, **operation_config)
 
@@ -660,8 +673,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         body = {}
         request_new = self.new_client.get(url, query_parameters, header_parameters)
         response = self.new_client.send_request(request_new)
-
-        return json.loads(response.body())
+        return response
 
     @staticmethod
     def _legacy_script_compatible_group_sanitization(name):
@@ -958,6 +970,8 @@ class AzureHost(object):
                                  for s in vm_instanceview_model.get('statuses', []) if self._powerstate_regex.match(s.get('code', ''))), 'unknown')
 
     def _on_nic_response(self, nic_model, is_primary=False):
+        display.debug("AzureNic raw response:")
+        display.debug(nic_model)
         nic = AzureNic(nic_model=nic_model, inventory_client=self._inventory_client, is_primary=is_primary)
         self.nics.append(nic)
 
@@ -977,6 +991,8 @@ class AzureNic(object):
                     self._inventory_client._enqueue_get(url=pip['id'], api_version=self._inventory_client._network_api_version, handler=self._on_pip_response)
 
     def _on_pip_response(self, pip_model):
+        display.debug("AzurePip raw response:")
+        display.debug(pip_model)
         self.public_ips[pip_model['id']] = AzurePip(pip_model)
 
 
