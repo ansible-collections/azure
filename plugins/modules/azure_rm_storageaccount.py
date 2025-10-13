@@ -920,6 +920,7 @@ def compare_cors(cors1, cors2):
             return False
     return True
 
+
 class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
     def __init__(self):
