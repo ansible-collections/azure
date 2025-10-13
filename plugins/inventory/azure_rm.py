@@ -231,7 +231,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         self.azure_auth = None
 
-        self._batch_fetch = False
+        self._batch_fetch = True
 
     def verify_file(self, path):
         '''
