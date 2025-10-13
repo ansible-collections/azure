@@ -329,10 +329,12 @@ options:
                     - With C(kubenet), nodes get an IP address from the Azure virtual network subnet.
                     - AKS features such as Virtual Nodes or network policies aren't supported with C(kubenet).
                     - C(azure) enables Azure Container Networking Interface(CNI), every pod gets an IP address from the subnet and can be accessed directly.
+                    - use BYO CNI for custom networking solutions.
                 type: str
                 choices:
                     - azure
                     - kubenet
+                    - none
             network_plugin_mode:
                 description:
                     - Network plugin mode used for building the Kubernetes network.
@@ -1109,7 +1111,7 @@ agent_pool_profile_spec = dict(
 
 
 network_profile_spec = dict(
-    network_plugin=dict(type='str', choices=['azure', 'kubenet']),
+    network_plugin=dict(type='str', choices=['azure', 'kubenet', 'none']),
     network_plugin_mode=dict(type='str', choices=['Overlay']),
     network_policy=dict(type='str', choices=['azure', 'calico']),
     pod_cidr=dict(type='str'),
