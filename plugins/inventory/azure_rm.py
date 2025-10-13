@@ -501,6 +501,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 if resp.status_code == 200:
                     item.handler(json.loads(resp.body()), **item.handler_args)
                 else:
+                    display.error(item.url)
                     display.error(resp.text())
         except Empty:
             pass
@@ -611,6 +612,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     # 429: Too many requests Error, Backoff and Retry
                     batch_retry = True
                 else:
+                    corresponding_request = [req for req in batch_requests if req['name'] == r['name']]
+                    if len(corresponding_request) > 0:
+                        display.error(corresponding_request[0])
                     display.error(r['content'])
             if batch_retry:
                 time.sleep(backoff_factor * (2 ** (retry_count)))
