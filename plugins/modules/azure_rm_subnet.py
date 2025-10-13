@@ -99,6 +99,8 @@ options:
         choices:
             - Enabled
             - Disabled
+            - NetworkSecurityGroupEnabled
+            - RouteTableEnabled
     private_link_service_network_policies:
         description:
             - C(Enabled) or C(Disabled) apply network policies on private link service in the subnet.
@@ -107,8 +109,6 @@ options:
         choices:
             - Enabled
             - Disabled
-            - NetworkSecurityGroupEnabled
-            - RouteTableEnabled
     delegations:
         description:
             - An array of delegations.
