@@ -386,7 +386,7 @@
         that:
           - filestorage_output is changed
           - filestorage_output.state.sku_name == "Premium_ZRS"
-    
+
     - name: Re-create a new storage account with auth_mode=login
       azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-storageaccount"
