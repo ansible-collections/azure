@@ -114,6 +114,22 @@
         that:
           - output is not changed
 
+    - name: Create storage account using login auth mode
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}02"
+        account_type: Standard_LRS
+        kind: StorageV2
+        auth_mode: login
+        static_website:
+          enabled: false
+      register: output
+    - name: Assert storage account created with login auth mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+
     - name: Enable storage account static website
       azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-storageaccount"
