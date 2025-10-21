@@ -64,6 +64,7 @@
         - "{{ storage_account_name_default }}06"
         - "{{ storage_account_name_default }}07"
         - "{{ storage_account_name_default }}08"
+        - "{{ storage_account_name_default }}09"
 
     - name: Create new storage account with defaults (omitted parameters)
       azure.azcollection.azure_rm_storageaccount:
@@ -113,22 +114,6 @@
       ansible.builtin.assert:
         that:
           - output is not changed
-
-    - name: Create storage account using login auth mode
-      azure.azcollection.azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}-storageaccount"
-        name: "{{ storage_account_name_default }}02"
-        account_type: Standard_LRS
-        kind: StorageV2
-        auth_mode: login
-        static_website:
-          enabled: false
-      register: output
-    - name: Assert storage account created with login auth mode
-      ansible.builtin.assert:
-        that:
-          - output is changed
-
 
     - name: Enable storage account static website
       azure.azcollection.azure_rm_storageaccount:
@@ -401,6 +386,21 @@
         that:
           - filestorage_output is changed
           - filestorage_output.state.sku_name == "Premium_ZRS"
+    
+    - name: Re-create a new storage account with auth_mode=login
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}09"
+        account_type: Standard_LRS
+        kind: StorageV2
+        auth_mode: login
+        static_website:
+          enabled: false
+      register: output
+    - name: Assert storage account created with login auth mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
 
     - name: Create new storage account with explicit parameters
       azure.azcollection.azure_rm_storageaccount:
