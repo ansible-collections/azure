@@ -21,6 +21,17 @@ description:
     - Get facts for one storage account or all storage accounts within a resource group.
 
 options:
+    auth_mode:
+        description:
+            - The mode in which to run the command. C(login) mode will directly use your login credentials for the authentication.
+            - The legacy C(key) mode will attempt to query for an account key if no authentication parameters for the account are provided.
+            - Can also be set via the environment variable C(AZURE_STORAGE_AUTH_MODE).
+        default: key
+        type: str
+        choices:
+            - key
+            - login
+        version_added: "3.10.0"
     name:
         description:
             - Only show results for a specific account.
@@ -629,6 +640,7 @@ storageaccounts:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils._text import to_native
+from ansible.module_utils.basic import env_fallback
 
 
 AZURE_OBJECT_CLASS = 'StorageAccount'
@@ -638,6 +650,12 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def __init__(self):
 
         self.module_arg_spec = dict(
+            auth_mode=dict(
+                type='str',
+                choices=['key', 'login'],
+                fallback=(env_fallback, ['AZURE_STORAGE_AUTH_MODE']),
+                default="key"
+            ),
             name=dict(type='str'),
             resource_group=dict(type='str', aliases=['resource_group_name']),
             tags=dict(type='list', elements='str'),
@@ -904,7 +922,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         if kind == "FileStorage":
             return None
         try:
-            return self.get_blob_service_client(resource_group, name).get_service_properties()
+            return self.get_blob_service_client(resource_group, name, self.auth_mode).get_service_properties()
         except Exception:
             pass
         return None
