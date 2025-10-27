@@ -849,7 +849,7 @@ class AzureHost(object):
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        if len(self.nics) == 0:
+        if len(self.nics) == 0 and self._vmss:
             # Set the attribute information related to the Uniform VMSS instance
             # Set os compute name, os name, os version and hyper V generation
             resource_group = new_hostvars['resource_group']
