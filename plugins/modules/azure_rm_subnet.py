@@ -99,6 +99,8 @@ options:
         choices:
             - Enabled
             - Disabled
+            - NetworkSecurityGroupEnabled
+            - RouteTableEnabled
     private_link_service_network_policies:
         description:
             - C(Enabled) or C(Disabled) apply network policies on private link service in the subnet.
@@ -466,7 +468,7 @@ class AzureRMSubnet(AzureRMModuleBase):
             private_endpoint_network_policies=dict(
                 type='str',
                 default='Enabled',
-                choices=['Enabled', 'Disabled']
+                choices=['Enabled', 'Disabled', 'NetworkSecurityGroupEnabled', 'RouteTableEnabled']
             ),
             private_link_service_network_policies=dict(
                 type='str',

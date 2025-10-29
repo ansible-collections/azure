@@ -17,6 +17,17 @@ short_description: Manage Azure storage accounts
 description:
     - Create, update or delete a storage account.
 options:
+    auth_mode:
+        description:
+            - The mode in which to run the command. C(login) mode will directly use your login credentials for the authentication.
+            - The legacy C(key) mode will attempt to query for an account key if no authentication parameters for the account are provided.
+            - Can also be set via the environment variable C(AZURE_STORAGE_AUTH_MODE).
+        default: key
+        type: str
+        choices:
+            - key
+            - login
+        version_added: "3.10.0"
     resource_group:
         description:
             - Name of the resource group to use.
@@ -848,6 +859,7 @@ import time
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AZURE_SUCCESS_STATE
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible.module_utils._text import to_native
+from ansible.module_utils.basic import env_fallback
 
 try:
     from azure.mgmt.storage.models import (Identity, UserAssignedIdentity)
@@ -914,6 +926,12 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
     def __init__(self):
 
         self.module_arg_spec = dict(
+            auth_mode=dict(
+                type='str',
+                choices=['key', 'login'],
+                fallback=(env_fallback, ['AZURE_STORAGE_AUTH_MODE']),
+                default="key"
+            ),
             account_type=dict(type='str',
                               choices=['Premium_LRS', 'Standard_GRS', 'Standard_LRS', 'Standard_RAGRS', 'Standard_ZRS', 'Premium_ZRS',
                                        'Standard_RAGZRS', 'Standard_GZRS'],
@@ -1125,7 +1143,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name)
             blob_mgmt_props = self.storage_client.blob_services.get_service_properties(self.resource_group, self.name)
             if self.kind != "FileStorage":
-                blob_client_props = self.get_blob_service_client(self.resource_group, self.name).get_service_properties()
+                blob_client_props = self.get_blob_service_client(self.resource_group, self.name, self.auth_mode).get_service_properties()
         except Exception:
             pass
 
@@ -1667,7 +1685,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         if self.kind == "FileStorage":
             return False
         self.log('Checking for existing blob containers')
-        blob_service = self.get_blob_service_client(self.resource_group, self.name)
+        blob_service = self.get_blob_service_client(self.resource_group, self.name, self.auth_mode)
         try:
             response = blob_service.list_containers()
         except Exception:
@@ -1691,7 +1709,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         if self.kind == "FileStorage":
             return
         try:
-            self.get_blob_service_client(self.resource_group, self.name).set_service_properties(static_website=self.static_website)
+            self.get_blob_service_client(self.resource_group, self.name, self.auth_mode).set_service_properties(static_website=self.static_website)
         except Exception as exc:
             self.fail("Failed to set static website config: {0}".format(str(exc)))
 
