@@ -188,6 +188,7 @@ except ImportError:
 
 display = Display()
 
+
 class AzureRMRestConfiguration(Configuration):
     def __init__(self, credentials, subscription_id, base_url=None):
 
