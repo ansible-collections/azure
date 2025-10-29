@@ -1,11 +1,11 @@
 import asyncio
-import json
 from typing import Any, Dict, Optional, Type
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from extensions.eda.plugins.event_source.azure_event_hub import main, AzureHubConsumer
+from extensions.eda.plugins.event_source.azure_event_hub import (
+    AzureHubConsumer, main)
 
 
 class MockEvent:
@@ -65,8 +65,11 @@ async def test_main_with_all_required_args() -> None:
         "azure_event_hub_name": "test_hub",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.EventHubConsumerClient") as mock_client_class, \
-         patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential") as mock_credential:
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.EventHubConsumerClient"
+    ) as mock_client_class, patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ) as mock_credential:
 
         mock_client = AsyncMock()
         mock_client_class.return_value = mock_client
@@ -78,7 +81,7 @@ async def test_main_with_all_required_args() -> None:
         mock_credential.assert_called_once_with(
             tenant_id="test_tenant_id",
             client_id="test_client_id",
-            client_secret="test_client_secret"
+            client_secret="test_client_secret",
         )
         mock_client_class.assert_called_once()
         mock_client.receive.assert_called_once()
@@ -95,7 +98,9 @@ async def test_azure_hub_consumer_on_event_json() -> None:
         "azure_event_hub_name": "test_hub",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"):
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ):
         consumer = AzureHubConsumer(queue, args)
 
         partition_context = MockPartitionContext()
@@ -118,7 +123,9 @@ async def test_azure_hub_consumer_on_event_raw_string() -> None:
         "azure_event_hub_name": "test_hub",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"):
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ):
         consumer = AzureHubConsumer(queue, args)
 
         partition_context = MockPartitionContext()
@@ -141,13 +148,17 @@ async def test_azure_hub_consumer_on_event_unicode_error() -> None:
         "azure_event_hub_name": "test_hub",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"):
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ):
         consumer = AzureHubConsumer(queue, args)
 
         partition_context = MockPartitionContext()
         event = MockEvent('{"message": "Hello World"}')
 
-        with patch.object(event, 'body_as_str', side_effect=UnicodeError("Unicode decode error")):
+        with patch.object(
+            event, "body_as_str", side_effect=UnicodeError("Unicode decode error")
+        ):
             await consumer.on_event(partition_context, event)
 
         # Should not put anything in queue when there's a Unicode error
@@ -165,7 +176,9 @@ async def test_azure_hub_consumer_on_event_no_event() -> None:
         "azure_event_hub_name": "test_hub",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"):
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ):
         consumer = AzureHubConsumer(queue, args)
 
         partition_context = MockPartitionContext()
@@ -188,7 +201,9 @@ async def test_azure_hub_consumer_initialization() -> None:
         "azure_starting_position": "5",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential") as mock_credential:
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ) as mock_credential:
         queue: asyncio.Queue[Any] = asyncio.Queue()
         consumer = AzureHubConsumer(queue, args)
 
@@ -200,7 +215,7 @@ async def test_azure_hub_consumer_initialization() -> None:
         mock_credential.assert_called_once_with(
             tenant_id="test_tenant_id",
             client_id="test_client_id",
-            client_secret="test_client_secret"
+            client_secret="test_client_secret",
         )
 
 
@@ -214,7 +229,9 @@ async def test_azure_hub_consumer_defaults() -> None:
         "azure_event_hub_name": "test_hub",
     }
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"):
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ):
         queue: asyncio.Queue[Any] = asyncio.Queue()
         consumer = AzureHubConsumer(queue, args)
 
@@ -234,8 +251,12 @@ async def test_azure_hub_consumer_start_receiving() -> None:
 
     events = [MockEvent('{"test": "data"}')]
 
-    with patch("extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"), \
-         patch("extensions.eda.plugins.event_source.azure_event_hub.EventHubConsumerClient", return_value=MockEventHubConsumerClient(events)):
+    with patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.ClientSecretCredential"
+    ), patch(
+        "extensions.eda.plugins.event_source.azure_event_hub.EventHubConsumerClient",
+        return_value=MockEventHubConsumerClient(events),
+    ):
 
         queue: asyncio.Queue[Any] = asyncio.Queue()
         consumer = AzureHubConsumer(queue, args)
