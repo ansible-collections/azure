@@ -58,3 +58,5 @@ pandas
 oras
 netaddr
 azure-servicebus
+azure-eventhub
+aiohttp
