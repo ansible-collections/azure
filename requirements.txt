@@ -1,7 +1,9 @@
+aiohttp==3.13.0
 azure-cli-core==2.75.0
 azure-common==1.1.28
 azure-containerregistry==1.2.0
 azure-core==1.31.0
+azure-eventhub==5.15.0
 azure-identity==1.19.0
 azure-iot-hub==2.6.1
 azure-keyvault==4.2.0
@@ -58,4 +60,3 @@ packaging==25.0
 pandas==2.3.3
 requests==2.32.5
 xmltodict==1.0.2
-
