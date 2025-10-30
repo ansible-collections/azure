@@ -32,7 +32,7 @@ options:
     description:
       - The azure event hub namespace which includes the host name
     type: str
-    example: "test.servicebus.windows.net",
+    example: "test.servicebus.windows.net"
     required: true
   azure_event_hub_name:
     description:
