@@ -1,0 +1,580 @@
+- name: Create a new resource group for monitor log search alert rule test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-scheduledqueryrules"
+    location: eastus
+  register: resource_group_output
+
+- name: For monitor log search alert rule test
+  block:
+    - name: Prepare variables
+      ansible.builtin.set_fact:
+        # Random string
+        random_string: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        action_group_mail: user@example.com
+        location: eastus
+      run_once: true
+
+    # ------ prerequisite resources, existing resource group, new action group, new log analytics workspace ------
+
+    - name: Create action group
+      azure.azcollection.azure_rm_monitoractiongroups:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "actiongroup-{{ random_string }}"
+        state: present
+        enabled: true
+        location: Global
+        email_receivers:
+          - email_address: "{{ action_group_mail }}"
+            name: "sendmailto{{ action_group_mail | split('@') | first }}"
+            use_common_alert_schema: true
+        group_short_name: AGShortName
+      register: action_group_output
+
+    - name: Create Log Analytics Workspace
+      azure.azcollection.azure_rm_loganalyticsworkspace:
+        name: "loganalyticsworkspace-{{ random_string }}"
+        location: "{{ location }}"
+        intelligence_packs:
+          VMInsights: true
+          AgentHealthAssessment: true
+          LogManagement: true
+          AzureResources: true
+        retention_in_days: 30
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        tags:
+          key1: value1
+        identity:
+          type: SystemAssigned
+      register: log_analytics_workspace_output
+
+    # ------ tests ------
+
+    - name: Create log search alert rule (check mode)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        location: "{{ location }}"
+        action:
+          azns_action:
+            action_group:
+              - "{{ action_group_output.actiongroup.id }}"
+            email_subject: ''
+          odata_type: Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+          severity: 1
+          trigger:
+            metric_trigger:
+              metric_column: InstanceName,_ResourceId
+              metric_trigger_type: Total
+              threshold: 1
+              threshold_operator: GreaterThanOrEqual
+            threshold: 5
+            threshold_operator: LessThan
+        auto_mitigate: true
+        description: Description
+        display_name: DisplayName
+        enabled: "True"
+        schedule:
+          frequency_in_minutes: 5
+          time_window_in_minutes: 5
+        source:
+          authorized_resources: []
+          data_source_id: "{{ log_analytics_workspace_output.id }}"
+          query: >
+            Perf
+            | where _ResourceId startswith "{{ resource_group_output.state.id | quote }}"
+            | where CounterName == "% Free Space"
+            | where InstanceName != "total"
+            | summarize AggregatedValue = max(CounterValue) by bin(TimeGenerated, 5m),
+            _ResourceId, InstanceName
+          query_type: ResultCount
+        tags:
+          CreationTag1: CreationTagValue1
+      check_mode: true
+      register: output
+
+    - name: Assert that log search alert rule has been created (check mode)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Create log search alert rule (no tags)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        location: "{{ location }}"
+        action:
+          azns_action:
+            action_group:
+              - "{{ action_group_output.actiongroup.id }}"
+            email_subject: ''
+          odata_type: Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+          severity: 1
+          trigger:
+            metric_trigger:
+              metric_column: InstanceName,_ResourceId
+              metric_trigger_type: Total
+              threshold: 1
+              threshold_operator: GreaterThanOrEqual
+            threshold: 5
+            threshold_operator: LessThan
+        auto_mitigate: true
+        description: Description
+        display_name: DisplayName
+        enabled: "True"
+        schedule:
+          frequency_in_minutes: 5
+          time_window_in_minutes: 5
+        source:
+          authorized_resources: []
+          data_source_id: "{{ log_analytics_workspace_output.id }}"
+          query: >
+            Perf
+            | where _ResourceId startswith "{{ resource_group_output.state.id | quote }}"
+            | where CounterName == "% Free Space"
+            | where InstanceName != "total"
+            | summarize AggregatedValue = max(CounterValue) by bin(TimeGenerated, 5m),
+            _ResourceId, InstanceName
+          query_type: ResultCount
+      register: output
+
+    - name: Assert that log search alert rule has been created (no tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.scheduledqueryrule.tags is not defined
+
+    - name: Create log search alert rule (no tags, idempotency check)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        location: "{{ location }}"
+        action:
+          azns_action:
+            action_group:
+              - "{{ action_group_output.actiongroup.id }}"
+            email_subject: ''
+          odata_type: Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+          severity: 1
+          trigger:
+            metric_trigger:
+              metric_column: InstanceName,_ResourceId
+              metric_trigger_type: Total
+              threshold: 1
+              threshold_operator: GreaterThanOrEqual
+            threshold: 5
+            threshold_operator: LessThan
+        auto_mitigate: true
+        description: Description
+        display_name: DisplayName
+        enabled: "True"
+        schedule:
+          frequency_in_minutes: 5
+          time_window_in_minutes: 5
+        source:
+          authorized_resources: []
+          data_source_id: "{{ log_analytics_workspace_output.id }}"
+          query: >
+            Perf
+            | where _ResourceId startswith "{{ resource_group_output.state.id | quote }}"
+            | where CounterName == "% Free Space"
+            | where InstanceName != "total"
+            | summarize AggregatedValue = max(CounterValue) by bin(TimeGenerated, 5m),
+            _ResourceId, InstanceName
+          query_type: ResultCount
+      register: output
+
+    - name: Assert that log search alert rule has not changed during idempotency check (no tags)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.scheduledqueryrule.tags is not defined
+
+    - name: Create log search alert rule (creation tags)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-creationtags-{{ random_string }}"
+        location: "{{ location }}"
+        action:
+          azns_action:
+            action_group:
+              - "{{ action_group_output.actiongroup.id }}"
+            email_subject: ''
+          odata_type: Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+          severity: 1
+          trigger:
+            metric_trigger:
+              metric_column: InstanceName,_ResourceId
+              metric_trigger_type: Total
+              threshold: 1
+              threshold_operator: GreaterThanOrEqual
+            threshold: 5
+            threshold_operator: LessThan
+        auto_mitigate: true
+        description: Description
+        display_name: DisplayName
+        enabled: "True"
+        schedule:
+          frequency_in_minutes: 5
+          time_window_in_minutes: 5
+        source:
+          authorized_resources: []
+          data_source_id: "{{ log_analytics_workspace_output.id }}"
+          query: >
+            Perf
+            | where _ResourceId startswith "{{ resource_group_output.state.id | quote }}"
+            | where CounterName == "% Free Space"
+            | where InstanceName != "total"
+            | summarize AggregatedValue = max(CounterValue) by bin(TimeGenerated, 5m),
+            _ResourceId, InstanceName
+          query_type: ResultCount
+        tags:
+          CreationTag1: CreationTagValue1
+      register: output
+
+    - name: Assert that log search alert rule has been created (creation tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.scheduledqueryrule.tags.CreationTag1 == 'CreationTagValue1'
+
+    - name: Create log search alert rule (creation tags, idempotency check)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-creationtags-{{ random_string }}"
+        location: "{{ location }}"
+        action:
+          azns_action:
+            action_group:
+              - "{{ action_group_output.actiongroup.id }}"
+            email_subject: ''
+          odata_type: Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+          severity: 1
+          trigger:
+            metric_trigger:
+              metric_column: InstanceName,_ResourceId
+              metric_trigger_type: Total
+              threshold: 1
+              threshold_operator: GreaterThanOrEqual
+            threshold: 5
+            threshold_operator: LessThan
+        auto_mitigate: true
+        description: Description
+        display_name: DisplayName
+        enabled: "True"
+        schedule:
+          frequency_in_minutes: 5
+          time_window_in_minutes: 5
+        source:
+          authorized_resources: []
+          data_source_id: "{{ log_analytics_workspace_output.id }}"
+          query: >
+            Perf
+            | where _ResourceId startswith "{{ resource_group_output.state.id | quote }}"
+            | where CounterName == "% Free Space"
+            | where InstanceName != "total"
+            | summarize AggregatedValue = max(CounterValue) by bin(TimeGenerated, 5m),
+            _ResourceId, InstanceName
+          query_type: ResultCount
+        tags:
+          CreationTag1: CreationTagValue1
+      register: output
+
+    - name: Assert that log search alert rule has not changed during idempotency check (creation tags)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.scheduledqueryrule.tags.CreationTag1 == 'CreationTagValue1'
+
+    - name: Add tag to existing log search alert rule
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that log search alert rule has been changed (add tag)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.scheduledqueryrule.tags.TestTag1 == 'TestValue1'
+
+    - name: Add tag to existing log search alert rule (idempontency)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that log search alert rule has been changed (add tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.scheduledqueryrule.tags.TestTag1 == 'TestValue1'
+
+    - name: Add tag to existing log search alert rule (append)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that log search alert rule has been changed (add tag)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.scheduledqueryrule.tags.TestTag1 == 'TestValue1'
+          - output.scheduledqueryrule.tags.TestTag2 == 'TestValue2'
+
+    - name: Add tag to existing log search alert rule (append, idempotency)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that log search alert rule has been changed (add tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.scheduledqueryrule.tags.TestTag1 == 'TestValue1'
+          - output.scheduledqueryrule.tags.TestTag2 == 'TestValue2'
+
+    - name: Replace tag on existing log search alert rule
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        append_tags: false
+        tags:
+          TestTag3: TestValue3
+      register: output
+
+    - name: Assert that log search alert rule tag has been changed (replace tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.scheduledqueryrule.tags.TestTag1 is not defined
+          - output.scheduledqueryrule.tags.TestTag2 is not defined
+          - output.scheduledqueryrule.tags.TestTag3 == 'TestValue3'
+
+    - name: Replace tag on existing log search alert rule (idempontency)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        append_tags: false
+        tags:
+          TestTag3: TestValue3
+      register: output
+
+    - name: Assert that log search alert rule tag has been changed (replace tag, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.scheduledqueryrule.tags.TestTag1 is not defined
+          - output.scheduledqueryrule.tags.TestTag2 is not defined
+          - output.scheduledqueryrule.tags.TestTag3 == 'TestValue3'
+
+    - name: Remove tags on existing log search alert rule
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        append_tags: false
+      register: output
+
+    - name: Assert that log search alert rule has been changed (remove tags)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          # - output.scheduledqueryrule.tags is not defined
+          - output.scheduledqueryrule.tags | length == 0
+
+    - name: Remove tags on existing log search alert rule (idempotency)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        append_tags: false
+      register: output
+
+    - name: Assert that log search alert rule has been changed (remove tags, idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          # https://github.com/Azure/azure-rest-api-specs/issues/35693
+          # - output.scheduledqueryrule.tags is not defined
+          - output.scheduledqueryrule.tags | length == 0
+
+    - name: Disable a log search alert rule
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        enabled: "False"
+      register: output
+
+    - name: Assert that log search alert rule has been disabled
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          # I am unsure why the case has changed here ... :)
+          - output.scheduledqueryrule.enabled == "false"
+
+    - name: Disable a log search alert rule (idempotency)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: present
+        enabled: "False"
+      register: output
+
+    - name: Assert that log search alert rule has been disabled (idempotency)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.scheduledqueryrule.enabled == "False"
+
+    - name: Get information about a log search alert rule
+      azure.azcollection.azure_rm_monitorscheduledqueryrules_info:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+      register: output
+
+    - name: Assert that log search alert rule list is properly filled
+      ansible.builtin.assert:
+        that:
+          - output.scheduledqueryrules | length == 1
+
+    - name: List all log search alert rules (resource group level)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules_info:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+      register: output
+
+    - name: Assert that log search alert rule list includes created log search alert rule (resource group level)
+      ansible.builtin.assert:
+        that:
+          - ('scheduledqueryrules-' + random_string) in (output.scheduledqueryrules | map(attribute='name') | list)
+
+    - name: List all log search alert rules (subscription level)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules_info:
+      register: output
+
+    - name: Assert that log search alert rule list includes created log search alert rule (subscription level)
+      ansible.builtin.assert:
+        that:
+          - ('scheduledqueryrules-' + random_string) in (output.scheduledqueryrules | map(attribute='name') | list)
+
+    # ------ teardown ------
+
+    - name: Delete log search alert rule (check mode)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert that log search alert rule has been deleted (check mode)
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Delete log search alert rule
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that log search alert rule has been deleted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Delete log search alert rule (idempontency check)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that log search alert rule has been deleted (idempotency check)
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Delete log search alert rule (creation tags)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-creationtags-{{ random_string }}"
+        state: absent
+      register: output
+
+    - name: Assert that log search alert rule has been deleted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Delete action group
+      azure.azcollection.azure_rm_monitoractiongroups:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "actiongroup-{{ random_string }}"
+        state: absent
+
+    - name: Delete Log Analytics Workspace
+      azure.azcollection.azure_rm_loganalyticsworkspace:
+        name: "loganalyticsworkspace-{{ random_string }}"
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        state: absent
+      register: log_analytics_workspace_output
+
+    # # ------ safety checks, ensure everything is gone ------
+
+    - name: Make sure delection succeeded
+      azure.azcollection.azure_rm_monitorscheduledqueryrules_info:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+        name: "scheduledqueryrules-{{ random_string }}"
+      register: output
+
+    - name: Assert that log search alert rule is no longer found
+      ansible.builtin.assert:
+        that:
+          - output.scheduledqueryrules | length == 0
+
+    - name: List all log search alert rules after deletion (resource group level)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules_info:
+        resource_group: "{{ resource_group }}-scheduledqueryrules"
+      register: output
+
+    - name: Assert that log search alert rule list no longer includes created log search alert rule (resource group level)
+      ansible.builtin.assert:
+        that:
+          - ('scheduledqueryrules-' + random_string) not in (output.scheduledqueryrules | map(attribute='name') | list)
+
+    - name: List all log search alert rules after deletion (subscription level)
+      azure.azcollection.azure_rm_monitorscheduledqueryrules_info:
+      register: output
+
+    - name: Assert that log search alert rule list no longer includes created log search alert rule (subscription level)
+      ansible.builtin.assert:
+        that:
+          - ('scheduledqueryrules-' + random_string) not in (output.scheduledqueryrules | map(attribute='name') | list)
+
+  always:
+    - name: Force delete the log alert resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-scheduledqueryrules"
+        force_delete_nonempty: true
+        state: absent
