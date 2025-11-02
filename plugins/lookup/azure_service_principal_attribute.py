@@ -80,7 +80,7 @@ class LookupModule(LookupBase):
             client_id=self.get_option('client_id'),
             secret=self.get_option('secret'),
             tenant=self.get_option('tenant', 'common'),
-            cloud_environment=self.get_options('cloud_environment'),
+            cloud_environment=self.get_option('cloud_environment'),
             is_ad_resource=True
         )
         azure_auth = AzureRMAuth(**auth_options)
