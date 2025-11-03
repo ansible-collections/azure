@@ -1,0 +1,31 @@
+
+ame: CI - Ansible Collection Sanity Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  sanity-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible-version: [2.14, 2.16, 2.17]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ansible-core
+        run: |
+          pip install ansible-core==${{ matrix.ansible-version }}
+
+      - name: Run sanity tests
+        run: |
+          ansible-test sanity --docker
