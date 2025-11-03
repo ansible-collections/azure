@@ -1,5 +1,4 @@
-
-ame: CI - Ansible Collection Sanity Tests
+name: CI - Ansible Collection Sanity Tests
 
 on:
   pull_request:
