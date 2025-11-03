@@ -1,4 +1,4 @@
-name: CI - Ansible Collection Sanity Tests
+name: CI - Ansible Collection Quality Checks
 
 on:
   pull_request:
@@ -9,6 +9,7 @@ on:
       - dev
 
 jobs:
+  # Sanity tests
   sanity-tests:
     runs-on: ubuntu-latest
     strategy:
@@ -27,6 +28,49 @@ jobs:
         run: |
           pip install ansible-core==${{ matrix.ansible-version }}
 
-      - name: Run sanity tests
+      - name: Prepare collection directory
         run: |
-          ansible-test sanity --docker
+          mkdir -p ansible_collections/azure/azcollection
+          rsync -av --exclude ansible_collections --exclude .git ./ ansible_collections/azure/azcollection/
+
+      - name: Run sanity tests
+        working-directory: ansible_collections/azure/azcollection
+        run: |
+          ansible-test sanity --docker --color yes
+
+  # Lint-checks
+  lint-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ansible-lint
+        run: |
+          pip install ansible-lint
+
+      - name: Run ansible-lint
+        run: |
+          ansible-lint .
+
+  # Requirements validation
+  requirements-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate requirements.txt
+        run: |
+          echo "Checking requirements.txt for pinned versions..."
+          if grep -E '^[a-zA-Z0-9_-]+==[0-9]' requirements.txt | grep -v '^internal-package'; then
+            echo "Error: Found pinned third-party dependencies! Please remove version pins."
+            exit 1
+          else
+            echo "Success: requirements.txt validation passed."
+          fi
