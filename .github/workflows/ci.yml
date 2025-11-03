@@ -65,4 +65,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install ruff
-      - run: ruff check .
+      - run: ruff check . --fix
