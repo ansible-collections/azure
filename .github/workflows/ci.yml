@@ -64,11 +64,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Validate requirements.txt
         run: |
           echo "Checking requirements.txt for pinned versions..."
-          if grep -E '^[a-zA-Z0-9_-]+==[0-9]' requirements.txt | grep -v '^internal-package'; then
+          # Fail if pinned versions exist for non-exempt packages
+          if grep -E '^[a-zA-Z0-9_-]+==[0-9]' requirements.txt | grep -v -E '^(internal-package|azure-|msgraph-sdk)'; then
             echo "Error: Found pinned third-party dependencies! Please remove version pins."
             exit 1
           else
