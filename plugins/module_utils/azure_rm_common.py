@@ -466,6 +466,7 @@ class AzureRMModuleBase(object):
         self._monitor_management_client_action_groups = None
         self._monitor_management_client_activity_log_alerts = None
         self._monitor_management_client_metric_alerts = None
+        self._monitor_management_client_scheduled_query_rules = None
         self._resource = None
         self._log_analytics_client = None
         self._servicebus_client = None
@@ -1435,6 +1436,15 @@ class AzureRMModuleBase(object):
                                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                                      api_version='2018-03-01')
         return self._monitor_management_client_metric_alerts
+
+    @property
+    def monitor_management_client_scheduled_query_rules(self):
+        self.log('Getting monitor client for scheduled query rules')
+        if not self._monitor_management_client_scheduled_query_rules:
+            self._monitor_management_client_scheduled_query_rules = self.get_mgmt_svc_client(MonitorManagementClient,
+                                                                                             base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                                             api_version='2018-04-16')
+        return self._monitor_management_client_scheduled_query_rules
 
     @property
     def log_analytics_client(self):
