@@ -176,14 +176,17 @@ class LookupModule(LookupBase):
         self.set_options(direct=kwargs)
 
         ret = []
-        vault_url = self.get_option('vault_url', None)
-        use_msi = self.get_option('use_msi', True)
+        vault_url = self.get_option('vault_url')
+        use_msi = self.get_option('use_msi')
+        # If use_msi is not defined default to True.
+        if use_msi is None:
+            use_msi = True
         TOKEN_ACQUIRED = False
         token = None
 
         token_params = {
             'api-version': '2018-02-01',
-            'resource': 'https://vault.{0}.net'.format(self.get_option('cloud_type', 'azure'))
+            'resource': 'https://vault.{0}.net'.format(self.get_option('cloud_type') or 'azure')
         }
 
         token_headers = {
