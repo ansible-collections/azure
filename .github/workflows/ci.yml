@@ -2,9 +2,11 @@ name: CI - Ansible Collection Sanity Tests
 
 on:
   pull_request:
+    branches:
+      - dev
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   sanity-tests:
