@@ -1,77 +1,68 @@
-name: CI - Ansible Collection Quality Checks
-
+name: CI
 on:
-  pull_request:
+  # Run CI against all pushes (direct commits, also merged PRs), Pull Requests
+  push:
     branches:
       - dev
-  push:
+  pull_request:
     branches:
       - dev
 
 jobs:
-  # Sanity tests
-  sanity-tests:
-    runs-on: ubuntu-latest
+  ###
+  # Sanity tests (REQUIRED)
+  #
+  # https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+  sanity:
+    name: Sanity (${{ matrix.ansible }})
     strategy:
       matrix:
-        ansible-version: [2.14, 2.16, 2.17]
+        ansible:
+          - stable-2.16
+          - stable-2.17
+          - stable-2.18
+          - devel
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Perform sanity testing
+        uses: ansible-community/ansible-test-gh-action@release/v1
         with:
-          python-version: '3.11'
+          ansible-core-version: ${{ matrix.ansible }}
+          testing-type: sanity
+          pull-request-change-detection: false
 
-      - name: Install ansible-core
-        run: |
-          pip install ansible-core==${{ matrix.ansible-version }}
-
-      - name: Prepare collection directory
-        run: |
-          mkdir -p ansible_collections/azure/azcollection
-          rsync -av --exclude ansible_collections --exclude .git ./ ansible_collections/azure/azcollection/
-
-      - name: Run sanity tests
-        working-directory: ansible_collections/azure/azcollection
-        run: |
-          ansible-test sanity --docker --color yes
-
-  # Lint-checks
+  # ansible-lint checks
   lint-checks:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - run: pip install ansible-lint
+      - run: ansible-lint .
 
-      - name: Install ansible-lint
-        run: |
-          pip install ansible-lint
-
-      - name: Run ansible-lint
-        run: |
-          ansible-lint .
-
-  # Requirements validation
+  # requirements.txt validation
   requirements-validation:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Validate requirements.txt
-        run: |
+      - uses: actions/checkout@v4
+      - run: |
           echo "Checking requirements.txt for pinned versions..."
-          # Fail if pinned versions exist for non-exempt packages
-          if grep -E '^[a-zA-Z0-9_-]+==[0-9]' requirements.txt | grep -v -E '^(azure-|msgraph-sdk)'; then
+          if grep '==' requirements.txt | grep -v -E '^(azure-|msgraph-sdk)'; then
             echo "Error: Found pinned third-party dependencies! Please remove version pins."
             exit 1
           else
             echo "Success: requirements.txt validation passed."
           fi
+
+  # ruff-check
+  ruff-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install ruff
+      - run: ruff check .
