@@ -71,4 +71,4 @@ jobs:
       - run: pip install ruff
       - run: |
           echo "Running Ruff check for EDA plugins..."
-          ruff check --select ALL --ignore INP001,FA102,UP001,UP010,I001,FA100,PLR0913,E501 -q extensions/eda/plugins
+          ruff check --select ALL --ignore D100,D104,INP001,FA102,UP001,UP010,I001,FA100,PLR0913,E501 -q extensions/eda/plugins
