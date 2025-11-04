@@ -104,7 +104,6 @@ keyed_groups:
 '''
 
 import re
-from ansible.module_utils.six import iteritems
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 from ansible.errors import AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
@@ -192,7 +191,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                                                     strict=constructable_config_strict)
             self.inventory.add_host(inventory_hostname)
 
-            for k, v in iteritems(hostvars):
+            for k, v in hostvars.items():
                 self.inventory.set_variable(inventory_hostname, k, v)
 
             # constructable delegation
