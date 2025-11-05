@@ -1,0 +1,74 @@
+name: CI
+on:
+  # Run CI against all pushes (direct commits, also merged PRs), Pull Requests
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  ###
+  # Sanity tests (REQUIRED)
+  #
+  # https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+  sanity:
+    name: Sanity (${{ matrix.ansible }})
+    strategy:
+      matrix:
+        ansible:
+          - stable-2.16
+          - stable-2.17
+          - stable-2.18
+          - devel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Perform sanity testing
+        uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: ${{ matrix.ansible }}
+          testing-type: sanity
+          pull-request-change-detection: false
+
+  # ansible-lint checks
+  lint-checks:
+    name: Link Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ansible-lint
+      - run: ansible-lint .
+
+  # requirements.txt validation
+  requirements-validation:
+    name: Requirements Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "Checking requirements.txt for pinned versions..."
+          if grep '==' requirements.txt | grep -v -E '^(azure-|msgraph-sdk)'; then
+            echo "Error: Found pinned third-party dependencies! Please remove version pins."
+            exit 1
+          else
+            echo "Success: requirements.txt validation passed."
+          fi
+
+  # ruff-check
+  ruff-check:
+    name: Ruff Check for EDA plugins
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: |
+          echo "Running Ruff check for EDA plugins..."
+          ruff check --select ALL --ignore INP001,FA102,UP001,UP010,I001,FA100,PLR0913,E501 -q extensions/eda/plugins

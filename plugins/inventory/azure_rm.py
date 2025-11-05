@@ -156,7 +156,6 @@ except ImportError:
 
 from collections import namedtuple
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
-from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
@@ -431,7 +430,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
             self.inventory.set_variable(inventory_hostname, "ansible_host",
                                         next(chain(hostvars['public_ipv4_address'], hostvars['private_ipv4_addresses']), None))
-            for k, v in iteritems(hostvars):
+            for k, v in hostvars.items():
                 # FUTURE: configurable hostvar prefix? Makes docs harder...
                 self.inventory.set_variable(inventory_hostname, k, v)
 

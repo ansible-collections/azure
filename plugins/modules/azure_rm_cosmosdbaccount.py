@@ -243,7 +243,6 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.cosmosdb import CosmosDBManagementClient
     from azure.mgmt.cosmosdb.models import ManagedServiceIdentity, ManagedServiceIdentityUserAssignedIdentity
-    from ansible.module_utils.six import string_types
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -647,7 +646,7 @@ def default_compare(new, old, path, result):
         if path == '/location' or path.endswith('location_name'):
             new = new.replace(' ', '').lower()
             old = new.replace(' ', '').lower()
-        if isinstance(old, string_types) and isinstance(new, string_types):
+        if isinstance(old, str) and isinstance(new, str):
             new = new.lower()
             old = old.lower()
         if new == old:

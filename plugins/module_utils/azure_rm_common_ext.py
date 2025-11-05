@@ -8,7 +8,6 @@ __metaclass__ = type
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
-from ansible.module_utils.six import string_types
 
 
 class AzureRMModuleBaseExt(AzureRMModuleBase):
@@ -148,7 +147,7 @@ class AzureRMModuleBaseExt(AzureRMModuleBase):
         :param pattern: pattern of resource is, just like in Azure Swagger
         '''
         value_dict = {}
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value_parts = value.split('/')
             if len(value_parts) == 1:
                 value_dict['name'] = value
@@ -283,11 +282,11 @@ class AzureRMModuleBaseExt(AzureRMModuleBase):
             if comparison == 'ignore':
                 return True
             elif comparison == 'default' or comparison == 'sensitive':
-                if isinstance(old, string_types) and isinstance(new, string_types):
+                if isinstance(old, str) and isinstance(new, str):
                     new = new.lower()
                     old = old.lower()
             elif comparison == 'location':
-                if isinstance(old, string_types) and isinstance(new, string_types):
+                if isinstance(old, str) and isinstance(new, str):
                     new = new.replace(' ', '').lower()
                     old = old.replace(' ', '').lower()
             if str(new) != str(old):
