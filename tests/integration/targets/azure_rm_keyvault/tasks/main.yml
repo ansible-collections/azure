@@ -538,7 +538,7 @@
             resource_group: "{{ resource_group }}-keyvault"
             hsm_name: "hsm{{ rpfx }}"
           register: facts
-        
+
         - name: List Key Vaults and HSMs in a resource group
           azure.azcollection.azure_rm_keyvault_info:
             resource_group: "{{ resource_group }}-keyvault"
