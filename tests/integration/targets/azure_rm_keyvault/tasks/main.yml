@@ -544,7 +544,7 @@
             resource_group: "{{ resource_group }}-keyvault"
           register: result
         - name: Assert keyvaults and hsms are returned
-          assert:
+          ansible.builtin.assert:
             that:
               - result.keyvaults is defined
               - result.hsms is defined
