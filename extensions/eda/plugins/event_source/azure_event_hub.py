@@ -3,7 +3,8 @@ import json
 import logging
 from typing import Any
 
-from azure.eventhub.aio import EventHubConsumerClient
+from azure.eventhub.aio import (EventHubConsumerClient, PartitionContext)
+from azure.eventhub import EventData
 from azure.identity.aio import ClientSecretCredential
 
 DOCUMENTATION = r"""
@@ -74,7 +75,10 @@ REQUIRED_ARGS = [
 
 
 class AzureHubConsumer:
+    """Azure Hub Consumer."""
+
     def __init__(self, queue: asyncio.Queue[Any], args: dict[str, Any]) -> None:
+        """Initialize Hub Consumer."""
         self.queue = queue
         tenant_id = args.get("azure_tenant_id")
         client_id = args.get("azure_client_id")
@@ -92,7 +96,8 @@ class AzureHubConsumer:
             client_secret=client_secret,
         )
 
-    async def on_event(self, partition_context, event):
+    async def on_event(self, partition_context: PartitionContext, event: EventData) -> None:
+        """Receiving event data."""
         if event:
             await partition_context.update_checkpoint(event)
             meta = {}
@@ -120,7 +125,8 @@ class AzureHubConsumer:
 
         await asyncio.sleep(0)
 
-    async def start_receiving(self):
+    async def start_receiving(self) -> None:
+        """Start receiving data."""
         client = EventHubConsumerClient(
             fully_qualified_namespace=self.event_hub_namespace,
             eventhub_name=self.event_hub_name,
@@ -136,7 +142,7 @@ async def main(  # pylint: disable=R0914
     queue: asyncio.Queue[Any],
     args: dict[str, Any],
 ) -> None:
-
+    """Entry Point."""
     for key in REQUIRED_ARGS:
         if key not in args:
             msg = f"Please provide {key} it is a required argument."
