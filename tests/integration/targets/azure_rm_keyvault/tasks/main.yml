@@ -539,6 +539,16 @@
             hsm_name: "hsm{{ rpfx }}"
           register: facts
 
+        - name: List Key Vaults and HSMs in a resource group
+          azure.azcollection.azure_rm_keyvault_info:
+            resource_group: "{{ resource_group }}-keyvault"
+          register: result
+        - name: Assert keyvaults and hsms are returned
+          ansible.builtin.assert:
+            that:
+              - result.keyvaults is defined
+              - result.hsms is defined
+
         - name: Assert the facts are properly set
           ansible.builtin.assert:
             that:
