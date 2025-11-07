@@ -10,7 +10,7 @@
   - plugins/lookup/azure_keyvault_secret.py: Fix regression when using MSI ([#2096](https://github.com/ansible-collections/azure/pull/2096))
   - .github/workflows/ci.yml: 
     - Add GitHub action workflows for ansible collection sanity tests ([#2094](https://github.com/ansible-collections/azure/pull/2094))
-    - Fix ruff errors ([#2097](https://github.com/ansible-collections/azure/pull/2097))S
+    - Fix ruff errors ([#2097](https://github.com/ansible-collections/azure/pull/2097))
   - plugins/inventory/azure_kpl.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
   - plugins/inventory/azure_rm.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
   - plugins/module_utils/azure_rm_common_ext.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
