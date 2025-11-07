@@ -31,7 +31,7 @@
 
     - name: Set location and managed_identity_ids
       ansible.builtin.set_fact:
-        location: westus2
+        location: australiacentral
         managed_identity_ids: []
         new_resource_group: "{{ resource_group }}-webapp01"
 
@@ -55,6 +55,7 @@
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}"
+          location: "{{ location }}"
           is_linux: false
           sku: B1
 
@@ -611,6 +612,7 @@
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-auth"
+          location: "{{ location }}"
           is_linux: false
           sku: B1
         site_auth_settings:
@@ -681,6 +683,7 @@
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
+          location: "{{ location }}"
           is_linux: false
           sku: B1
         identity:
