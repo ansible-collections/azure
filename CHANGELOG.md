@@ -1,4 +1,28 @@
 # Change Log
+## v3.10.2 (2025-11-07)
+
+### NEW MODULES
+  - azure_rm_monitorscheduledqueryrules.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
+  - azure_rm_monitorscheduledqueryrules_info.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
+
+### FEATURE ENHANCEMENT
+  - extensions/eda/plugins/event_source/azure_event_hub.py: Fix ruff errors on azure_event_hub_plugin ([#2097](https://github.com/ansible-collections/azure/pull/2097))
+  - plugins/lookup/azure_keyvault_secret.py: Fix regression when using MSI ([#2096](https://github.com/ansible-collections/azure/pull/2096))
+  - .github/workflows/ci.yml: 
+    - Add GitHub action workflows for ansible collection sanity tests ([#2094](https://github.com/ansible-collections/azure/pull/2094))
+    - Fix ruff errors ([#2097](https://github.com/ansible-collections/azure/pull/2097))S
+  - plugins/inventory/azure_kpl.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
+  - plugins/inventory/azure_rm.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
+  - plugins/module_utils/azure_rm_common_ext.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
+  - azure_rm_cosmosdbaccount.py: Fix sanity issues ([#2094](https://github.com/ansible-collections/azure/pull/2094))
+  - requirements.txt: Remove pin of third party packages ([#2092](https://github.com/ansible-collections/azure/pull/2092))
+
+### BUG FIXING
+  - azure_rm_keyvault_info.py: Correct method call ([#2098](https://github.com/ansible-collections/azure/pull/2098))
+  - extensions/eda/plugins/event_source/azure_event_hub.py: Fix doc issue ([#2089](https://github.com/ansible-collections/azure/pull/2089))
+  - plugins/lookup/azure_service_principal_attribute.py: Fix typo ([#2091](https://github.com/ansible-collections/azure/pull/2091))
+
+
 ## v3.10.0 (2025-10-30)
 
 ### NEW MODULES
