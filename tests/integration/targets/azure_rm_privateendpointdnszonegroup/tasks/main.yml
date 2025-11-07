@@ -1,7 +1,7 @@
 - name: Create a new resource group for private endpoint dns zone group test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-privateendpointdnszonegroup"
-    location: eastus
+    location: eastus2
 
 - name: For private endpoint dns zone group test
   block:
