@@ -236,6 +236,7 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_plan_name }}"
+          location: "{{ location }}"
           is_linux: true
           sku: B1
           number_of_workers: 1
@@ -255,6 +256,7 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_plan_name }}"
+          location: "{{ location }}"
         container_settings:
           name: "ansible/ansible:ubuntu1404"
           registry_server_url: test.io
@@ -304,6 +306,7 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_plan_name }}"
+          location: "{{ location }}"
         frameworks:
           - name: node
             version: "20"
@@ -401,6 +404,7 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_app_name }}-siteconfig-plan"
+          location: "{{ location }}"
           is_linux: true
           sku: B1
         frameworks:
@@ -505,6 +509,7 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_app_name }}-http20-plan"
+          location: "{{ location }}"
           is_linux: true
           sku: B1
         frameworks:
@@ -572,6 +577,7 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_app_name }}-http20-plan"
+          location: "{{ location }}"
           is_linux: true
           sku: B1
         frameworks:
