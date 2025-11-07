@@ -1,4 +1,17 @@
 # Change Log
+## v3.11.0 (2025-11-07)
+
+### NEW MODULES
+  - azure_rm_monitorscheduledqueryrules.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
+  - azure_rm_monitorscheduledqueryrules_info.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
+
+### BUG FIXING
+  - azure_rm_keyvault_info.py: Correct method call ([#2098](https://github.com/ansible-collections/azure/pull/2098))
+  - plugins/lookup/azure_keyvault_secret.py: Fix regression when using MSI ([#2096](https://github.com/ansible-collections/azure/pull/2096))
+  - requirements.txt: Remove pin of third party packages ([#2092](https://github.com/ansible-collections/azure/pull/2092))
+  - plugins/lookup/azure_service_principal_attribute.py: Fix typo ([#2091](https://github.com/ansible-collections/azure/pull/2091))
+
+
 ## v3.10.0 (2025-10-30)
 
 ### NEW MODULES
