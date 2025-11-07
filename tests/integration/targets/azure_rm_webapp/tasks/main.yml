@@ -31,7 +31,7 @@
 
     - name: Set location and managed_identity_ids
       ansible.builtin.set_fact:
-        location: australiacentral
+        location: westus2
         managed_identity_ids: []
         new_resource_group: "{{ resource_group }}-webapp01"
 
@@ -51,11 +51,9 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}1"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}"
-          location: "{{ location }}"
           is_linux: false
           sku: B1
 
@@ -63,7 +61,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}2"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
       register: output
 
@@ -95,7 +92,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}3"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         https_only: true
         tags:
@@ -119,7 +115,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "java"
@@ -152,7 +147,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "java"
@@ -200,7 +194,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         purge_app_settings: true
       register: output
@@ -213,7 +206,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}5"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "python"
@@ -236,7 +228,6 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_plan_name }}"
-          location: "{{ location }}"
           is_linux: true
           sku: B1
           number_of_workers: 1
@@ -256,7 +247,6 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_plan_name }}"
-          location: "{{ location }}"
         container_settings:
           name: "ansible/ansible:ubuntu1404"
           registry_server_url: test.io
@@ -306,7 +296,6 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_plan_name }}"
-          location: "{{ location }}"
         frameworks:
           - name: node
             version: "20"
@@ -338,7 +327,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}11"
-        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "python"
@@ -404,7 +392,6 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_app_name }}-siteconfig-plan"
-          location: "{{ location }}"
           is_linux: true
           sku: B1
         frameworks:
@@ -509,7 +496,6 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_app_name }}-http20-plan"
-          location: "{{ location }}"
           is_linux: true
           sku: B1
         frameworks:
@@ -577,7 +563,6 @@
         plan:
           resource_group: "{{ linux_app_plan_resource_group }}"
           name: "{{ linux_app_name }}-http20-plan"
-          location: "{{ location }}"
           is_linux: true
           sku: B1
         frameworks:
@@ -614,11 +599,9 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-auth"
-          location: "{{ location }}"
           is_linux: false
           sku: B1
         site_auth_settings:
@@ -642,7 +625,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-auth"
@@ -685,11 +667,9 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
-          location: "{{ location }}"
           is_linux: false
           sku: B1
         identity:
@@ -720,7 +700,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
@@ -755,7 +734,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
@@ -790,7 +768,6 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
-        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
