@@ -4,7 +4,7 @@
     location: "{{ item['location'] }}"
   loop:
     - name: webapp01
-      location: eastus2
+      location: australiacentral
     - name: webapp02
       location: westus2
 
@@ -51,6 +51,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}1"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}"
@@ -61,6 +62,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}2"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
       register: output
 
@@ -92,6 +94,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}3"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         https_only: true
         tags:
@@ -115,6 +118,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "java"
@@ -147,6 +151,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "java"
@@ -194,6 +199,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}4"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         purge_app_settings: true
       register: output
@@ -206,6 +212,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}5"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "python"
@@ -327,6 +334,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}11"
+        location: "{{ location }}"
         plan: "{{ win_plan_name }}"
         frameworks:
           - name: "python"
@@ -599,6 +607,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-auth"
@@ -625,6 +634,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-auth"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-auth"
@@ -667,6 +677,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
@@ -700,6 +711,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
@@ -734,6 +746,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
@@ -768,6 +781,7 @@
       azure.azcollection.azure_rm_webapp:
         resource_group: "{{ resource_group }}-webapp01"
         name: "{{ win_app_name }}-identity"
+        location: "{{ location }}"
         plan:
           resource_group: "{{ resource_group }}-webapp01"
           name: "{{ win_plan_name }}-identity"
