@@ -1,5 +1,5 @@
 # Change Log
-## v3.10.2 (2025-11-07)
+## v3.11.0 (2025-11-07)
 
 ### NEW MODULES
   - azure_rm_monitorscheduledqueryrules.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
