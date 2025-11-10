@@ -59,7 +59,7 @@ pip install  -I -r "${TEST_DIR}/requirements.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements.txt"
 pip install ansible-lint==25.8.1
 
-timeout=180
+timeout=360
 
 # See: https://docs.ansible.com/ansible/latest/dev_guide/testing/sanity/integration-aliases.html
 echo '--------------------------------------------'
@@ -92,7 +92,7 @@ ansible-test env --dump --show --timeout "${timeout}" --color -v
 if [ "sanity" = "${GROUP_NO}" ]
 then
     ansible-lint --exclude "tests/integration/targets/inventory_azure/playbooks/vars.yml" --force-color
-    ansible-test sanity --color -v --junit
+    ansible-test sanity --timeout "${timeout}" --color -v --junit
 else
     # See: https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template
     config_file="${TEST_DIR}"/tests/integration/cloud-config-azure.ini
@@ -109,6 +109,6 @@ AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
 AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 AZURE_ROLE_DEFINITION_ID:${AZURE_ROLE_DEFINITION_ID}
 EOF
-    ansible-test integration --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive || { rm "$config_file"; die "failed to run integration test"; }
+    ansible-test integration --timeout "${timeout}" --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive || { rm "$config_file"; die "failed to run integration test"; }
     rm "$config_file"
 fi
