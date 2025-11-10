@@ -291,6 +291,8 @@ jobs:
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.InitializationTest.outputs['setvar.resource_group_secondary'] ]
+    pool:
+      name: pool-ubuntu-2404
     strategy:
       matrix:
         afdendpoint:    { MODULE_NAME: "azure_rm_afdendpoint" }
@@ -303,7 +305,6 @@ jobs:
         displayName: 'Use Python ${{ parameters.PYTHON_VER }}'
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
-
       - script: tests/utils/ado/ado.sh ${{ parameters.ANSIBLE_VER }} ${{ matrix.MODULE_NAME }}
         env:
           SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
@@ -323,6 +324,7 @@ jobs:
     dependsOn:
       - InitializationTest
       - RunTests
+      - RunAFDTests
     condition: always()
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
