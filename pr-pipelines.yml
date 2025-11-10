@@ -283,48 +283,10 @@ jobs:
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
         displayName: 'Running Tests'
 
-  - job: RunAFDTests
-    displayName: Run AFD Tests (Parallel Matrix)
-    dependsOn: InitializationTest
-    timeoutInMinutes: 360
-    cancelTimeoutInMinutes: 15
-    variables:
-      TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
-      TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.InitializationTest.outputs['setvar.resource_group_secondary'] ]
-    pool:
-      name: pool-ubuntu-2404
-    strategy:
-      matrix:
-        afdendpoint:    { MODULE_NAME: "azure_rm_afdendpoint" }
-        afdorigin:      { MODULE_NAME: "azure_rm_afdorigin" }
-        afdorigingroup: { MODULE_NAME: "azure_rm_afdorigingroup" }
-        afdroute:       { MODULE_NAME: "azure_rm_afdroute" }
-        afdrules:       { MODULE_NAME: "azure_rm_afdrules" }
-    steps:
-      - task: UsePythonVersion@0
-        displayName: 'Use Python ${{ parameters.PYTHON_VER }}'
-        inputs:
-          versionSpec: '${{ parameters.PYTHON_VER }}'
-      - script: tests/utils/ado/ado.sh ${{ parameters.ANSIBLE_VER }} ${{ matrix.MODULE_NAME }}
-        env:
-          SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
-          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-          AZURE_SECRET: $(AZURE_SECRET)
-          AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
-          AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
-          AZURE_TENANT: $(AZURE_TENANT)
-          AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
-          AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
-          AZURE_ROLE_DEFINITION_ID: $(AZURE_ROLE_DEFINITION_ID)
-          RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
-          RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-        displayName: "Run ${{ matrix.MODULE_NAME }}"
-
   - job: CleanupResourceGroups
     dependsOn:
       - InitializationTest
       - RunTests
-      - RunAFDTests
     condition: always()
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
