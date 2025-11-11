@@ -26,18 +26,19 @@ options:
     vault_url:
         description: Url of Azure Key Vault.
         required: True
-    client_id:
-        description: Client id of service principal that has access to the Azure Key Vault
-    secret:
-        description: Secret of the service principal.
     tenant:
-        description: Tenant id of service principal.
         aliases:
           - tenant_id
     use_msi:
-        description: MSI token autodiscover, default is true.
+        description:
+          - MSI token autodiscover.
+          - The default is to try MSI authentication first, then use auth_source, You can disable MSI entirely
+            by setting this to False.
+        default: true
     use_cli:
-        description: When I(use_cli=True), get the 'az login' credential authentication, default is false.
+        description:
+          - When I(use_cli=True), get the 'az login' credential authentication, default if false.
+          - Deprecated, please use I(auth_source=cli) instead.
     cloud_type:
         description: Specify which cloud, such as C(azure), C(usgovcloudapi).
 notes:
@@ -50,6 +51,9 @@ notes:
       AZURE_CLIENT_ID, AZURE_CLIENT_SECRET and AZURE_TENANT_ID.
     - Authentication via C(az login) is also supported. Set I(use_cli=true) when using Azure CLI.
     - To use a plugin from a collection, please reference the full namespace, collection name, and lookup plugin name that you want to use.
+
+extends_documentation_fragment:
+    - azure.azcollection.azure_plugin
 """
 
 EXAMPLE = """
@@ -87,7 +91,7 @@ EXAMPLE = """
           client_id=client_id,
           secret=secret,
           tenant=tenant,
-          use_msi=false
+          use_msi=False
         )
       }}"
 
@@ -145,9 +149,9 @@ logger = logging.getLogger("azure.identity").setLevel(logging.ERROR)
 
 
 class LookupModule(LookupBase):
-    def lookup_secret_non_msi(self, terms, vault_url):
+    def lookup_secret_non_msi(self, terms, vault_url, auth_source):
 
-        auth_source = 'auto'
+        # Legacy use_cli will set auth_source to cli.
         if self.get_option('use_cli'):
             auth_source = 'cli'
         auth_options = dict(
@@ -176,11 +180,10 @@ class LookupModule(LookupBase):
         self.set_options(direct=kwargs)
 
         ret = []
+        # Default auth_source is auto, but we still try MSI first unless explicitly disabled.
+        auth_source = self.get_option('auth_source')
         vault_url = self.get_option('vault_url')
         use_msi = self.get_option('use_msi')
-        # If use_msi is not defined default to True.
-        if use_msi is None:
-            use_msi = True
         TOKEN_ACQUIRED = False
         token = None
 
@@ -225,4 +228,4 @@ class LookupModule(LookupBase):
                     raise AnsibleError('Failed to fetch secret ' + term + ' from ' + vault_url + ' via MSI endpoint.')
             return ret
         else:
-            return self.lookup_secret_non_msi(terms, vault_url)
+            return self.lookup_secret_non_msi(terms, vault_url, auth_source)
