@@ -37,25 +37,25 @@ options:
     use_msi:
         description: MSI token autodiscover, default is true.
     use_cli:
-        description: When I(use_cli=True), get the 'az lgin' credential authentication, default if false.
+        description: When I(use_cli=True), get the 'az login' credential authentication, default is false.
     cloud_type:
         description: Specify which cloud, such as C(azure), C(usgovcloudapi).
 notes:
     - If version is not provided, this plugin will return the latest version of the secret.
-    - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant isn't required.
+    - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant are not required.
     - For enabling MSI on Azure VM, please refer to this doc https://docs.microsoft.com/en-us/azure/active-directory/managed-service-identity/
     - After enabling MSI on Azure VM, remember to grant access of the Key Vault to the VM by adding a new Acess Policy in Azure Portal.
     - If MSI is not enabled on ansible host, it's required to provide a valid service principal which has access to the key vault.
     - To authenticate via service principal, pass client_id, secret and tenant or set environment variables
       AZURE_CLIENT_ID, AZURE_CLIENT_SECRET and AZURE_TENANT_ID.
-    - Authentication via C(az login) is also supported.
+    - Authentication via C(az login) is also supported. Set I(use_cli=true) when using Azure CLI.
     - To use a plugin from a collection, please reference the full namespace, collection name, and lookup plugin name that you want to use.
 """
 
 EXAMPLE = """
 - name: Look up secret when azure cli login
   debug:
-    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri)}}"
+    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri, use_cli=true)}}"
 
 - name: Look up secret with cloud type
   debug:
