@@ -4,7 +4,7 @@
     location: "{{ item['location'] }}"
   loop:
     - name: webapp01
-      location: eastus2
+      location: australiacentral
     - name: webapp02
       location: westus2
 

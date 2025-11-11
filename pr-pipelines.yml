@@ -208,7 +208,7 @@ jobs:
           group_no="all"
           case "${{ parameters.MODULE_NAME }}" in
             sanity)
-              gropu_no=sanity
+              group_no=sanity
               ;;
             inventory_azure)
               group_no=1
@@ -225,7 +225,7 @@ jobs:
 
   - job: RunTests
     dependsOn: InitializationTest
-    timeoutInMinutes: 180
+    timeoutInMinutes: 360
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.InitializationTest.outputs['setvar.resource_group_secondary'] ]
