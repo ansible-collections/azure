@@ -64,6 +64,7 @@ def classify_ref(val: Any) -> Tuple[str, Any]:
 
     return 'unknown', val
 
+
 def normalize_cross_rg_ref(
     val: Any,
     *,
@@ -107,6 +108,7 @@ def normalize_cross_rg_ref(
         return as_id_dict(build_with(subscription_id, default_rg, data))
 
     return val
+
 
 def normalize_agw_child_ref(
     val: Any,
