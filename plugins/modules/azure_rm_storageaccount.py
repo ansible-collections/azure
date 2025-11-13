@@ -198,6 +198,26 @@ options:
                             - The only logical I(action=Allow) because this setting is only accessible when I(default_action=Deny).
                         default: 'Allow'
                         type: str
+            resource_access_rules:
+                description:
+                    - A list of resource instance rules that allow specific Azure resources to access the storage account when public network access is restricted.
+                    - Each entry must include the full ARM resource ID and the tenant ID.
+                    - Supported resource types include Microsoft.DataProtection/BackupVaults, Microsoft.Synapse/workspaces, etc.
+                    - Resource instance rules only apply when I(default_action=Deny) and public network access is Enabled.
+                    - Note: These rules allow access to the public endpoint only; RBAC permissions are still required for data operations.
+                type: list
+                elements: dict
+                suboptions:
+                    resource_id:
+                        description:
+                            - The full ARM resource ID of the Azure resource instance.
+                            - Must start with C(/subscriptions/).
+                        type: str
+                        required: true
+                    tenant_id:
+                        description:
+                            - The Azure Active Directory tenant ID of the resource instance.
+                        type: str
     blob_cors:
         description:
             - Specifies CORS rules for the Blob service.
@@ -505,6 +525,31 @@ EXAMPLES = '''
         key_version: 0bd2556671c64fc998095603878beb12
       encryption_identity:
         encryption_user_assigned_identity: "{{ managed_identity_ids[0] }}"
+
+- name: Configure resource instance rules for Backup Vault and Synapse
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: mystorageacct
+    account_type: Standard_LRS
+    kind: StorageV2
+    public_network_access: Enabled
+    network_acls:
+      default_action: Deny
+      bypass: AzureServices
+      resource_access_rules:
+        - resource_id: "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DataProtection/BackupVaults/myBackupVault"
+          tenant_id: "<tenant-guid>"
+        - resource_id: "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Synapse/workspaces/mySynapseWorkspace"
+          tenant_id: "<tenant-guid>"
+
+- name: Remove all resource instance rules
+  azure_rm_storageaccount:
+    resource_group: myResourceGroup
+    name: mystorageacct
+    network_acls:
+      default_action: Deny
+      bypass: AzureServices
+      resource_access_rules: []
 '''
 
 
@@ -718,6 +763,12 @@ state:
                         {
                             "action": "Allow",
                             "value": "123.234.123.0/24"
+                        }
+                    ],
+                    "resource_access_rules": [
+                        {
+                            "resource_id": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DataProtection/BackupVaults/myBackupVault",
+                            "tenant_id": "<tenant-guid>"
                         }
                     ]
                     }
@@ -952,7 +1003,18 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             allow_shared_key_access=dict(type='bool'),
             allow_cross_tenant_replication=dict(type='bool'),
             default_to_o_auth_authentication=dict(type='bool'),
-            network_acls=dict(type='dict'),
+            network_acls=dict(type='dict', options=dict(
+                        bypass=dict(type='str'),
+                        default_action=dict(type='str', choices=['Allow', 'Deny']),
+                        virtual_network_rules=dict(type='list', elements='dict'),
+                        ip_rules=dict(type='list', elements='dict'),
+                        resource_access_rules=dict(type='list', elements='dict', options=dict(
+                                resource_id=dict(type='str', required=True),
+                                tenant_id=dict(type='str')
+                            )
+                        )
+                    )
+                ),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
@@ -1176,7 +1238,6 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             default_to_o_auth_authentication=account_obj.default_to_o_auth_authentication,
             allow_cross_tenant_replication=account_obj.allow_cross_tenant_replication,
             allow_shared_key_access=account_obj.allow_shared_key_access,
-            network_acls=account_obj.network_rule_set,
             is_hns_enabled=account_obj.is_hns_enabled if account_obj.is_hns_enabled else False,
             enable_nfs_v3=account_obj.enable_nfs_v3 if hasattr(account_obj, 'enable_nfs_v3') else None,
             large_file_shares_state=account_obj.large_file_shares_state,
@@ -1274,10 +1335,17 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             if account_obj.identity:
                 account_dict['identity'] = account_obj.identity.as_dict()
 
+            account_dict['network_acls']['resource_access_rules'] = []
+            if getattr(account_obj.network_rule_set, 'resource_access_rules', None):
+                for rule in account_obj.network_rule_set.resource_access_rules:
+                    account_dict['network_acls']['resource_access_rules'].append(dict(
+                        resource_id=rule.resource_id,
+                        tenant_id=rule.tenant_id
+                    ))
+
         return account_dict
 
     def failover_account(self):
-
         if str(self.account_dict['sku_name']) not in ["Standard_GZRS", "Standard_GRS", "Standard_RAGZRS", "Standard_RAGRS"]:
             self.fail("Storage account SKU ({0}) does not support failover to a secondary region.".format(self.account_dict['sku_name']))
         try:
@@ -1303,15 +1371,54 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
     def update_network_rule_set(self):
         if not self.check_mode:
             try:
-                parameters = self.storage_models.StorageAccountUpdateParameters(network_rule_set=self.network_acls)
-                self.storage_client.storage_accounts.update(self.resource_group,
-                                                            self.name,
-                                                            parameters)
-            except Exception as exc:
-                self.fail("Failed to update account type: {0}".format(str(exc)))
+                models = self.storage_models
+                nacls = self.network_acls or {}
 
-    def sort_list_of_dicts(self, rule_set, dict_key):
-        return sorted(rule_set, key=lambda i: i[dict_key])
+                vnet_rules = None
+                if nacls.get('virtual_network_rules'):
+                    vnet_rules = [
+                        models.VirtualNetworkRule(
+                            virtual_network_resource_id=r.get('id'),
+                            action=r.get('action', 'Allow')
+                        ) for r in (nacls.get('virtual_network_rules') or [])
+                    ]
+
+                ip_rules = None
+                if nacls.get('ip_rules'):
+                    ip_rules = [
+                        models.IPRule(
+                            ip_address_or_range=r.get('value'),
+                            action=r.get('action', 'Allow')
+                        ) for r in (nacls.get('ip_rules') or [])
+                    ]
+
+                resource_access_rules = None
+                # IMPORTANT: when desired list is [], send [] (not None) to clear rules
+                if nacls.get('resource_access_rules') is not None:
+                    resource_access_rules = [
+                        models.ResourceAccessRule(
+                            resource_id=r.get('resource_id'),
+                            tenant_id=r.get('tenant_id')
+                        ) for r in (nacls.get('resource_access_rules') or [])
+                    ]
+
+                nrs = models.NetworkRuleSet(
+                    bypass=nacls.get('bypass'),
+                    default_action=nacls.get('default_action', 'Allow'),
+                    virtual_network_rules=vnet_rules,
+                    ip_rules=ip_rules,
+                    resource_access_rules=resource_access_rules
+                )
+
+                parameters = self.storage_models.StorageAccountUpdateParameters(network_rule_set=nrs)
+                self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
+            except Exception as exc:
+                self.fail("Failed to update network ACLs: {0}".format(str(exc)))
+
+    def sort_list_of_dicts(self, rule_set, dict_key, secondary_key=None):
+        if secondary_key:
+            return sorted(rule_set, key=lambda i: (i.get(dict_key), i.get(secondary_key)))
+        return sorted(rule_set, key=lambda i: i.get(dict_key))
 
     def update_account(self):
         self.log('Update storage account {0}'.format(self.name))
@@ -1322,7 +1429,24 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 self.update_network_rule_set()
 
             if self.network_acls.get('default_action', 'Allow') == 'Deny':
-                if self.network_acls['bypass'] != self.account_dict['network_acls']['bypass']:
+                desired_rars = self.network_acls.get('resource_access_rules', None)
+                current_rars = self.account_dict['network_acls'].get('resource_access_rules', [])
+
+                if desired_rars is not None and current_rars != []:
+                    if self.sort_list_of_dicts(desired_rars, 'resource_id', 'tenant_id') != \
+                    self.sort_list_of_dicts(current_rars, 'resource_id', 'tenant_id'):
+                        self.results['changed'] = True
+                        # keep account_dict in sync for local state (optional)
+                        self.account_dict['network_acls']['resource_access_rules'] = desired_rars
+                        self.update_network_rule_set()
+
+                if desired_rars is not None and current_rars == []:
+                    self.results['changed'] = True
+                    # keep account_dict in sync for local state (optional)
+                    self.account_dict['network_acls']['resource_access_rules'] = desired_rars
+                    self.update_network_rule_set()
+
+                if self.network_acls.get('bypass') != self.account_dict['network_acls'].get('bypass'):
                     self.results['changed'] = True
                     self.account_dict['network_acls']['bypass'] = self.network_acls['bypass']
                     self.update_network_rule_set()
@@ -1715,12 +1839,50 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
     def set_network_acls(self):
         try:
-            parameters = self.storage_models.StorageAccountUpdateParameters(network_rule_set=self.network_acls)
-            self.storage_client.storage_accounts.update(self.resource_group,
-                                                        self.name,
-                                                        parameters)
+            models = self.storage_models
+            nacls = self.network_acls or {}
+
+            def build_network_rule_set(nacls_local):
+                vnet_rules = None
+                if nacls_local.get('virtual_network_rules'):
+                    vnet_rules = [
+                        models.VirtualNetworkRule(
+                            virtual_network_resource_id=r.get('id'),
+                            action=r.get('action', 'Allow')
+                        ) for r in (nacls_local.get('virtual_network_rules') or [])
+                    ]
+
+                ip_rules = None
+                if nacls_local.get('ip_rules'):
+                    ip_rules = [
+                        models.IPRule(
+                            ip_address_or_range=r.get('value'),
+                            action=r.get('action', 'Allow')
+                        ) for r in (nacls_local.get('ip_rules') or [])
+                    ]
+
+                resource_access_rules = None
+                if nacls_local.get('resource_access_rules'):
+                    resource_access_rules = [
+                        models.ResourceAccessRule(
+                            resource_id=r.get('resource_id'),
+                            tenant_id=r.get('tenant_id')
+                        ) for r in (nacls_local.get('resource_access_rules') or [])
+                    ]
+
+                return models.NetworkRuleSet(
+                    bypass=nacls_local.get('bypass'),
+                    default_action=nacls_local.get('default_action', 'Allow'),
+                    virtual_network_rules=vnet_rules,
+                    ip_rules=ip_rules,
+                    resource_access_rules=resource_access_rules
+                )
+
+            nrs = build_network_rule_set(nacls)
+            parameters = self.storage_models.StorageAccountUpdateParameters(network_rule_set=nrs)
+            self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
         except Exception as exc:
-            self.fail("Failed to update account type: {0}".format(str(exc)))
+            self.fail("Failed to update network ACLs: {0}".format(str(exc)))
 
 
 def main():
