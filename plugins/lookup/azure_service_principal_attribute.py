@@ -75,11 +75,21 @@ class LookupModule(LookupBase):
 
         self.set_options(direct=kwargs)
 
+        auth_source = self.get_option('auth_source')
+        client_id = self.get_option('client_id')
+        secret = self.get_option('secret')
+        tenant = self.get_option('tenant')
+
+        # If auth_source is auto but no client_id or secret passed in switch to cli
+        if auth_source == 'auto':
+            if any(v is None for v in [client_id, secret, tenant]):
+                auth_source = 'cli'
+
         auth_options = dict(
-            auth_source=self.get_option('auth_source'),
-            client_id=self.get_option('client_id'),
-            secret=self.get_option('secret'),
-            tenant=self.get_option('tenant'),
+            auth_source=auth_source,
+            client_id=client_id,
+            secret=secret,
+            tenant=tenant,
             cloud_environment=self.get_option('cloud_environment'),
             is_ad_resource=True
         )

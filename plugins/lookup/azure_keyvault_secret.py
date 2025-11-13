@@ -151,14 +151,23 @@ logger = logging.getLogger("azure.identity").setLevel(logging.ERROR)
 class LookupModule(LookupBase):
     def lookup_secret_non_msi(self, terms, vault_url, auth_source):
 
+        client_id = self.get_option('client_id')
+        secret = self.get_option('secret')
+        tenant = self.get_option('tenant')
+
         # Legacy use_cli will set auth_source to cli.
         if self.get_option('use_cli'):
             auth_source = 'cli'
+        # If auth_source is auto but no client_id or secret passed in switch to cli
+        if auth_source == 'auto':
+            if any(v is None for v in [client_id, secret, tenant]):
+                auth_source = 'cli'
+
         auth_options = dict(
             auth_source=auth_source,
-            client_id=self.get_option('client_id'),
-            secret=self.get_option('secret'),
-            tenant=self.get_option('tenant'),
+            client_id=client_id,
+            secret=secret,
+            tenant=tenant,
             is_ad_resource=True
         )
 
