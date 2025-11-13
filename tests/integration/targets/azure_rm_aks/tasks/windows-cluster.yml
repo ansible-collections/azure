@@ -1,0 +1,139 @@
+- name: Create a new resource group for AKS test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-win"
+    location: eastus
+
+- name: For AKS test
+  block:
+    - name: Set varialbles
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        location: westus2
+
+    - name: Find available k8s version
+      azure.azcollection.azure_rm_aksversion_info:
+        location: "{{ location }}"
+      register: versions
+
+    - name: Create a kubernet service with I(os_type=Windows)
+      azure_rm_aks:
+        name: "win{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-win"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        windows_profile:
+          admin_username: azureuser
+          admin_password: InsecurePassword@0329
+          gmsa_profile:
+            enabled: true
+        aad_profile:
+          managed: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D8ds_v5
+            mode: System
+            os_type: Linux
+            os_sku: Ubuntu
+          - name: def
+            count: 1
+            vm_size: Standard_D2as_v4
+            mode: User
+            os_type: Windows
+            os_sku: Windows2022
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          load_balancer_sku: standard
+          network_plugin: azure
+          outbound_type: loadBalancer
+      register: output
+
+    - name: Assert the AKS instance is well created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
+
+    - name: Get AKS fact
+      azure.azcollection.azure_rm_aks_info:
+        name: "win{{ rpfx }}"
+        resource_group: "{{ resource_group }}-win"
+      register: fact
+
+    - name: Assert fact returns the created one
+      ansible.builtin.assert:
+        that:
+          - "fact.aks | length == 1"
+          - fact.aks[0].id == output.id
+          - fact.aks[0].aad_profile.managed == true
+
+    - name: Create a kubernet service with I(os_type=Windows) (idempotent)
+      azure_rm_aks:
+        name: "win{{ rpfx }}"
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}-win"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        dns_prefix: "aks{{ rpfx }}"
+        enable_rbac: true
+        windows_profile:
+          admin_username: azureuser
+          admin_password: InsecurePassword@0329
+          gmsa_profile:
+            enabled: true
+        aad_profile:
+          managed: true
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D8ds_v5
+            mode: System
+            os_type: Linux
+            os_sku: Ubuntu
+          - name: def
+            count: 1
+            vm_size: Standard_D2as_v4
+            mode: User
+            os_type: Windows
+            os_sku: Windows2022
+        api_server_access_profile:
+          authorized_ip_ranges:
+            - "192.0.2.0"
+            - "198.51.100.0"
+            - "203.0.113.0"
+          enable_private_cluster: false
+        network_profile:
+          load_balancer_sku: standard
+          network_plugin: azure
+          outbound_type: loadBalancer
+      register: output
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete the AKS instance
+      azure.azcollection.azure_rm_aks:
+        name: "win{{ rpfx }}"
+        resource_group: "{{ resource_group }}-win"
+        state: absent
+      register: output
+
+    - name: Assert the AKS instance is well deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-win"
+        force_delete_nonempty: true
+        state: absent

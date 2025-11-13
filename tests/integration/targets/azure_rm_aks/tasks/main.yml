@@ -35,6 +35,9 @@
         user_identity: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-aks/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity"
         user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-aks/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-aks-identity-2"
 
+    - name: Include aks Windows tasks
+      ansible.builtin.include_tasks: windows-cluster.yml
+
     - name: Include aks tasks
       ansible.builtin.include_tasks: minimal-cluster.yml
 
