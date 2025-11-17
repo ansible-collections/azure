@@ -200,11 +200,12 @@ options:
                         type: str
             resource_access_rules:
                 description:
-                    - A list of resource instance rules that allow specific Azure resources to access the storage account when public network access is restricted.
+                    - List of resource instance rules that allow specific Azure resources to access storage account when public network access is restricted.
                     - Each entry must include the full ARM resource ID and the tenant ID.
-                    - Supported resource types include Microsoft.DataProtection/BackupVaults, Microsoft.Synapse/workspaces, etc.
-                    - Resource instance rules only apply when I(default_action=Deny) and public network access is Enabled.
-                    - Note: These rules allow access to the public endpoint only; RBAC permissions are still required for data operations.
+                    - Supported resource types
+                      U(https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security-trusted-azure-services?source=recommendations)
+                    - Resource instance rules only apply when I(default_action=Deny) and when I(public_network_access=Enabled).
+                    - These rules allow access to the public endpoint only; RBAC permissions are still required for data operations.
                 type: list
                 elements: dict
                 suboptions:
@@ -537,10 +538,10 @@ EXAMPLES = '''
       default_action: Deny
       bypass: AzureServices
       resource_access_rules:
-        - resource_id: "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DataProtection/BackupVaults/myBackupVault"
-          tenant_id: "<tenant-guid>"
-        - resource_id: "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Synapse/workspaces/mySynapseWorkspace"
-          tenant_id: "<tenant-guid>"
+        - resource_id: "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.DataProtection/BackupVaults/myBackupVault"
+          tenant_id: "myTenantId"
+        - resource_id: "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/providers/Microsoft.Synapse/workspaces/mySynapseWorkspace"
+          tenant_id: "myTenantId"
 
 - name: Remove all resource instance rules
   azure_rm_storageaccount:
@@ -767,8 +768,9 @@ state:
                     ],
                     "resource_access_rules": [
                         {
-                            "resource_id": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DataProtection/BackupVaults/myBackupVault",
-                            "tenant_id": "<tenant-guid>"
+                            "resource_id": "/subscriptions/mySubscriptionId/resourceGroups/myResourceGroup/ \
+                                            providers/Microsoft.DataProtection/BackupVaults/myBackupVault",
+                            "tenant_id": "myTenantId"
                         }
                     ]
                     }
@@ -1003,18 +1005,23 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             allow_shared_key_access=dict(type='bool'),
             allow_cross_tenant_replication=dict(type='bool'),
             default_to_o_auth_authentication=dict(type='bool'),
-            network_acls=dict(type='dict', options=dict(
-                        bypass=dict(type='str'),
-                        default_action=dict(type='str', choices=['Allow', 'Deny']),
-                        virtual_network_rules=dict(type='list', elements='dict'),
-                        ip_rules=dict(type='list', elements='dict'),
-                        resource_access_rules=dict(type='list', elements='dict', options=dict(
-                                resource_id=dict(type='str', required=True),
-                                tenant_id=dict(type='str')
-                            )
-                        )
-                    )
+            network_acls=dict(
+                type='dict',
+                options=dict(
+                    bypass=dict(type='str', default='AzureServices', no_log=False),
+                    default_action=dict(type='str', choices=['Allow', 'Deny'], default='Allow'),
+                    virtual_network_rules=dict(type='list', elements='dict'),
+                    ip_rules=dict(type='list', elements='dict'),
+                    resource_access_rules=dict(
+                        type='list',
+                        elements='dict',
+                        options=dict(
+                            resource_id=dict(type='str', required=True),
+                            tenant_id=dict(type='str'),
+                        ),
+                    ),
                 ),
+            ),
             blob_cors=dict(type='list', options=cors_rule_spec, elements='dict'),
             static_website=dict(type='dict', options=static_website_spec),
             is_hns_enabled=dict(type='bool'),
@@ -1027,20 +1034,16 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                         type='dict',
                         options=dict(
                             blob=dict(
-                                type='dict',
-                                options=blob_spec
+                                type='dict', options=blob_spec
                             ),
                             table=dict(
-                                type='dict',
-                                options=table_spec
+                                type='dict', options=table_spec
                             ),
                             queue=dict(
-                                type='dict',
-                                options=queue_spec
+                                type='dict', options=queue_spec
                             ),
                             file=dict(
-                                type='dict',
-                                options=file_spec
+                                type='dict', options=file_spec
                             )
                         )
                     ),
@@ -1433,8 +1436,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 current_rars = self.account_dict['network_acls'].get('resource_access_rules', [])
 
                 if desired_rars is not None and current_rars != []:
-                    if self.sort_list_of_dicts(desired_rars, 'resource_id', 'tenant_id') != \
-                    self.sort_list_of_dicts(current_rars, 'resource_id', 'tenant_id'):
+                    if self.sort_list_of_dicts(desired_rars, 'resource_id', 'tenant_id') != self.sort_list_of_dicts(current_rars, 'resource_id', 'tenant_id'):
                         self.results['changed'] = True
                         # keep account_dict in sync for local state (optional)
                         self.account_dict['network_acls']['resource_access_rules'] = desired_rars
