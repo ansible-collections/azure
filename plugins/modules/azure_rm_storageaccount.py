@@ -216,7 +216,7 @@ options:
                         required: true
                     tenant_id:
                         description:
-                            - The Azure Active Directory tenant ID of the resource instance.
+                            - The Azure Active Directory tenant ID of the resource instance. Defaults to the current tenant id.
                         type: str
     blob_cors:
         description:
