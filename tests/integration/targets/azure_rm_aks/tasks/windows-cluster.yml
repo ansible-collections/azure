@@ -5,7 +5,7 @@
 
 - name: For AKS test
   block:
-    - name: Set varialbles
+    - name: Set variables
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
         location: westus2
@@ -16,7 +16,7 @@
       register: versions
 
     - name: Create a kubernet service with I(os_type=Windows)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "win{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-win"
@@ -33,7 +33,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D8ds_v5
+            vm_size: Standard_D2s_v3
             mode: System
             os_type: Linux
             os_sku: Ubuntu
@@ -75,7 +75,7 @@
           - fact.aks[0].aad_profile.managed == true
 
     - name: Create a kubernet service with I(os_type=Windows) (idempotent)
-      azure_rm_aks:
+      azure.azcollection.azure_rm_aks:
         name: "win{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-win"
@@ -92,7 +92,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D8ds_v5
+            vm_size: Standard_D2s_v3
             mode: System
             os_type: Linux
             os_sku: Ubuntu
