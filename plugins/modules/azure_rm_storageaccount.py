@@ -204,7 +204,6 @@ options:
                     - Supported resource types
                       U(https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security-trusted-azure-services?source=recommendations)
                     - Resource instance rules only apply when I(default_action=Deny) and when I(public_network_access=Enabled).
-                    - These rules allow access to the public endpoint only; RBAC permissions are still required for data operations.
                 type: list
                 elements: dict
                 suboptions:
