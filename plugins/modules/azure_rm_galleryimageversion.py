@@ -611,12 +611,12 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     storage_account = kwargs[key]['os_disk']['source'].get('storage_account')
                                     self.body['storage_profile']['os_disk_image']['source']['storageAccountId'] = ('/subscriptions/' +
-                                                                                                     self.subscription_id +
-                                                                                                     '/resourceGroups/' +
-                                                                                                     resource_group +
-                                                                                                     '/providers/Microsoft.Storage' +
-                                                                                                     '/storageAccounts/' +
-                                                                                                     storage_account)
+                                                                                                                   self.subscription_id +
+                                                                                                                   '/resourceGroups/' +
+                                                                                                                   resource_group +
+                                                                                                                   '/providers/Microsoft.Storage' +
+                                                                                                                   '/storageAccounts/' +
+                                                                                                                   storage_account)
                                     self.body['storage_profile']['os_disk_image']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")
