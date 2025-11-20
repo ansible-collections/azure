@@ -626,6 +626,20 @@
           - output.versions['publishing_profile'] != None
           - output.versions['provisioning_state'] != None
 
+    - name: Delete gallery image version from VM source
+      azure.azcollection.azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.3.0
+        state: absent
+      register: output
+
+    - name: Assert the gallery image version from VM source deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
     - name: Delete gallery image version from URI.
       azure.azcollection.azure_rm_galleryimageversion:
         resource_group: "{{ resource_group }}-gallery"
