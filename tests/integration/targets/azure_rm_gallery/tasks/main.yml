@@ -584,6 +584,57 @@
         that:
           - output is changed
 
+    - name: Create gallery image version from blob VHD in storage account
+      azure.azcollection.azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.2.0
+        location: eastus
+        publishing_profile:
+          replica_count: 1
+          exclude_from_latest: false
+          storage_account_type: Standard_LRS
+          target_regions:
+            - name: eastus
+              regional_replica_count: 1
+        storage_profile:
+          os_disk:
+            source:
+              resource_group: "{{ resource_group }}-gallery"
+              storage_account: "{{ gallery_storage_account }}"
+              uri: "https://{{ gallery_storage_account }}.blob.core.windows.net/testcontainer/testimage.vhd"
+      register: blob_vhd_result
+
+    - name: Assert blob VHD gallery image version created
+      ansible.builtin.assert:
+        that:
+          - blob_vhd_result is changed
+
+    - name: Create gallery image version from VM source
+      azure.azcollection.azure_rm_galleryimageversion:
+        resource_group: "{{ resource_group }}-gallery"
+        gallery_name: myGallery{{ rpfx }}
+        gallery_image_name: myImage
+        name: 10.3.0
+        location: eastus
+        publishing_profile:
+          replica_count: 1
+          exclude_from_latest: false
+          storage_account_type: Standard_LRS
+          target_regions:
+            - name: eastus
+              regional_replica_count: 1
+        storage_profile:
+          source_image:
+            virtual_machine_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-gallery/providers/Microsoft.Compute/virtualMachines/vmforimage{{ rpfx }}"
+      register: vm_source_result
+
+    - name: Assert VM source gallery image version created
+      ansible.builtin.assert:
+        that:
+          - vm_source_result is changed
+
     - name: Get a simple gallery Image Version info.
       azure.azcollection.azure_rm_galleryimageversion_info:
         resource_group: "{{ resource_group }}-gallery"
