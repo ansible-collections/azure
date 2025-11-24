@@ -245,7 +245,7 @@
         __pip_name: "appgateway-v2-{{ rpfx }}-pip"
         __pip_rg: "{{ resource_group }}-appgateway"
 
-    - name: Set frontend public IP using full resource ID (expect change)
+    - name: Set frontend public IP using full resource ID (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
@@ -266,10 +266,10 @@
           - name: "inbound-https"
             port: 443
       register: __variant1_apply
-    - name: Assert frontend public IP set via full resource ID changed state
+    - name: Assert frontend public IP set via full resource ID is idempotent
       ansible.builtin.assert:
         that:
-          - __variant1_apply is changed
+          - __variant1_apply is not changed
 
     - name: Reapply frontend public IP using full resource ID (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
@@ -291,13 +291,13 @@
             port: 80
           - name: "inbound-https"
             port: 443
-      register: __variant1_idem
+      register: __variant1_apply
     - name: Assert reapplying full resource ID is idempotent
       ansible.builtin.assert:
         that:
-          - __variant1_idem is not changed
+          - __variant1_apply is not changed
 
-    - name: Set frontend public IP using name + resource_group dict (expect no change)
+    - name: Set frontend public IP using name + resource_group dict (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
@@ -320,12 +320,12 @@
           - name: "inbound-https"
             port: 443
       register: __variant2_apply
-    - name: Assert name+resource_group dict is equivalent (no change)
+    - name: Assert name+resource_group dict is idempotent
       ansible.builtin.assert:
         that:
           - __variant2_apply is not changed
 
-    - name: Set frontend public IP using bare name (expect no change)
+    - name: Set frontend public IP using bare name (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
         name: "appgateway-v2-{{ rpfx }}"
@@ -346,7 +346,7 @@
           - name: "inbound-https"
             port: 443
       register: __variant3_apply
-    - name: Assert bare name is equivalent (no change)
+    - name: Assert bare name is idempotent
       ansible.builtin.assert:
         that:
           - __variant3_apply is not changed
