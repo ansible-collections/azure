@@ -348,7 +348,8 @@
       register: __variant3_apply
     - name: Assert bare name is equivalent (no change)
       ansible.builtin.assert:
-               that:
+        that:
+          - __variant3_apply is not changed
 
     - name: Try to create v2 instance of Application Gateway with rewrite rules - no update
       azure.azcollection.azure_rm_appgateway:
