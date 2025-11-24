@@ -233,6 +233,123 @@
         that:
           - output is changed
 
+    - name: Gather full ID of the v2 AppGW Public IP (same RG)
+      azure.azcollection.azure_rm_publicipaddress_info:
+        name: "appgateway-v2-{{ rpfx }}-pip"
+        resource_group: "{{ resource_group }}-appgateway"
+      register: __pip_info
+
+    - name: Cache PIP identifiers for reference format tests
+      ansible.builtin.set_fact:
+        __pip_id: "{{ __pip_info.publicipaddresses.0.id }}"
+        __pip_name: "appgateway-v2-{{ rpfx }}-pip"
+        __pip_rg: "{{ resource_group }}-appgateway"
+
+    - name: Set frontend public IP using full resource ID (expect change)
+      azure.azcollection.azure_rm_appgateway:
+        resource_group: "{{ resource_group }}-appgateway"
+        name: "appgateway-v2-{{ rpfx }}"
+        sku:
+          name: standard_v2
+          tier: standard_v2
+          capacity: 2
+        gateway_ip_configurations:
+          - subnet:
+              id: "{{ subnet_output.state.id }}"
+            name: app_gateway_ip_config
+        frontend_ip_configurations:
+          - name: "public-inbound-ip"
+            public_ip_address: "{{ __pip_id }}"        # FULL ID string
+        frontend_ports:
+          - name: "inbound-http"
+            port: 80
+          - name: "inbound-https"
+            port: 443
+      register: __variant1_apply
+    - name: Assert frontend public IP set via full resource ID changed state
+      ansible.builtin.assert:
+        that:
+          - __variant1_apply is changed
+
+    - name: Reapply frontend public IP using full resource ID (expect idempotent)
+      azure.azcollection.azure_rm_appgateway:
+        resource_group: "{{ resource_group }}-appgateway"
+        name: "appgateway-v2-{{ rpfx }}"
+        sku:
+          name: standard_v2
+          tier: standard_v2
+          capacity: 2
+        gateway_ip_configurations:
+          - subnet:
+              id: "{{ subnet_output.state.id }}"
+            name: app_gateway_ip_config
+        frontend_ip_configurations:
+          - name: "public-inbound-ip"
+            public_ip_address: "{{ __pip_id }}"        # FULL ID string
+        frontend_ports:
+          - name: "inbound-http"
+            port: 80
+          - name: "inbound-https"
+            port: 443
+      register: __variant1_idem
+    - name: Assert reapplying full resource ID is idempotent
+      ansible.builtin.assert:
+        that:
+          - __variant1_idem is not changed
+
+    - name: Set frontend public IP using name + resource_group dict (expect no change)
+      azure.azcollection.azure_rm_appgateway:
+        resource_group: "{{ resource_group }}-appgateway"
+        name: "appgateway-v2-{{ rpfx }}"
+        sku:
+          name: standard_v2
+          tier: standard_v2
+          capacity: 2
+        gateway_ip_configurations:
+          - subnet:
+              id: "{{ subnet_output.state.id }}"
+            name: app_gateway_ip_config
+        frontend_ip_configurations:
+          - name: "public-inbound-ip"
+            public_ip_address:
+              name: "{{ __pip_name }}"                  # DICT format
+              resource_group: "{{ __pip_rg }}"
+        frontend_ports:
+          - name: "inbound-http"
+            port: 80
+          - name: "inbound-https"
+            port: 443
+      register: __variant2_apply
+    - name: Assert name+resource_group dict is equivalent (no change)
+      ansible.builtin.assert:
+        that:
+          - __variant2_apply is not changed
+
+    - name: Set frontend public IP using bare name (expect no change)
+      azure.azcollection.azure_rm_appgateway:
+        resource_group: "{{ resource_group }}-appgateway"
+        name: "appgateway-v2-{{ rpfx }}"
+        sku:
+          name: standard_v2
+          tier: standard_v2
+          capacity: 2
+        gateway_ip_configurations:
+          - subnet:
+              id: "{{ subnet_output.state.id }}"
+            name: app_gateway_ip_config
+        frontend_ip_configurations:
+          - name: "public-inbound-ip"
+            public_ip_address: "{{ __pip_name }}"       # BARE NAME
+        frontend_ports:
+          - name: "inbound-http"
+            port: 80
+          - name: "inbound-https"
+            port: 443
+      register: __variant3_apply
+    - name: Assert bare name is equivalent (no change)
+      ansible.builtin.assert:
+               that:
+
     - name: Try to create v2 instance of Application Gateway with rewrite rules - no update
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"

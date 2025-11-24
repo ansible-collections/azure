@@ -1593,10 +1593,6 @@ from copy import deepcopy
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
-from ansible_collections.azure.azcollection.plugins.module_utils.resource_ref_utils import (
-    normalize_cross_rg_ref,
-    normalize_agw_child_ref,
-)
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
 from ansible.module_utils.six.moves.collections_abc import MutableMapping
 
@@ -2121,15 +2117,13 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                         item = ev[i]
                         if 'redirect_type' in item:
                             item['redirect_type'] = _snake_to_camel(item['redirect_type'], True)
-                        if 'target_listener' in item and item['target_listener'] is not None:
-                            item['target_listener'] = normalize_agw_child_ref(
-                                item['target_listener'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=http_listener_id
-                            )
-                        if item.get('request_routing_rules'):
+                        if 'target_listener' in item:
+                            id = http_listener_id(self.subscription_id,
+                                                  kwargs['resource_group'],
+                                                  kwargs['name'],
+                                                  item['target_listener'])
+                            item['target_listener'] = {'id': id}
+                        if item['request_routing_rules']:
                             for j in range(len(item['request_routing_rules'])):
                                 rule_name = item['request_routing_rules'][j]
                                 id = request_routing_rule_id(self.subscription_id,
@@ -2138,8 +2132,8 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                                                              rule_name)
                                 item['request_routing_rules'][j] = {'id': id}
                         else:
-                            item.pop('request_routing_rules', None)
-                        if item.get('url_path_maps'):
+                            del item['request_routing_rules']
+                        if item['url_path_maps']:
                             for j in range(len(item['url_path_maps'])):
                                 pathmap_name = item['url_path_maps'][j]
                                 id = url_path_map_id(self.subscription_id,
@@ -2148,8 +2142,8 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                                                      pathmap_name)
                                 item['url_path_maps'][j] = {'id': id}
                         else:
-                            item.pop('url_path_maps', None)
-                        if item.get('path_rules'):
+                            del item['url_path_maps']
+                        if item['path_rules']:
                             for j in range(len(item['path_rules'])):
                                 pathrule = item['path_rules'][j]
                                 if 'name' in pathrule and 'path_map_name' in pathrule:
@@ -2160,7 +2154,7 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                                                           pathrule['name'])
                                     item['path_rules'][j] = {'id': id}
                         else:
-                            item.pop('path_rules', None)
+                            del item['path_rules']
                     self.parameters["redirect_configurations"] = ev
                 elif key == "rewrite_rule_sets":
                     ev = kwargs[key]
@@ -2183,12 +2177,41 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                         if 'private_ip_allocation_method' in item and item['private_ip_allocation_method'] is not None:
                             item['private_ip_allocation_method'] = _snake_to_camel(item['private_ip_allocation_method'], True)
                         if 'public_ip_address' in item and item['public_ip_address'] is not None:
-                            item['public_ip_address'] = normalize_cross_rg_ref(
-                                item['public_ip_address'],
-                                subscription_id=self.subscription_id,
-                                default_rg=self.resource_group,
-                                build_with=public_ip_id
-                            )
+                            pip = item['public_ip_address']
+
+                            def _ensure_pip_id(pip_val):
+                                # dict: {'id': <id>} or {'name': <name>, 'resource_group': <rg>}
+                                if isinstance(pip_val, dict):
+                                    if pip_val.get('id'):
+                                        rid = pip_val['id']
+                                        return rid if is_valid_resource_id(rid) else public_ip_id(
+                                            self.subscription_id,
+                                            pip_val.get('resource_group', kwargs['resource_group']),
+                                            rid
+                                        )
+                                    elif pip_val.get('name'):
+                                        return public_ip_id(
+                                            self.subscription_id,
+                                            pip_val.get('resource_group', kwargs['resource_group']),
+                                            pip_val['name']
+                                        )
+                                    else:
+                                        self.fail("frontend_ip_configurations.public_ip_address must contain 'id' or 'name'")
+                                elif isinstance(pip_val, str):
+                                    return pip_val if is_valid_resource_id(pip_val) else public_ip_id(
+                                        self.subscription_id,
+                                        kwargs['resource_group'],
+                                        pip_val
+                                    )
+                                else:
+                                    self.fail("frontend_ip_configurations.public_ip_address must be a string or dict")
+                            pip_id = _ensure_pip_id(pip)
+                            if is_valid_resource_id(pip_id):
+                                rid = parse_resource_id(pip_id)
+                                res_type = rid.get('type', '').lower()
+                                if 'publicipaddresses' not in res_type:
+                                    self.fail("frontend_ip_configurations.public_ip_address must reference a Microsoft.Network/publicIPAddresses resource")
+                            item['public_ip_address'] = {'id': pip_id}
                         if 'subnet' in item and item['subnet'] is not None and 'name' in item['subnet'] and item['subnet']['name'] is not None and \
                                 'virtual_network_name' in item['subnet'] and item['subnet']['virtual_network_name'] is not None:
                             id = subnet_id(self.subscription_id,
@@ -2219,13 +2242,11 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                         if 'cookie_based_affinity' in item and item['cookie_based_affinity'] is not None:
                             item['cookie_based_affinity'] = _snake_to_camel(item['cookie_based_affinity'], True)
                         if 'probe' in item and item['probe'] is not None:
-                            item['probe'] = normalize_agw_child_ref(
-                                item['probe'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=probe_id
-                            )
+                            id = probe_id(self.subscription_id,
+                                          kwargs['resource_group'],
+                                          kwargs['name'],
+                                          item['probe'])
+                            item['probe'] = {'id': id}
                         if 'trusted_root_certificates' in item and item['trusted_root_certificates'] is not None:
                             for j in range(len(item['trusted_root_certificates'])):
                                 id = item['trusted_root_certificates'][j]
@@ -2240,29 +2261,24 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                     for i in range(len(ev)):
                         item = ev[i]
                         if 'frontend_ip_configuration' in item and item['frontend_ip_configuration'] is not None:
-                            item['frontend_ip_configuration'] = normalize_agw_child_ref(
-                                item['frontend_ip_configuration'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=frontend_ip_configuration_id
-                            )
+                            id = frontend_ip_configuration_id(self.subscription_id,
+                                                              kwargs['resource_group'],
+                                                              kwargs['name'],
+                                                              item['frontend_ip_configuration'])
+                            item['frontend_ip_configuration'] = {'id': id}
+
                         if 'frontend_port' in item and item['frontend_port'] is not None:
-                            item['frontend_port'] = normalize_agw_child_ref(
-                                item['frontend_port'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=frontend_port_id
-                            )
+                            id = frontend_port_id(self.subscription_id,
+                                                  kwargs['resource_group'],
+                                                  kwargs['name'],
+                                                  item['frontend_port'])
+                            item['frontend_port'] = {'id': id}
                         if 'ssl_certificate' in item and item['ssl_certificate'] is not None:
-                            item['ssl_certificate'] = normalize_agw_child_ref(
-                                item['ssl_certificate'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=ssl_certificate_id
-                            )
+                            id = ssl_certificate_id(self.subscription_id,
+                                                    kwargs['resource_group'],
+                                                    kwargs['name'],
+                                                    item['ssl_certificate'])
+                            item['ssl_certificate'] = {'id': id}
                         if 'protocol' in item and item['protocol'] is not None:
                             item['protocol'] = _snake_to_camel(item['protocol'], True)
                         ev[i] = item
@@ -2271,87 +2287,77 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                     ev = kwargs[key]
                     for i in range(len(ev)):
                         item = ev[i]
-                        if item.get('default_backend_address_pool') is not None:
-                            item['default_backend_address_pool'] = normalize_agw_child_ref(
-                                item['default_backend_address_pool'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=backend_address_pool_id
-                            )
+                        if item['default_backend_address_pool'] and item['default_backend_address_pool'] is not None:
+                            id = backend_address_pool_id(self.subscription_id,
+                                                         kwargs['resource_group'],
+                                                         kwargs['name'],
+                                                         item['default_backend_address_pool'])
+                            item['default_backend_address_pool'] = {'id': id}
                         else:
-                            item.pop('default_backend_address_pool', None)
-                        if item.get('default_backend_http_settings') is not None:
-                            item['default_backend_http_settings'] = normalize_agw_child_ref(
-                                item['default_backend_http_settings'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=backend_http_settings_id
-                            )
+                            del item['default_backend_address_pool']
+                        if item['default_backend_http_settings'] and item['default_backend_http_settings'] is not None:
+                            id = backend_http_settings_id(self.subscription_id,
+                                                          kwargs['resource_group'],
+                                                          kwargs['name'],
+                                                          item['default_backend_http_settings'])
+                            item['default_backend_http_settings'] = {'id': id}
                         else:
-                            item.pop('default_backend_http_settings', None)
-                        if 'path_rules' in item and item['path_rules']:
+                            del item['default_backend_http_settings']
+                        if 'path_rules' in item:
                             ev2 = item['path_rules']
                             for j in range(len(ev2)):
                                 item2 = ev2[j]
-                                if item2.get('backend_address_pool') is not None:
-                                    item2['backend_address_pool'] = normalize_agw_child_ref(
-                                        item2['backend_address_pool'],
-                                        subscription_id=self.subscription_id,
-                                        resource_group=self.resource_group,
-                                        appgw_name=self.name,
-                                        build_child_id=backend_address_pool_id
-                                    )
+                                if item2['backend_address_pool'] and item2['backend_address_pool'] is not None:
+                                    id = backend_address_pool_id(self.subscription_id,
+                                                                 kwargs['resource_group'],
+                                                                 kwargs['name'],
+                                                                 item2['backend_address_pool'])
+                                    item2['backend_address_pool'] = {'id': id}
                                 else:
-                                    item2.pop('backend_address_pool', None)
-                                if item2.get('backend_http_settings') is not None:
-                                    item2['backend_http_settings'] = normalize_agw_child_ref(
-                                        item2['backend_http_settings'],
-                                        subscription_id=self.subscription_id,
-                                        resource_group=self.resource_group,
-                                        appgw_name=self.name,
-                                        build_child_id=backend_http_settings_id
-                                    )
+                                    del item2['backend_address_pool']
+                                if item2['backend_http_settings'] and item2['backend_http_settings'] is not None:
+                                    id = backend_http_settings_id(self.subscription_id,
+                                                                  kwargs['resource_group'],
+                                                                  kwargs['name'],
+                                                                  item2['backend_http_settings'])
+                                    item2['backend_http_settings'] = {'id': id}
                                 else:
-                                    item2.pop('backend_http_settings', None)
-                                if item2.get('redirect_configuration') is not None:
-                                    item2['redirect_configuration'] = normalize_agw_child_ref(
-                                        item2['redirect_configuration'],
-                                        subscription_id=self.subscription_id,
-                                        resource_group=self.resource_group,
-                                        appgw_name=self.name,
-                                        build_child_id=redirect_configuration_id
-                                    )
+                                    del item2['backend_http_settings']
+                                if item2['redirect_configuration'] and item2['redirect_configuration'] is not None:
+                                    id = redirect_configuration_id(self.subscription_id,
+                                                                   kwargs['resource_group'],
+                                                                   kwargs['name'],
+                                                                   item2['redirect_configuration'])
+                                    item2['redirect_configuration'] = {'id': id}
                                 else:
-                                    item2.pop('redirect_configuration', None)
-                                if item2.get('rewrite_rule_set'):
-                                    rid = item2['rewrite_rule_set']
-                                    rid = rid if is_valid_resource_id(rid) else rewrite_rule_set_id(
-                                        self.subscription_id, self.resource_group, self.name, rid)
-                                    item2['rewrite_rule_set'] = {'id': rid}
+                                    del item2['redirect_configuration']
+                                if item2['rewrite_rule_set']:
+                                    id = item2['rewrite_rule_set']
+                                    id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
+                                                                                                 kwargs['resource_group'],
+                                                                                                 kwargs['name'],
+                                                                                                 id)
+                                    item2['rewrite_rule_set'] = {'id': id}
                                 else:
-                                    item2.pop('rewrite_rule_set', None)
+                                    del item2['rewrite_rule_set']
                                 ev2[j] = item2
+                        if item['default_redirect_configuration']:
+                            id = redirect_configuration_id(self.subscription_id,
+                                                           kwargs['resource_group'],
+                                                           kwargs['name'],
+                                                           item['default_redirect_configuration'])
+                            item['default_redirect_configuration'] = {'id': id}
                         else:
-                            item.pop('path_rules', None)
-                        if item.get('default_redirect_configuration'):
-                            item['default_redirect_configuration'] = normalize_agw_child_ref(
-                                item['default_redirect_configuration'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=redirect_configuration_id
-                            )
+                            del item['default_redirect_configuration']
+                        if item['default_rewrite_rule_set']:
+                            id = item['default_rewrite_rule_set']
+                            id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
+                                                                                         kwargs['resource_group'],
+                                                                                         kwargs['name'],
+                                                                                         id)
+                            item['default_rewrite_rule_set'] = {'id': id}
                         else:
-                            item.pop('default_redirect_configuration', None)
-                        if item.get('default_rewrite_rule_set'):
-                            rid = item['default_rewrite_rule_set']
-                            rid = rid if is_valid_resource_id(rid) else rewrite_rule_set_id(
-                                self.subscription_id, self.resource_group, self.name, rid)
-                            item['default_rewrite_rule_set'] = {'id': rid}
-                        else:
-                            item.pop('default_rewrite_rule_set', None)
+                            del item['default_rewrite_rule_set']
                         ev[i] = item
                     self.parameters["url_path_maps"] = ev
                 elif key == "request_routing_rules":
@@ -2362,45 +2368,39 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                                 'backend_address_pool' in item and item['backend_address_pool'] is not None:
                             del item['backend_address_pool']
                         if 'backend_address_pool' in item and item['backend_address_pool'] is not None:
-                            item['backend_address_pool'] = normalize_agw_child_ref(
-                                item['backend_address_pool'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=backend_address_pool_id
-                            )
+                            id = backend_address_pool_id(self.subscription_id,
+                                                         kwargs['resource_group'],
+                                                         kwargs['name'],
+                                                         item['backend_address_pool'])
+                            item['backend_address_pool'] = {'id': id}
                         if 'backend_http_settings' in item and item['backend_http_settings'] is not None:
-                            item['backend_http_settings'] = normalize_agw_child_ref(
-                                item['backend_http_settings'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=backend_http_settings_id
-                            )
+                            id = backend_http_settings_id(self.subscription_id,
+                                                          kwargs['resource_group'],
+                                                          kwargs['name'],
+                                                          item['backend_http_settings'])
+                            item['backend_http_settings'] = {'id': id}
                         if 'http_listener' in item and item['http_listener'] is not None:
-                            item['http_listener'] = normalize_agw_child_ref(
-                                item['http_listener'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=http_listener_id
-                            )
+                            id = http_listener_id(self.subscription_id,
+                                                  kwargs['resource_group'],
+                                                  kwargs['name'],
+                                                  item['http_listener'])
+                            item['http_listener'] = {'id': id}
+                        if 'protocol' in item and item['protocol'] is not None:
+                            item['protocol'] = _snake_to_camel(item['protocol'], True)
+                        if 'rule_type' in item and item['rule_type'] is not None:
+                            item['rule_type'] = _snake_to_camel(item['rule_type'], True)
                         if 'redirect_configuration' in item and item['redirect_configuration'] is not None:
-                            item['redirect_configuration'] = normalize_agw_child_ref(
-                                item['redirect_configuration'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=redirect_configuration_id
-                            )
+                            id = redirect_configuration_id(self.subscription_id,
+                                                           kwargs['resource_group'],
+                                                           kwargs['name'],
+                                                           item['redirect_configuration'])
+                            item['redirect_configuration'] = {'id': id}
                         if 'url_path_map' in item and item['url_path_map'] is not None:
-                            item['url_path_map'] = normalize_agw_child_ref(
-                                item['url_path_map'],
-                                subscription_id=self.subscription_id,
-                                resource_group=self.resource_group,
-                                appgw_name=self.name,
-                                build_child_id=url_path_map_id
-                            )
+                            id = url_path_map_id(self.subscription_id,
+                                                 kwargs['resource_group'],
+                                                 kwargs['name'],
+                                                 item['url_path_map'])
+                            item['url_path_map'] = {'id': id}
                         if item.get('rewrite_rule_set'):
                             id = item.get('rewrite_rule_set')
                             id = id if is_valid_resource_id(id) else rewrite_rule_set_id(self.subscription_id,
