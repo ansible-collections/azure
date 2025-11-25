@@ -271,7 +271,6 @@
         that:
           - __variant1_apply is not changed
 
-
     - name: Set frontend public IP using name + resource_group dict (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
