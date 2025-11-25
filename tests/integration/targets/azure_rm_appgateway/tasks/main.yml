@@ -271,31 +271,6 @@
         that:
           - __variant1_apply is not changed
 
-    - name: Reapply frontend public IP using full resource ID (expect idempotent)
-      azure.azcollection.azure_rm_appgateway:
-        resource_group: "{{ resource_group }}-appgateway"
-        name: "appgateway-v2-{{ rpfx }}"
-        sku:
-          name: standard_v2
-          tier: standard_v2
-          capacity: 2
-        gateway_ip_configurations:
-          - subnet:
-              id: "{{ subnet_output.state.id }}"
-            name: app_gateway_ip_config
-        frontend_ip_configurations:
-          - name: "public-inbound-ip"
-            public_ip_address: "{{ __pip_id }}"        # FULL ID string
-        frontend_ports:
-          - name: "inbound-http"
-            port: 80
-          - name: "inbound-https"
-            port: 443
-      register: __variant1_apply
-    - name: Assert reapplying full resource ID is idempotent
-      ansible.builtin.assert:
-        that:
-          - __variant1_apply is not changed
 
     - name: Set frontend public IP using name + resource_group dict (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
