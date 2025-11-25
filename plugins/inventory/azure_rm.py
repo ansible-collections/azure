@@ -855,7 +855,8 @@ class AzureHost(object):
             vmss_name = new_hostvars['vmss']['name']
             instance_id = self._vm_model.get('instanceId')
             compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id,
+                                                     base_url=self._inventory_client.azure_auth._cloud_environment.endpoints.resource_manager)
             instance_view = compute_client.virtual_machine_scale_set_vms.get_instance_view(resource_group_name=resource_group,
                                                                                            vm_scale_set_name=vmss_name,
                                                                                            instance_id=instance_id)
@@ -866,7 +867,8 @@ class AzureHost(object):
 
             # Set Uniform VMSS instance's nic-related values
             network_client = NetworkManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id,
+                                                     base_url=self._inventory_client.azure_auth._cloud_environment.endpoints.resource_manager)
             nics = network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=resource_group,
                                                                                                           virtual_machine_scale_set_name=vmss_name,
                                                                                                           virtualmachine_index=instance_id)
@@ -933,7 +935,8 @@ class AzureHost(object):
 
             # Set os compute name, os name, os version and hyper V generation
             compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id)
+                                                     subscription_id=self._inventory_client.azure_auth.subscription_id,
+                                                     base_url=self._inventory_client.azure_auth._cloud_environment.endpoints.resource_manager)
             instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
             new_hostvars['os_compute_name'] = instance_view.computer_name
             new_hostvars['os_name'] = instance_view.os_name
