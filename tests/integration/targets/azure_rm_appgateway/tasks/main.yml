@@ -271,34 +271,6 @@
         that:
           - __variant1_apply is not changed
 
-    - name: Set frontend public IP using name + resource_group dict (expect idempotent)
-      azure.azcollection.azure_rm_appgateway:
-        resource_group: "{{ resource_group }}-appgateway"
-        name: "appgateway-v2-{{ rpfx }}"
-        sku:
-          name: standard_v2
-          tier: standard_v2
-          capacity: 2
-        gateway_ip_configurations:
-          - subnet:
-              id: "{{ subnet_output.state.id }}"
-            name: app_gateway_ip_config
-        frontend_ip_configurations:
-          - name: "public-inbound-ip"
-            public_ip_address:
-              name: "{{ __pip_name }}"                  # DICT format
-              resource_group: "{{ __pip_rg }}"
-        frontend_ports:
-          - name: "inbound-http"
-            port: 80
-          - name: "inbound-https"
-            port: 443
-      register: __variant2_apply
-    - name: Assert name+resource_group dict is idempotent
-      ansible.builtin.assert:
-        that:
-          - __variant2_apply is not changed
-
     - name: Set frontend public IP using bare name (expect idempotent)
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
@@ -319,11 +291,11 @@
             port: 80
           - name: "inbound-https"
             port: 443
-      register: __variant3_apply
+      register: __variant2_apply
     - name: Assert bare name is idempotent
       ansible.builtin.assert:
         that:
-          - __variant3_apply is not changed
+          - __variant2_apply is not changed
 
     - name: Try to create v2 instance of Application Gateway with rewrite rules - no update
       azure.azcollection.azure_rm_appgateway:

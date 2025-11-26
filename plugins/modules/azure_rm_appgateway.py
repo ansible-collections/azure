@@ -2180,31 +2180,15 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                             pip = item['public_ip_address']
 
                             def _ensure_pip_id(pip_val):
-                                # dict: {'id': <id>} or {'name': <name>, 'resource_group': <rg>}
-                                if isinstance(pip_val, dict):
-                                    if pip_val.get('id'):
-                                        rid = pip_val['id']
-                                        return rid if is_valid_resource_id(rid) else public_ip_id(
-                                            self.subscription_id,
-                                            pip_val.get('resource_group', kwargs['resource_group']),
-                                            rid
-                                        )
-                                    elif pip_val.get('name'):
-                                        return public_ip_id(
-                                            self.subscription_id,
-                                            pip_val.get('resource_group', kwargs['resource_group']),
-                                            pip_val['name']
-                                        )
-                                    else:
-                                        self.fail("frontend_ip_configurations.public_ip_address must contain 'id' or 'name'")
-                                elif isinstance(pip_val, str):
+                                # accept full ARM ID or name in same RG
+                                if isinstance(pip_val, str):
                                     return pip_val if is_valid_resource_id(pip_val) else public_ip_id(
                                         self.subscription_id,
                                         kwargs['resource_group'],
                                         pip_val
                                     )
                                 else:
-                                    self.fail("frontend_ip_configurations.public_ip_address must be a string or dict")
+                                    self.fail("frontend_ip_configurations.public_ip_address must be a string (Public IP name or full ARM ID)")
                             pip_id = _ensure_pip_id(pip)
                             if is_valid_resource_id(pip_id):
                                 rid = parse_resource_id(pip_id)
