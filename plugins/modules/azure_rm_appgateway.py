@@ -2178,14 +2178,11 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                             item['private_ip_allocation_method'] = _snake_to_camel(item['private_ip_allocation_method'], True)
                         if 'public_ip_address' in item and item['public_ip_address'] is not None:
                             pip = item['public_ip_address']
-                            if isinstance(pip, str):
-                                pip_id = (pip if is_valid_resource_id(pip) else public_ip_id(
-                                    self.subscription_id,
-                                    kwargs['resource_group'],
-                                    pip
-                                ))
-                            else:
-                                self.fail("frontend_ip_configurations.public_ip_address must be a string (Public IP name or full ARM ID)")
+                            pip_id = (pip if is_valid_resource_id(pip) else public_ip_id(
+                                self.subscription_id,
+                                kwargs['resource_group'],
+                                pip
+                            ))
                             item['public_ip_address'] = {'id': pip_id}
                         if 'subnet' in item and item['subnet'] is not None and 'name' in item['subnet'] and item['subnet']['name'] is not None and \
                                 'virtual_network_name' in item['subnet'] and item['subnet']['virtual_network_name'] is not None:
