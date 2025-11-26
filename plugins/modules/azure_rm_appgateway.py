@@ -2178,23 +2178,14 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                             item['private_ip_allocation_method'] = _snake_to_camel(item['private_ip_allocation_method'], True)
                         if 'public_ip_address' in item and item['public_ip_address'] is not None:
                             pip = item['public_ip_address']
-
-                            def _ensure_pip_id(pip_val):
-                                # accept full ARM ID or name in same RG
-                                if isinstance(pip_val, str):
-                                    return pip_val if is_valid_resource_id(pip_val) else public_ip_id(
-                                        self.subscription_id,
-                                        kwargs['resource_group'],
-                                        pip_val
-                                    )
-                                else:
-                                    self.fail("frontend_ip_configurations.public_ip_address must be a string (Public IP name or full ARM ID)")
-                            pip_id = _ensure_pip_id(pip)
-                            if is_valid_resource_id(pip_id):
-                                rid = parse_resource_id(pip_id)
-                                res_type = rid.get('type', '').lower()
-                                if 'publicipaddresses' not in res_type:
-                                    self.fail("frontend_ip_configurations.public_ip_address must reference a Microsoft.Network/publicIPAddresses resource")
+                            if isinstance(pip, str):
+                                pip_id = (pip if is_valid_resource_id(pip) else public_ip_id(
+                                    self.subscription_id,
+                                    kwargs['resource_group'],
+                                    pip
+                                ))
+                            else:
+                                self.fail("frontend_ip_configurations.public_ip_address must be a string (Public IP name or full ARM ID)")
                             item['public_ip_address'] = {'id': pip_id}
                         if 'subnet' in item and item['subnet'] is not None and 'name' in item['subnet'] and item['subnet']['name'] is not None and \
                                 'virtual_network_name' in item['subnet'] and item['subnet']['virtual_network_name'] is not None:
