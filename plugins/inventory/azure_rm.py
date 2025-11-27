@@ -193,9 +193,10 @@ class AzureRMRestConfiguration(Configuration):
             raise ValueError("Parameter 'credentials' must not be None.")
         if subscription_id is None:
             raise ValueError("Parameter 'subscription_id' must not be None.")
-        base = (base_url or "https://management.azure.com").rstrip("/")
+        if not base_url:
+            base_url = 'https://management.azure.com'
 
-        credential_scopes = [f"{base}/.default"]
+        credential_scopes = [f"{base_url}/.default"]
 
         super(AzureRMRestConfiguration, self).__init__()
 
@@ -334,11 +335,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         self.azure_auth = AzureRMAuth(**auth_options)
 
-        rm_endpoint = self.azure_auth._cloud_environment.endpoints.resource_manager.rstrip('/')
+        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id, self.azure_auth._cloud_environment.endpoints.resource_manager)
 
-        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id, rm_endpoint)
-
-        self.new_client = PipelineClient(rm_endpoint, config=self._clientconfig)
+        self.new_client = PipelineClient(self.azure_auth._cloud_environment.endpoints.resource_manager, config=self._clientconfig)
 
     def _enqueue_get(self, url, api_version, handler, handler_args=None):
         if not handler_args:
