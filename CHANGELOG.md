@@ -13,6 +13,7 @@
 ### BUG FIXING
   - plugins/modules/azure_rm_galleryimageversion.py: azure_rm_galleryimageversion to align with current Azure Compute Gallery API ([#2114](https://github.com/ansible-collections/azure/pull/2114))
   - plugins/inventory/azure_rm.py: Fix subscription not found when azure_rm inventory runs in Azure US Government ([#2116](https://github.com/ansible-collections/azure/pull/2116))
+  - plugins/modules/azure_rm_networkinterface.py: Change IP configuration to construct list instead of set ([#2119](https://github.com/ansible-collections/azure/pull/2119))
 
 
 ## v3.11.0 (2025-11-07)
