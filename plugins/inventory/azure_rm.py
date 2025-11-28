@@ -178,6 +178,7 @@ try:
     from netaddr import IPAddress
     from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.compute import ComputeManagementClient
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     Configuration = object
     parse_resource_id = object
@@ -299,8 +300,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def _serialize(self, hosts):
         results = []
         for h in hosts:
-            results.append(dict(default_inventory_hostname=h.default_inventory_hostname,
-                                hostvars=h.hostvars))
+            try:
+                host_data = dict(default_inventory_hostname=h.default_inventory_hostname,
+                                hostvars=h.hostvars)
+            except ResourceNotFoundError as e:
+                continue
+            results.append(host_data)
         return results
 
     def _credential_setup(self):
