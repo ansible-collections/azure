@@ -926,10 +926,10 @@ class AzureRMNetworkInterface(AzureRMModuleBaseExt):
             public_ip_address_name=(to_native(item.get('public_ip_address').get('name'))
                                     if item.get('public_ip_address') else to_native(item.get('public_ip_address_name'))),
             load_balancer_backend_address_pools=(sorted({to_native(self.backend_addr_pool_id(id))
-                                                      for id in item.get('load_balancer_backend_address_pools', [])})
+                                                         for id in item.get('load_balancer_backend_address_pools', [])})
                                                  if item.get('load_balancer_backend_address_pools') else None),
             application_gateway_backend_address_pools=(sorted({to_native(self.gateway_backend_addr_pool_id(id))
-                                                           for id in item.get('application_gateway_backend_address_pools', [])})
+                                                               for id in item.get('application_gateway_backend_address_pools', [])})
                                                        if item.get('application_gateway_backend_address_pools') else None),
             application_security_groups=(sorted({to_native(asg_id) for asg_id in item.get('application_security_groups', [])})
                                          if item.get('application_security_groups') else None),
