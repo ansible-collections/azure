@@ -1,4 +1,20 @@
 # Change Log
+## v3.12.0 (2025-11-28)
+
+### FEATURE ENHANCEMENT
+  - plugins/lookup/azure_keyvault_secret.py: Update lookup plugins to use auth_source ([#2107](https://github.com/ansible-collections/azure/pull/2107))
+  - plugins/lookup/azure_service_principal_attribute.py: Update lookup plugins to use auth_source ([#2107](https://github.com/ansible-collections/azure/pull/2107))
+  - plugins/doc_fragments/azure_plugin.py: Update lookup plugins to use auth_source ([#2107](https://github.com/ansible-collections/azure/pull/2107))
+  - plugins/modules/azure_rm_appgateway.py: Normalize references azure_rm_appgateway ([#2108](https://github.com/ansible-collections/azure/pull/2108))
+  - plugins/modules/azure_rm_storageaccount.py: azure_rm_storageaccount added support to handle resource instance rules ([#2109](https://github.com/ansible-collections/azure/pull/2109))
+  - plugins/modules/azure_rm_storageaccount_info.py: azure_rm_storageaccount added support to handle resource instance rules ([#2109](https://github.com/ansible-collections/azure/pull/2109))
+  - plugins/modules/azure_rm_aks.py: Added gMSA support ([#2111](https://github.com/ansible-collections/azure/pull/2111))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_galleryimageversion.py: azure_rm_galleryimageversion to align with current Azure Compute Gallery API ([#2114](https://github.com/ansible-collections/azure/pull/2114))
+  - plugins/inventory/azure_rm.py: Fix subscription not found when azure_rm inventory runs in Azure US Government ([#2116](https://github.com/ansible-collections/azure/pull/2116))
+
+
 ## v3.11.0 (2025-11-07)
 
 ### NEW MODULES
