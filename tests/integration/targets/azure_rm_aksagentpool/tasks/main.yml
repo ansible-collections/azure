@@ -11,13 +11,13 @@
 
     - name: Find available k8s version
       azure.azcollection.azure_rm_aksversion_info:
-        location: westus2
+        location: eastus
       register: versions
 
     - name: Create proximity placement group
       azure.azcollection.azure_rm_proximityplacementgroup:
         resource_group: "{{ resource_group }}-akspool"
-        location: westus2
+        location: eastus
         name: "proxi{{ rpfx }}"
       register: proxi_output
 
@@ -25,7 +25,7 @@
       azure.azcollection.azure_rm_publicipprefix:
         resource_group: "{{ resource_group }}-akspool"
         name: "pipprefix{{ rpfx }}"
-        location: westus2
+        location: eastus
         zones:
           - 2
         public_ip_address_version: IPV4
@@ -38,7 +38,7 @@
     - name: Create a kubernet service with minimal parameters
       azure.azcollection.azure_rm_aks:
         name: "min{{ rpfx }}"
-        location: westus2
+        location: eastus
         resource_group: "{{ resource_group }}-akspool"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
@@ -49,7 +49,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B1s
+            vm_size: Standard_B2s
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -115,7 +115,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
-        vm_size: Standard_B1s
+        vm_size: Standard_B2s
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -142,7 +142,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
-        vm_size: Standard_B1s
+        vm_size: Standard_B2s
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -180,7 +180,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
-        vm_size: Standard_B1s
+        vm_size: Standard_B2s
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -226,7 +226,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default06
         count: 1
-        vm_size: Standard_B1s
+        vm_size: Standard_B2s
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -270,7 +270,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default06
         count: 1
-        vm_size: Standard_B1s
+        vm_size: Standard_B2s
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
