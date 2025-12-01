@@ -33,15 +33,20 @@ jobs:
 
   # ansible-lint checks
   lint-checks:
-    name: Link Checks
+    name: Lint Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install ansible-lint
+      - run: pip install ansible-lint pylint
       - run: ansible-lint .
+      - run: |
+          echo "Running pylint on EDA event_source..."
+          pylint ansible_collections/azure/azcollection/extensions/eda/plugins/event_source/*.py \
+            --output-format=parseable \
+            --score=no
 
   # requirements.txt validation
   requirements-validation:
@@ -59,7 +64,7 @@ jobs:
           fi
 
   # ruff-check
-  ruff-check:
+  ruff-checks:
     name: Ruff Check for EDA plugins
     runs-on: ubuntu-latest
     continue-on-error: true
