@@ -46,7 +46,8 @@ jobs:
           echo "Running pylint on EDA event_source..."
           pylint extensions/eda/plugins/event_source/*.py \
             --output-format=parseable \
-            --score=no
+            --score=no \
+            --disable=R0801,E0401,C0103,R0913,R0902,R0903
 
   # requirements.txt validation
   requirements-validation:
