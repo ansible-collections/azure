@@ -302,7 +302,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         for h in hosts:
             try:
                 host_data = dict(default_inventory_hostname=h.default_inventory_hostname,
-                                hostvars=h.hostvars)
+                                 hostvars=h.hostvars)
             except ResourceNotFoundError as e:
                 continue
             results.append(host_data)
