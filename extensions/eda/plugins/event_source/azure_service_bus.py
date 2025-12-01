@@ -1,3 +1,9 @@
+"""Ansible-rulebook event source plugin for Azure Service Bus.
+
+This module provides asynchronous consumers for Azure Service Bus to feed
+events into Ansible EDA rulebooks.
+"""
+
 import asyncio
 import contextlib
 import json

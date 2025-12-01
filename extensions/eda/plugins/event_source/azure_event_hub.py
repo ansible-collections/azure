@@ -1,3 +1,9 @@
+"""Ansible-rulebook event source plugin for Azure Event Hub.
+
+This module provides asynchronous consumers for Azure Event Hub to feed
+events into Ansible EDA rulebooks.
+"""
+
 import asyncio
 import json
 import logging
@@ -176,4 +182,3 @@ if __name__ == "__main__":
             test_args,
         ),
     )
-    asyncio.run(main())

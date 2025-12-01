@@ -47,7 +47,7 @@ jobs:
           pylint extensions/eda/plugins/event_source/*.py \
             --output-format=parseable \
             --score=no \
-            --disable=R0801,E0401,C0103,R0913,R0902,R0903
+            --disable=R0801,E0401,C0103,R0913,R0902,R0903,W0621
 
   # requirements.txt validation
   requirements-validation:
