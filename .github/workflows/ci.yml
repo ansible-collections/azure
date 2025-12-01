@@ -44,7 +44,7 @@ jobs:
       - run: ansible-lint .
       - run: |
           echo "Running pylint on EDA event_source..."
-          pylint ansible_collections/azure/azcollection/extensions/eda/plugins/event_source/*.py \
+          pylint extensions/eda/plugins/event_source/*.py \
             --output-format=parseable \
             --score=no
 
