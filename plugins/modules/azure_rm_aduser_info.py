@@ -235,21 +235,18 @@ class AzureRMADUserInfo(AzureRMModuleBase):
                 ad_users = [asyncio.get_event_loop().run_until_complete(self.get_user(self.object_id))]
             elif self.attribute_name is not None and self.attribute_value is not None:
                 try:
-                    users = asyncio.get_event_loop().run_until_complete(
+                    ad_users = asyncio.get_event_loop().run_until_complete(
                         self.get_users_by_filter("{0} eq '{1}'".format(self.attribute_name, self.attribute_value)))
-                    ad_users = list(users.value)
-                except Exception as e:
+                except Exception:
                     # the type doesn't get more specific. Could check the error message but no guarantees that message doesn't change in the future
                     # more stable to try again assuming the first error came from the attribute being a list
                     try:
-                        users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(
+                        ad_users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(
                             "{0}/any(c:c eq '{1}')".format(self.attribute_name, self.attribute_value)))
-                        ad_users = list(users.value)
-                    except Exception as sub_e:
+                    except Exception:
                         raise
             elif self.odata_filter is not None:  # run a filter based on user input to return based on any given attribute/query
-                users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))
-                ad_users = list(users.value)
+                ad_users = asyncio.get_event_loop().run_until_complete(self.get_users_by_filter(self.odata_filter))
             elif self.all:
                 # this returns as a list, since we parse multiple pages
                 ad_users = asyncio.get_event_loop().run_until_complete(self.get_users())
@@ -317,15 +314,25 @@ class AzureRMADUserInfo(AzureRMModuleBase):
         return users
 
     async def get_users_by_filter(self, filter):
-        return await self._client.users.get(
-            request_configuration=UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
-                query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
-                    filter=filter,
-                    select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
-                            "userType", "companyName", "onPremisesExtensionAttributes", "surname", "givenName"],
-                    count=True
-                ),
-            ))
+        request_configuration = UsersRequestBuilder.UsersRequestBuilderGetRequestConfiguration(
+            query_parameters=UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+                filter=filter,
+                select=["accountEnabled", "displayName", "mail", "mailNickname", "id", "userPrincipalName",
+                        "userType", "companyName", "onPremisesExtensionAttributes", "surname", "givenName"],
+                count=True
+            ),
+        )
+        users = []
+        response = await self._client.users.get(request_configuration=request_configuration)
+
+        if response:
+            users += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.users.with_url(response.odata_next_link).get(request_configuration=request_configuration)
+            if response:
+                users += response.value
+
+        return users
 
 
 def main():
