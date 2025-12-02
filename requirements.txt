@@ -50,6 +50,7 @@ azure-mgmt-sql==4.0.0b19
 azure-mgmt-storage==21.2.1
 azure-mgmt-trafficmanager==1.1.0
 azure-mgmt-web==7.3.1
+azure-mgmt-eventgrid=10.4.0
 azure-nspkg==3.0.2
 azure-servicebus==7.14.2
 azure-storage-blob==12.23.0b1
