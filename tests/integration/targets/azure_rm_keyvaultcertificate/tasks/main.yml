@@ -281,7 +281,7 @@
           -passout pass:{{ cert_password }}
       args:
         creates: "{{ playbook_dir }}/cert.pfx"
-    
+
     - name: Import PKCS#12 certificate
       azure.azcollection.azure_rm_keyvaultcertificate:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
@@ -292,11 +292,11 @@
         policy:
           content_type: "application/x-pkcs12"
       register: rotate_pfx_result
-    
+
     - name: Assert the keyvault certificate PKCS#12 rotated
       ansible.builtin.assert:
         that: rotate_pfx_result is changed
-    
+
     - name: Re-import same certificate PFX (idempotent check)
       azure.azcollection.azure_rm_keyvaultcertificate:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
