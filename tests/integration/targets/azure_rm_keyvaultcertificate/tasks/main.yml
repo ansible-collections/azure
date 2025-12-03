@@ -221,19 +221,19 @@
           - facts['certificates'] | length == 0
 
     - name: Generate test RSA private key (PEM)
-      community.crypto.openssl_privatekey:
-        path: "{{ playbook_dir }}/cert.key"
-        type: RSA
-        size: 2048
+      ansible.builtin.command:
+        cmd: >
+          openssl genrsa -out "{{ playbook_dir }}/cert.key" 2048
+      args:
+        creates: "{{ playbook_dir }}/cert.key"
 
     - name: Generate self-signed certificate (PEM)
-      community.crypto.openssl_certificate:
-        path: "{{ playbook_dir }}/cert.crt"
-        privatekey_path: "{{ playbook_dir }}/cert.key"
-        provider: selfsigned
-        subject:
-          common_name: "ansible-test"
-        valid_days: 365
+      ansible.builtin.command:
+        cmd: >
+          openssl req -x509 -new -nodes -key "{{ playbook_dir }}/cert.key"
+          -sha256 -days 365 -subj "/CN=ansible-test" -out "{{ playbook_dir }}/cert.crt"
+      args:
+        creates: "{{ playbook_dir }}/cert.crt"
 
     - name: Build PEM bundle (key + cert) for Key Vault import
       ansible.builtin.copy:
@@ -242,7 +242,7 @@
         content: |
           {{ lookup('file', playbook_dir ~ '/cert.key') }}
           {{ lookup('file', playbook_dir ~ '/cert.crt') }}
-    
+
     - name: Import new certificate for rotation
       azure.azcollection.azure_rm_keyvaultcertificate:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
@@ -256,7 +256,7 @@
     - name: Assert the keyvault certificate rotated
       ansible.builtin.assert:
         that: rotate_result is changed
-    
+
     - name: Re-import same certificate PEM (idempotent check)
       azure.azcollection.azure_rm_keyvaultcertificate:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net

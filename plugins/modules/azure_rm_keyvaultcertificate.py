@@ -567,7 +567,6 @@ try:
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.serialization import pkcs12
     except Exception:
-        x509 = None
         hashes = None
         pkcs12 = None
     from azure.core.polling import LROPoller
