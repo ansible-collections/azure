@@ -220,6 +220,57 @@
         that:
           - facts['certificates'] | length == 0
 
+    - name: Generate test RSA private key (PEM)
+      community.crypto.openssl_privatekey:
+        path: "{{ playbook_dir }}/cert.key"
+        type: RSA
+        size: 2048
+
+    - name: Generate self-signed certificate (PEM)
+      community.crypto.openssl_certificate:
+        path: "{{ playbook_dir }}/cert.crt"
+        privatekey_path: "{{ playbook_dir }}/cert.key"
+        provider: selfsigned
+        subject:
+          common_name: "ansible-test"
+        valid_days: 365
+
+    - name: Build PEM bundle (key + cert) for Key Vault import
+      ansible.builtin.copy:
+        dest: "{{ cert_file }}"
+        mode: "0600"
+        content: |
+          {{ lookup('file', playbook_dir ~ '/cert.key') }}
+          {{ lookup('file', playbook_dir ~ '/cert.crt') }}
+    
+    - name: Import new certificate for rotation
+      azure.azcollection.azure_rm_keyvaultcertificate:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: "cert{{ rpfx }}"
+        cert_data: "{{ lookup('file', cert_file) }}"
+        state: import
+        policy:
+          content_type: "application/x-pem-file"
+      register: rotate_result
+
+    - name: Assert the keyvault certificate rotated
+      ansible.builtin.assert:
+        that: rotate_result is changed
+    
+    - name: Re-import same certificate PEM (idempotent check)
+      azure.azcollection.azure_rm_keyvaultcertificate:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: "cert{{ rpfx }}"
+        cert_data: "{{ lookup('file', cert_file) }}"
+        state: import
+        policy:
+          content_type: "application/x-pem-file"
+      register: idempotent_result
+
+    - name: Assert no change on re-import
+      ansible.builtin.assert:
+        that: idempotent_result is not changed
+
     - name: Delete instance of Key Vault
       azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvaultcertificate"
