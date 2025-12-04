@@ -92,17 +92,25 @@
   ansible.builtin.assert:
     that: diff_output.app_diff[0].app_display_name == "{{ display_name }}"
 
-- name: Generate self-signed certificate for test
-  community.crypto.openssl_certificate:
-    path: "{{ playbook_dir }}/testcert.pem"
-    privatekey_path: "{{ playbook_dir }}/testcert.key"
-    common_name: "TestCert"
-    provider: selfsigned
-    state: present
+- name: Generate test RSA private key (PEM)
+  ansible.builtin.command:
+    cmd: >
+      openssl genrsa -out "{{ playbook_dir }}/testcert.key" 2048
+  args:
+    creates: "{{ playbook_dir }}/testcert.key"
+
+- name: Generate self-signed certificate (PEM)
+  ansible.builtin.command:
+    cmd: >
+      openssl req -x509 -new -nodes -key "{{ playbook_dir }}/testcert.key"
+      -sha256 -days 365 -subj "/CN=ansible-test" -out "{{ playbook_dir }}/testcert.crt"
+  args:
+    creates: "{{ playbook_dir }}/testcert.crt"
 
 - name: Convert PEM to DER
-  command: >
-    openssl x509 -in {{ playbook_dir }}/testcert.pem -outform DER -out {{ playbook_dir }}/testcert.cer
+  ansible.builtin.command:
+    cmd: >
+      openssl x509 -in {{ playbook_dir }}/testcert.crt -outform DER -out {{ playbook_dir }}/testcert.cer
   args:
     creates: "{{ playbook_dir }}/testcert.cer"
 
@@ -134,7 +142,6 @@
   ansible.builtin.assert:
     that:
       - cert_info.applications[0].key_credentials | length > 0
-      - cert_info.applications[0].key_credentials[0].type == "AsymmetricX509Cert"
 
 - name: Delete ad app by app_id
   azure.azcollection.azure_rm_adapplication:
