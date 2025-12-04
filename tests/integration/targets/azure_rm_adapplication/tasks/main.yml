@@ -92,6 +92,50 @@
   ansible.builtin.assert:
     that: diff_output.app_diff[0].app_display_name == "{{ display_name }}"
 
+- name: Generate self-signed certificate for test
+  community.crypto.openssl_certificate:
+    path: "{{ playbook_dir }}/testcert.pem"
+    privatekey_path: "{{ playbook_dir }}/testcert.key"
+    common_name: "TestCert"
+    provider: selfsigned
+    state: present
+
+- name: Convert PEM to DER
+  command: >
+    openssl x509 -in {{ playbook_dir }}/testcert.pem -outform DER -out {{ playbook_dir }}/testcert.cer
+  args:
+    creates: "{{ playbook_dir }}/testcert.cer"
+
+- name: Slurp DER certificate
+  ansible.builtin.slurp:
+    src: "{{ playbook_dir }}/testcert.cer"
+  register: cert_file
+
+- name: Create application with certificate key_value
+  azure.azcollection.azure_rm_adapplication:
+    display_name: "{{ display_name }}_cert"
+    key_type: AsymmetricX509Cert
+    key_usage: Verify
+    key_value: "{{ cert_file.content }}"
+  register: cert_app_output
+
+- name: Assert certificate app created successfully
+  ansible.builtin.assert:
+    that:
+      - cert_app_output is changed
+      - cert_app_output.object_id is defined
+
+- name: Verify keyCredentials present via info module
+  azure.azcollection.azure_rm_adapplication_info:
+    object_id: "{{ cert_app_output.object_id }}"
+  register: cert_info
+
+- name: Assert keyCredentials metadata
+  ansible.builtin.assert:
+    that:
+      - cert_info.applications[0].key_credentials | length > 0
+      - cert_info.applications[0].key_credentials[0].type == "AsymmetricX509Cert"
+
 - name: Delete ad app by app_id
   azure.azcollection.azure_rm_adapplication:
     app_id: "{{ create_output.app_id }}"
