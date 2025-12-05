@@ -159,8 +159,8 @@
 
     - name: Get blob facts (URL-uploaded blob)
       azure.azcollection.azure_rm_storageblob_info:
-        resource_group: "{{ resource_group }}-storageblob }}"
-        account_name: "{{ storage_account }}"
+        resource_group: "resource_group }}-storageblob"
+        account_name: "{{ storage_account }}2"
         container_name: my-blobs
         blob_name: "Microsoft_Azure.png"
       register: png_info
