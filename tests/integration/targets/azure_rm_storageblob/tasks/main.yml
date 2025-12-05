@@ -145,9 +145,9 @@
         resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
-        blob: 'Microsoft_Azure.svg'
-        source_url: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Microsoft_Azure.svg'
-        content_type: image/svg+xml
+        blob: 'Microsoft_Azure.png'
+        source_url: 'https://logos-world.net/wp-content/uploads/2021/03/Microsoft-Azure-Logo.png'
+        content_type: image/png
         standard_blob_tier: Hot
         force: true
       register: url_upload
@@ -162,15 +162,15 @@
         resource_group: "{{ resource_group }}-storageblob }}"
         account_name: "{{ storage_account }}"
         container_name: my-blobs
-        blob_name: "Microsoft_Azure.svg"
-      register: svg_info
+        blob_name: "Microsoft_Azure.png"
+      register: png_info
 
     - name: Assert blob facts for URL-uploaded blob
       ansible.builtin.assert:
         that:
-          - svg_info.blob.name == "Microsoft_Azure.svg"
-          - svg_info.blob.content_settings.content_type == "image/svg+xml"
-          - svg_info.blob.standard_blob_tier == 'Hot'
+          - png_info.blob.name == "Microsoft_Azure.png"
+          - png_info.blob.content_settings.content_type == "image/png"
+          - png_info.blob.standard_blob_tier == 'Hot'
 
     - name: Update the blob with I(standard_blob_tier=Cool)
       azure.azcollection.azure_rm_storageblob:
