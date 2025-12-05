@@ -140,6 +140,38 @@
       ansible.builtin.assert:
         that: output is changed
 
+    - name: Upload from web URL to existing container
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}-storageblob"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob: 'Microsoft_Azure.svg'
+        source_url: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Microsoft_Azure.svg'
+        content_type: image/svg+xml
+        standard_blob_tier: Hot
+        force: true
+      register: url_upload
+
+    - name: Assert URL upload changed
+      ansible.builtin.assert:
+        that:
+          - url_upload is changed
+
+    - name: Get blob facts (URL-uploaded blob)
+      azure.azcollection.azure_rm_storageblob_info:
+        resource_group: "{{ resource_group }}-storageblob }}"
+        account_name: "{{ storage_account }}"
+        container_name: my-blobs
+        blob_name: "Microsoft_Azure.svg"
+      register: svg_info
+
+    - name: Assert blob facts for URL-uploaded blob
+      ansible.builtin.assert:
+        that:
+          - svg_info.blob.name == "Microsoft_Azure.svg"
+          - svg_info.blob.content_settings.content_type == "image/svg+xml"
+          - svg_info.blob.standard_blob_tier == 'Hot'
+
     - name: Update the blob with I(standard_blob_tier=Cool)
       azure.azcollection.azure_rm_storageblob:
         resource_group: "{{ resource_group }}-storageblob"
