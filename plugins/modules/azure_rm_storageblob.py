@@ -294,7 +294,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             content_md5=dict(type='str'),
         )
 
-        mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src'), ('source_url', 'src'), ('source_url', 'dest'), ('source_url', 'batch_upload_src')]
+        mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src'),
+                              ('source_url', 'src'), ('source_url', 'dest'), ('source_url', 'batch_upload_src')]
 
         self.blob_service_client = None
         self.blob_details = None
