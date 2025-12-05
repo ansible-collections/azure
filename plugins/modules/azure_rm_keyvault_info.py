@@ -357,7 +357,7 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
                 self.fail("resource_group is required when filtering by hsm_name")
         elif self.resource_group:
             self.results['keyvaults'] = self.list_vault_by_resource_group()
-            self.results['hsms'] = self.list_hsm_by_resource_group_hsm()
+            self.results['hsms'] = self.list_hsm_by_resource_group()
         else:
             self.results['keyvaults'] = self.list_vault()
             self.results['hsms'] = self.list_hsm()

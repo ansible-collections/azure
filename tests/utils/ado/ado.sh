@@ -59,7 +59,7 @@ pip install  -I -r "${TEST_DIR}/requirements.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements.txt"
 pip install ansible-lint==25.8.1
 
-timeout=180
+timeout=360
 
 # See: https://docs.ansible.com/ansible/latest/dev_guide/testing/sanity/integration-aliases.html
 echo '--------------------------------------------'

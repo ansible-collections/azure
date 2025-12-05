@@ -344,7 +344,7 @@ storageaccounts:
             sample: true
         network_acls:
             description:
-                - A set of firewall and virtual network rules
+                - A set of firewall, virtual network and resource instance rules.
             returned: always
             type: dict
             sample: {
@@ -366,7 +366,13 @@ storageaccounts:
                             "action": "Allow",
                             "value": "123.234.123.0/24"
                         }
-                    ]
+                        ],
+                    "resource_access_rules": [
+                        {
+                            "resource_id": "/subscriptions/.../BackupVaults/myBackupVault",
+                            "tenant_id": "myTenantId"
+                        }
+                        ]
                     }
         provisioning_state:
             description:
@@ -810,17 +816,28 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             account_dict['network_acls'] = dict(
                 bypass=account_obj.network_rule_set.bypass,
                 default_action=account_obj.network_rule_set.default_action,
-                ip_rules=account_obj.network_rule_set.ip_rules
             )
-            if account_obj.network_rule_set.virtual_network_rules:
-                account_dict['network_acls']['virtual_network_rules'] = []
-                for rule in account_obj.network_rule_set.virtual_network_rules:
-                    account_dict['network_acls']['virtual_network_rules'].append(dict(id=rule.virtual_network_resource_id, action=rule.action))
 
+            account_dict['network_acls']['virtual_network_rules'] = []
+            if account_obj.network_rule_set.virtual_network_rules:
+                for rule in account_obj.network_rule_set.virtual_network_rules:
+                    account_dict['network_acls']['virtual_network_rules'].append(
+                        dict(id=rule.virtual_network_resource_id, action=rule.action)
+                    )
+
+            account_dict['network_acls']['ip_rules'] = []
             if account_obj.network_rule_set.ip_rules:
-                account_dict['network_acls']['ip_rules'] = []
                 for rule in account_obj.network_rule_set.ip_rules:
-                    account_dict['network_acls']['ip_rules'].append(dict(value=rule.ip_address_or_range, action=rule.action))
+                    account_dict['network_acls']['ip_rules'].append(
+                        dict(value=rule.ip_address_or_range, action=rule.action)
+                    )
+
+            account_dict['network_acls']['resource_access_rules'] = []
+            if getattr(account_obj.network_rule_set, 'resource_access_rules', None):
+                for rule in account_obj.network_rule_set.resource_access_rules:
+                    account_dict['network_acls']['resource_access_rules'].append(
+                        dict(resource_id=rule.resource_id, tenant_id=rule.tenant_id)
+                    )
 
         account_dict['primary_endpoints'] = None
         if account_obj.primary_endpoints:
@@ -835,10 +852,10 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         account_dict['secondary_endpoints'] = None
         if account_obj.secondary_endpoints:
             account_dict['secondary_endpoints'] = dict(
-                blob=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.blob, 'blob'),
-                file=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.file, 'file'),
-                queue=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.queue, 'queue'),
-                table=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.primary_endpoints.table, 'table'),
+                blob=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.secondary_endpoints.blob, 'blob'),
+                file=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.secondary_endpoints.file, 'file'),
+                queue=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.secondary_endpoints.queue, 'queue'),
+                table=self.format_endpoint_dict(account_dict['name'], account_key[1], account_obj.secondary_endpoints.table, 'table'),
             )
             if account_key[1]:
                 account_dict['secondary_endpoints']['key'] = '{0}'.format(account_key[1])
@@ -848,11 +865,11 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         blob_mgmt_props = self.get_blob_mgmt_props(account_dict['resource_group'], account_dict['name'])
         if blob_mgmt_props and blob_mgmt_props.cors and blob_mgmt_props.cors.cors_rules:
             account_dict['blob_cors'] = [dict(
-                allowed_origins=to_native(x.allowed_origins),
-                allowed_methods=to_native(x.allowed_methods),
+                allowed_origins=[to_native(o) for o in x.allowed_origins],
+                allowed_methods=[to_native(m) for m in x.allowed_methods],
                 max_age_in_seconds=x.max_age_in_seconds,
-                exposed_headers=to_native(x.exposed_headers),
-                allowed_headers=to_native(x.allowed_headers)
+                exposed_headers=[to_native(h) for h in x.exposed_headers],
+                allowed_headers=[to_native(h) for h in x.allowed_headers],
             ) for x in blob_mgmt_props.cors.cors_rules]
         blob_client_props = self.get_blob_client_props(account_dict['resource_group'], account_dict['name'], account_dict['kind'])
         if blob_client_props and blob_client_props['static_website']:

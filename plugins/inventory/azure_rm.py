@@ -156,7 +156,6 @@ except ImportError:
 
 from collections import namedtuple
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
-from ansible.module_utils.six import iteritems
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMAuth
 from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
@@ -178,6 +177,7 @@ try:
     from azure.mgmt.core.polling.arm_polling import ARMPolling
     from azure.core.polling import LROPoller
     from netaddr import IPAddress
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     Configuration = object
     parse_resource_id = object
@@ -199,11 +199,11 @@ class AzureRMRestConfiguration(Configuration):
         if not base_url:
             base_url = 'https://management.azure.com'
 
-        credential_scopes = base_url + '/.default'
+        credential_scopes = [f"{base_url}/.default"]
 
         super(AzureRMRestConfiguration, self).__init__()
 
-        self.authentication_policy = BearerTokenCredentialPolicy(credentials, credential_scopes)
+        self.authentication_policy = BearerTokenCredentialPolicy(credentials, *credential_scopes)
         self.credentials = credentials
         self.subscription_id = subscription_id
 
@@ -303,8 +303,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def _serialize(self, hosts):
         results = []
         for h in hosts:
-            results.append(dict(default_inventory_hostname=h.default_inventory_hostname,
-                                hostvars=h.hostvars))
+            try:
+                host_data = dict(default_inventory_hostname=h.default_inventory_hostname,
+                                 hostvars=h.hostvars)
+            except ResourceNotFoundError as e:
+                continue
+            results.append(host_data)
         return results
 
     def _credential_setup(self):
@@ -434,7 +438,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             # FUTURE: configurable default IP list? can already do this via hostvar_expressions
             self.inventory.set_variable(inventory_hostname, "ansible_host",
                                         next(chain(hostvars['public_ipv4_address'], hostvars['private_ipv4_addresses']), None))
-            for k, v in iteritems(hostvars):
+            for k, v in hostvars.items():
                 # FUTURE: configurable hostvar prefix? Makes docs harder...
                 self.inventory.set_variable(inventory_hostname, k, v)
 

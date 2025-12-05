@@ -226,6 +226,24 @@ EXAMPLES = '''
     enabled: true
     state: generate
 
+- name: Rotate Key Vault Certificate with a renewed PEM bundle
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    cert_data: "{{ lookup('file', 'new_cert.pem') }}" # PEM must include private key + cert
+    policy:
+      content_type: "application/x-pem-file"
+    state: import
+
+- name: Rotate Key Vault Certificate with a renewed PFX bundle
+  azure_rm_keyvaultcertificate:
+    vault_uri: https://vault{{ rpfx }}.vault.azure.net
+    name: fredcerticate
+    cert_data: "{{ lookup('file', 'new_cert.pfx') | b64encode }}" # PFX must include private key + cert
+    password: Password@****
+    policy:
+      content_type: "application/x-pkcs12"
+    state: import
 
 - name: Update the keyvault certificate
   azure_rm_keyvaultcertificate:
@@ -544,6 +562,13 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.keyvault.certificates import CertificateClient, CertificatePolicy, LifetimeAction
     import base64
+    import hashlib
+    try:
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.serialization import pkcs12
+    except Exception:
+        hashes = None
+        pkcs12 = None
     from azure.core.polling import LROPoller
 except ImportError:
     # This is handled in azure_rm_common
@@ -720,6 +745,52 @@ def deleted_certificatebundle_to_dict(certificate):
     return response
 
 
+def _cert_data_thumbprint_sha1(cert_data_str, content_type=None, password=None):
+    """
+    Returns SHA-1 thumbprint (bytes) of the leaf certificate contained in cert_data_str.
+    Supports PEM ('-----BEGIN CERTIFICATE-----') and PKCS12 (application/x-pkcs12) if cryptography is available.
+    Returns None when parsing fails (caller should decide fallback behavior).
+    """
+    try:
+        # PEM: extract first CERT block and hash its DER
+        if "-----BEGIN CERTIFICATE-----" in cert_data_str:
+            lines = cert_data_str.strip().splitlines()
+            collecting = False
+            b64 = []
+            for ln in lines:
+                if ln.startswith("-----BEGIN CERTIFICATE-----"):
+                    collecting = True
+                    b64 = []
+                    continue
+                if ln.startswith("-----END CERTIFICATE-----"):
+                    collecting = False
+                    der = base64.b64decode("".join(b64))
+                    return hashlib.sha1(der).digest()
+                if collecting:
+                    b64.append(ln.strip())
+
+        # PKCS#12 (PFX): parse via cryptography if available
+        if content_type and content_type.lower() in ("application/x-pkcs12", "application/x-pfx"):
+            if pkcs12 and hashes:
+                try:
+                    raw = base64.b64decode(cert_data_str)
+                except Exception:
+                    raw = cert_data_str.encode("utf-8", "ignore")
+                pk = pkcs12.load_key_and_certificates(raw, None if password in (None, "") else password.encode("utf-8"))
+                if pk and pk[1]:
+                    return pk[1].fingerprint(hashes.SHA1())
+            return None
+
+        # Fallback: attempt base64->DER->SHA1
+        try:
+            der = base64.b64decode(cert_data_str)
+            return hashlib.sha1(der).digest()
+        except Exception:
+            return None
+    except Exception:
+        return None
+
+
 policy_spec = dict(
     issuer_name=dict(type='str', choices=['self', 'unknown']),
     subject=dict(type='str'),
@@ -761,7 +832,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
                                     policy=dict(type='dict', options=policy_spec),
                                     enabled=dict(type='bool'),
                                     password=dict(type='str', no_log=True),
-                                    cert_data=dict(type='str'),
+                                    cert_data=dict(type='str', no_log=True),
                                     state=dict(
                                         type='str',
                                         required=True,
@@ -777,7 +848,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
 
         self.results = dict(changed=False)
         self._client = None
-        required_if = [('state', 'import', ['cert_data', 'password'])]
+        required_if = [('state', 'import', ['cert_data'])]
 
         super(AzureRMKeyVaultCertificate,
               self).__init__(derived_arg_spec=self.module_arg_spec,
@@ -801,6 +872,9 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
 
         del_response = self.get_deleted_certificate()
         response = self.get_certificate()
+
+        if self.state == 'import' and del_response is not None and response is None:
+            self.fail("The certificate {0} is soft-deleted and recoverable; recover or purge before importing".format(self.name))
 
         if self.state == 'delete':
             if response is not None:
@@ -842,6 +916,28 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
                     changed = True
                     if not self.check_mode:
                         response = self.update_certificate_properties()
+
+                if self.state == 'import' and self.cert_data:
+                    existing_thumb_b64 = response['properties'].get('x509_thumbprint')
+                    existing_thumb = None
+                    if existing_thumb_b64:
+                        try:
+                            existing_thumb = base64.b64decode(existing_thumb_b64)
+                        except Exception:
+                            existing_thumb = None
+
+                    new_thumb = _cert_data_thumbprint_sha1(self.cert_data, (self.policy or {}).get('content_type'), password=self.password)
+
+                    should_import = False
+                    if new_thumb is None or existing_thumb is None:
+                        should_import = True
+                    else:
+                        should_import = (new_thumb != existing_thumb)
+
+                    if should_import:
+                        changed = True
+                        if not self.check_mode:
+                            response = self.import_certificate()
             else:
                 changed = True
                 if self.state == 'import':
@@ -883,7 +979,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
         self.log("Create the certificate {0}".format(self.name))
 
         lifetime_actions = []
-        for item in self.policy['lifetime_actions']:
+        for item in (self.policy.get('lifetime_actions') or []):
             lifetime_actions.append(LifetimeAction(**item))
 
         try:
@@ -926,8 +1022,21 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
         self.log("Import the certificate {0}".format(self.name))
 
         try:
+            raw_bytes = None
+            ct = (self.policy or {}).get('content_type')
+            if ct and ct.lower() in ("application/x-pkcs12", "application/x-pfx"):
+                # Expect cert_data to be Base64 text of the PFX; decode to raw bytes
+                try:
+                    raw_bytes = base64.b64decode(self.cert_data)
+                except Exception:
+                    # raw binary encoded as latin-1-safe text; avoid utf-8
+                    raw_bytes = self.cert_data.encode("latin-1")
+            else:
+                # PEM or unknown: treat as text content; SDK accepts PEM bytes
+                raw_bytes = self.cert_data.encode('utf-8')
+
             response = self._client.import_certificate(certificate_name=self.name,
-                                                       certificate_bytes=self.cert_data.encode('utf-8'),
+                                                       certificate_bytes=raw_bytes,
                                                        enabled=self.enabled,
                                                        password=self.password,
                                                        tags=self.tags)
@@ -1011,7 +1120,7 @@ class AzureRMKeyVaultCertificate(AzureRMModuleBaseExt):
         self.log("Update the certificate policy {0}".format(self.name))
 
         lifetime_actions = []
-        for item in self.policy['lifetime_actions']:
+        for item in (self.policy.get('lifetime_actions') or []):
             lifetime_actions.append(LifetimeAction(**item))
 
         policy = CertificatePolicy(subject=self.policy.get('subject'),

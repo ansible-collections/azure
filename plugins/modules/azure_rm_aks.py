@@ -574,6 +574,30 @@ options:
                     - The Admin password for the cluster.
                 required: true
                 type: str
+            gmsa_profile:
+                description:
+                    - Windows Group Managed Service Accounts (gMSA).
+                type: dict
+                suboptions:
+                    enabled:
+                        description:
+                            - Whether to enable gMSA in the cluster.
+                        type: bool
+                        default: false
+                    dns_server:
+                        description:
+                            - Specifies the DNS server for Windows gMSA. Optional if you have
+                              configured the DNS server in the vnet which is used to create
+                              the managed cluster.
+                        required: false
+                        type: str
+                    root_domain_name:
+                        description:
+                            - Specifies the root domain name for Windows gMSA. Optional if you have
+                              configured the DNS server in the vnet which is used to create
+                              the managed cluster.
+                        required: false
+                        type: str
     disable_local_accounts:
         description:
             - If set to true, getting static credentials will be disabled for this cluster.
@@ -762,6 +786,8 @@ EXAMPLES = '''
     windows_profile:
       admin_username: azureuser
       admin_password: Password@0329
+      gmsa_profile:
+        enabled: true
     aad_profile:
       managed: true
     agent_pool_profiles:
@@ -1001,7 +1027,8 @@ def create_windows_profile_dict(windowsprofile):
     if windowsprofile:
         return dict(
             admin_username=windowsprofile.admin_username,
-            admin_password=windowsprofile.admin_password
+            admin_password=windowsprofile.admin_password,
+            gmsa_profile=windowsprofile.gmsa_profile.as_dict() if windowsprofile.gmsa_profile else {},
         )
     else:
         return None
@@ -1148,6 +1175,14 @@ managed_identity_spec = dict(
 windows_profile_spec = dict(
     admin_username=dict(type='str', required=True),
     admin_password=dict(type='str', no_log=True, required=True),
+    gmsa_profile=dict(
+        type='dict',
+        options=dict(
+            enabled=dict(type='bool', default=False),
+            dns_server=dict(type='str', required=False),
+            root_domain_name=dict(type='str', required=False),
+        )
+    )
 )
 
 
@@ -1477,6 +1512,15 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                             if not compare_addon(response['addon'].get(addon_name), self.addon.get(key), ADDONS[key].get('config')):
                                 to_be_updated = True
 
+                    if self.windows_profile:
+                        if not self.default_compare({},
+                                                    self.windows_profile.get('gmsa_profile'),
+                                                    response['windows_profile'].get('gmsa_profile'),
+                                                    '', dict(compare=[])):
+                            to_be_updated = True
+                        else:
+                            self.windows_profile['gmsa_profile'] = response['windows_profile']['gmsa_profile']
+
                     if not self.default_compare({}, self.security_profile, response['security_profile'], '', dict(compare=[])):
                         to_be_updated = True
                     else:
@@ -1706,7 +1750,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
             return create_aks_dict(response)
         except Exception as exc:
             self.log('Error attempting to create the AKS instance.')
-            self.fail("Error creating the AKS instance: {0}".format(exc.message))
+            self.fail("Error creating the AKS instance: {0}".format(exc))
 
     def update_aks_tags(self):
         try:
@@ -1847,9 +1891,14 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
         :param: windowsprofile: dict with the parameters to setup the ManagedClusterWindowsProfile
         :return: ManagedClusterWindowsProfile
         '''
+        gmsa_profile = None
+        if windowsprofile.get('gmsa_profile'):
+            gmsa_profile = self.managedcluster_models.WindowsGmsaProfile(**windowsprofile.get('gmsa_profile'))
+
         return self.managedcluster_models.ManagedClusterWindowsProfile(
             admin_username=windowsprofile['admin_username'],
-            admin_password=windowsprofile['admin_password']
+            admin_password=windowsprofile['admin_password'],
+            gmsa_profile=gmsa_profile
         )
 
     def create_network_profile_instance(self, network):

@@ -312,7 +312,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         if results["object_id"] and self.return_owners:
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_owners(results["object_id"]))
-            results["group_owners"] = [self.result_to_dict(object) for object in ret.value]
+            results["group_owners"] = [self.result_to_dict(object) for object in ret]
 
         if results["object_id"] and self.return_group_members:
             ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(results["object_id"]))
@@ -320,7 +320,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         if results["object_id"] and self.return_member_groups:
             ret = asyncio.get_event_loop().run_until_complete(self.get_member_groups(results["object_id"]))
-            results["member_groups"] = [self.result_to_dict(object) for object in list(ret.value)]
+            results["member_groups"] = [self.result_to_dict(object) for object in ret]
 
         if results["object_id"] and self.check_membership:
             filter = "id eq '{0}' ".format(self.check_membership)
@@ -364,7 +364,16 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
             ),
         )
-        return await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
+        response = await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
+        groups = []
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.by_group_id(group_id).owners.with_url(response.odata_next_link).get(
+                request_configuration=request_configuration)
+            if response:
+                groups += response.value
+        return groups
 
     async def get_group_members(self, group_id, filters=None):
         if self.raw_membership:
@@ -383,7 +392,16 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         try:
             response = await self._client.groups.by_group_id(group_id).transitive_members.get(
                 request_configuration=request_configuration)
-            return response.value
+            groups = []
+
+            if response:
+                groups += response.value
+            while response is not None and response.odata_next_link is not None:
+                response = await self._client.groups.by_group_id(group_id).transitive_members.with_url(response.odata_next_link).get(
+                    request_configuration=request_configuration)
+                if response:
+                    groups += response.value
+            return groups
         except Exception:
             return
 
@@ -392,17 +410,36 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
             query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
                 # this ensures service principals are returned
                 # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
-                expand=["members"]
+                # expand=["members"]
             ),
         )
         if filters:
             request_configuration.query_parameters.filter = filters
-        return await self._client.groups.by_group_id(group_id).members.get(
+        response = await self._client.groups.by_group_id(group_id).members.get(
             request_configuration=request_configuration)
+        groups = []
+
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.by_group_id(group_id).members.with_url(response.odata_next_link).get(
+                request_configuration=request_configuration)
+            if response:
+                groups += response.value
+        return groups
 
     async def get_member_groups(self, obj_id):
         request_body = GetMemberGroupsPostRequestBody(security_enabled_only=False)
-        return await self._client.groups.by_group_id(obj_id).get_member_groups.post(body=request_body)
+        response = await self._client.groups.by_group_id(obj_id).get_member_groups.post(body=request_body)
+        groups = []
+        if response:
+            groups += response.value
+        while response is not None and response.odata_next_link is not None:
+            response = await self._client.groups.by_group_id(obj_id).get_member_groups.with_url(response.odata_next_link).post(
+                body=request_body)
+            if response:
+                groups += response.value
+        return groups
 
 
 def main():

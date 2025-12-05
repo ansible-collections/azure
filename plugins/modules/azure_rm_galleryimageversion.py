@@ -560,7 +560,7 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                             if kwargs[key]['source_image'].get('id') is not None:
                                 self.body['storage_profile']['source']['id'] = kwargs[key]['source_image'].get('id')
                             elif kwargs[key]['source_image'].get('virtual_machine_id') is not None:
-                                self.body['storage_profile']['source']['virtual_machine_id'] = kwargs[key]['source_image'].get('virtual_machine_id')
+                                self.body['storage_profile']['source']['virtualMachineId'] = kwargs[key]['source_image'].get('virtual_machine_id')
                             elif kwargs[key]['source_image'].get('resource_group') is not None and kwargs[key]['source_image'].get('name') is not None:
                                 self.body['storage_profile']['source']['id'] = ('/subscriptions/' +
                                                                                 self.subscription_id +
@@ -610,13 +610,13 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
                                         kwargs[key]['os_disk']['source'].get('storage_account') is not None:
                                     resource_group = kwargs[key]['os_disk']['source'].get('resource_group')
                                     storage_account = kwargs[key]['os_disk']['source'].get('storage_account')
-                                    self.body['storage_profile']['os_disk_image']['source']['id'] = ('/subscriptions/' +
-                                                                                                     self.subscription_id +
-                                                                                                     '/resourceGroups/' +
-                                                                                                     resource_group +
-                                                                                                     '/providers/Microsoft.Storage' +
-                                                                                                     '/storageAccounts/' +
-                                                                                                     storage_account)
+                                    self.body['storage_profile']['os_disk_image']['source']['storageAccountId'] = ('/subscriptions/' +
+                                                                                                                   self.subscription_id +
+                                                                                                                   '/resourceGroups/' +
+                                                                                                                   resource_group +
+                                                                                                                   '/providers/Microsoft.Storage' +
+                                                                                                                   '/storageAccounts/' +
+                                                                                                                   storage_account)
                                     self.body['storage_profile']['os_disk_image']['source']['uri'] = kwargs[key]['os_disk']['source'].get('uri')
                                 else:
                                     self.fail("The os_disk.source parameters config errors")

@@ -220,6 +220,98 @@
         that:
           - facts['certificates'] | length == 0
 
+    - name: Generate test RSA private key (PEM)
+      ansible.builtin.command:
+        cmd: >
+          openssl genrsa -out "{{ playbook_dir }}/cert.key" 2048
+      args:
+        creates: "{{ playbook_dir }}/cert.key"
+
+    - name: Generate self-signed certificate (PEM)
+      ansible.builtin.command:
+        cmd: >
+          openssl req -x509 -new -nodes -key "{{ playbook_dir }}/cert.key"
+          -sha256 -days 365 -subj "/CN=ansible-test" -out "{{ playbook_dir }}/cert.crt"
+      args:
+        creates: "{{ playbook_dir }}/cert.crt"
+
+    - name: Build PEM bundle (key + cert) for Key Vault import
+      ansible.builtin.copy:
+        dest: "{{ cert_file }}"
+        mode: "0600"
+        content: |
+          {{ lookup('file', playbook_dir ~ '/cert.key') }}
+          {{ lookup('file', playbook_dir ~ '/cert.crt') }}
+
+    - name: Import new certificate for rotation
+      azure.azcollection.azure_rm_keyvaultcertificate:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: "cert{{ rpfx }}"
+        cert_data: "{{ lookup('file', cert_file) }}"
+        state: import
+        policy:
+          content_type: "application/x-pem-file"
+      register: rotate_result
+
+    - name: Assert the keyvault certificate rotated
+      ansible.builtin.assert:
+        that: rotate_result is changed
+
+    - name: Re-import same certificate PEM (idempotent check)
+      azure.azcollection.azure_rm_keyvaultcertificate:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: "cert{{ rpfx }}"
+        cert_data: "{{ lookup('file', cert_file) }}"
+        state: import
+        policy:
+          content_type: "application/x-pem-file"
+      register: idempotent_result
+
+    - name: Assert no change on re-import
+      ansible.builtin.assert:
+        that: idempotent_result is not changed
+
+    - name: Generate PKCS#12 bundle from generated key and cert
+      ansible.builtin.command:
+        cmd: >
+          openssl pkcs12 -export
+          -inkey "{{ playbook_dir }}/cert.key"
+          -in "{{ playbook_dir }}/cert.crt"
+          -out "{{ playbook_dir }}/cert.pfx"
+          -passout pass:{{ cert_password }}
+      args:
+        creates: "{{ playbook_dir }}/cert.pfx"
+
+    - name: Import PKCS#12 certificate
+      azure.azcollection.azure_rm_keyvaultcertificate:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: "cert-pfx-{{ rpfx }}"
+        cert_data: "{{ lookup('file', playbook_dir ~ '/cert.pfx') | b64encode }}"
+        password: "{{ cert_password }}"
+        state: import
+        policy:
+          content_type: "application/x-pkcs12"
+      register: rotate_pfx_result
+
+    - name: Assert the keyvault certificate PKCS#12 rotated
+      ansible.builtin.assert:
+        that: rotate_pfx_result is changed
+
+    - name: Re-import same certificate PFX (idempotent check)
+      azure.azcollection.azure_rm_keyvaultcertificate:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        name: "cert-pfx-{{ rpfx }}"
+        cert_data: "{{ lookup('file', playbook_dir ~ '/cert.pfx') | b64encode }}"
+        password: "{{ cert_password }}"
+        state: import
+        policy:
+          content_type: "application/x-pkcs12"
+      register: idempotent_pfx_result
+
+    - name: Assert no change on re-import of PFX
+      ansible.builtin.assert:
+        that: idempotent_pfx_result is not changed
+
     - name: Delete instance of Key Vault
       azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvaultcertificate"

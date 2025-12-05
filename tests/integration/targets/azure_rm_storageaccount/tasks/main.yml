@@ -65,6 +65,7 @@
         - "{{ storage_account_name_default }}07"
         - "{{ storage_account_name_default }}08"
         - "{{ storage_account_name_default }}09"
+        - "{{ storage_account_name_default }}10"
 
     - name: Create new storage account with defaults (omitted parameters)
       azure.azcollection.azure_rm_storageaccount:
@@ -449,6 +450,40 @@
           - explicit_output.state.network_acls.bypass == "AzureServices"
           - explicit_output.state.network_acls.default_action == "Deny"
           - explicit_output.state.network_acls.ip_rules | length == 1
+
+    - name: Create storage account with resource_access_rules
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}10"
+        account_type: Standard_LRS
+        kind: StorageV2
+        public_network_access: Enabled
+        network_acls:
+          default_action: Deny
+          bypass: AzureServices
+          resource_access_rules:
+            - resource_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-storageaccount/providers/Microsoft.DataProtection/BackupVaults/testVault"
+              tenant_id: "{{ tenant_id }}"
+            - resource_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-storageaccount/providers/Microsoft.ApiManagement/service/testAPI"
+              tenant_id: "{{ tenant_id }}"
+      register: resource_acl_output
+    - name: Assert resource_access_rules applied
+      ansible.builtin.assert:
+        that:
+          - resource_acl_output is changed
+          - resource_acl_output.state.network_acls.resource_access_rules | length == 2
+          - resource_acl_output.state.network_acls.resource_access_rules[0].tenant_id == tenant_id
+
+    - name: Gather storage account facts for resource_access_rules
+      azure.azcollection.azure_rm_storageaccount_info:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}10"
+      register: resource_acl_info
+    - name: Assert resource_access_rules in facts
+      ansible.builtin.assert:
+        that:
+          - resource_acl_info.storageaccounts[0].network_acls.resource_access_rules | length == 2
+          - resource_acl_info.storageaccounts[0].network_acls.default_action == "Deny"
 
     - name: Update existing storage account (idempotence)
       azure.azcollection.azure_rm_storageaccount:

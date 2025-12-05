@@ -1,7 +1,7 @@
 - name: Create a new resource group for postgresql flexible server test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-postgresqlflexibleserver"
-    location: eastus
+    location: westus2
 
 - name: For postgresql flexible server test
   block:

@@ -2177,10 +2177,13 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                         if 'private_ip_allocation_method' in item and item['private_ip_allocation_method'] is not None:
                             item['private_ip_allocation_method'] = _snake_to_camel(item['private_ip_allocation_method'], True)
                         if 'public_ip_address' in item and item['public_ip_address'] is not None:
-                            id = public_ip_id(self.subscription_id,
-                                              kwargs['resource_group'],
-                                              item['public_ip_address'])
-                            item['public_ip_address'] = {'id': id}
+                            pip = item['public_ip_address']
+                            pip_id = (pip if is_valid_resource_id(pip) else public_ip_id(
+                                self.subscription_id,
+                                kwargs['resource_group'],
+                                pip
+                            ))
+                            item['public_ip_address'] = {'id': pip_id}
                         if 'subnet' in item and item['subnet'] is not None and 'name' in item['subnet'] and item['subnet']['name'] is not None and \
                                 'virtual_network_name' in item['subnet'] and item['subnet']['virtual_network_name'] is not None:
                             id = subnet_id(self.subscription_id,

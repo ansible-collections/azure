@@ -1,4 +1,54 @@
 # Change Log
+## v3.12.0 (2025-11-28)
+
+### FEATURE ENHANCEMENT
+  - plugins/lookup/azure_keyvault_secret.py: Update lookup plugins to use auth_source ([#2107](https://github.com/ansible-collections/azure/pull/2107))
+  - plugins/lookup/azure_service_principal_attribute.py: Update lookup plugins to use auth_source ([#2107](https://github.com/ansible-collections/azure/pull/2107))
+  - plugins/doc_fragments/azure_plugin.py: Update lookup plugins to use auth_source ([#2107](https://github.com/ansible-collections/azure/pull/2107))
+  - plugins/modules/azure_rm_appgateway.py: Normalize references azure_rm_appgateway ([#2108](https://github.com/ansible-collections/azure/pull/2108))
+  - plugins/modules/azure_rm_storageaccount.py: azure_rm_storageaccount added support to handle resource instance rules ([#2109](https://github.com/ansible-collections/azure/pull/2109))
+  - plugins/modules/azure_rm_storageaccount_info.py: azure_rm_storageaccount added support to handle resource instance rules ([#2109](https://github.com/ansible-collections/azure/pull/2109))
+  - plugins/modules/azure_rm_aks.py: Added gMSA support ([#2111](https://github.com/ansible-collections/azure/pull/2111))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_galleryimageversion.py: azure_rm_galleryimageversion to align with current Azure Compute Gallery API ([#2114](https://github.com/ansible-collections/azure/pull/2114))
+  - plugins/inventory/azure_rm.py: Fix subscription not found when azure_rm inventory runs in Azure US Government ([#2116](https://github.com/ansible-collections/azure/pull/2116))
+  - plugins/modules/azure_rm_networkinterface.py: Change IP configuration to construct list instead of set ([#2119](https://github.com/ansible-collections/azure/pull/2119))
+
+
+## v3.11.0 (2025-11-07)
+
+### NEW MODULES
+  - azure_rm_monitorscheduledqueryrules.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
+  - azure_rm_monitorscheduledqueryrules_info.py:([#2090](https://github.com/ansible-collections/azure/pull/2090))
+
+### BUG FIXING
+  - azure_rm_keyvault_info.py: Correct method call ([#2098](https://github.com/ansible-collections/azure/pull/2098))
+  - plugins/lookup/azure_keyvault_secret.py: Fix regression when using MSI ([#2096](https://github.com/ansible-collections/azure/pull/2096))
+  - requirements.txt: Remove pin of third party packages ([#2092](https://github.com/ansible-collections/azure/pull/2092))
+  - plugins/lookup/azure_service_principal_attribute.py: Fix typo ([#2091](https://github.com/ansible-collections/azure/pull/2091))
+
+
+## v3.10.0 (2025-10-30)
+
+### NEW MODULES
+  - extensions/eda/plugins/event_source/azure_event_hub.py: ([#2078](https://github.com/ansible-collections/azure/pull/2078))
+
+### FEATURE ENHANCEMENT
+  - azure_rm_aks.py: Add 'none' option to network_plugin for AKS module ([#2073](https://github.com/ansible-collections/azure/pull/2073))
+  - azure_rm_subnet.py: Add support for "NetworkSecurityGroupEnabled" and "Rout eTableEnabled" in private_endpoint_network_policies ([#2080](https://github.com/ansible-collections/azure/pull/2080))
+  - azure_rm_storageaccount: Add auth_mode to azure_rm_storageaccount ([#2079](https://github.com/ansible-collections/azure/pull/2079))
+  - azure_keyvault_secret.py: Update lookup plugins to support ENV vars ([#2084](https://github.com/ansible-collections/azure/pull/2084))
+  - azure_service_principal_attribute.py: Update lookup plugins to support ENV vars ([#2084](https://github.com/ansible-collections/azure/pull/2084))
+  - requirements.txt: Re-generate requirments file ([#2087](https://github.com/ansible-collections/azure/pull/2087))
+
+### BUG FIXING
+  - README.md:
+    - Update `SUPPORT` section in readme ([#2071](https://github.com/ansible-collections/azure/pull/2071))
+    - Fix a type in README.md ([#2072](https://github.com/ansible-collections/azure/pull/2072))
+  - azure_rm.py: Fix wrong conditional for vmss presence ([#2083](https://github.com/ansible-collections/azure/pull/2083))
+
+
 ## v3.9.0 (2025-09-29)
 
 ### NEW MODULES
