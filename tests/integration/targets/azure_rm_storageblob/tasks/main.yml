@@ -246,6 +246,18 @@
         resource_group: "{{ resource_group }}-storageblob"
         account_name: "{{ storage_account }}2"
         container_name: my-blobs
+        blob: "Microsoft_Azure.png"
+        state: absent
+      register: output
+    - name: Assert the blob deleted
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: Delete blob object
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}-storageblob"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
         blob: "Ratings.png"
         state: absent
       register: output
