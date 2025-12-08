@@ -264,7 +264,7 @@ options:
                         description:
                             - Identifier of Azure Key Vault key.
                         type: str
-                    key_vault_network_acces:
+                    key_vault_network_access:
                         description:
                             - Network access of key vault.
                         type: str
@@ -275,8 +275,8 @@ options:
                     key_vault_resource_id:
                         description:
                             - Resource ID of key vault.
-                            - When I(key_vault_network_acces=Private), this field is required and must be a valid resource ID.
-                            - When I(key_vault_network_acces=Public), leave the field empty.
+                            - When I(key_vault_network_access=Private), this field is required and must be a valid resource ID.
+                            - When I(key_vault_network_access=Public), leave the field empty.
                         type: str
     service_principal:
         description:
@@ -1332,7 +1332,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         options=dict(
                             enabled=dict(type='bool', default=False),
                             key_id=dict(type='str'),
-                            key_vault_network_acces=dict(type='str', choices=['Private', 'Public'], default='Public'),
+                            key_vault_network_access=dict(type='str', choices=['Private', 'Public'], default='Public'),
                             key_vault_resource_id=dict(type='str')
                         )
                     ),
@@ -1530,6 +1530,11 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         to_be_updated = True
                     else:
                         self.auto_upgrade_profile = response['auto_upgrade_profile']
+
+                    if not self.default_compare({}, self.aad_profile, response['aad_profile'], '', dict(compare=[])):
+                        to_be_updated = True
+                    else:
+                        self.aad_profile = response['aad_profile']
 
                     for profile_result in response['agent_pool_profiles']:
                         matched = False
