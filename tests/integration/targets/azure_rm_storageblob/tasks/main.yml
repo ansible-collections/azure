@@ -140,6 +140,38 @@
       ansible.builtin.assert:
         that: output is changed
 
+    - name: Upload from web URL to existing container
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}-storageblob"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob: 'Microsoft_Azure.png'
+        source_url: 'https://logos-world.net/wp-content/uploads/2021/03/Microsoft-Azure-Logo.png'
+        content_type: image/png
+        standard_blob_tier: Hot
+        force: true
+      register: url_upload
+
+    - name: Assert URL upload changed
+      ansible.builtin.assert:
+        that:
+          - url_upload is changed
+
+    - name: Get blob facts (URL-uploaded blob)
+      azure.azcollection.azure_rm_storageblob_info:
+        resource_group: "{{ resource_group }}-storageblob"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob_name: "Microsoft_Azure.png"
+      register: png_info
+
+    - name: Assert blob facts for URL-uploaded blob
+      ansible.builtin.assert:
+        that:
+          - png_info.blob.name == "Microsoft_Azure.png"
+          - png_info.blob.content_settings.content_type == "image/png"
+          - png_info.blob.standard_blob_tier == 'Hot'
+
     - name: Update the blob with I(standard_blob_tier=Cool)
       azure.azcollection.azure_rm_storageblob:
         resource_group: "{{ resource_group }}-storageblob"
@@ -208,6 +240,18 @@
         resource_group: "{{ resource_group }}-storageblob"
         name: "{{ storage_account }}"
         state: absent
+
+    - name: Delete blob object
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}-storageblob"
+        account_name: "{{ storage_account }}2"
+        container_name: my-blobs
+        blob: "Microsoft_Azure.png"
+        state: absent
+      register: output
+    - name: Assert the blob deleted
+      ansible.builtin.assert:
+        that: output is changed
 
     - name: Delete blob object
       azure.azcollection.azure_rm_storageblob:

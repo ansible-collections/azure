@@ -18,6 +18,7 @@ description:
     - Create, update and delete blob containers and blob objects.
     - Use to upload a file and store it as a blob object, or download a blob object to a file(upload and download mode)
     - Use to upload a batch of files under a given directory(batch upload mode)
+    - Use to upload a blob directly from a web URL (source_url), enabling server-side copy from HTTP/HTTPS sources.
     - In the batch upload mode, the existing blob object will be overwritten if a blob object with the same name is to be created.
     - the module can work exclusively in three modes, when C(batch_upload_src) is set, it is working in batch upload mode;
       when C(src) is set, it is working in upload mode and when C(dst) is set, it is working in dowload mode.
@@ -129,6 +130,13 @@ options:
             - Cool
             - Cold
             - Hot
+    source_url:
+        description:
+            - HTTP/HTTPS URL of the source file to copy directly into the blob.
+            - The source must be publicly accessible, or authenticated via a shared access signature (SAS) appended
+              to the URL, or via bearer token on supported Azure sources.
+            - Only supported for block blobs.
+        type: str
     state:
         description:
             - State of a container or blob.
@@ -191,6 +199,18 @@ EXAMPLES = '''
     container: foo
     blob: graylog.png
     dest: ~/tmp/images/graylog.png
+
+- name: Upload a blob directly from a web URL (public HTTP/HTTPS)
+  azure_rm_storageblob:
+    resource_group: myResourceGroup
+    storage_account_name: clh0002
+    container: images
+    blob: graylog.png
+    source_url: https://example.com/path/to/graylog.png
+    content_type: image/png
+    cache_control: 'public, max-age=3600'
+    standard_blob_tier: Hot
+    state: present
 '''
 
 RETURN = '''
@@ -261,6 +281,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             force=dict(type='bool', default=False),
             resource_group=dict(required=True, type='str', aliases=['resource_group_name']),
             src=dict(type='str', aliases=['source']),
+            source_url=dict(type='str'),
             batch_upload_src=dict(type='path'),
             batch_upload_dst=dict(type='path'),
             state=dict(type='str', default='present', choices=['absent', 'present']),
@@ -273,7 +294,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             content_md5=dict(type='str'),
         )
 
-        mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src')]
+        mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src'),
+                              ('source_url', 'src'), ('source_url', 'dest'), ('source_url', 'batch_upload_src')]
 
         self.blob_service_client = None
         self.blob_details = None
@@ -288,6 +310,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.force = None
         self.resource_group = None
         self.src = None
+        self.source_url = None
         self.batch_upload_src = None
         self.batch_upload_dst = None
         self.state = None
@@ -342,6 +365,8 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                         self.upload_blob()
                 elif self.dest and self.dest_is_valid():
                     self.download_blob()
+                elif self.source_url:
+                    self.upload_blob_from_url()
 
                 update_tags, self.blob_obj['tags'] = self.update_tags(self.blob_obj.get('tags'))
                 if update_tags:
@@ -559,6 +584,46 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.blob_obj = self.get_blob()
         self.results['changed'] = True
         self.results['actions'].append('created blob {0} from {1}'.format(self.blob, self.src))
+        self.results['container'] = self.container_obj
+        self.results['blob'] = self.blob_obj
+
+    def upload_blob_from_url(self):
+        # Only block blobs are supported via upload_blob_from_url
+        if self.blob_type != 'block':
+            self.fail("source_url is only supported for block blobs. Set blob_type=block.")
+
+        # Prepare optional destination content settings
+        content_settings = None
+        if self.content_type or self.content_encoding or self.content_language or self.content_disposition or \
+                self.cache_control or self.content_md5:
+            content_settings = ContentSettings(
+                content_type=self.content_type,
+                content_encoding=self.content_encoding,
+                content_language=self.content_language,
+                content_disposition=self.content_disposition,
+                cache_control=self.cache_control,
+                content_md5=self.content_md5
+            )
+
+        if not self.check_mode:
+            try:
+                client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+
+                # Upload directly from URL. For standard storage accounts & block blobs
+                client.upload_blob_from_url(
+                    source_url=self.source_url,
+                    overwrite=self.force,
+                    metadata=self.tags,
+                    content_settings=content_settings,
+                    standard_blob_tier=self.get_blob_tier(self.standard_blob_tier)
+                )
+
+            except Exception as exc:
+                self.fail("Error uploading blob from url {0} - {1}".format(self.source_url, str(exc)))
+
+        self.blob_obj = self.get_blob()
+        self.results['changed'] = True
+        self.results['actions'].append('created blob {0} from {1}'.format(self.blob, self.source_url))
         self.results['container'] = self.container_obj
         self.results['blob'] = self.blob_obj
 
