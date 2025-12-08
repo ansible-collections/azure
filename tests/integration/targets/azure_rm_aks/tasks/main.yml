@@ -176,7 +176,7 @@
             type: VirtualMachineScaleSets
             mode: System
         network_profile:
-              load_balancer_sku: standard
+          load_balancer_sku: standard
       register: aad_update_idempotent
 
     - name: Assert AAD admin group update idempotent
