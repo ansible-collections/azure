@@ -590,13 +590,14 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.results['blob'] = self.blob_obj
 
     def upload_blob_from_url(self):
+        # Only block blobs are supported via upload_blob_from_url
         if self.blob_type != 'block':
             self.fail("source_url is only supported for block blobs. Set blob_type=block.")
 
-        # Prepare optional content settings
+        # Prepare optional destination content settings
         content_settings = None
-        if self.content_type or self.content_encoding or self.content_language or \
-                self.content_disposition or self.cache_control or self.content_md5:
+        if self.content_type or self.content_encoding or self.content_language or self.content_disposition or \
+                self.cache_control or self.content_md5:
             content_settings = ContentSettings(
                 content_type=self.content_type,
                 content_encoding=self.content_encoding,
