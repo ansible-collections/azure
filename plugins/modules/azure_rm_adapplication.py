@@ -357,6 +357,15 @@ EXAMPLES = '''
   azure_rm_adapplication:
     app_id: "{{ app_id }}"
     state: absent
+
+- name: Add certificate credential when creating ad application
+  azure_rm_adapplication:
+  display_name: "{{ display_name }}"
+  key_type: AsymmetricX509Cert
+  key_usage: Verify
+  key_value: "{{ cert_file.content }}" # slurp gives base64 of the file; module normalizes to DER bytes
+  tenant: "{{ tenant_id }}"
+  subscription_id: "{{ subscription_id }}"
 '''
 
 RETURN = '''
@@ -453,6 +462,8 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     import datetime
+    import base64
+    import re
     import dateutil.parser
     import uuid
     import asyncio
@@ -821,10 +832,10 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                                                  key_id=self.gen_guid(), secret_text=password,
                                                  custom_key_identifier=custom_key_id)]  # value ? secret_text
         elif key_value:
-            key_creds = [
-                KeyCredential(start_date_time=start_date, end_date_time=end_date, key_id=self.gen_guid(), key=key_value,
-                              # value ? key
-                              usage=key_usage, type=key_type, custom_key_identifier=custom_key_id)]
+            key_bytes = self._normalize_cert_key_value(key_value)
+            key_creds = [KeyCredential(start_date_time=start_date, end_date_time=end_date,
+                                       key_id=self.gen_guid(), key=key_bytes, usage=key_usage,
+                                       type=key_type, custom_key_identifier=custom_key_id)]
 
         return password_creds, key_creds
 
@@ -832,6 +843,43 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         # utf16 is used by AAD portal. Do not change it to other random encoding
         # unless you know what you are doing.
         return key_description.encode('utf-16')
+
+    def _normalize_cert_key_value(self, key_value):
+        """
+        Normalize a certificate to raw DER bytes suitable for KeyCredential.key.
+
+        Accepts:
+        - raw bytes: already DER, returned as-is
+        - str (PEM): strip headers and base64-decode to DER bytes
+        - str (base64 DER): base64-decode to DER bytes
+        - other types: best-effort bytes conversion
+
+        Returns:
+        DER bytes
+        """
+        if isinstance(key_value, bytes):
+            return key_value
+
+        if not isinstance(key_value, str):
+            try:
+                return bytes(key_value)
+            except Exception:
+                return str(key_value).encode("utf-8")
+
+        s = key_value.strip()
+
+        # PEM with BEGIN/END headers
+        m = re.search(r"-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----", s, re.S)
+        if m:
+            pem_b64 = re.sub(r"\s+", "", m.group(1))
+            return base64.b64decode(pem_b64)
+
+        # Base64 DER
+        try:
+            return base64.b64decode(s)
+        except Exception:
+            # Last resort: treat as UTF-8 bytes
+            return s.encode("utf-8")
 
     def gen_guid(self):
         return uuid.uuid4()

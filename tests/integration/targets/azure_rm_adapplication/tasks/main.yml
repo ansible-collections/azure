@@ -92,6 +92,47 @@
   ansible.builtin.assert:
     that: diff_output.app_diff[0].app_display_name == "{{ display_name }}"
 
+- name: Generate test RSA private key (PEM)
+  ansible.builtin.command:
+    cmd: >
+      openssl genrsa -out "{{ playbook_dir }}/testcert.key" 2048
+  args:
+    creates: "{{ playbook_dir }}/testcert.key"
+
+- name: Generate self-signed certificate (PEM)
+  ansible.builtin.command:
+    cmd: >
+      openssl req -x509 -new -nodes -key "{{ playbook_dir }}/testcert.key"
+      -sha256 -days 365 -subj "/CN=ansible-test" -out "{{ playbook_dir }}/testcert.crt"
+  args:
+    creates: "{{ playbook_dir }}/testcert.crt"
+
+- name: Convert PEM to DER
+  ansible.builtin.command:
+    cmd: >
+      openssl x509 -in {{ playbook_dir }}/testcert.crt -outform DER -out {{ playbook_dir }}/testcert.cer
+  args:
+    creates: "{{ playbook_dir }}/testcert.cer"
+
+- name: Slurp DER certificate
+  ansible.builtin.slurp:
+    src: "{{ playbook_dir }}/testcert.cer"
+  register: cert_file
+
+- name: Create application with certificate key_value
+  azure.azcollection.azure_rm_adapplication:
+    display_name: "{{ display_name }}_cert"
+    key_type: AsymmetricX509Cert
+    key_usage: Verify
+    key_value: "{{ cert_file.content }}"
+  register: cert_app_output
+
+- name: Assert certificate app created successfully
+  ansible.builtin.assert:
+    that:
+      - cert_app_output is changed
+      - cert_app_output.object_id is defined
+
 - name: Delete ad app by app_id
   azure.azcollection.azure_rm_adapplication:
     app_id: "{{ create_output.app_id }}"
