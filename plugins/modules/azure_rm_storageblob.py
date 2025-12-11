@@ -611,13 +611,34 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             try:
                 client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
 
-                # Generate block ID and stage block from URL
-                block_id = base64.b64encode(uuid.uuid4().hex.encode()).decode()
-                client.stage_block_from_url(block_id=block_id, source_url=self.source_url)
+                # Determine source size (HEAD request)
+                import requests
+                head_resp = requests.head(self.source_url)
+                if head_resp.status_code != 200 or 'Content-Length' not in head_resp.headers:
+                    self.fail("Unable to determine source size for URL: {0}".format(self.source_url))
+                total_size = int(head_resp.headers['Content-Length'])
 
-                # Commit block list
+                # Azure max block size (4000 MiB)
+                max_block_size = 4000 * 1024 * 1024
+                block_ids = []
+                offset = 0
+
+                # Chunked upload if file > max_block_size
+                while offset < total_size:
+                    length = min(max_block_size, total_size - offset)
+                    block_id = base64.b64encode(uuid.uuid4().bytes).decode('utf-8')
+                    client.stage_block_from_url(
+                        block_id=block_id,
+                        source_url=self.source_url,
+                        source_offset=offset,
+                        source_length=length
+                    )
+                    block_ids.append(block_id)
+                    offset += length
+
+                # Commit all blocks
                 client.commit_block_list(
-                    [block_id],
+                    block_ids,
                     metadata=self.tags,
                     content_settings=content_settings,
                     standard_blob_tier=self.get_blob_tier(self.standard_blob_tier)
