@@ -155,6 +155,38 @@
         that:
           - aad_update is changed
 
+    - name: Update AKS instance with AAD admin group (idempotent)
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+          admin_group_object_ids:
+            - "11111111-2222-3333-4444-555555555555" # Dummy GUID
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: aad_update_idem
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - aad_update_idem is not changed
+
     - name: Get AKS fact
       azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
