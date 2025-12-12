@@ -262,7 +262,7 @@ try:
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
-    from azure.mgmt.rdbms.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
+    from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from azure.mgmt.containerregistry import ContainerRegistryManagementClient
     from azure.mgmt.containerinstance import ContainerInstanceManagementClient
