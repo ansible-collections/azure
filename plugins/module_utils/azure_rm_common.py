@@ -262,7 +262,7 @@ try:
     from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
     from azure.mgmt.rdbms.mysql import MySQLManagementClient
-    from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
+    from azure.mgmt.rdbms.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
     from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from azure.mgmt.containerregistry import ContainerRegistryManagementClient
     from azure.mgmt.containerinstance import ContainerInstanceManagementClient
@@ -1291,8 +1291,7 @@ class AzureRMModuleBase(object):
         self.log('Getting PostgreSQL client')
         if not self._postgresql_flexible_client:
             self._postgresql_flexible_client = self.get_mgmt_svc_client(PostgreSQLFlexibleManagementClient,
-                                                                        base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                        api_version='2024-08-01')
+                                                                        base_url=self._cloud_environment.endpoints.resource_manager)
         return self._postgresql_flexible_client
 
     @property
