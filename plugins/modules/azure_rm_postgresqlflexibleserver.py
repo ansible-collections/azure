@@ -887,7 +887,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         try:
             # structure of parameters for update must be changed
             response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                      server_name=self.name, 
+                                                                                      server_name=self.name,
                                                                                       parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
