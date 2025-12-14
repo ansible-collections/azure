@@ -561,7 +561,7 @@ servers:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-    import azure.mgmt.rdbms.postgresql_flexibleservers.models as PostgreSQLFlexibleModels
+    from azure.mgmt.postgresqlflexibleservers import models as PostgreSQLFlexibleModels
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -879,39 +879,36 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         return self.results
 
     def update_postgresqlflexibleserver(self, body):
-        '''
-        Updates PostgreSQL Flexible Server with the specified configuration.
-        :return: deserialized PostgreSQL Flexible Server instance state dictionary
-        '''
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            # structure of parameters for update must be changed
-            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                      server_name=self.name,
-                                                                                      parameters=body)
+            # Use PATCH model for efficiency
+            patch_model = self._to_model(body, is_patch=True)
+
+            response = self.postgresql_flexible_client.servers.begin_update(
+                resource_group_name=self.resource_group,
+                server_name=self.name,
+                parameters=patch_model
+            )
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-
         except Exception as exc:
-            self.log('Error attempting to create the PostgreSQL Flexible Server instance.')
             self.fail("Error updating the PostgreSQL Flexible Server instance: {0}".format(str(exc)))
         return self.format_item(response)
 
     def create_postgresqlflexibleserver(self, body):
-        '''
-        Creates PostgreSQL Flexible Server with the specified configuration.
-        :return: deserialized PostgreSQL Flexible Server instance state dictionary
-        '''
         self.log("Creating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                      server_name=self.name,
-                                                                                      parameters=body)
+            # Convert dict to typed Server model
+            server_model = self._to_model(body, is_patch=False)
+
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(
+                resource_group_name=self.resource_group,
+                server_name=self.name,
+                parameters=server_model
+            )
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
-
         except Exception as exc:
-            self.log('Error attempting to create the PostgreSQL Flexible Server instance.')
             self.fail("Error creating the PostgreSQL Flexible Server instance: {0}".format(str(exc)))
         return self.format_item(response)
 
@@ -1052,6 +1049,92 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         return result
 
+    def _to_model(self, params, is_patch=False):
+        """
+        Convert dict params to typed SDK model.
+        :param params: dict of user inputs
+        :param is_patch: True for ServerForPatch (update), False for Server (create)
+        :return: PostgreSQLFlexibleModels.Server or ServerForPatch
+        """
+        if is_patch:
+            model = PostgreSQLFlexibleModels.ServerForPatch()
+            if params.get('sku'):
+                model.sku = PostgreSQLFlexibleModels.SkuForPatch(
+                    name=params['sku'].get('name'),
+                    tier=params['sku'].get('tier')
+                )
+        else:
+            model = PostgreSQLFlexibleModels.Server(
+                location=params.get('location'),
+                administrator_login=params.get('administrator_login'),
+                administrator_login_password=params.get('administrator_login_password'),
+                version=params.get('version'),
+                create_mode="Default" if params.get('create_mode') in ['Create', 'Update', None] else params.get('create_mode'),
+                source_server_resource_id=params.get('source_server_resource_id'),
+                point_in_time_utc=params.get('point_in_time_utc')
+            )
+            if params.get('sku'):
+                model.sku = PostgreSQLFlexibleModels.Sku(
+                    name=params['sku'].get('name'),
+                    tier=params['sku'].get('tier')
+                )
+
+        # Common fields for both create and patch
+        if params.get('storage'):
+            model.storage = PostgreSQLFlexibleModels.Storage(storage_size_gb=params['storage'].get('storage_size_gb'))
+        if params.get('backup'):
+            model.backup = PostgreSQLFlexibleModels.Backup(
+                backup_retention_days=params['backup'].get('backup_retention_days'),
+                geo_redundant_backup=params['backup'].get('geo_redundant_backup')
+            )
+        if params.get('network'):
+            model.network = PostgreSQLFlexibleModels.Network(
+                public_network_access=params['network'].get('public_network_access'),
+                delegated_subnet_resource_id=params['network'].get('delegated_subnet_resource_id'),
+                private_dns_zone_arm_resource_id=params['network'].get('private_dns_zone_arm_resource_id')
+            )
+        if params.get('maintenance_window'):
+            mw = params['maintenance_window']
+            model.maintenance_window = PostgreSQLFlexibleModels.MaintenanceWindow(
+                custom_window=mw.get('custom_window'),
+                start_hour=mw.get('start_hour'),
+                start_minute=mw.get('start_minute'),
+                day_of_week=mw.get('day_of_week')
+            )
+        if params.get('high_availability'):
+            ha = params['high_availability']
+            model.high_availability = PostgreSQLFlexibleModels.HighAvailability(
+                mode=ha.get('mode'),
+                standby_availability_zone=ha.get('standby_availability_zone')
+            )
+        if params.get('identity'):
+            model.identity = self._convert_identity(params.get('identity'))
+        if params.get('auth_config'):
+            model.auth_config = self._convert_auth(params.get('auth_config'))
+        if params.get('tags'):
+            model.tags = params.get('tags')
+
+        return model
+
+    def _convert_identity(self, identity):
+        if not identity:
+            return PostgreSQLFlexibleModels.UserAssignedIdentity(type="None")
+        if identity.get('type') == 'UserAssigned':
+            ids = identity.get('user_assigned_identities', {}).get('id', [])
+            return PostgreSQLFlexibleModels.UserAssignedIdentity(
+                type="UserAssigned",
+                user_assigned_identities={mid: PostgreSQLFlexibleModels.UserIdentity() for mid in ids}
+            )
+        return PostgreSQLFlexibleModels.UserAssignedIdentity(type=identity.get('type'))
+
+    def _convert_auth(self, auth):
+        if not auth:
+            return None
+        return PostgreSQLFlexibleModels.AuthConfig(
+            active_directory_auth=auth.get('active_directory_auth'),
+            password_auth=auth.get('password_auth'),
+            tenant_id=auth.get('tenant_id')
+        )
 
 def main():
     """Main execution"""
