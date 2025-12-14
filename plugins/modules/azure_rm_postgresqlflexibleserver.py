@@ -1136,6 +1136,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             tenant_id=auth.get('tenant_id')
         )
 
+
 def main():
     """Main execution"""
     AzureRMPostgreSqlFlexibleServers()
