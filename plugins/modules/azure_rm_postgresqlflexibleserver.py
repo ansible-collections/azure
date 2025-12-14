@@ -1116,14 +1116,15 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
     def _convert_identity(self, identity):
         if not identity or not isinstance(identity, dict):
-            return PostgreSQLFlexibleModels.UserAssignedIdentity(type="None")
-        if identity.get('type') == 'UserAssigned':
+            return None
+        id_type = identity.get('type')
+        if id_type == 'UserAssigned':
             ids = identity.get('user_assigned_identities', {}).get('id', [])
             return PostgreSQLFlexibleModels.UserAssignedIdentity(
                 type="UserAssigned",
                 user_assigned_identities={mid: PostgreSQLFlexibleModels.UserIdentity() for mid in ids}
             )
-        return PostgreSQLFlexibleModels.UserAssignedIdentity(type=identity.get('type') or "None")
+        return PostgreSQLFlexibleModels.UserAssignedIdentity(type=id_type)
 
     def _convert_auth(self, auth):
         if not auth:
