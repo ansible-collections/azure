@@ -881,13 +881,12 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
     def update_postgresqlflexibleserver(self, body):
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            # Use PATCH model for efficiency
-            patch_model = self._to_model(body, is_patch=True)
+            server_model = self._to_model(body, is_patch=True)
 
             response = self.postgresql_flexible_client.servers.begin_update(
                 resource_group_name=self.resource_group,
                 server_name=self.name,
-                parameters=patch_model
+                parameters=server_model
             )
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
@@ -898,7 +897,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
     def create_postgresqlflexibleserver(self, body):
         self.log("Creating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            # Convert dict to typed Server model
             server_model = self._to_model(body, is_patch=False)
 
             response = self.postgresql_flexible_client.servers.begin_create_or_update(
