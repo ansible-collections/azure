@@ -1039,7 +1039,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         if item.identity is not None:
             result['identity'] = item.identity.as_dict()
         else:
-            result['identity'] = PostgreSQLFlexibleModels.Identity(type='None').as_dict()
+            result['identity'] = PostgreSQLFlexibleModels.UserAssignedIdentity(type='None').as_dict()
         if item.auth_config is not None:
             result['auth_config']['active_directory_auth'] = item.auth_config.active_directory_auth
             result['auth_config']['password_auth'] = item.auth_config.password_auth
@@ -1118,15 +1118,14 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
     def _convert_identity(self, identity):
         if not identity or not isinstance(identity, dict):
-            return PostgreSQLFlexibleModels.Identity(type="None")
-        id_type = identity.get('type') or "None"
-        if id_type == 'UserAssigned':
+            return PostgreSQLFlexibleModels.UserAssignedIdentity(type="None")
+        if identity.get('type') == 'UserAssigned':
             ids = identity.get('user_assigned_identities', {}).get('id', [])
-            return PostgreSQLFlexibleModels.Identity(
+            return PostgreSQLFlexibleModels.UserAssignedIdentity(
                 type="UserAssigned",
                 user_assigned_identities={mid: PostgreSQLFlexibleModels.UserIdentity() for mid in ids}
             )
-        return PostgreSQLFlexibleModels.Identity(type=id_type or "None")
+        return PostgreSQLFlexibleModels.UserAssignedIdentity(type=identity.get('type') or "None")
 
     def _convert_auth(self, auth):
         if not auth:
