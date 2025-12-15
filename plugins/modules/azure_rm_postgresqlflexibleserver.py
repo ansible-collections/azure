@@ -885,17 +885,28 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         current_ids = []
         if isinstance(curr_identity, dict):
-            current_ids = list(curr_identity.get('userAssignedIdentities', {}).keys())
+            current_ids = list((curr_identity.get('userAssignedIdentities') or {}).keys())
 
-        final_ids = requested_ids if not append else list({*current_ids, *requested_ids})
+        current_norm_map = {rid.strip().casefold(): rid for rid in current_ids}
+        requested_norm_map = {rid.strip().casefold(): rid for rid in requested_ids}
+
+        if append:
+            final_norm_keys = set(current_norm_map.keys()) | set(requested_norm_map.keys())
+        else:
+            final_norm_keys = set(requested_norm_map.keys())
+
+        final_ids = [
+            current_norm_map.get(k) or requested_norm_map.get(k)
+            for k in sorted(final_norm_keys)
+        ]
 
         sdk_identity = PostgreSQLFlexibleModels.UserAssignedIdentity(
             type=id_type,
             user_assigned_identities={rid: {} for rid in final_ids} if final_ids else None
         )
 
-        curr_type = curr_identity.get('type') if isinstance(curr_identity, dict) else 'None'
-        should_update = (id_type != curr_type) or (set(final_ids) != set(current_ids))
+        curr_type = (curr_identity or {}).get('type', 'None')
+        should_update = (id_type != curr_type) or (final_norm_keys != set(current_norm_map.keys()))
 
         return should_update, sdk_identity
 
