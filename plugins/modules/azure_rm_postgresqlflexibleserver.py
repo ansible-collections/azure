@@ -82,10 +82,6 @@ options:
             - '16'
             - '17'
             - '18'
-    fully_qualified_domain_name:
-        description:
-            - The fully qualified domain name of a server.
-        type: str
     backup:
         description:
             - Backup properties of a server.
@@ -169,15 +165,6 @@ options:
         description:
             - Availability zone information of the server
         type: str
-    create_mode:
-        description:
-            - The mode to create a new PostgreSQL server.
-        type: str
-        choices:
-            - Default
-            - Create
-            - Update
-            - PointInTimeRestore
     source_server_resource_id:
         description:
             - The source server resource ID to restore from.
@@ -292,7 +279,6 @@ EXAMPLES = '''
     version: 12
     storage:
       storage_size_gb: 128
-    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
     backup:
       backup_retention_days: 7
       geo_redundant_backup: Disabled
@@ -303,7 +289,6 @@ EXAMPLES = '''
       day_of_week: 0
     point_in_time_utc: 2023-05-31T00:28:17.7279547+00:00
     availability_zone: 1
-    create_mode: Default
 
 - name: Delete PostgreSQL Flexible Server
   azure_rm_postgresqlflexibleserver:
@@ -651,9 +636,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 type='str',
                 choices=['11', '12', '13', '14', '15', '16', '17', '18']
             ),
-            fully_qualified_domain_name=dict(
-                type='str',
-            ),
             storage=dict(
                 type='dict',
                 options=storage_spec
@@ -679,10 +661,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             ),
             availability_zone=dict(
                 type='str'
-            ),
-            create_mode=dict(
-                type='str',
-                choices=['Default', 'Create', 'Update', 'PointInTimeRestore']
             ),
             is_start=dict(
                 type='bool',
@@ -743,7 +721,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 if kwargs[key] is not None:
                     self.parameters[key] = kwargs[key]
                     if key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',
-                               'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
+                               'high_availability', 'maintenance_window', 'auth_config']:
                         self.update_parameters[key] = kwargs[key]
 
         old_response = None
@@ -1094,15 +1072,18 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                     tier=params['sku'].get('tier')
                 )
         else:
+            inferred_mode = 'Default'
+            if params.get('source_server_resource_id') and params.get('point_in_time_utc'):
+                inferred_mode = 'PointInTimeRestore'
             model = PostgreSQLFlexibleModels.Server(
                 location=params.get('location'),
                 administrator_login=params.get('administrator_login'),
                 administrator_login_password=params.get('administrator_login_password'),
                 version=params.get('version'),
-                create_mode="Default" if params.get('create_mode') in ['Create', 'Update', None] else params.get('create_mode'),
                 source_server_resource_id=params.get('source_server_resource_id'),
                 point_in_time_utc=params.get('point_in_time_utc')
             )
+            model.create_mode = inferred_mode
             if params.get('sku'):
                 model.sku = PostgreSQLFlexibleModels.Sku(
                     name=params['sku'].get('name'),
