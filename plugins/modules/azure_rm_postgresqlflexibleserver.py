@@ -81,6 +81,7 @@ options:
             - '15'
             - '16'
             - '17'
+            - '18'
     fully_qualified_domain_name:
         description:
             - The fully qualified domain name of a server.
@@ -648,7 +649,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             ),
             version=dict(
                 type='str',
-                choices=['11', '12', '13', '14', '15', '16', '17']
+                choices=['11', '12', '13', '14', '15', '16', '17', '18']
             ),
             fully_qualified_domain_name=dict(
                 type='str',
@@ -728,31 +729,22 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.results = dict(changed=False)
         self.state = None
 
-        self._managed_identity = None
-
         super(AzureRMPostgreSqlFlexibleServers, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                supports_check_mode=True,
                                                                supports_tags=True)
-
-    @property
-    def managed_identity(self):
-        if not self._managed_identity:
-            self._managed_identity = {"identity": PostgreSQLFlexibleModels.UserAssignedIdentity,
-                                      "user_assigned": PostgreSQLFlexibleModels.UserIdentity
-                                      }
-        return self._managed_identity
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
 
         for key in list(self.module_arg_spec.keys()) + ['tags']:
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
-            elif kwargs[key] is not None:
-                self.parameters[key] = kwargs[key]
-                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',
-                            'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
-                    self.update_parameters[key] = kwargs[key]
+            if key in kwargs:
+                if hasattr(self, key):
+                    setattr(self, key, kwargs[key])
+                if kwargs[key] is not None:
+                    self.parameters[key] = kwargs[key]
+                    if key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',
+                               'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
+                        self.update_parameters[key] = kwargs[key]
 
         old_response = None
         response = None
@@ -771,8 +763,8 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             if self.state == 'present':
                 if not self.check_mode:
                     if self.identity:
-                        update_identity, new_identity = self.update_managed_identity(new_identity=self.identity)
-                        if update_identity:
+                        unused_result, new_identity = self.update_managed_identity(new_identity=self.identity)
+                        if new_identity:
                             self.parameters['identity'] = new_identity
                     response = self.create_postgresqlflexibleserver(self.parameters)
                     if self.is_stop:
@@ -877,6 +869,35 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.results['state'] = response
 
         return self.results
+
+    def update_managed_identity(self, new_identity, curr_identity=None):
+        """
+        Merge requested UAMI IDs with current server IDs and return SDK model.
+        Returns: (should_update: bool, sdk_identity: UserAssignedIdentity or None)
+        """
+        if not new_identity or not isinstance(new_identity, dict):
+            return False, None
+
+        id_type = new_identity.get('type') or 'None'
+        ids_block = new_identity.get('user_assigned_identities', {}) or {}
+        requested_ids = [rid for rid in ids_block.get('id', []) if isinstance(rid, str)]
+        append = ids_block.get('append', True)
+
+        current_ids = []
+        if isinstance(curr_identity, dict):
+            current_ids = list(curr_identity.get('userAssignedIdentities', {}).keys())
+
+        final_ids = requested_ids if not append else list({*current_ids, *requested_ids})
+
+        sdk_identity = PostgreSQLFlexibleModels.UserAssignedIdentity(
+            type=id_type,
+            user_assigned_identities={rid: {} for rid in final_ids} if final_ids else None
+        )
+
+        curr_type = curr_identity.get('type') if isinstance(curr_identity, dict) else 'None'
+        should_update = (id_type != curr_type) or (set(final_ids) != set(current_ids))
+
+        return should_update, sdk_identity
 
     def update_postgresqlflexibleserver(self, body):
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
@@ -1037,7 +1058,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         if item.identity is not None:
             result['identity'] = item.identity.as_dict()
         else:
-            result['identity'] = PostgreSQLFlexibleModels.UserAssignedIdentity(type='None').as_dict()
+            result['identity'] = None
         if item.auth_config is not None:
             result['auth_config']['active_directory_auth'] = item.auth_config.active_directory_auth
             result['auth_config']['password_auth'] = item.auth_config.password_auth
@@ -1106,7 +1127,11 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 standby_availability_zone=ha.get('standby_availability_zone')
             )
         if params.get('identity'):
-            model.identity = self._convert_identity(params.get('identity'))
+            ident = params['identity']
+            if isinstance(ident, PostgreSQLFlexibleModels.UserAssignedIdentity):
+                model.identity = ident
+            else:
+                model.identity = self._convert_identity(ident)
         if params.get('auth_config'):
             model.auth_config = self._convert_auth(params.get('auth_config'))
         if params.get('tags'):
@@ -1117,12 +1142,16 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
     def _convert_identity(self, identity):
         if not identity or not isinstance(identity, dict):
             return None
-        id_type = identity.get('type')
+
+        id_type = identity.get('type') or 'None'
         if id_type == 'UserAssigned':
-            ids = identity.get('user_assigned_identities', {}).get('id', [])
+            ids_block = identity.get('user_assigned_identities', {}) or {}
+            ids = ids_block.get('id', []) or []
             return PostgreSQLFlexibleModels.UserAssignedIdentity(
-                type="UserAssigned",
-                user_assigned_identities={mid: PostgreSQLFlexibleModels.UserIdentity() for mid in ids}
+                type='UserAssigned',
+                user_assigned_identities={
+                    rid: {} for rid in ids if isinstance(rid, str)
+                }
             )
         return PostgreSQLFlexibleModels.UserAssignedIdentity(type=id_type)
 
