@@ -249,12 +249,11 @@ container:
 
 import os
 import mimetypes
-import base64
-import uuid
 
 try:
     from azure.storage.blob._models import BlobType, ContentSettings, StandardBlobTier
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.storage.blob import ContentSettings
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -590,11 +589,10 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.results['blob'] = self.blob_obj
 
     def upload_blob_from_url(self):
-        # Only block blobs are supported via upload_blob_from_url
+        # Only support block blobs for source_url
         if self.blob_type != 'block':
             self.fail("source_url is only supported for block blobs. Set blob_type=block.")
 
-        # Prepare optional destination content settings
         content_settings = None
         if self.content_type or self.content_encoding or self.content_language or self.content_disposition or \
                 self.cache_control or self.content_md5:
@@ -606,52 +604,29 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 cache_control=self.cache_control,
                 content_md5=self.content_md5
             )
-
-        if not self.check_mode:
-            try:
-                client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
-
-                # Determine source size (HEAD request)
-                import requests
-                head_resp = requests.head(self.source_url)
-                if head_resp.status_code != 200 or 'Content-Length' not in head_resp.headers:
-                    self.fail("Unable to determine source size for URL: {0}".format(self.source_url))
-                total_size = int(head_resp.headers['Content-Length'])
-
-                # Azure max block size (4000 MiB)
-                max_block_size = 4000 * 1024 * 1024
-                block_ids = []
-                offset = 0
-
-                # Chunked upload if file > max_block_size
-                while offset < total_size:
-                    length = min(max_block_size, total_size - offset)
-                    block_id = base64.b64encode(uuid.uuid4().bytes).decode('utf-8')
-                    client.stage_block_from_url(
-                        block_id=block_id,
-                        source_url=self.source_url,
-                        source_offset=offset,
-                        source_length=length
-                    )
-                    block_ids.append(block_id)
-                    offset += length
-
-                # Commit all blocks
-                client.commit_block_list(
-                    block_ids,
+        try:
+            client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+            if not self.check_mode:
+                # Initiate asynchronous copy operation
+                copy_result = client.start_copy_from_url(
+                    source_url=self.source_url,
                     metadata=self.tags,
-                    content_settings=content_settings,
                     standard_blob_tier=self.get_blob_tier(self.standard_blob_tier)
                 )
+                copy_status = copy_result.get('copy_status', 'pending')
+                self.results['copy_id'] = copy_result.get('copy_id')
+                self.results['copy_status'] = copy_status
 
-            except Exception as exc:
-                self.fail("Error uploading blob from url {0} - {1}".format(self.source_url, str(exc)))
+            self.blob_obj = self.get_blob()
+            self.results['changed'] = True
+            self.results['actions'].append(f'started copy of blob {self.blob} from {self.source_url}')
+            self.results['container'] = self.container_obj
+            self.results['blob'] = self.blob_obj
+            if content_settings:
+                self.results['deferred_http_headers'] = True
 
-        self.blob_obj = self.get_blob()
-        self.results['changed'] = True
-        self.results['actions'].append('created blob {0} from {1}'.format(self.blob, self.source_url))
-        self.results['container'] = self.container_obj
-        self.results['blob'] = self.blob_obj
+        except Exception as exc:
+            self.fail(f"Error copying blob from url {self.source_url} - {str(exc)}")
 
     def download_blob(self):
         if not self.check_mode:
