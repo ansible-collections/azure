@@ -253,7 +253,6 @@ import mimetypes
 try:
     from azure.storage.blob._models import BlobType, ContentSettings, StandardBlobTier
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.storage.blob import ContentSettings
 except ImportError:
     # This is handled in azure_rm_common
     pass
