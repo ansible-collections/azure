@@ -1292,7 +1292,7 @@ class AzureRMModuleBase(object):
         if not self._postgresql_flexible_client:
             self._postgresql_flexible_client = self.get_mgmt_svc_client(PostgreSQLFlexibleManagementClient,
                                                                         base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                        api_version='2024-08-01')
+                                                                        api_version='2025-08-01')
         return self._postgresql_flexible_client
 
     @property
