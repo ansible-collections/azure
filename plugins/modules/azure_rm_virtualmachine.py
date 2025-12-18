@@ -2773,8 +2773,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 if interface_dict['id'] == interface_ref.id:
                     nic_dict = self.serialize_obj(nic, 'NetworkInterface')
                     interface_dict['name'] = int_dict['networkInterfaces']
-
-                    interface_dict['nic_properties'] = nic_dict
+                    interface_dict['properties'] = nic_dict
                     try:
                         ref_props = getattr(interface_ref, 'properties', None)
                         if ref_props is not None and getattr(ref_props, 'delete_option', None):
@@ -2785,9 +2784,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         # Expand public IPs to include config properties
         for interface_dict in result['network_profile']['network_interfaces']:
             ip_confs = []
-            if isinstance(interface_dict.get('nic_properties'), dict) and interface_dict['nic_properties'].get('ip_configurations'):
-                ip_confs = interface_dict['nic_properties']['ip_configurations']
-            elif isinstance(interface_dict.get('properties'), dict) and interface_dict['properties'].get('ip_configurations'):
+            if isinstance(interface_dict.get('properties'), dict) and interface_dict['properties'].get('ip_configurations'):
                 ip_confs = interface_dict['properties']['ip_configurations']
             else:
                 continue

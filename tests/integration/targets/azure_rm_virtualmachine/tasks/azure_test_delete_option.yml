@@ -1,0 +1,230 @@
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
+  ssh_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+
+# delete_option=Delete
+- name: Create network interface for delete_option=Delete test
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    virtual_network: "{{ network_name }}"
+    subnet: "{{ subnet_name }}"
+    open_ports:
+      - 33
+  register: nic_delete_result
+
+- name: Create Spot VM (delete_option=Delete for OS/Data/NIC)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}"
+    vm_size: Standard_B1ms
+    os_type: Linux
+    admin_username: adminuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/adminuser/.ssh/authorized_keys
+        key_data: "{{ ssh_public_key }}"
+    network_interfaces: "{{ interface_name }}"
+    managed_disk_type: Premium_LRS
+    # Spot eviction configuration
+    priority: Spot
+    eviction_policy: Delete
+    max_price: 0.018298
+    # delete_option flags
+    os_disk_delete_option: Delete
+    nic_delete_option: Delete
+    data_disks:
+      - lun: 0
+        disk_size_gb: 8
+        managed_disk_type: Premium_LRS
+        delete_option: Delete
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: vm_create_delete
+
+- name: Assert delete_option flags applied (Delete path)
+  ansible.builtin.assert:
+    that:
+      - vm_create_delete.ansible_facts.azure_vm.storage_profile.os_disk.delete_option == "Delete"
+      - vm_create_delete.ansible_facts.azure_vm.storage_profile.data_disks[0].delete_option == "Delete"
+      - vm_create_delete.ansible_facts.azure_vm.network_profile.network_interfaces[0].properties.delete_option == "Delete"
+
+- name: Trigger Spot eviction (Delete path)
+  ansible.builtin.command: >
+    az vm simulate-eviction
+    --resource-group {{ resource_group }}-vm01
+    --name {{ vm_name }}
+  register: simulate_eviction_delete
+  changed_when: true
+
+- name: Pause 5 minutes to allow ARM to complete eviction (Delete path)
+  ansible.builtin.pause:
+    minutes: 5
+
+- name: OS disk should be gone (Delete path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}"
+  register: osdisk_info_delete
+
+- name: Assert OS disk removed (Delete path)
+  ansible.builtin.assert:
+    that:
+      - osdisk_info_delete.managed_disks | length == 0
+
+- name: Data disk should be gone (Delete path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-datadisk-0"
+  register: datadisk_info_delete
+
+- name: Assert data disk removed (Delete path)
+  ansible.builtin.assert:
+    that:
+      - datadisk_info_delete.managed_disks | length == 0
+
+- name: NIC should be gone (Delete path)
+  azure.azcollection.azure_rm_networkinterface_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+  register: nic_info_delete
+
+- name: Assert NIC removed (Delete path)
+  ansible.builtin.assert:
+    that:
+      - nic_info_delete.networkinterfaces | length == 0
+
+# delete_option=Detach
+- name: Derive names for Detach scenario
+  ansible.builtin.set_fact:
+    vm_name_detach: "{{ vm_name }}-detach"
+    interface_name_detach: "{{ interface_name }}-detach"
+
+- name: Create network interface for delete_option=Detach test
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name_detach }}"
+    virtual_network: "{{ network_name }}"
+    subnet: "{{ subnet_name }}"
+    open_ports:
+      - 33
+  register: nic_detach_result
+
+- name: Create Spot VM (delete_option=Detach for OS/Data/NIC)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+    vm_size: Standard_B1ms
+    os_type: Linux
+    admin_username: adminuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/adminuser/.ssh/authorized_keys
+        key_data: "{{ ssh_public_key }}"
+    network_interfaces: "{{ interface_name_detach }}"
+    managed_disk_type: Premium_LRS
+    # Spot eviction configuration
+    priority: Spot
+    eviction_policy: Delete
+    max_price: 0.018298
+    # delete_option flags
+    os_disk_delete_option: Detach
+    nic_delete_option: Detach
+    data_disks:
+      - lun: 0
+        disk_size_gb: 8
+        managed_disk_type: Premium_LRS
+        delete_option: Detach
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: vm_create_detach
+
+- name: Assert delete_option flags applied (Detach path)
+  ansible.builtin.assert:
+    that:
+      - vm_create_detach.ansible_facts.azure_vm.storage_profile.os_disk.delete_option == "Detach"
+      - vm_create_detach.ansible_facts.azure_vm.storage_profile.data_disks[0].delete_option == "Detach"
+      - vm_create_detach.ansible_facts.azure_vm.network_profile.network_interfaces[0].properties.delete_option == "Detach"
+
+- name: Trigger Spot eviction (Detach path)
+  ansible.builtin.command: >
+    az vm simulate-eviction
+    --resource-group {{ resource_group }}-vm01
+    --name {{ vm_name_detach }}
+  register: simulate_eviction_detach
+  changed_when: true
+
+- name: Pause 5 minutes to allow ARM to complete eviction (Detach path)
+  ansible.builtin.pause:
+    minutes: 5
+
+# Verify Azure-native behavior preserved attached resources
+- name: OS disk should still exist (Detach path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+  register: osdisk_info_detach
+
+- name: Assert OS disk still present (Detach path)
+  ansible.builtin.assert:
+    that:
+      - osdisk_info_detach.managed_disks | length == 1
+
+- name: Data disk should still exist (Detach path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}-datadisk-0"
+  register: datadisk_info_detach
+
+- name: Assert data disk still present (Detach path)
+  ansible.builtin.assert:
+    that:
+      - datadisk_info_detach.managed_disks | length == 1
+
+- name: NIC should still exist (Detach path)
+  azure.azcollection.azure_rm_networkinterface_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name_detach }}"
+  register: nic_info_detach
+
+- name: Assert NIC still present (Detach path)
+  ansible.builtin.assert:
+    that:
+      - nic_info_detach.networkinterfaces | length == 1
+
+- name: Delete NIC (Detach path cleanup)
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name_detach }}"
+    state: absent
+
+- name: Delete OS managed disk (Detach path cleanup)
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+    state: absent
+
+- name: Delete data managed disk (Detach path cleanup)
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}-datadisk-0"
+    state: absent
+
+- name: Destroy subnet
+  azure.azcollection.azure_rm_subnet:
+    resource_group: "{{ resource_group }}-vm01"
+    virtual_network: "{{ network_name }}"
+    name: "{{ subnet_name }}"
+    state: absent
+
+- name: Destroy virtual network
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ network_name }}"
+    state: absent
