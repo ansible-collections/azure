@@ -349,6 +349,15 @@ options:
                     - None
                     - ReadOnly
                     - ReadWrite
+            delete_option:
+                description:
+                    - Specifies the delete behavior for the data disk when deletin the VM.
+                    - When set to C(Delete), the data disk is removed during VM deletion.
+                    - When set to C(Detach), the data disk is preserved.
+                type: str
+                choices:
+                    - Delete
+                    - Detach
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -644,6 +653,24 @@ options:
             - UserData for the VM, which must be base-64 encoded.
             - Customer should notpass any secrets in here. Minimum api-version '2021-03-01'.
         type: str
+    os_disk_delete_option:
+        description:
+            - Specifies the delete behavior for the VM's OS disk when the VM is deleted.
+            - When set to C(Delete), the OS disk will be removed automatically during VM deletion.
+            - When set to C(Detach), the OS disk will be preserved.
+        type: str
+        choices:
+            - Delete
+            - Detach
+    nic_delete_option:
+        description:
+            - Specifies the delete behavior for the VM's NIC when the VM is deleted.
+            - When set to C(Delete), the NIC will be removed automatically during VM deletion.
+            - When set to C(Detach), the NIC will be preserved.
+        type: str
+        choices:
+            - Delete
+            - Detach
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -655,6 +682,7 @@ author:
     - Christopher Perrin (@cperrin88)
     - James E. King III (@jeking3)
 '''
+
 EXAMPLES = '''
 
 - name: Create VM with defaults
@@ -927,6 +955,29 @@ EXAMPLES = '''
       publisher: Canonical
       sku: 22_04-lts-gen2
       version: latest
+
+- name: Create a VM and enable deleteOption on OS disk, data disk and NIC
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vm_name }}"
+    vm_size: Standard_D4s_v3
+    managed_disk_type: Standard_LRS
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: 22_04-lts-gen2
+      version: latest
+    network_interfaces: testvm001
+    os_disk_delete_option: Delete
+    nic_delete_option: Delete
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        storage_container_name: datadisk1
+        storage_blob_name: datadisk1.vhd
+        delete_option: Delete
 
 - name: Remove a VM and all resources that were autocreated
   azure_rm_virtualmachine:
@@ -1254,7 +1305,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_account_name=dict(type='str'),
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
-                    caching=dict(type='str', choices=['None', 'ReadOnly', 'ReadWrite'])
+                    caching=dict(type='str', choices=['None', 'ReadOnly', 'ReadWrite']),
+                    delete_option=dict(type='str', choices=['Delete', 'Detach'])
                 )
             ),
             plan=dict(type='dict'),
@@ -1293,6 +1345,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 )
             ),
             user_data=dict(type='str'),
+            os_disk_delete_option=dict(type='str', choices=['Delete', 'Detach']),
+            nic_delete_option=dict(type='str', choices=['Delete', 'Detach']),
         )
 
         self.resource_group = None
@@ -1539,7 +1593,40 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 current_nics = []
                 results = vm_dict
                 current_osdisk = vm_dict['storage_profile']['os_disk']
-                current_ephemeral = current_osdisk.get('diff_disk_ettings', None)
+                current_osdisk_delete = current_osdisk.get('delete_option')
+                if self.os_disk_delete_option and self.os_disk_delete_option != current_osdisk_delete:
+                    self.log('CHANGED: OS disk delete_option differs.')
+                    differences.append('OS Disk delete_option')
+                    changed = True
+
+                # Data disks delete option diff
+                if self.data_disks and vm_dict['storage_profile'].get('data_disks'):
+                    for dd_arg in self.data_disks:
+                        if dd_arg.get('delete_option') is None:
+                            continue
+                        # find matching disk by lun
+                        match = next((d for d in vm_dict['storage_profile']['data_disks']
+                                      if int(d.get('lun', -1)) == int(dd_arg.get('lun', -2))), None)
+                        if match:
+                            current_dd_delete = match.get('delete_option')
+                            if dd_arg['delete_option'] != current_dd_delete:
+                                self.log(f"CHANGED: Data disk LUN {dd_arg['lun']} delete_option differs.")
+                                differences.append(f"Data Disk {dd_arg['lun']} delete_option")
+                                changed = True
+
+                # NIC reference delete option diff (applies uniformly if user provided a global nic_delete_option)
+                if self.nic_delete_option and vm_dict.get('network_profile', {}).get('network_interfaces'):
+                    for ni in vm_dict['network_profile']['network_interfaces']:
+                        cur = ni.get('properties', {}).get('delete_option')
+                        if cur is None:
+                            cur = ni.get('delete_option')
+                        if cur != self.nic_delete_option:
+                            self.log("CHANGED: NIC delete_option differs.")
+                            differences.append('NIC delete_option')
+                            changed = True
+                            break
+
+                current_ephemeral = current_osdisk.get('diff_disk_settings', None)
                 current_properties = vm_dict
 
                 if self.priority and self.priority != current_properties.get('priority', 'None'):
@@ -1916,8 +2003,30 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if not self.short_hostname:
                         self.short_hostname = self.name
 
-                    nics = [self.compute_models.NetworkInterfaceReference(id=id, primary=(i == 0))
-                            for i, id in enumerate(network_interfaces)]
+                    nics = []
+                    for i, id in enumerate(network_interfaces):
+                        nic_delete = self.nic_delete_option
+
+                        try:
+                            props_cls = getattr(self.compute_models, 'NetworkInterfaceReferenceProperties', None)
+                            if props_cls:
+                                props = props_cls(primary=(i == 0))
+                                if nic_delete:
+                                    try:
+                                        props.delete_option = nic_delete
+                                    except Exception:
+                                        pass
+                                nics.append(self.compute_models.NetworkInterfaceReference(id=id, properties=props))
+                            else:
+                                ref = self.compute_models.NetworkInterfaceReference(id=id, primary=(i == 0))
+                                if nic_delete:
+                                    try:
+                                        ref.delete_option = nic_delete
+                                    except Exception:
+                                        pass
+                                nics.append(ref)
+                        except Exception:
+                            nics.append(self.compute_models.NetworkInterfaceReference(id=id, primary=(i == 0)))
 
                     # os disk
                     if self.managed_disk_type:
@@ -1961,29 +2070,41 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         zones=self.zones,
                         user_data=to_native(base64.b64encode(to_bytes(self.user_data)))
                     )
-
                     if self.swap_os_disk is not None:
+                        osd = self.compute_models.OSDisk(
+                            name=swap_os_disk.get('name'),
+                            managed_disk=swap_os_disk.get('managed_disk'),
+                            os_type=self.os_type,
+                            create_option='attach',
+                        )
+                        if self.os_disk_delete_option:
+                            try:
+                                osd.delete_option = self.os_disk_delete_option
+                            except Exception:
+                                pass
+
                         storage_profile = self.compute_models.StorageProfile(
-                            os_disk=self.compute_models.OSDisk(
-                                name=swap_os_disk.get('name'),
-                                managed_disk=swap_os_disk.get('managed_disk'),
-                                os_type=self.os_type,
-                                create_option='attach',
-                            ),
+                            os_disk=osd,
                             image_reference=image_reference
                         )
                         os_profile = None
                     else:
+                        os_disk_obj = self.compute_models.OSDisk(
+                            name=self.os_disk_name if self.os_disk_name else self.storage_blob_name,
+                            vhd=vhd,
+                            managed_disk=managed_disk,
+                            create_option=self.compute_models.DiskCreateOptionTypes.from_image,
+                            caching=self.os_disk_caching,
+                            disk_size_gb=self.os_disk_size_gb,
+                            diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None
+                        )
+                        if self.os_disk_delete_option:
+                            try:
+                                os_disk_obj.delete_option = self.os_disk_delete_option
+                            except Exception:
+                                pass
                         storage_profile = self.compute_models.StorageProfile(
-                            os_disk=self.compute_models.OSDisk(
-                                name=self.os_disk_name if self.os_disk_name else self.storage_blob_name,
-                                vhd=vhd,
-                                managed_disk=managed_disk,
-                                create_option=self.compute_models.DiskCreateOptionTypes.from_image,
-                                caching=self.os_disk_caching,
-                                disk_size_gb=self.os_disk_size_gb,
-                                diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None
-                            ),
+                            os_disk=os_disk_obj,
                             image_reference=image_reference
                         )
                         os_profile = self.compute_models.OSProfile(
@@ -2147,6 +2268,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 managed_disk=data_disk_managed_disk,
                             ))
 
+                            if data_disk.get('delete_option'):
+                                try:
+                                    data_disks[-1].delete_option = data_disk.get('delete_option')
+                                except Exception:
+                                    pass
+
                         vm_resource.storage_profile.data_disks = data_disks
 
                     # Before creating VM accept terms of plan if `accept_terms` is True
@@ -2195,9 +2322,31 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     self.log("Update virtual machine {0}".format(self.name))
                     self.results['actions'].append('Updated VM {0}'.format(self.name))
-                    nics = [self.compute_models.NetworkInterfaceReference(id=interface['id'], primary=(i == 0))
-                            for i, interface in enumerate(vm_dict['network_profile']['network_interfaces'])]
+                    nics = []
+                    for i, interface in enumerate(vm_dict['network_profile']['network_interfaces']):
+                        id = interface['id']
+                        nic_delete = self.nic_delete_option or interface.get('properties', {}).get('delete_option')
 
+                        try:
+                            props_cls = getattr(self.compute_models, 'NetworkInterfaceReferenceProperties', None)
+                            if props_cls:
+                                props = props_cls(primary=(i == 0))
+                                if nic_delete:
+                                    try:
+                                        props.delete_option = nic_delete
+                                    except Exception:
+                                        pass
+                                nics.append(self.compute_models.NetworkInterfaceReference(id=id, properties=props))
+                            else:
+                                ref = self.compute_models.NetworkInterfaceReference(id=id, primary=(i == 0))
+                                if nic_delete:
+                                    try:
+                                        ref.delete_option = nic_delete
+                                    except Exception:
+                                        pass
+                                nics.append(ref)
+                        except Exception:
+                            nics.append(self.compute_models.NetworkInterfaceReference(id=id, primary=(i == 0)))
                     # os disk
                     if not vm_dict['storage_profile']['os_disk'].get('managedDisk'):
                         managed_disk = None
@@ -2243,12 +2392,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         # pass if the availability set is not set
                         pass
 
-                    if 'imageReference' in vm_dict['storage_profile'].keys():
+                    if 'image_reference' in vm_dict['storage_profile'].keys():
                         if 'id' in vm_dict['storage_profile']['image_reference'].keys():
                             image_reference = self.compute_models.ImageReference(
                                 id=vm_dict['storage_profile']['image_reference']['id']
                             )
-                        elif 'shared_gallery_image_i' in vm_dict['storage_profile'].keys():
+                        elif 'shared_gallery_image_id' in vm_dict['storage_profile'].keys():
                             image_reference = self.compute_models.ImageReference(
                                 shared_gallery_image_id=vm_dict['storage_profile']['image_reference']['shared_gallery_image_id']
                             )
@@ -2303,16 +2452,33 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             image_reference=image_reference
                         )
                     else:
+                        os_disk_obj = self.compute_models.OSDisk(
+                            name=vm_dict['storage_profile']['os_disk'].get('name'),
+                            vhd=vhd,
+                            managed_disk=managed_disk,
+                            create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
+                            os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
+                            caching=vm_dict['storage_profile']['os_disk'].get('caching'),
+                            disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb')
+                        )
+                        try:
+                            current_delete = vm_dict['storage_profile']['os_disk'].get('delete_option')
+                        except Exception:
+                            current_delete = None
+
+                        if self.os_disk_delete_option:
+                            try:
+                                os_disk_obj.delete_option = self.os_disk_delete_option
+                            except Exception:
+                                pass
+                        elif current_delete:
+                            try:
+                                os_disk_obj.delete_option = current_delete
+                            except Exception:
+                                pass
+
                         storage_profile = self.compute_models.StorageProfile(
-                            os_disk=self.compute_models.OSDisk(
-                                name=vm_dict['storage_profile']['os_disk'].get('name'),
-                                vhd=vhd,
-                                managed_disk=managed_disk,
-                                create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
-                                os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
-                                caching=vm_dict['storage_profile']['os_disk'].get('caching'),
-                                disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb')
-                            ),
+                            os_disk=os_disk_obj,
                             image_reference=image_reference
                         )
 
@@ -2441,7 +2607,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 data_disk_vhd = data_disk['vhd']['uri']
                                 data_disk_managed_disk = None
 
-                            data_disks.append(self.compute_models.DataDisk(
+                            data_disk_model = self.compute_models.DataDisk(
                                 lun=int(data_disk['lun']),
                                 name=data_disk.get('name'),
                                 vhd=data_disk_vhd,
@@ -2449,7 +2615,21 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 create_option=data_disk.get('create_option'),
                                 disk_size_gb=int(data_disk.get('disk_size_gb', 0)) or None,
                                 managed_disk=data_disk_managed_disk,
-                            ))
+                            )
+                            requested = None
+                            if self.data_disks:
+                                for dd in self.data_disks:
+                                    if dd.get('lun') == int(data_disk['lun']) and dd.get('delete_option'):
+                                        requested = dd['delete_option']
+                                        break
+                            current = data_disk.get('delete_option')
+                            try:
+                                data_disk_model.delete_option = requested or current
+                            except Exception:
+                                pass
+
+                            data_disks.append(data_disk_model)
+
                         vm_resource.storage_profile.data_disks = data_disks
 
                     if self.security_profile is not None:
@@ -2586,17 +2766,32 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     result['powerstate'] = 'generalized'
 
         # Expand network interfaces to include config properties
-        for interface in vm.network_profile.network_interfaces:
-            int_dict = azure_id_to_dict(interface.id)
+        for interface_ref in vm.network_profile.network_interfaces:
+            int_dict = azure_id_to_dict(interface_ref.id)
             nic = self.get_network_interface(int_dict['resourceGroups'], int_dict['networkInterfaces'])
             for interface_dict in result['network_profile']['network_interfaces']:
-                if interface_dict['id'] == interface.id:
+                if interface_dict['id'] == interface_ref.id:
                     nic_dict = self.serialize_obj(nic, 'NetworkInterface')
                     interface_dict['name'] = int_dict['networkInterfaces']
-                    interface_dict['properties'] = nic_dict
+
+                    interface_dict['nic_properties'] = nic_dict
+                    try:
+                        ref_props = getattr(interface_ref, 'properties', None)
+                        if ref_props is not None and getattr(ref_props, 'delete_option', None):
+                            interface_dict.setdefault('properties', {})['delete_option'] = ref_props.delete_option
+                    except Exception:
+                        pass
+
         # Expand public IPs to include config properties
-        for interface in result['network_profile']['network_interfaces']:
-            for config in interface['properties']['ip_configurations']:
+        for interface_dict in result['network_profile']['network_interfaces']:
+            ip_confs = []
+            if isinstance(interface_dict.get('nic_properties'), dict) and interface_dict['nic_properties'].get('ip_configurations'):
+                ip_confs = interface_dict['nic_properties']['ip_configurations']
+            elif isinstance(interface_dict.get('properties'), dict) and interface_dict['properties'].get('ip_configurations'):
+                ip_confs = interface_dict['properties']['ip_configurations']
+            else:
+                continue
+            for config in ip_confs:
                 if config.get('public_ip_address'):
                     pipid_dict = azure_id_to_dict(config['public_ip_address']['id'])
                     try:
@@ -2607,7 +2802,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                                                               str(exc)))
                     pip_dict = self.serialize_obj(pip, 'PublicIPAddress')
                     config['public_ip_address']['name'] = pipid_dict['publicIPAddresses']
-                    config['public_ip_address']['properties'] = pip_dict['ip_configuration']
+                    try:
+                        config['public_ip_address']['properties'] = pip_dict['ip_configuration']
+                    except Exception:
+                        pass
 
         self.log(result, pretty_print=True)
         if self.state != 'absent' and not result['powerstate']:
