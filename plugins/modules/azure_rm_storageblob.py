@@ -252,7 +252,7 @@ import mimetypes
 
 try:
     from azure.storage.blob._models import BlobType, ContentSettings, StandardBlobTier
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -372,8 +372,11 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 if update_tags:
                     self.update_blob_tags(self.blob_obj['tags'])
 
-                if self.blob_content_settings_differ():
-                    self.update_blob_content_settings()
+                if self.results.get('copy_status') == 'pending':
+                    pass
+                else:
+                    if self.blob_content_settings_differ():
+                        self.update_blob_content_settings()
 
                 if self.standard_blob_tier is not None and self.blob_obj.get('standard_blob_tier') is not None and \
                    self.blob_obj['standard_blob_tier'] != self.standard_blob_tier:
@@ -593,6 +596,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             self.fail("source_url is only supported for block blobs. Set blob_type=block.")
 
         content_settings = None
+        # Stored only, not applied during copy
         if self.content_type or self.content_encoding or self.content_language or self.content_disposition or \
                 self.cache_control or self.content_md5:
             content_settings = ContentSettings(
@@ -604,17 +608,32 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 content_md5=self.content_md5
             )
         try:
+            # Destination blob client
             client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+            # If the blob exists and force is false, skip copy
+            if self.blob_obj and not self.force:
+                self.log(f"Destination blob {self.blob} already exists. Skipping copy. Use force=true to overwrite.")
+                self.results['changed'] = False
+                return
             if not self.check_mode:
-                # Initiate asynchronous copy operation
-                copy_result = client.start_copy_from_url(
-                    source_url=self.source_url,
-                    metadata=self.tags,
-                    standard_blob_tier=self.get_blob_tier(self.standard_blob_tier)
-                )
+                kwargs = {
+                    "source_url": self.source_url,
+                    "metadata": self.tags,
+                    "standard_blob_tier": self.get_blob_tier(self.standard_blob_tier),
+                }
+                # Server-side overwrite protection, equivalent to `--destination-if-none-match`
+                if not self.force:
+                    kwargs["if_none_match"] = "*"
+
+                # Start async copy
+                copy_result = client.start_copy_from_url(**kwargs)
                 copy_status = copy_result.get('copy_status', 'pending')
-                self.results['copy_id'] = copy_result.get('copy_id')
                 self.results['copy_status'] = copy_status
+                self.results['copy_id'] = copy_result.get('copy_id')
+
+                # Defer HTTP headers if copy still pending
+                if content_settings and copy_status == 'pending':
+                    self.results['deferred_http_headers'] = True
 
             self.blob_obj = self.get_blob()
             self.results['changed'] = True
@@ -624,6 +643,15 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             if content_settings:
                 self.results['deferred_http_headers'] = True
 
+        except HttpResponseError as exc:
+            # Azure returns 412 Precondition Failed if the destination exists and If-None-Match was set
+            if getattr(exc, "status_code", None) == 412 and not self.force:
+                self.fail(
+                    f"Copy not started: destination blob '{self.blob}' exists "
+                    f"(precondition If-None-Match violated). Use force=true to overwrite."
+                )
+            else:
+                self.fail(f"Error copying blob from url {self.source_url} - {str(exc)}")
         except Exception as exc:
             self.fail(f"Error copying blob from url {self.source_url} - {str(exc)}")
 
