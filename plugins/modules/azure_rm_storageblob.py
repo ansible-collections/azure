@@ -200,6 +200,20 @@ EXAMPLES = '''
     blob: graylog.png
     dest: ~/tmp/images/graylog.png
 
+- name: Upload a blob directly from a web URL asynchronously (public HTTP/HTTPS)
+  azure_rm_storageblob:
+    resource_group: myResourceGroup
+    storage_account_name: clh0002
+    container: images
+    blob: graylog.png
+    source_url: https://example.com/path/to/graylog.png
+    content_type: image/png
+    cache_control: 'public, max-age=3600'
+    standard_blob_tier: Hot
+    state: present
+  async: 1800
+  poll: 0
+
 - name: Upload a blob directly from a web URL (public HTTP/HTTPS)
   azure_rm_storageblob:
     resource_group: myResourceGroup
@@ -249,6 +263,7 @@ container:
 
 import os
 import mimetypes
+import time
 
 try:
     from azure.storage.blob._models import BlobType, ContentSettings, StandardBlobTier
@@ -372,8 +387,11 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 if update_tags:
                     self.update_blob_tags(self.blob_obj['tags'])
 
-                if self.blob_content_settings_differ():
-                    self.update_blob_content_settings()
+                if self.results.get('copy_status') == 'pending':
+                    pass
+                else:
+                    if self.blob_content_settings_differ():
+                        self.update_blob_content_settings()
 
                 if self.standard_blob_tier is not None and self.blob_obj.get('standard_blob_tier') is not None and \
                    self.blob_obj['standard_blob_tier'] != self.standard_blob_tier:
@@ -588,11 +606,10 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.results['blob'] = self.blob_obj
 
     def upload_blob_from_url(self):
-        # Only block blobs are supported via upload_blob_from_url
+        # Only support block blobs for source_url
         if self.blob_type != 'block':
             self.fail("source_url is only supported for block blobs. Set blob_type=block.")
 
-        # Prepare optional destination content settings
         content_settings = None
         if self.content_type or self.content_encoding or self.content_language or self.content_disposition or \
                 self.cache_control or self.content_md5:
@@ -604,28 +621,48 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 cache_control=self.cache_control,
                 content_md5=self.content_md5
             )
+        try:
+            client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+            # If the blob exists and force is false, skip copy
+            if self.blob_obj and not self.force:
+                self.log(f"Destination blob {self.blob} already exists. Skipping copy. Use force=true to overwrite.")
+                self.results['changed'] = False
+                return
+            if not self.check_mode:
+                kwargs = {
+                    "source_url": self.source_url,
+                    "metadata": self.tags,
+                    "standard_blob_tier": self.get_blob_tier(self.standard_blob_tier),
+                }
 
-        if not self.check_mode:
-            try:
-                client = self.blob_service_client.get_blob_client(container=self.container, blob=self.blob)
+                # Start async copy
+                client.start_copy_from_url(**kwargs)
 
-                # Upload directly from URL. For standard storage accounts & block blobs
-                client.upload_blob_from_url(
-                    source_url=self.source_url,
-                    overwrite=self.force,
-                    metadata=self.tags,
-                    content_settings=content_settings,
-                    standard_blob_tier=self.get_blob_tier(self.standard_blob_tier)
-                )
+                while True:
+                    props = client.get_blob_properties()
+                    # SDK: BlobProperties has `copy` attribute; handle dict-like fallback defensively
+                    copy_props = getattr(props, 'copy', None)
+                    status = getattr(copy_props, 'status', None) if copy_props else None
 
-            except Exception as exc:
-                self.fail("Error uploading blob from url {0} - {1}".format(self.source_url, str(exc)))
+                    if status in ('success', 'completed'):
+                        break
+                    if status in ('failed', 'aborted'):
+                        desc = getattr(copy_props, 'status_description', '') if copy_props else ''
+                        self.fail(f"Server-side copy failed/aborted (status={status}). {desc}")
 
-        self.blob_obj = self.get_blob()
-        self.results['changed'] = True
-        self.results['actions'].append('created blob {0} from {1}'.format(self.blob, self.source_url))
-        self.results['container'] = self.container_obj
-        self.results['blob'] = self.blob_obj
+                    time.sleep(5)
+
+                    # Copy is complete; apply headers if requested
+                if content_settings:
+                    client.set_http_headers(content_settings=content_settings)
+
+            self.blob_obj = self.get_blob()
+            self.results['changed'] = True
+            self.results['actions'].append(f'started copy of blob {self.blob} from {self.source_url}')
+            self.results['container'] = self.container_obj
+            self.results['blob'] = self.blob_obj
+        except Exception as exc:
+            self.fail(f"Error copying blob from url {self.source_url} - {str(exc)}")
 
     def download_blob(self):
         if not self.check_mode:
