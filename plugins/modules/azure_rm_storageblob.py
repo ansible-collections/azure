@@ -163,12 +163,6 @@ options:
         choices:
             - container
             - blob
-    requires_sync:
-        description:
-            - If true, wait for the server-side copy to finish (polling copy status) before returning.
-            - If false, return immediately after initiating the copy (asynchronous).
-        type: bool
-        default: true
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -205,6 +199,20 @@ EXAMPLES = '''
     container: foo
     blob: graylog.png
     dest: ~/tmp/images/graylog.png
+
+- name: Upload a blob directly from a web URL asynchronously (public HTTP/HTTPS)
+  azure_rm_storageblob:
+    resource_group: myResourceGroup
+    storage_account_name: clh0002
+    container: images
+    blob: graylog.png
+    source_url: https://example.com/path/to/graylog.png
+    content_type: image/png
+    cache_control: 'public, max-age=3600'
+    standard_blob_tier: Hot
+    state: present
+  async: 1800
+  poll: 0
 
 - name: Upload a blob directly from a web URL (public HTTP/HTTPS)
   azure_rm_storageblob:
@@ -311,7 +319,6 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             content_disposition=dict(type='str'),
             cache_control=dict(type='str'),
             content_md5=dict(type='str'),
-            requires_sync=dict(type='bool', default=True),
         )
 
         mutually_exclusive = [('src', 'dest'), ('src', 'batch_upload_src'), ('dest', 'batch_upload_src'),
@@ -336,7 +343,6 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.state = None
         self.tags = None
         self.public_access = None
-        self.requires_sync = None
         self.results = dict(
             changed=False,
             actions=[],
@@ -642,39 +648,25 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                 }
 
                 # Start async copy
-                copy_result = client.start_copy_from_url(**kwargs)
-                copy_status = copy_result.get('copy_status', 'pending')
+                client.start_copy_from_url(**kwargs)
 
-                # If requires_sync is true, poll copy status until complete
-                if self.requires_sync and copy_status == 'pending':
-                    start_ts = time.time()
-                    poll_every = 5  # 5 seconds
-                    deadline = start_ts + 1800  # default max 30 min
-                    while True:
-                        props = client.get_blob_properties()
-                        # SDK: BlobProperties has `copy` attribute; handle dict-like fallback defensively
-                        copy_props = getattr(props, 'copy', None)
-                        status = getattr(copy_props, 'status', None) if copy_props else None
+                while True:
+                    props = client.get_blob_properties()
+                    # SDK: BlobProperties has `copy` attribute; handle dict-like fallback defensively
+                    copy_props = getattr(props, 'copy', None)
+                    status = getattr(copy_props, 'status', None) if copy_props else None
 
-                        if status in ('success', 'completed'):
-                            self.results['copy_status'] = 'success'
-                            self.results['copy_id'] = getattr(copy_props, 'id', self.results.get('copy_id'))
-                            break
-                        if status in ('failed', 'aborted'):
-                            desc = getattr(copy_props, 'status_description', '') if copy_props else ''
-                            self.fail(f"Server-side copy failed/aborted (status={status}). {desc}")
+                    if status in ('success', 'completed'):
+                        break
+                    if status in ('failed', 'aborted'):
+                        desc = getattr(copy_props, 'status_description', '') if copy_props else ''
+                        self.fail(f"Server-side copy failed/aborted (status={status}). {desc}")
 
-                        if time.time() > deadline:
-                            self.fail(
-                                f"Timed out waiting for blob copy to complete after 1800s "
-                                f"(last status={status or copy_status})."
-                            )
-
-                        time.sleep(poll_every)
+                    time.sleep(5)
 
                     # Copy is complete; apply headers if requested
-                    if content_settings:
-                        client.set_http_headers(content_settings=content_settings)
+                if content_settings:
+                    client.set_http_headers(content_settings=content_settings)
 
             self.blob_obj = self.get_blob()
             self.results['changed'] = True
