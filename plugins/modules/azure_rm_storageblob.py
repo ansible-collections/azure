@@ -259,18 +259,6 @@ container:
         "name": "foo",
         "tags": {}
     }
-copy_id:
-  description:
-    - The ID of the server-side copy operation started by the source_url upload.
-  returned: when source_url is used
-  type: str
-  sample: "11111111-2222-3333-4444-555555555555"
-copy_status:
-  description:
-    - Final status of the server-side copy operation.
-  returned: when source_url is used
-  type: str
-  sample: "success"
 '''
 
 import os
