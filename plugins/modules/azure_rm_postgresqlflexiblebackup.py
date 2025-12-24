@@ -211,7 +211,7 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         self.log("Creating the PostgreSQL Flexible Backup instance {0}".format(self.backup_name))
 
         try:
-            response = self.postgresql_flexible_client.backups.begin_create(resource_group_name=self.resource_group,
+            response = self.postgresql_flexible_client.backups_automatic_and_on_demand.begin_create(resource_group_name=self.resource_group,
                                                                             server_name=self.server_name,
                                                                             backup_name=self.backup_name)
             if isinstance(response, LROPoller):
@@ -230,7 +230,7 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         '''
         self.log("Deleting the PostgreSQL Flexible Backup instance {0}".format(self.backup_name))
         try:
-            self.postgresql_flexible_client.backups.begin_delete(resource_group_name=self.resource_group,
+            self.postgresql_flexible_client.backups_automatic_and_on_demand.begin_delete(resource_group_name=self.resource_group,
                                                                  server_name=self.server_name,
                                                                  backup_name=self.backup_name)
         except Exception as ec:
@@ -246,7 +246,7 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         self.log("Checking if the PostgreSQL Flexible Backup instance {0} is present".format(self.backup_name))
         found = False
         try:
-            response = self.postgresql_flexible_client.backups.get(resource_group_name=self.resource_group,
+            response = self.postgresql_flexible_client.backups_automatic_and_on_demand.get(resource_group_name=self.resource_group,
                                                                    server_name=self.server_name,
                                                                    backup_name=self.backup_name)
             found = True
