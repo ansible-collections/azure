@@ -158,9 +158,9 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.postgresql_flexible_client.backups.get(resource_group_name=self.resource_group,
-                                                                   server_name=self.server_name,
-                                                                   backup_name=self.backup_name)
+            response = self.postgresql_flexible_client.backups_automatic_and_on_demand.get(resource_group_name=self.resource_group,
+                                                                                           server_name=self.server_name,
+                                                                                           backup_name=self.backup_name)
             self.log("Response : {0}".format(response))
         except ResourceNotFoundError:
             self.log('Could not get backup facts for PostgreSQL Flexible Server.')
@@ -174,8 +174,8 @@ class AzureRMPostgreSqlFlexibleBackupInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.postgresql_flexible_client.backups.list_by_server(resource_group_name=self.resource_group,
-                                                                              server_name=self.server_name)
+            response = self.postgresql_flexible_client.backups_automatic_and_on_demand.list_by_server(resource_group_name=self.resource_group,
+                                                                                                      server_name=self.server_name)
             self.log("Response : {0}".format(response))
         except Exception as ec:
             self.log('Could not list backups facts for PostgreSQL Flexible Servers.')
