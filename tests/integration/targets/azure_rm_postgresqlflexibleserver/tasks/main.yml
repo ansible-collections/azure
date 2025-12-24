@@ -218,6 +218,48 @@
         that:
           - output.state.identity.type == 'None'
 
+    - name: Create postgresql elastic cluster
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
+        resource_group: "{{ new_resource_group }}"
+        name: postflexible{{ rpfx }}
+        sku:
+          name: Standard_D2s_v3
+          tier: GeneralPurpose
+        administrator_login: azureuser
+        administrator_login_password: "{{ password }}"
+        version: 17
+        storage:
+          storage_size_gb: 128
+        backup:
+          backup_retention_days: 7
+          geo_redundant_backup: Disabled
+        network:
+          public_network_access: Disabled
+        maintenance_window:
+          custom_window: Enabled
+          start_hour: 8
+          start_minute: 4
+          day_of_week: 3
+        availability_zone: 2
+        cluster:
+          cluster_size: 3
+          default_database_name: "myclusterdb"
+        create_mode: Default
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        state: present
+      register: elastic_cluster_create
+
+    - name: Assert the postgresql elastic cluster is well created
+      ansible.builtin.assert:
+        that:
+          - elastic_cluster_create is changed
+          - elastic_cluster_create.state.cluster.cluster_size == 3
+          - elastic_cluster_create.state.cluster.default_database_name == 'myclusterdb'
+
     - name: Create a postgresql flexible database(check mode)
       azure.azcollection.azure_rm_postgresqlflexibledatabase:
         resource_group: "{{ new_resource_group }}"

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun), zunyangc (@zunyangc)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -147,6 +147,9 @@ options:
                 description:
                     - Indicates whether custom window is enabled or disabled.
                 type: str
+                choices:
+                    - Enabled
+                    - Disabled
             start_hour:
                 description:
                     - Start hour for maintenance window.
@@ -168,6 +171,20 @@ options:
         description:
             - Availability zone information of the server
         type: str
+    cluster:
+        description:
+            - The elastic cluster properties of a server.
+        type: dict
+        suboptions:
+            cluster_size:
+                description:
+                    - The number of instances in the cluster.
+                type: int
+                required: True
+            default_database_name:
+                description:
+                    - The default database name for the cluster.
+                type: str
     create_mode:
         description:
             - The mode to create a new PostgreSQL server.
@@ -304,6 +321,34 @@ EXAMPLES = '''
     availability_zone: 1
     create_mode: Default
 
+- name: Create (or update) PostgreSQL Elastic Cluster with 3 nodes
+  azure_rm_postgresqlflexibleserver:
+    resource_group: myResourceGroup
+    name: testserver
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: "{{ password }}"
+    version: 17  # PostgreSQL version 17 for flexible server
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 0
+      day_of_week: 0
+    cluster:
+      cluster_size: 3
+      default_database_name: "myclusterdb"
+    point_in_time_utc: 2023-05-31T00:28:17.7279547+00:00
+    availability_zone: 1
+    create_mode: Default
+
 - name: Delete PostgreSQL Flexible Server
   azure_rm_postgresqlflexibleserver:
     resource_group: myResourceGroup
@@ -400,6 +445,24 @@ servers:
             type: str
             returned: always
             sample: 1
+        cluster:
+            description:
+                - The elastic cluster properties of a server.
+            type: complex
+            returned: always
+            contains:
+                cluster_size:
+                    description:
+                    - The number of instances in the cluster.
+                    type: int
+                    returned: always
+                    sample: 3
+                default_database_name:
+                    description:
+                    - The default database name for the cluster.
+                    type: str
+                    returned: always
+                    sample: mydb
         backup:
             description:
                 - Backup properties of a server.
@@ -576,7 +639,7 @@ sku_spec = dict(
 
 
 maintenance_window_spec = dict(
-    custom_window=dict(type='str'),
+    custom_window=dict(type='str', choices=["Enabled", "Disabled"]),
     start_hour=dict(type='int'),
     start_minute=dict(type='int'),
     day_of_week=dict(type='int'),
@@ -679,6 +742,13 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             availability_zone=dict(
                 type='str'
             ),
+            cluster=dict(
+                type='dict',
+                options=dict(
+                    cluster_size=dict(type='int', required=True),
+                    default_database_name=dict(type='str'),
+                )
+            ),
             create_mode=dict(
                 type='str',
                 choices=['Default', 'Create', 'Update', 'PointInTimeRestore']
@@ -750,8 +820,8 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
-                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',
-                            'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
+                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'cluster',
+                            'backup', 'high_availability', 'maintenance_window', 'auth_config']:
                     self.update_parameters[key] = kwargs[key]
 
         old_response = None
@@ -799,6 +869,14 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                     update_flag = True
                 else:
                     self.update_parameters['storage'] = old_response['storage']
+
+                if self.update_parameters.get('cluster') is not None:
+                    for key in self.update_parameters['cluster'].keys():
+                        if (self.update_parameters['cluster'][key] is not None) and\
+                                (self.update_parameters['cluster'][key] != old_response['cluster'].get(key)):
+                            update_flag = True
+                        else:
+                            self.update_parameters['cluster'][key] = old_response['cluster'].get(key)
 
                 if self.update_parameters.get('backup') is not None:
                     for key in self.update_parameters['backup'].keys():
@@ -886,14 +964,14 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
             # structure of parameters for update must be changed
-            response = self.postgresql_flexible_client.servers.begin_update(resource_group_name=self.resource_group,
-                                                                            server_name=self.name,
-                                                                            parameters=body)
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                      server_name=self.name,
+                                                                                      parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
-            self.log('Error attempting to create the PostgreSQL Flexible Server instance.')
+            self.log('Error attempting to update the PostgreSQL Flexible Server instance.')
             self.fail("Error updating the PostgreSQL Flexible Server instance: {0}".format(str(exc)))
         return self.format_item(response)
 
@@ -904,9 +982,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         '''
         self.log("Creating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            response = self.postgresql_flexible_client.servers.begin_create(resource_group_name=self.resource_group,
-                                                                            server_name=self.name,
-                                                                            parameters=body)
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                      server_name=self.name,
+                                                                                      parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -982,7 +1060,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             response = self.postgresql_flexible_client.servers.get(resource_group_name=self.resource_group,
                                                                    server_name=self.name)
             self.log("Response : {0}".format(response))
-            self.log("PostgreSQL Flexible Server instance : {0} found".format(response.name))
+            self.log("PostgreSQL Flexible Server instance : {0} found".format(self.name))
         except ResourceNotFoundError as e:
             self.log('Did not find the PostgreSQL Flexible Server instance. Exception as {0}'.format(str(e)))
             return None
@@ -1010,7 +1088,8 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             source_server_resource_id=item.source_server_resource_id,
             point_in_time_utc=item.point_in_time_utc,
             availability_zone=item.availability_zone,
-            auth_config=dict()
+            auth_config=dict(),
+            cluster=dict()
         )
         if item.sku is not None:
             result['sku']['name'] = item.sku.name
@@ -1049,6 +1128,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             result['auth_config']['tenant_id'] = item.auth_config.tenant_id
         else:
             result['auth_config'] = None
+        if hasattr(item, 'properties') and hasattr(item.properties, 'cluster'):
+            result['cluster']['cluster_size'] = getattr(item.properties.cluster, 'cluster_size', None)
+            result['cluster']['default_database_name'] = getattr(item.properties.cluster, 'default_database_name', None)
 
         return result
 
