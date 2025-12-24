@@ -221,7 +221,7 @@
     - name: Create postgresql elastic cluster
       azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ new_resource_group }}"
-        name: postflexible{{ rpfx }}
+        name: postflexible{{ rpfx }}-cluster
         sku:
           name: Standard_D2s_v3
           tier: GeneralPurpose
@@ -552,6 +552,18 @@
       register: output
 
     - name: Assert the postgresql server is well deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete postgresql elastic cluster
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
+        resource_group: "{{ new_resource_group }}"
+        name: postflexible{{ rpfx }}-cluster
+        state: absent
+      register: output
+
+    - name: Assert the postgresql elastic cluster is well deleted
       ansible.builtin.assert:
         that:
           - output is changed
