@@ -212,8 +212,8 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
 
         try:
             response = self.postgresql_flexible_client.backups_automatic_and_on_demand.begin_create(resource_group_name=self.resource_group,
-                                                                            server_name=self.server_name,
-                                                                            backup_name=self.backup_name)
+                                                                                                    server_name=self.server_name,
+                                                                                                    backup_name=self.backup_name)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -231,8 +231,8 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         self.log("Deleting the PostgreSQL Flexible Backup instance {0}".format(self.backup_name))
         try:
             self.postgresql_flexible_client.backups_automatic_and_on_demand.begin_delete(resource_group_name=self.resource_group,
-                                                                 server_name=self.server_name,
-                                                                 backup_name=self.backup_name)
+                                                                                         server_name=self.server_name,
+                                                                                         backup_name=self.backup_name)
         except Exception as ec:
             self.log('Error attempting to delete the PostgreSQL Flexible Backup instance.')
             self.fail("Error deleting the PostgreSQL Flexible Backup instance: {0}".format(str(ec)))
@@ -247,8 +247,8 @@ class AzureRMPostgreSqlFlexibleBackup(AzureRMModuleBase):
         found = False
         try:
             response = self.postgresql_flexible_client.backups_automatic_and_on_demand.get(resource_group_name=self.resource_group,
-                                                                   server_name=self.server_name,
-                                                                   backup_name=self.backup_name)
+                                                                                           server_name=self.server_name,
+                                                                                           backup_name=self.backup_name)
             found = True
             self.log("Response : {0}".format(response))
             self.log("PostgreSQL Flexible Backup instance : {0} found".format(response.name))
