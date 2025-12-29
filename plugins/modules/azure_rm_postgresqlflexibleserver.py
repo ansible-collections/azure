@@ -624,7 +624,7 @@ servers:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-    import azure.mgmt.rdbms.postgresql_flexibleservers.models as PostgreSQLFlexibleModels
+    from azure.mgmt.postgresqlflexibleservers import models as PostgreSQLFlexibleModels
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -787,7 +787,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.resource_group = None
         self.name = None
         self.parameters = dict()
-        self.update_parameters = dict()
         self.tags = None
         self.is_start = None
         self.is_stop = None
@@ -820,11 +819,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
-                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'cluster',
-                            'backup', 'high_availability', 'maintenance_window', 'auth_config']:
-                    self.update_parameters[key] = kwargs[key]
 
-        old_response = None
         response = None
         changed = False
 
@@ -832,128 +827,59 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         if "location" not in self.parameters:
             self.parameters["location"] = resource_group.location
-            self.update_parameters["location"] = resource_group.location
 
         old_response = self.get_postgresqlflexibleserver()
 
-        if not old_response:
-            self.log("PostgreSQL Flexible Server instance doesn't exist")
-            if self.state == 'present':
-                if not self.check_mode:
+        if self.state == 'present':
+            if not self.check_mode:
+                if not old_response:
+                    # Create
                     if self.identity:
                         update_identity, new_identity = self.update_managed_identity(new_identity=self.identity)
                         if update_identity:
                             self.parameters['identity'] = new_identity
                     response = self.create_postgresqlflexibleserver(self.parameters)
-                    if self.is_stop:
-                        self.stop_postgresqlflexibleserver()
-                    elif self.is_start:
-                        self.start_postgresqlflexibleserver()
-                    elif self.is_restart:
-                        self.restart_postgresqlflexibleserver()
-                changed = True
-            else:
-                self.log("PostgreSQL Flexible Server instance doesn't exist, Don't need to delete")
-        else:
-            self.log("PostgreSQL Flexible Server instance already exists")
-            if self.state == 'present':
-                update_flag = False
-                if self.update_parameters.get('sku') is not None:
-                    for key in self.update_parameters['sku'].keys():
-                        if self.update_parameters['sku'][key] is not None and self.update_parameters['sku'][key] != old_response['sku'].get(key):
-                            update_flag = True
-                        else:
-                            self.update_parameters['sku'][key] = old_response['sku'].get(key)
-
-                if self.update_parameters.get('storage') is not None and self.update_parameters['storage'] != old_response['storage']:
-                    update_flag = True
-                else:
-                    self.update_parameters['storage'] = old_response['storage']
-
-                if self.update_parameters.get('cluster') is not None:
-                    for key in self.update_parameters['cluster'].keys():
-                        if (self.update_parameters['cluster'][key] is not None) and\
-                                (self.update_parameters['cluster'][key] != old_response['cluster'].get(key)):
-                            update_flag = True
-                        else:
-                            self.update_parameters['cluster'][key] = old_response['cluster'].get(key)
-
-                if self.update_parameters.get('backup') is not None:
-                    for key in self.update_parameters['backup'].keys():
-                        if self.update_parameters['backup'][key] is not None and self.update_parameters['backup'][key] != old_response['backup'].get(key):
-                            update_flag = True
-                        else:
-                            self.update_parameters['backup'][key] = old_response['backup'].get(key)
-
-                if self.update_parameters.get('high_availability') is not None:
-                    for key in self.update_parameters['high_availability'].keys():
-                        if (self.update_parameters['high_availability'][key] is not None) and\
-                                (self.update_parameters['high_availability'][key] != old_response['high_availability'].get(key)):
-                            update_flag = True
-                        else:
-                            self.update_parameters['high_availability'][key] = old_response['high_availability'].get(key)
-
-                if self.update_parameters.get('maintenance_window') is not None:
-                    for key in self.update_parameters['maintenance_window'].keys():
-                        if (self.update_parameters['maintenance_window'][key] is not None) and\
-                                (self.update_parameters['maintenance_window'][key] != old_response['maintenance_window'].get(key)):
-                            update_flag = True
-                        else:
-                            self.update_parameters['maintenance_window'][key] = old_response['maintenance_window'].get(key)
-
-                if self.identity:
-                    update_identity, new_identity = self.update_managed_identity(new_identity=self.identity,
-                                                                                 curr_identity=old_response.get('identity', {}))
-                    if update_identity:
-                        self.update_parameters['identity'] = new_identity
-                        update_flag = True
-
-                update_tags, new_tags = self.update_tags(old_response['tags'])
-                self.update_parameters['tags'] = new_tags
-                if update_tags:
-                    update_flag = True
-
-                if self.auth_config is not None and not self.default_compare({}, self.auth_config, old_response['auth_config'], '', dict(compare=[])):
-                    update_flag = True
-                else:
-                    self.auth_config = old_response['auth_config']
-
-                if update_flag:
                     changed = True
-                    if not self.check_mode:
-                        response = self.update_postgresqlflexibleserver(self.update_parameters, old_response)
+                else:
+                    # Compare updating fields only
+                    update_fields = [
+                        'sku', 'storage', 'cluster', 'backup', 'high_availability',
+                        'maintenance_window', 'auth_config', 'identity', 'tags',
+                        'version', 'network', 'availability_zone', 'create_mode'
+                    ]
+                    desired = {k: self.parameters.get(k) for k in update_fields}
+                    current = {k: old_response.get(k) for k in update_fields}
+                    if not self.default_compare({}, desired, current, '', dict(compare=[])):
+                        # Update (PUT)
+                        response = self.update_postgresqlflexibleserver(self.parameters, old_response)
+                        changed = True
                     else:
                         response = old_response
-                    if self.is_stop:
-                        self.stop_postgresqlflexibleserver()
-                        changed = True
-                    elif self.is_start:
-                        self.start_postgresqlflexibleserver()
-                        changed = True
-                    elif self.is_restart:
-                        self.restart_postgresqlflexibleserver()
-                        changed = True
-                else:
-                    if not self.check_mode:
-                        if self.is_stop:
-                            self.stop_postgresqlflexibleserver()
-                            changed = True
-                        elif self.is_start:
-                            self.start_postgresqlflexibleserver()
-                            changed = True
-                        elif self.is_restart:
-                            self.restart_postgresqlflexibleserver()
-                            changed = True
-                    response = old_response
+                        changed = False
+
+                if self.is_stop:
+                    self.stop_postgresqlflexibleserver()
+                    changed = True
+                elif self.is_start:
+                    self.start_postgresqlflexibleserver()
+                    changed = True
+                elif self.is_restart:
+                    self.restart_postgresqlflexibleserver()
+                    changed = True
+
             else:
-                self.log("PostgreSQL Flexible Server instance already exist, will be deleted")
+                response = old_response
+
+        elif self.state == 'absent':
+            if old_response:
                 changed = True
                 if not self.check_mode:
                     response = self.delete_postgresqlflexibleserver()
-
+            else:
+                self.log("PostgreSQL Flexible Server instance doesn't exist, nothing to delete.")
+                response = {}
         self.results['changed'] = changed
         self.results['state'] = response
-
         return self.results
 
     def update_postgresqlflexibleserver(self, body, old_response):
@@ -964,16 +890,28 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
             for key in ['location', 'sku', 'storage', 'cluster', 'backup', 'high_availability',
-                        'maintenance_window', 'auth_config', 'identity', 'tags', 'version']:
+                        'maintenance_window', 'auth_config', 'identity', 'tags', 'version',
+                        'network', 'availability_zone', 'create_mode']:
                 if key not in body or body[key] is None:
                     body[key] = old_response.get(key)
+
+            # Guard immutable cluster default_database_name
+            old_cluster = old_response.get('cluster', {}) or {}
+            new_cluster = body.get('cluster', {}) or {}
+            if old_cluster.get('cluster_size') is not None:
+                if 'default_database_name' in new_cluster:
+                    if new_cluster['default_database_name'] and new_cluster['default_database_name'] != old_cluster.get('default_database_name'):
+                        self.fail("Changing 'cluster.default_database_name' is not supported after cluster creation.")
+
             # Remove cluster block if server is not part of an elastic cluster
             if old_response.get('cluster', {}).get('cluster_size') is None:
                 body.pop('cluster', None)
 
-            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                      server_name=self.name,
-                                                                                      parameters=body)
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(
+                resource_group_name=self.resource_group,
+                server_name=self.name,
+                parameters=body
+            )
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
