@@ -109,6 +109,11 @@
           - output.state.identity.type == 'UserAssigned'
           - managed_identity_ids[0] in output.state.identity.user_assigned_identities
 
+    - name: Wait for 3 minutes to allow Azure resource state to stabilise
+      ansible.builtin.pause:
+        minutes: 3
+      changed_when: false
+
     - name: Create postgresql flexible server (Idempotent Test)
       azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ new_resource_group }}"
