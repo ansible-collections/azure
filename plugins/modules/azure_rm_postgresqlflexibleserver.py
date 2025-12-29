@@ -967,6 +967,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                         'maintenance_window', 'auth_config', 'identity', 'tags', 'version']:
                 if key not in body or body[key] is None:
                     body[key] = old_response.get(key)
+            # Remove cluster block if server is not part of an elastic cluster
+            if old_response.get('cluster', {}).get('cluster_size') is None:
+                body.pop('cluster', None)
 
             response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                       server_name=self.name,
