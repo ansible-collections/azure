@@ -845,8 +845,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                     update_fields = [
                         'sku', 'storage', 'cluster', 'backup', 'high_availability',
                         'maintenance_window', 'auth_config', 'identity', 'tags',
-                        'version', 'network', 'availability_zone', 'create_mode',
-                        'fully_qualified_domain_name'
+                        'version', 'network', 'availability_zone', 'create_mode'
                     ]
                     desired = {k: self.parameters.get(k) for k in update_fields}
                     current = {k: old_response.get(k) for k in update_fields}
