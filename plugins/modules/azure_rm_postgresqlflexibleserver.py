@@ -81,6 +81,7 @@ options:
             - '15'
             - '16'
             - '17'
+            - '18'
     fully_qualified_domain_name:
         description:
             - The fully qualified domain name of a server.
@@ -711,7 +712,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             ),
             version=dict(
                 type='str',
-                choices=['11', '12', '13', '14', '15', '16', '17']
+                choices=['11', '12', '13', '14', '15', '16', '17', '18']
             ),
             fully_qualified_domain_name=dict(
                 type='str',
@@ -841,14 +842,13 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                     response = self.create_postgresqlflexibleserver(self.parameters)
                     changed = True
                 else:
-                    # Compare updating fields only
                     update_fields = [
                         'sku', 'storage', 'cluster', 'backup', 'high_availability',
                         'maintenance_window', 'auth_config', 'identity', 'tags',
                         'version', 'network', 'availability_zone', 'create_mode'
                     ]
-                    desired = {k: v for k, v in self.parameters.items() if k in update_fields and v is not None}
-                    current = {k: v for k, v in old_response.items() if k in update_fields and v is not None}
+                    desired = {k: self.parameters.get(k) for k in update_fields}
+                    current = {k: old_response.get(k) for k in update_fields}
                     if not self.default_compare({}, desired, current, '', dict(compare=[])):
                         # Update (PUT)
                         response = self.update_postgresqlflexibleserver(self.parameters, old_response)
@@ -889,24 +889,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         '''
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            for key in ['location', 'sku', 'storage', 'cluster', 'backup', 'high_availability',
-                        'maintenance_window', 'auth_config', 'identity', 'tags', 'version',
-                        'network', 'availability_zone', 'create_mode']:
-                if key not in body or body[key] is None:
-                    body[key] = old_response.get(key)
-
-            # Guard immutable cluster default_database_name
-            old_cluster = old_response.get('cluster', {}) or {}
-            new_cluster = body.get('cluster', {}) or {}
-            if old_cluster.get('cluster_size') is not None:
-                if 'default_database_name' in new_cluster:
-                    if new_cluster['default_database_name'] and new_cluster['default_database_name'] != old_cluster.get('default_database_name'):
-                        self.fail("Changing 'cluster.default_database_name' is not supported after cluster creation.")
-
-            # Remove cluster block if server is not part of an elastic cluster
-            if old_response.get('cluster', {}).get('cluster_size') is None:
-                body.pop('cluster', None)
-
             response = self.postgresql_flexible_client.servers.begin_create_or_update(
                 resource_group_name=self.resource_group,
                 server_name=self.name,
