@@ -847,8 +847,8 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                         'maintenance_window', 'auth_config', 'identity', 'tags',
                         'version', 'network', 'availability_zone', 'create_mode'
                     ]
-                    desired = {k: self.parameters.get(k) for k in update_fields}
-                    current = {k: old_response.get(k) for k in update_fields}
+                    desired = {k: v for k, v in self.parameters.items() if k in update_fields and v is not None}
+                    current = {k: v for k, v in old_response.items() if k in update_fields and v is not None}
                     if not self.default_compare({}, desired, current, '', dict(compare=[])):
                         # Update (PUT)
                         response = self.update_postgresqlflexibleserver(self.parameters, old_response)
