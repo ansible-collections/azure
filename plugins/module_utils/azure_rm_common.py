@@ -134,6 +134,7 @@ AZURE_API_PROFILES = {
         'CosmosDBManagementClient': 'latest',
         'CdnManagementClient': '2017-04-02',
         'BatchManagementClient': 'latest',
+        'EventGridManagementClient': '2025-02-15',
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',

@@ -1,0 +1,141 @@
+- name: Create a new resource group for eventgrid subscription test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-eventgrid-subscription"
+    location: westus3
+
+- name: For eventgrid topic test
+  block:
+    - name: Create randomID
+      ansible.builtin.set_fact:
+        randomID: "{{ 65535 | random | string }}"
+
+    - name: Create randomIdentifier
+      ansible.builtin.set_fact:
+        randomIdentifier: "{{ resource_group | hash('md5') | truncate(16, True, '') + randomID }}"
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-eventgrid-subscription"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-eventgrid-subscription"
+        topic_name: "topic-{{ randomIdentifier }}"
+        subscription_name: "subscription-{{ randomIdentifier }}"
+        site: "event-grid-site-{{ randomIdentifier }}"
+
+    - name: Create EventGrid Topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ topic_name }}"
+        resource_group: "{{ new_resource_group }}"
+      register: results
+
+    - name: Assert the eventgrid topic created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Azure Deploy
+      azure.azcollection.azure_rm_deployment:
+        resource_group: "{{ new_resource_group }}"
+        location: "{{ location }}"
+        template_link: 'https://raw.githubusercontent.com/Azure-Samples/azure-event-grid-viewer/master/azuredeploy.json'
+        deployment_name: "{{ site }}"
+        parameters:
+          siteName:
+            value: "{{ site }}"
+          hostingPlanName:
+            value: viewerhost
+      register: results
+
+    - name: Assert the deployment changed
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Set endpoint
+      ansible.builtin.set_fact:
+        endpoint: "{{ results.deployment.outputs.appServiceEndpoint.value }}"
+
+    - name: Subscribe to custom topic
+      azure.azcollection.azure_rm_eventgrid_subscription:
+        name: "{{ subscription_name }}"
+        source_resource_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}/providers/Microsoft.EventGrid/topics/{{ topic_name }}"
+        endpoint: "{{ endpoint }}/api/updates"
+      register: results
+
+    - name: Assert the eventgrid subscription changed
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Get subscription info
+      azure.azcollection.azure_rm_eventgrid_subscription_info:
+        source_resource_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}/providers/Microsoft.EventGrid/topics/{{ topic_name }}"
+      register: results
+
+    - name: debug
+      ansible.builtin.debug:
+        var: results
+
+    - name: Get topic info
+      azure.azcollection.azure_rm_eventgrid_topic_info:
+        name: "{{ topic_name }}"
+        resource_group: "{{ new_resource_group }}"
+      register: results
+
+    - name: Set key, url and event data
+      ansible.builtin.set_fact:
+        url: "{{ results.eventgrid_topics[0].endpoint }}"
+        key: "{{ results.eventgrid_topics[0].topic_keys.key1 }}"
+        event:
+          - id: "{{ randomID }}"
+            eventType: recordInserted
+            subject: myapp/vehicles/motorcycles
+            eventTime: "{{ '%Y-%m-%dT%H:%M:%S%z' | strftime(ansible_facts.date_time.epoch) }}"
+            data:
+              make: Ducati
+              model: Monster
+            dataVersion: 1.0
+
+    - name: Publish to Topic
+      ansible.builtin.uri:
+        url: "{{ url }}"
+        method: POST
+        headers:
+          aeg-sas-key: "{{ key }}"
+        body_format: json
+        body: "{{ event }}"
+        status_code: 200
+
+    # cleanup
+    - name: Delete EventGrid subscription
+      azure.azcollection.azure_rm_eventgrid_subscription:
+        name: "{{ subscription_name }}"
+        source_resource_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}/providers/Microsoft.EventGrid/topics/{{ topic_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the eventgrid subscription deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete EventGrid Topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ topic_name }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+      register: results
+
+    - name: Assert the eventgrid topic deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent

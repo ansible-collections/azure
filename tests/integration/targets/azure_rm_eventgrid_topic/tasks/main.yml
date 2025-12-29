@@ -1,0 +1,323 @@
+- name: Create a new resource group for eventgrid topic test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-eventgrid-topic"
+    location: eastus
+
+- name: For eventgrid topic test
+  block:
+    - name: Create random eventgrid topic name
+      ansible.builtin.set_fact:
+        name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-eventgrid-topic"
+      register: __rg_info
+
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-eventgrid-topic"
+
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'eventgrid-topic'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
+
+    - name: Set identities IDs to test.
+      ansible.builtin.set_fact:
+        user_identity: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ new_resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-eventgrid-topic-identity-1"
+        user_identity_2: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ new_resource_group }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/ansible-test-eventgrid-topic-identity-2"
+
+    - name: Create EventGrid Topic (check mode)
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities:
+            - "{{ user_identity }}"
+      check_mode: true
+      register: results
+
+    - name: Assert the check mode result
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Create EventGrid Topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities:
+            - "{{ user_identity }}"
+      register: results
+
+    - name: Assert the eventgrid topic created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - user_identity in results.eventgrid_topic.identity.user_assigned_identities
+
+    - name: Create EventGrid Topic (idempotent)
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities:
+            - "{{ user_identity }}"
+      register: results
+
+    - name: Assert the eventgrid topic not changed
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Create EventGrid Topic (update)
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        identity:
+          type: "UserAssigned"
+          user_assigned_identities:
+            - "{{ user_identity }}"
+            - "{{ user_identity_2 }}"
+      register: results
+
+    - name: Assert the eventgrid topic changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - user_identity in results.eventgrid_topic.identity.user_assigned_identities
+          - user_identity_2 in results.eventgrid_topic.identity.user_assigned_identities
+
+    - name: Check info module
+      azure.azcollection.azure_rm_eventgrid_topic_info:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+      register: results
+
+    - name: Assert then eventgrid topic info
+      ansible.builtin.assert:
+        that:
+          - results.eventgrid_topics | length == 1
+          - '"topic_keys" in results.eventgrid_topics[0]'
+          - results.eventgrid_topics[0].topic_keys | length == 2
+          - '"key1" in results.eventgrid_topics[0].topic_keys'
+          - '"key2" in results.eventgrid_topics[0].topic_keys'
+          - results.eventgrid_topics[0].identity.type == "UserAssigned"
+          - results.eventgrid_topics[0].identity.user_assigned_identities | length == 2
+
+    # cleanup
+    - name: Delete EventGrid Topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+      register: results
+
+    - name: Assert the eventgrid topic deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Create a new Topic that accepts events published in CloudEvents V1.0 schema
+      azure.azcollection.azure_rm_eventgrid_topic:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        location: "{{ location }}"
+        input_schema: CloudEventSchemaV1_0
+      register: results
+
+    - name: Assert the eventgrid topic changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.eventgrid_topic.input_schema == "CloudEventSchemaV1_0"
+
+    - name: Check info module
+      azure.azcollection.azure_rm_eventgrid_topic_info:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+      register: keys_1
+
+    - name: Update key1
+      azure.azcollection.azure_rm_eventgrid_topic:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        regenerate_keys:
+          - key1
+      register: results
+
+    - name: Assert the eventgrid topic changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Check info module
+      azure.azcollection.azure_rm_eventgrid_topic_info:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+      register: keys_2
+
+    - name: Assert that key1 updated
+      ansible.builtin.assert:
+        that:
+          - keys_1.eventgrid_topics[0].topic_keys.key1 != keys_2.eventgrid_topics[0].topic_keys.key1
+          - keys_1.eventgrid_topics[0].topic_keys.key2 == keys_2.eventgrid_topics[0].topic_keys.key2
+          - keys_2.eventgrid_topics[0].input_schema == "CloudEventSchemaV1_0"
+
+    - name: Update key1 and key2
+      azure.azcollection.azure_rm_eventgrid_topic:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        regenerate_keys:
+          - key1
+          - key2
+      register: results
+
+    - name: Assert the eventgrid topic changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Check info module
+      azure.azcollection.azure_rm_eventgrid_topic_info:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+      register: keys_3
+
+    - name: Assert that both keys updated
+      ansible.builtin.assert:
+        that:
+          - keys_2.eventgrid_topics[0].topic_keys.key1 != keys_3.eventgrid_topics[0].topic_keys.key1
+          - keys_2.eventgrid_topics[0].topic_keys.key2 != keys_3.eventgrid_topics[0].topic_keys.key2
+          - keys_3.eventgrid_topics[0].input_schema == "CloudEventSchemaV1_0"
+
+    # cleanup
+    - name: Delete EventGrid Topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+
+    - name: Create a new Topic with custom input mappings
+      azure.azcollection.azure_rm_eventgrid_topic:
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        location: "{{ location }}"
+        input_schema: CustomEventSchema
+        input_mapping_fields:
+          - mapping_key: topic
+            mapping_value: myTopicField
+          - mapping_key: eventtype
+            mapping_value: myEventTypeField
+        input_mapping_default_values:
+          - mapping_key: subject
+            mapping_value: DefaultSubject
+          - mapping_key: dataversion
+            mapping_value: 1.0
+      register: results
+
+    - name: Assert the eventgrid topic changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.eventgrid_topic.input_schema == "CustomEventSchema"
+          - '"topic" in results.eventgrid_topic.input_schema_mapping'
+          - '"data_version" in results.eventgrid_topic.input_schema_mapping'
+          - '"event_type" in results.eventgrid_topic.input_schema_mapping'
+          - results.eventgrid_topic.input_schema_mapping.data_version.default_value == "1.0"
+          - results.eventgrid_topic.input_schema_mapping.event_type.source_field == "myEventTypeField"
+
+    # cleanup
+    - name: delete eventgrid topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+
+    - name: create a new topic which allows specific inbound ip rules with system assigned
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: enabled
+        inbound_ip_rules:
+            - ipmask: 10.0.0.0/8
+              action: Allow
+            - ipmask: 10.2.0.0/8
+              action: Allow
+        identity:
+            type: SystemAssigned
+      register: results
+
+    - name: Assert the eventgrid topic changed
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.eventgrid_topic.inbound_ip_rules | length == 2
+
+    # cleanup
+    - name: delete eventgrid topic
+      azure.azcollection.azure_rm_eventgrid_topic:
+        location: "{{ location }}"
+        name: "{{ name_rpfx }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+
+#    - name: create a new topic in AzureArc targeting a custom location
+#      azure.azcollection.azure_rm_eventgrid_topic:
+#        location: "{{ location }}"
+#        name: "{{ name_rpfx }}"
+#        resource_group: "{{ new_resource_group }}"
+#        kind: azurearc
+#        extended_location_name: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ new_resource_group }}/providers/microsoft.extendedlocation/customlocations/{{ cust_loc_name }}"
+#        extended_location_type: customlocation
+#        input_schema: CloudEventSchemaV1_0
+#      register: results
+#
+#    - name: Debug results
+#      ansible.builtin.debug:
+#        var: results
+#
+#    # cleanup
+#    - name: Delete EventGrid Topic
+#      azure.azcollection.azure_rm_eventgrid_topic:
+#        location: "{{ location }}"
+#        name: "{{ name_rpfx }}"
+#        resource_group: "{{ new_resource_group }}-eventgrid-topic"
+#        state: absent
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'eventgrid-topic'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
