@@ -1128,22 +1128,17 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             result['auth_config']['tenant_id'] = item.auth_config.tenant_id
         else:
             result['auth_config'] = None
-        cluster_obj = None
-        if hasattr(item, 'cluster') and getattr(item, 'cluster') is not None:
-            cluster_obj = getattr(item, 'cluster')
-        elif hasattr(item, 'properties') and hasattr(item.properties, 'cluster') and getattr(item.properties, 'cluster') is not None:
-            cluster_obj = getattr(item.properties, 'cluster')
+        if 'cluster' not in result or result['cluster'] is None:
+            result['cluster'] = {}
+        cluster_obj = getattr(item, 'cluster', None)
+        if cluster_obj is None and hasattr(item, 'properties'):
+            cluster_obj = getattr(item.properties, 'cluster', None)
         if cluster_obj is not None:
-            cluster_size = getattr(cluster_obj, 'cluster_size', None)
-            if cluster_size is None:
-                cluster_size = getattr(cluster_obj, 'clusterSize', None)
-
-            default_db = getattr(cluster_obj, 'default_database_name', None)
-            if default_db is None:
-                default_db = getattr(cluster_obj, 'defaultDatabaseName', None)
-
-            result['cluster']['cluster_size'] = cluster_size
-            result['cluster']['default_database_name'] = default_db
+            result['cluster']['cluster_size'] = getattr(cluster_obj, 'cluster_size', None)
+            result['cluster']['default_database_name'] = getattr(cluster_obj, 'default_database_name', None)
+        else:
+            result['cluster']['cluster_size'] = None
+            result['cluster']['default_database_name'] = None
 
         return result
 
