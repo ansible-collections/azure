@@ -921,7 +921,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 if update_flag:
                     changed = True
                     if not self.check_mode:
-                        response = self.update_postgresqlflexibleserver(self.update_parameters)
+                        response = self.update_postgresqlflexibleserver(self.update_parameters, old_response)
                     else:
                         response = old_response
                     if self.is_stop:
@@ -956,14 +956,18 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         return self.results
 
-    def update_postgresqlflexibleserver(self, body):
+    def update_postgresqlflexibleserver(self, body, old_response):
         '''
         Updates PostgreSQL Flexible Server with the specified configuration.
         :return: deserialized PostgreSQL Flexible Server instance state dictionary
         '''
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            # structure of parameters for update must be changed
+            for key in ['location', 'sku', 'storage', 'cluster', 'backup', 'high_availability',
+                        'maintenance_window', 'auth_config', 'identity', 'tags', 'version']:
+                if key not in body or body[key] is None:
+                    body[key] = old_response.get(key)
+
             response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
                                                                                       server_name=self.name,
                                                                                       parameters=body)
@@ -1128,8 +1132,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             result['auth_config']['tenant_id'] = item.auth_config.tenant_id
         else:
             result['auth_config'] = None
-        if 'cluster' not in result or result['cluster'] is None:
-            result['cluster'] = {}
         cluster_obj = getattr(item, 'cluster', None)
         if cluster_obj is None and hasattr(item, 'properties'):
             cluster_obj = getattr(item.properties, 'cluster', None)
