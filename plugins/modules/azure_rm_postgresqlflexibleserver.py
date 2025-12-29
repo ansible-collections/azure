@@ -882,18 +882,16 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.results['state'] = response
         return self.results
 
-    def update_postgresqlflexibleserver(self, body, old_response):
+    def update_postgresqlflexibleserver(self, body):
         '''
         Updates PostgreSQL Flexible Server with the specified configuration.
         :return: deserialized PostgreSQL Flexible Server instance state dictionary
         '''
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            response = self.postgresql_flexible_client.servers.begin_create_or_update(
-                resource_group_name=self.resource_group,
-                server_name=self.name,
-                parameters=body
-            )
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                      server_name=self.name,
+                                                                                      parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
