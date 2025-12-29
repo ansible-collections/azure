@@ -851,7 +851,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                     current = {k: old_response.get(k) for k in update_fields}
                     if not self.default_compare({}, desired, current, '', dict(compare=[])):
                         # Update (PUT)
-                        response = self.update_postgresqlflexibleserver(self.parameters, old_response)
+                        response = self.update_postgresqlflexibleserver(self.parameters)
                         changed = True
                     else:
                         response = old_response
