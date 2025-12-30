@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun)
+# Copyright (c) 2024 xuzhang3 (@xuzhang3), Fred-sun (@Fred-sun), zunyangc (@zunyangc)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -147,6 +147,9 @@ options:
                 description:
                     - Indicates whether custom window is enabled or disabled.
                 type: str
+                choices:
+                    - Enabled
+                    - Disabled
             start_hour:
                 description:
                     - Start hour for maintenance window.
@@ -168,6 +171,20 @@ options:
         description:
             - Availability zone information of the server
         type: str
+    cluster:
+        description:
+            - The elastic cluster properties of a server.
+        type: dict
+        suboptions:
+            cluster_size:
+                description:
+                    - The number of instances in the cluster.
+                type: int
+                required: True
+            default_database_name:
+                description:
+                    - The default database name for the cluster.
+                type: str
     create_mode:
         description:
             - The mode to create a new PostgreSQL server.
@@ -304,6 +321,34 @@ EXAMPLES = '''
     availability_zone: 1
     create_mode: Default
 
+- name: Create (or update) PostgreSQL Elastic Cluster with 3 nodes
+  azure_rm_postgresqlflexibleserver:
+    resource_group: myResourceGroup
+    name: testserver
+    sku:
+      name: Standard_B1ms
+      tier: Burstable
+    administrator_login: azureuser
+    administrator_login_password: "{{ password }}"
+    version: 17  # PostgreSQL version 17 for flexible server
+    storage:
+      storage_size_gb: 128
+    fully_qualified_domain_name: st-private-dns-zone.postgres.database.azure.com
+    backup:
+      backup_retention_days: 7
+      geo_redundant_backup: Disabled
+    maintenance_window:
+      custom_window: Enabled
+      start_hour: 8
+      start_minute: 0
+      day_of_week: 0
+    cluster:
+      cluster_size: 3
+      default_database_name: "myclusterdb"
+    point_in_time_utc: 2023-05-31T00:28:17.7279547+00:00
+    availability_zone: 1
+    create_mode: Default
+
 - name: Delete PostgreSQL Flexible Server
   azure_rm_postgresqlflexibleserver:
     resource_group: myResourceGroup
@@ -400,6 +445,24 @@ servers:
             type: str
             returned: always
             sample: 1
+        cluster:
+            description:
+                - The elastic cluster properties of a server.
+            type: complex
+            returned: always
+            contains:
+                cluster_size:
+                    description:
+                    - The number of instances in the cluster.
+                    type: int
+                    returned: always
+                    sample: 3
+                default_database_name:
+                    description:
+                    - The default database name for the cluster.
+                    type: str
+                    returned: always
+                    sample: mydb
         backup:
             description:
                 - Backup properties of a server.
@@ -561,7 +624,7 @@ servers:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-    import azure.mgmt.rdbms.postgresql_flexibleservers.models as PostgreSQLFlexibleModels
+    from azure.mgmt.postgresqlflexibleservers import models as PostgreSQLFlexibleModels
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -576,7 +639,7 @@ sku_spec = dict(
 
 
 maintenance_window_spec = dict(
-    custom_window=dict(type='str'),
+    custom_window=dict(type='str', choices=["Enabled", "Disabled"]),
     start_hour=dict(type='int'),
     start_minute=dict(type='int'),
     day_of_week=dict(type='int'),
@@ -679,6 +742,13 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             availability_zone=dict(
                 type='str'
             ),
+            cluster=dict(
+                type='dict',
+                options=dict(
+                    cluster_size=dict(type='int', required=True),
+                    default_database_name=dict(type='str'),
+                )
+            ),
             create_mode=dict(
                 type='str',
                 choices=['Default', 'Create', 'Update', 'PointInTimeRestore']
@@ -717,7 +787,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         self.resource_group = None
         self.name = None
         self.parameters = dict()
-        self.update_parameters = dict()
         self.tags = None
         self.is_start = None
         self.is_stop = None
@@ -750,11 +819,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                 setattr(self, key, kwargs[key])
             elif kwargs[key] is not None:
                 self.parameters[key] = kwargs[key]
-                for key in ['location', 'sku', 'administrator_login_password', 'storage', 'backup',
-                            'high_availability', 'maintenance_window', 'create_mode', 'auth_config']:
-                    self.update_parameters[key] = kwargs[key]
 
-        old_response = None
         response = None
         changed = False
 
@@ -762,120 +827,81 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         if "location" not in self.parameters:
             self.parameters["location"] = resource_group.location
-            self.update_parameters["location"] = resource_group.location
 
         old_response = self.get_postgresqlflexibleserver()
 
-        if not old_response:
-            self.log("PostgreSQL Flexible Server instance doesn't exist")
-            if self.state == 'present':
-                if not self.check_mode:
-                    if self.identity:
-                        update_identity, new_identity = self.update_managed_identity(new_identity=self.identity)
-                        if update_identity:
-                            self.parameters['identity'] = new_identity
-                    response = self.create_postgresqlflexibleserver(self.parameters)
-                    if self.is_stop:
-                        self.stop_postgresqlflexibleserver()
-                    elif self.is_start:
-                        self.start_postgresqlflexibleserver()
-                    elif self.is_restart:
-                        self.restart_postgresqlflexibleserver()
-                changed = True
+        update_identity = False
+
+        if self.identity:
+            # Get current identity from old_response
+            curr_identity = old_response.get('identity') if old_response else {}
+            update_identity, new_identity = self.update_managed_identity(
+                new_identity=self.identity,
+                curr_identity=curr_identity,
+                allow_identities_append=True,
+                patch_support=False
+            )
+            if update_identity:
+                self.parameters['identity'] = new_identity
+
+        current_tags = old_response.get('tags') if old_response else None
+        if self.tags is not None:
+            try:
+                append = getattr(self, 'append_tags', True)
+            except AttributeError:
+                append = True
+            self.parameters['tags'] = (current_tags or {})
+            if append:
+                self.parameters['tags'].update(self.tags or {})
             else:
-                self.log("PostgreSQL Flexible Server instance doesn't exist, Don't need to delete")
-        else:
-            self.log("PostgreSQL Flexible Server instance already exists")
-            if self.state == 'present':
-                update_flag = False
-                if self.update_parameters.get('sku') is not None:
-                    for key in self.update_parameters['sku'].keys():
-                        if self.update_parameters['sku'][key] is not None and self.update_parameters['sku'][key] != old_response['sku'].get(key):
-                            update_flag = True
-                        else:
-                            self.update_parameters['sku'][key] = old_response['sku'].get(key)
+                self.parameters['tags'] = self.tags or {}
+        elif current_tags is not None:
+            self.parameters['tags'] = current_tags
 
-                if self.update_parameters.get('storage') is not None and self.update_parameters['storage'] != old_response['storage']:
-                    update_flag = True
-                else:
-                    self.update_parameters['storage'] = old_response['storage']
-
-                if self.update_parameters.get('backup') is not None:
-                    for key in self.update_parameters['backup'].keys():
-                        if self.update_parameters['backup'][key] is not None and self.update_parameters['backup'][key] != old_response['backup'].get(key):
-                            update_flag = True
-                        else:
-                            self.update_parameters['backup'][key] = old_response['backup'].get(key)
-
-                if self.update_parameters.get('high_availability') is not None:
-                    for key in self.update_parameters['high_availability'].keys():
-                        if (self.update_parameters['high_availability'][key] is not None) and\
-                                (self.update_parameters['high_availability'][key] != old_response['high_availability'].get(key)):
-                            update_flag = True
-                        else:
-                            self.update_parameters['high_availability'][key] = old_response['high_availability'].get(key)
-
-                if self.update_parameters.get('maintenance_window') is not None:
-                    for key in self.update_parameters['maintenance_window'].keys():
-                        if (self.update_parameters['maintenance_window'][key] is not None) and\
-                                (self.update_parameters['maintenance_window'][key] != old_response['maintenance_window'].get(key)):
-                            update_flag = True
-                        else:
-                            self.update_parameters['maintenance_window'][key] = old_response['maintenance_window'].get(key)
-
-                if self.identity:
-                    update_identity, new_identity = self.update_managed_identity(new_identity=self.identity,
-                                                                                 curr_identity=old_response.get('identity', {}))
-                    if update_identity:
-                        self.update_parameters['identity'] = new_identity
-                        update_flag = True
-
-                update_tags, new_tags = self.update_tags(old_response['tags'])
-                self.update_parameters['tags'] = new_tags
-                if update_tags:
-                    update_flag = True
-
-                if self.auth_config is not None and not self.default_compare({}, self.auth_config, old_response['auth_config'], '', dict(compare=[])):
-                    update_flag = True
-                else:
-                    self.auth_config = old_response['auth_config']
-
-                if update_flag:
+        if self.state == 'present':
+            if not self.check_mode:
+                if not old_response:
+                    # Create
+                    response = self.create_postgresqlflexibleserver(self.parameters)
                     changed = True
-                    if not self.check_mode:
-                        response = self.update_postgresqlflexibleserver(self.update_parameters)
+                else:
+                    update_fields = [
+                        'sku', 'storage', 'cluster', 'backup', 'high_availability',
+                        'maintenance_window', 'auth_config', 'identity', 'tags',
+                        'version', 'network', 'availability_zone']
+                    desired = {k: self.parameters.get(k) for k in update_fields}
+                    current = {k: old_response.get(k) for k in update_fields}
+                    if not self.default_compare({}, desired, current, '', dict(compare=[])):
+                        # Update (PUT)
+                        response = self.update_postgresqlflexibleserver(self.parameters)
+                        changed = True
                     else:
                         response = old_response
-                    if self.is_stop:
-                        self.stop_postgresqlflexibleserver()
-                        changed = True
-                    elif self.is_start:
-                        self.start_postgresqlflexibleserver()
-                        changed = True
-                    elif self.is_restart:
-                        self.restart_postgresqlflexibleserver()
-                        changed = True
-                else:
-                    if not self.check_mode:
-                        if self.is_stop:
-                            self.stop_postgresqlflexibleserver()
-                            changed = True
-                        elif self.is_start:
-                            self.start_postgresqlflexibleserver()
-                            changed = True
-                        elif self.is_restart:
-                            self.restart_postgresqlflexibleserver()
-                            changed = True
-                    response = old_response
+                        changed = False
+
+                if self.is_stop:
+                    self.stop_postgresqlflexibleserver()
+                    changed = True
+                elif self.is_start:
+                    self.start_postgresqlflexibleserver()
+                    changed = True
+                elif self.is_restart:
+                    self.restart_postgresqlflexibleserver()
+                    changed = True
+
             else:
-                self.log("PostgreSQL Flexible Server instance already exist, will be deleted")
+                response = old_response
+
+        elif self.state == 'absent':
+            if old_response:
                 changed = True
                 if not self.check_mode:
                     response = self.delete_postgresqlflexibleserver()
-
+            else:
+                self.log("PostgreSQL Flexible Server instance doesn't exist, nothing to delete.")
+                response = {}
         self.results['changed'] = changed
         self.results['state'] = response
-
         return self.results
 
     def update_postgresqlflexibleserver(self, body):
@@ -885,15 +911,14 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         '''
         self.log("Updating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            # structure of parameters for update must be changed
-            response = self.postgresql_flexible_client.servers.begin_update(resource_group_name=self.resource_group,
-                                                                            server_name=self.name,
-                                                                            parameters=body)
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                      server_name=self.name,
+                                                                                      parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
         except Exception as exc:
-            self.log('Error attempting to create the PostgreSQL Flexible Server instance.')
+            self.log('Error attempting to update the PostgreSQL Flexible Server instance.')
             self.fail("Error updating the PostgreSQL Flexible Server instance: {0}".format(str(exc)))
         return self.format_item(response)
 
@@ -904,9 +929,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
         '''
         self.log("Creating the PostgreSQL Flexible Server instance {0}".format(self.name))
         try:
-            response = self.postgresql_flexible_client.servers.begin_create(resource_group_name=self.resource_group,
-                                                                            server_name=self.name,
-                                                                            parameters=body)
+            response = self.postgresql_flexible_client.servers.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                                      server_name=self.name,
+                                                                                      parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -982,7 +1007,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             response = self.postgresql_flexible_client.servers.get(resource_group_name=self.resource_group,
                                                                    server_name=self.name)
             self.log("Response : {0}".format(response))
-            self.log("PostgreSQL Flexible Server instance : {0} found".format(response.name))
+            self.log("PostgreSQL Flexible Server instance : {0} found".format(self.name))
         except ResourceNotFoundError as e:
             self.log('Did not find the PostgreSQL Flexible Server instance. Exception as {0}'.format(str(e)))
             return None
@@ -1010,7 +1035,8 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             source_server_resource_id=item.source_server_resource_id,
             point_in_time_utc=item.point_in_time_utc,
             availability_zone=item.availability_zone,
-            auth_config=dict()
+            auth_config=dict(),
+            cluster=dict()
         )
         if item.sku is not None:
             result['sku']['name'] = item.sku.name
@@ -1049,6 +1075,12 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             result['auth_config']['tenant_id'] = item.auth_config.tenant_id
         else:
             result['auth_config'] = None
+        if item.cluster is not None:
+            result['cluster']['cluster_size'] = item.cluster.cluster_size
+            result['cluster']['default_database_name'] = item.cluster.default_database_name
+        else:
+            result['cluster']['cluster_size'] = None
+            result['cluster']['default_database_name'] = None
 
         return result
 
