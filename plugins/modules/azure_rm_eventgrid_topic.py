@@ -223,7 +223,7 @@ EXAMPLES = '''
       - ipmask: 10.2.0.0/8
         action: Allow
     identity:
-        type: SystemAssigned # try to invoke sanity check
+      type: SystemAssigned
 
 - name: Create a new topic in AzureArc targeting a custom location
   azure.azcollection.azure_rm_eventgrid_topic:
