@@ -81,7 +81,6 @@ options:
             - '15'
             - '16'
             - '17'
-            - '18'
     fully_qualified_domain_name:
         description:
             - The fully qualified domain name of a server.
@@ -712,7 +711,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             ),
             version=dict(
                 type='str',
-                choices=['11', '12', '13', '14', '15', '16', '17', '18']
+                choices=['11', '12', '13', '14', '15', '16', '17']
             ),
             fully_qualified_domain_name=dict(
                 type='str',
@@ -1053,12 +1052,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             result['auth_config']['tenant_id'] = item.auth_config.tenant_id
         else:
             result['auth_config'] = None
-        cluster_obj = getattr(item, 'cluster', None)
-        if cluster_obj is None and hasattr(item, 'properties'):
-            cluster_obj = getattr(item.properties, 'cluster', None)
-        if cluster_obj is not None:
-            result['cluster']['cluster_size'] = getattr(cluster_obj, 'cluster_size', None)
-            result['cluster']['default_database_name'] = getattr(cluster_obj, 'default_database_name', None)
+        if item.cluster is not None:
+            result['cluster']['cluster_size'] = item.cluster.cluster_size
+            result['cluster']['default_database_name'] = item.cluster.default_database_name
         else:
             result['cluster']['cluster_size'] = None
             result['cluster']['default_database_name'] = None
