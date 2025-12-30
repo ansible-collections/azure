@@ -133,7 +133,7 @@
           start_minute: 4
           day_of_week: 3
         availability_zone: 2
-        # create_mode: Create  <- Azure do not store create_mode after server has been created
+        create_mode: Create
         identity:
           type: UserAssigned
           user_assigned_identities:
@@ -170,7 +170,7 @@
           start_minute: 6
           day_of_week: 6
         availability_zone: 2
-        create_mode: Update
+        create_mode: Create
         tags:
           key1: value1
           key2: value2

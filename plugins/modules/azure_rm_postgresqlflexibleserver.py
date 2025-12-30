@@ -868,8 +868,7 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
                     update_fields = [
                         'sku', 'storage', 'cluster', 'backup', 'high_availability',
                         'maintenance_window', 'auth_config', 'identity', 'tags',
-                        'version', 'network', 'availability_zone', 'create_mode'
-                    ]
+                        'version', 'network', 'availability_zone']
                     desired = {k: self.parameters.get(k) for k in update_fields}
                     current = {k: old_response.get(k) for k in update_fields}
                     if not self.default_compare({}, desired, current, '', dict(compare=[])):
