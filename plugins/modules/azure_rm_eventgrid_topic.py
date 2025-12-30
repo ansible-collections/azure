@@ -218,12 +218,12 @@ EXAMPLES = '''
     location: westus2
     public_network_access: enabled
     inbound_ip_rules:
-        - ipmask: 10.0.0.0/8
-          action: Allow
-        - ipmask: 10.2.0.0/8
-          action: Allow
+      - ipmask: 10.0.0.0/8
+        action: Allow
+      - ipmask: 10.2.0.0/8
+        action: Allow
     identity:
-        type: SystemAssigned
+      - type: SystemAssigned
 
 - name: Create a new topic in AzureArc targeting a custom location
   azure.azcollection.azure_rm_eventgrid_topic:
