@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install ansible-lint pylint
-      - run: ansible-lint .
+      - run: ansible-lint
       - run: |
           echo "Running pylint on EDA event_source..."
           pylint extensions/eda/plugins/event_source/*.py \
