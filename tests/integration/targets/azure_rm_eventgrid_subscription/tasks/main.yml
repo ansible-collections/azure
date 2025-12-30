@@ -5,13 +5,10 @@
 
 - name: For eventgrid topic test
   block:
-    - name: Create randomID
+    - name: Create resource prefix
       ansible.builtin.set_fact:
-        randomID: "{{ 65535 | random | string }}"
-
-    - name: Create randomIdentifier
-      ansible.builtin.set_fact:
-        randomIdentifier: "{{ resource_group | hash('md5') | truncate(16, True, '') + randomID }}"
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
+      run_once: true
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
@@ -22,9 +19,9 @@
       ansible.builtin.set_fact:
         location: "{{ __rg_info.resourcegroups.0.location }}"
         new_resource_group: "{{ resource_group }}-eventgrid-subscription"
-        topic_name: "topic-{{ randomIdentifier }}"
-        subscription_name: "subscription-{{ randomIdentifier }}"
-        site: "event-grid-site-{{ randomIdentifier }}"
+        topic_name: "topic-{{ rpfx }}"
+        subscription_name: "subscription-{{ rpfx }}"
+        site: "event-grid-site-{{ rpfx }}"
 
     - name: Create EventGrid Topic
       azure.azcollection.azure_rm_eventgrid_topic:
@@ -75,7 +72,7 @@
         source_resource_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}/providers/Microsoft.EventGrid/topics/{{ topic_name }}"
       register: results
 
-    - name: debug
+    - name: Debug
       ansible.builtin.debug:
         var: results
 
@@ -90,7 +87,7 @@
         url: "{{ results.eventgrid_topics[0].endpoint }}"
         key: "{{ results.eventgrid_topics[0].topic_keys.key1 }}"
         event:
-          - id: "{{ randomID }}"
+          - id: "{{ rpfx }}"
             eventType: recordInserted
             subject: myapp/vehicles/motorcycles
             eventTime: "{{ '%Y-%m-%dT%H:%M:%S%z' | strftime(ansible_facts.date_time.epoch) }}"

@@ -7,7 +7,8 @@
   block:
     - name: Create random eventgrid topic name
       ansible.builtin.set_fact:
-        name_rpfx: "test{{ resource_group | hash('md5') | truncate(16, True, '') + (65535 | random | string) }}"
+        name_rpfx: "test{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
+      run_once: true
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
@@ -245,26 +246,26 @@
           - results.eventgrid_topic.input_schema_mapping.event_type.source_field == "myEventTypeField"
 
     # cleanup
-    - name: delete eventgrid topic
+    - name: Delete eventgrid topic
       azure.azcollection.azure_rm_eventgrid_topic:
         location: "{{ location }}"
         name: "{{ name_rpfx }}"
         resource_group: "{{ new_resource_group }}"
         state: absent
 
-    - name: create a new topic which allows specific inbound ip rules with system assigned
+    - name: Create a new topic which allows specific inbound ip rules with system assigned
       azure.azcollection.azure_rm_eventgrid_topic:
         location: "{{ location }}"
         name: "{{ name_rpfx }}"
         resource_group: "{{ new_resource_group }}"
         public_network_access: enabled
         inbound_ip_rules:
-            - ipmask: 10.0.0.0/8
-              action: Allow
-            - ipmask: 10.2.0.0/8
-              action: Allow
+          - ipmask: 10.0.0.0/8
+            action: Allow
+          - ipmask: 10.2.0.0/8
+            action: Allow
         identity:
-            type: SystemAssigned
+          type: SystemAssigned
       register: results
 
     - name: Assert the eventgrid topic changed
@@ -274,7 +275,7 @@
           - results.eventgrid_topic.inbound_ip_rules | length == 2
 
     # cleanup
-    - name: delete eventgrid topic
+    - name: Delete eventgrid topic
       azure.azcollection.azure_rm_eventgrid_topic:
         location: "{{ location }}"
         name: "{{ name_rpfx }}"
