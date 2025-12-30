@@ -1,4 +1,29 @@
 # Change Log
+## v3.13.0 (2025-12-31)
+
+### NEW MODULES
+  - azure_rm_eventgrid_subscription.py:([#2140](https://github.com/ansible-collections/azure/pull/2140))
+  - azure_rm_eventgrid_subscription_info.py:([#2140](https://github.com/ansible-collections/azure/pull/2140))
+  - azure_rm_eventgrid_topic.py:([#2140](https://github.com/ansible-collections/azure/pull/2140))
+  - azure_rm_eventgrid_topic_info.py:([#2140](https://github.com/ansible-collections/azure/pull/2140))
+  - azure_rm_eventgrid_topic_subscription.py:([#2140](https://github.com/ansible-collections/azure/pull/2140))
+
+### FEATURE ENHANCEMENT
+  - requirements.txt: Added support for elastic cluster ([#2141](https://github.com/ansible-collections/azure/pull/2141))
+  - plugins/modules/azure_rm_postgresqlflexibleserver: Added support for elastic cluster ([#2141](https://github.com/ansible-collections/azure/pull/2141))
+  - plugins/module_utils/azure_rm_common.py: Update latest PostgreSQL API version ([#2135](https://github.com/ansible-collections/azure/pull/2135))
+  - plugins/modules/azure_rm_storageblob.py: 
+    - Added support for URL upload ([#2128](https://github.com/ansible-collections/azure/pull/2128))
+    - Support upload for bigger files ([#2133](https://github.com/ansible-collections/azure/pull/2133))
+  - plugins/modules/azure_rm_keyvaultcertificate.py: Support re-import of existing key vault certificates ([#2124](https://github.com/ansible-collections/azure/pull/2124))
+  - plugins/inventory/azure_rm.py: Handle Azure ResourceNotFoundError during inventory serialization ([#2120](https://github.com/ansible-collections/azure/pull/2120))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_common.py: Force JSON output for CLI queries to avoid parsing errors ([#2139](https://github.com/ansible-collections/azure/pull/2139))
+  - plugins/modules/azure_rm_adapplication.py: Fix KeyValue cannot be null or empty error when adding a certificate via key_value ([#2127](https://github.com/ansible-collections/azure/pull/2127))
+  - plugins/modules/azure_rm_networkinterface.py: Change IP configuration to construct list instead of set ([#2119](https://github.com/ansible-collections/azure/pull/2119))
+
+
 ## v3.12.0 (2025-11-28)
 
 ### FEATURE ENHANCEMENT
