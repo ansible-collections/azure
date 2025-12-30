@@ -830,6 +830,20 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         old_response = self.get_postgresqlflexibleserver()
 
+        current_tags = old_response.get('tags') if old_response else None
+        if self.tags is not None:
+            try:
+                append = getattr(self, 'append_tags', True)
+            except AttributeError:
+                append = True
+            self.parameters['tags'] = (current_tags or {})
+            if append:
+                self.parameters['tags'].update(self.tags or {})
+            else:
+                self.parameters['tags'] = self.tags or {}
+        elif current_tags is not None:
+            self.parameters['tags'] = current_tags
+
         if self.state == 'present':
             if not self.check_mode:
                 if not old_response:
