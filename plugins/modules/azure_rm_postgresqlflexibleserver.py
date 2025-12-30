@@ -830,6 +830,20 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
 
         old_response = self.get_postgresqlflexibleserver()
 
+        update_identity = False
+
+        if self.identity:
+            # Get current identity from old_response
+            curr_identity = old_response.get('identity') if old_response else {}
+            update_identity, new_identity = self.update_managed_identity(
+                new_identity=self.identity,
+                curr_identity=curr_identity,
+                allow_identities_append=True,
+                patch_support=False
+            )
+            if update_identity:
+                self.parameters['identity'] = new_identity
+
         current_tags = old_response.get('tags') if old_response else None
         if self.tags is not None:
             try:
@@ -848,10 +862,6 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             if not self.check_mode:
                 if not old_response:
                     # Create
-                    if self.identity:
-                        update_identity, new_identity = self.update_managed_identity(new_identity=self.identity)
-                        if update_identity:
-                            self.parameters['identity'] = new_identity
                     response = self.create_postgresqlflexibleserver(self.parameters)
                     changed = True
                 else:
