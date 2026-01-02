@@ -126,8 +126,8 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state.id
-          - output.state.ip_configuration.primary
+          - output.state.id is defined
+          - output.state.ip_configuration.primary == True
 
     - name: Get fact of the new created NIC
       azure.azcollection.azure_rm_networkinterface_info:
@@ -507,7 +507,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id != ''
+          - output.id is defined
 
     - name: Get Application security group
       azure.azcollection.azure_rm_applicationsecuritygroup_info:
