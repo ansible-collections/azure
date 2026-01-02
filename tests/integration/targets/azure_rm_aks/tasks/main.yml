@@ -69,7 +69,7 @@
             node_labels: {"release":"stable"}
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -110,7 +110,7 @@
             node_labels: {"release":"stable"}
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -123,6 +123,70 @@
           - output is changed
           - output.provisioning_state == 'Succeeded'
 
+    - name: Update AKS instance with AAD admin group
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+          admin_group_object_ids:
+            - "11111111-2222-3333-4444-555555555555" # Dummy GUID
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: aad_update
+
+    - name: Assert AAD admin group update applied
+      ansible.builtin.assert:
+        that:
+          - aad_update is changed
+
+    - name: Update AKS instance with AAD admin group (idempotent)
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+          admin_group_object_ids:
+            - "11111111-2222-3333-4444-555555555555" # Dummy GUID
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_B2s
+            type: VirtualMachineScaleSets
+            mode: System
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: aad_update_idem
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - aad_update_idem is not changed
+
     - name: Get AKS fact
       azure.azcollection.azure_rm_aks_info:
         name: "aks{{ rpfx }}"
@@ -134,7 +198,7 @@
         that:
           - "fact.aks | length == 1"
           - fact.aks[0].id == output.id
-          - fact.aks[0].agent_pool_profiles[0].availability_zones == ["1"]
+          - fact.aks[0].agent_pool_profiles[0].availability_zones == ["2"]
           - fact.aks[0].agent_pool_profiles[0].mode == "System"
           - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
 
@@ -161,7 +225,7 @@
             node_labels: {"release":"stable", "environment":"dev"}
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -219,7 +283,7 @@
             mode: System
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -258,7 +322,7 @@
             mode: System
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         addon:
           http_application_routing:
@@ -302,7 +366,7 @@
             mode: System
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         addon:
           http_application_routing:
@@ -345,7 +409,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -386,7 +450,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -423,7 +487,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
           - name: default2
             count: 1
             vm_size: Standard_B2s
@@ -470,7 +534,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
           - name: default2
             count: 1
             vm_size: Standard_B2s
@@ -512,7 +576,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
           - name: default2
             count: 1
             vm_size: Standard_B2s
@@ -559,7 +623,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 1
+              - 2
           - name: default2
             count: 1
             vm_size: Standard_B2s

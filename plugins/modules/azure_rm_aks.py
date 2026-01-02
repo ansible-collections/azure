@@ -264,7 +264,7 @@ options:
                         description:
                             - Identifier of Azure Key Vault key.
                         type: str
-                    key_vault_network_acces:
+                    key_vault_network_access:
                         description:
                             - Network access of key vault.
                         type: str
@@ -275,8 +275,8 @@ options:
                     key_vault_resource_id:
                         description:
                             - Resource ID of key vault.
-                            - When I(key_vault_network_acces=Private), this field is required and must be a valid resource ID.
-                            - When I(key_vault_network_acces=Public), leave the field empty.
+                            - When I(key_vault_network_access=Private), this field is required and must be a valid resource ID.
+                            - When I(key_vault_network_access=Public), leave the field empty.
                         type: str
     service_principal:
         description:
@@ -820,6 +820,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     state: absent
 '''
+
 RETURN = '''
 state:
     description: Current state of the Azure Container Service (AKS).
@@ -1332,7 +1333,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         options=dict(
                             enabled=dict(type='bool', default=False),
                             key_id=dict(type='str'),
-                            key_vault_network_acces=dict(type='str', choices=['Private', 'Public'], default='Public'),
+                            key_vault_network_access=dict(type='str', choices=['Private', 'Public'], default='Public'),
                             key_vault_resource_id=dict(type='str')
                         )
                     ),
@@ -1417,7 +1418,9 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                 if not self.service_principal and not self.identity:
                     self.identity = dotdict({'type': 'SystemAssigned'})
                 if self.identity:
-                    changed, self.identity = self.update_identity(self.identity, {})
+                    changed, new_identity_obj = self.update_identity(self.identity, {})
+                    if changed:
+                        self.identity_obj = new_identity_obj
                 if self.kubernetes_version not in available_versions.keys():
                     self.fail("Unsupported kubernetes version. Expected one of {0} but got {1}".format(available_versions.keys(), self.kubernetes_version))
             else:
@@ -1425,6 +1428,21 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                 self.results['changed'] = False
                 self.log('Results : {0}'.format(response))
                 update_tags, response['tags'] = self.update_tags(response['tags'])
+
+                if response and not self.service_principal and not self.identity:
+                    current_id = response.get('identity', {})
+                    if current_id.get('type') in ['UserAssigned', 'SystemAssigned']:
+                        # Preserve existing identity type
+                        self.identity = {'type': current_id['type']}
+                        # If user-assigned, include the existing identity resource ID
+                        if current_id['type'] == 'UserAssigned' and current_id.get('user_assigned_identities'):
+                            # current_id['user_assigned_identities'] is a dict of {ID: {}}
+                            uai_list = list(current_id['user_assigned_identities'].keys())
+                            if uai_list:
+                                self.identity['user_assigned_identities'] = uai_list[0]
+                    else:
+                        # Fallback to system-assigned if no identity at all
+                        self.identity = {'type': 'SystemAssigned'}
 
                 if response['provisioning_state'] == "Succeeded":
 
@@ -1531,6 +1549,14 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     else:
                         self.auto_upgrade_profile = response['auto_upgrade_profile']
 
+                    if self.aad_profile and 'admin_group_object_ids' in self.aad_profile and 'admin_group_object_i_ds' not in self.aad_profile:
+                        self.aad_profile['admin_group_object_i_ds'] = self.aad_profile.pop('admin_group_object_ids')
+
+                    if not self.default_compare({}, self.aad_profile, response['aad_profile'], '', dict(compare=[])):
+                        to_be_updated = True
+                    else:
+                        self.aad_profile = response['aad_profile']
+
                     for profile_result in response['agent_pool_profiles']:
                         matched = False
                         for profile_self in self.agent_pool_profiles:
@@ -1607,8 +1633,10 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     if not self.service_principal and not self.identity:
                         self.identity = dotdict({'type': 'SystemAssigned'})
                     if self.identity:
-                        changed, self.identity = self.update_identity(self.identity, response['identity'])
+                        changed, new_identity_obj = self.update_identity(self.identity, response.get('identity', {}))
                         if changed:
+                            # Keep dict for internal checks, use object only for SDK call
+                            self.identity_obj = new_identity_obj
                             to_be_updated = True
                     # Cannot Update the Username for now // Let service to handle it
                     if self.windows_profile and is_property_changed('windows_profile', 'admin_username'):
@@ -1679,7 +1707,6 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
         # Only service_principal or identity can be specified, but default to SystemAssigned if none specified.
         if self.service_principal:
             service_principal_profile = self.create_service_principal_profile_instance(self.service_principal)
-            identity = None
         else:
             service_principal_profile = None
 
@@ -1715,6 +1742,34 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
         else:
             security_profile = None
 
+        identity_param = getattr(self, 'identity_obj', None)
+        if self.identity and identity_param is None:
+            identity_param = self.managedcluster_models.ManagedClusterIdentity(
+                type=self.identity['type'],
+                user_assigned_identities=({self.identity['user_assigned_identities']: {}}
+                                          if self.identity.get('user_assigned_identities')
+                                          else None))
+
+        if self.aad_profile:
+            # Fill tenant_id from the existing cluster if not provided
+            if not self.aad_profile.get('tenant_id'):
+                self.aad_profile['tenant_id'] = (self.results.get('aad_profile') or {}).get('tenant_id')
+
+            # Preserve managed flag if not provided
+            if 'managed' not in self.aad_profile:
+                current_managed = (self.results.get('aad_profile') or {}).get('managed')
+                if current_managed is not None:
+                    self.aad_profile['managed'] = current_managed
+
+            # Preserve enable_azure_rbac if not provided
+            if 'enable_azure_rbac' not in self.aad_profile:
+                current_rbac = (self.results.get('aad_profile') or {}).get('enable_azure_rbac')
+                if current_rbac is not None:
+                    self.aad_profile['enable_azure_rbac'] = current_rbac
+
+            if 'admin_group_object_ids' in self.aad_profile and 'admin_group_object_i_ds' not in self.aad_profile:
+                self.aad_profile['admin_group_object_i_ds'] = self.aad_profile.pop('admin_group_object_ids')
+
         parameters = self.managedcluster_models.ManagedCluster(
             location=self.location,
             dns_prefix=self.dns_prefix,
@@ -1724,7 +1779,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
             agent_pool_profiles=agentpools,
             linux_profile=linux_profile,
             windows_profile=windows_profile,
-            identity=self.identity,
+            identity=identity_param,
             enable_rbac=self.enable_rbac,
             network_profile=self.create_network_profile_instance(self.network_profile),
             aad_profile=self.create_aad_profile_instance(self.aad_profile),
