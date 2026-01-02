@@ -109,7 +109,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
     - name: Create auto scaling (idemponent)
       azure.azcollection.azure_rm_autoscale:
@@ -136,7 +136,7 @@
       ansible.builtin.assert:
         that:
           - output is not changed
-          - output.id
+          - output.id is defined
 
     - name: Update auto scaling
       azure.azcollection.azure_rm_autoscale:

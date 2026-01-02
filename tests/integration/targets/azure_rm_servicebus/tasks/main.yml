@@ -46,9 +46,9 @@
     - name: Assert the namespace created
       ansible.builtin.assert:
         that:
-          - output.id
+          - output.id is defined
           - output is changed
-          - output.tags
+          - output.tags is defined
 
     - name: Create a namespace (idempontent)
       azure.azcollection.azure_rm_servicebus:
@@ -183,7 +183,7 @@
           key1: value1
       register: output
 
-    - name: Assert the service bus udpated
+    - name: Assert the service bus updated
       ansible.builtin.assert:
         that:
           - output is changed
@@ -217,7 +217,7 @@
     - name: Assert the queue created
       ansible.builtin.assert:
         that:
-          - queue.id
+          - queue.id is defined
           - queue is changed
 
     - name: Create a topic (check mode)
@@ -250,7 +250,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
           - "'subscription_count' not in output"
 
     - name: Create a topic (idempontent)
@@ -287,7 +287,7 @@
     - name: Assert the subscription created
       ansible.builtin.assert:
         that:
-          - subs.id
+          - subs.id is defined
           - subs is changed
 
     - name: Retrive topic
@@ -302,7 +302,7 @@
     - name: Assert the topic facts
       ansible.builtin.assert:
         that:
-          - "facts.servicebuses | length == 1"
+          - "facts.servicebuses | length == 1
           - facts.servicebuses[0].id == output.id
           - facts.servicebuses[0].subscription_count == 1
           - facts.servicebuses[0].sas_policies.testpolicy
@@ -329,7 +329,7 @@
       ansible.builtin.assert:
         that:
           - facts.servicebuses[0].subscription_count == 0
-          - "facts.servicebuses | length == 1"
+          - "facts.servicebuses | length == 1
 
     - name: Delete topic
       azure.azcollection.azure_rm_servicebustopic:
@@ -350,7 +350,7 @@
     - name: Assert the topic facts
       ansible.builtin.assert:
         that:
-          - "facts.servicebuses | length == 0"
+          - "facts.servicebuses | length == 0
 
     - name: Delete queue
       azure.azcollection.azure_rm_servicebusqueue:

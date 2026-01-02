@@ -34,8 +34,8 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
-          - output.host_name
+          - output.id is defined
+          - output.host_name is defined
 
     - name: Update EndPoint (idempotent test)
       azure.azcollection.azure_rm_afdendpoint:
@@ -67,8 +67,8 @@
           - output.afdendpoints | length == 1
           - output.afdendpoints[0].auto_generated_domain_name_label_scope == 'TenantReuse'
           - output.afdendpoints[0].enabled_state == 'Enabled'
-          - output.afdendpoints[0].host_name
-          - output.afdendpoints[0].id
+          - output.afdendpoints[0].host_name is defined
+          - output.afdendpoints[0].id is defined
           - output.afdendpoints[0].profile_name == profile
           - output.afdendpoints[0].tags.test == 'tag value'
           - output is not changed

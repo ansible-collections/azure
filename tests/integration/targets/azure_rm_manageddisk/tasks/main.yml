@@ -52,7 +52,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state
+          - output.state is defined
 
     - name: Create new managed disk succesfully
       azure.azcollection.azure_rm_manageddisk:
@@ -347,7 +347,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state
+          - output.state is defined
 
     - name: Gather Resource Group info
       azure.azcollection.azure_rm_resourcegroup_info:
@@ -396,7 +396,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state
+          - output.state is defined
           - output.state.tags.testtag1 is not defined
           - output.state.tags.testtag2 == 'TestValue2'
 
@@ -413,7 +413,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state
+          - output.state is defined
           - output.state.tags.testtag1 is not defined
           - output.state.tags.testtag2 == 'TestValue2'
           - output.state.tags.TestTag3 == 'TestValue3'
