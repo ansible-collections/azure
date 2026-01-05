@@ -23,7 +23,7 @@
     - name: Assert check mode
       ansible.builtin.assert:
         that:
-          - output.id is not defined
+          - output.id is none
           - output is changed
 
     - name: Create a route table
@@ -79,7 +79,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id is not defined
+          - output.id is none
 
     - name: Create route
       azure.azcollection.azure_rm_route:

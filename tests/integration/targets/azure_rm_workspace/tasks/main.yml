@@ -45,7 +45,7 @@
         that:
           - output.retention_in_days == 40
           - output is changed
-          - output.intelligence_packs
+          - output.intelligence_packs | length > 0
 
     - name: Create workspace (idempontent)
       azure.azcollection.azure_rm_loganalyticsworkspace:
