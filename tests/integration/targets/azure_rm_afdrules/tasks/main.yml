@@ -63,7 +63,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
     - name: Update Rule 1 (idempotent test)
       azure.azcollection.azure_rm_afdrules:
@@ -97,7 +97,7 @@
       ansible.builtin.assert:
         that:
           - output is not changed
-          - output.id
+          - output.id is defined
 
     - name: Load Rule info
       azure.azcollection.azure_rm_afdrules_info:
@@ -113,7 +113,7 @@
           - output.afdrules | length == 1
           - output.afdrules[0].actions | length == 2
           - output.afdrules[0].conditions | length == 1
-          - output.afdrules[0].id
+          - output.afdrules[0].id is defined
           - output.afdrules[0].match_processing_behavior == "Continue"
           - output.afdrules[0].order == 1
           - output.afdrules[0].rule_set_name == "{{ ruleset }}"
@@ -132,7 +132,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
     - name: Delete Rule (idempotent test)
       azure.azcollection.azure_rm_afdrules:
