@@ -10,7 +10,7 @@
 
 - name: Set user managed identity ID base path
   ansible.builtin.set_fact:
-    base_path: "/subscriptions/{{ mi_sub }}/resourceGroups/{{ mi_rg }}"
+    base_path: "/subscriptions/{{ mi_sub }}/resourcegroups/{{ mi_rg }}"
 
 - name: Set user managed identity ID
   ansible.builtin.set_fact:
