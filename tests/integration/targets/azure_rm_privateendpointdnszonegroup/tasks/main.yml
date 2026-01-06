@@ -135,7 +135,7 @@
           - output.state.provisioning_state == 'Succeeded'
           - output.state.private_dns_zone_configs | length == 1
           - output.state.private_dns_zone_configs[0].name == 'default'
-          - output.state.private_dns_zone_configs[0].private_dns_zone_id
+          - output.state.private_dns_zone_configs[0].private_dns_zone_id is defined
           - output.state.private_dns_zone_configs[0].record_sets | length == 1
           - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
           - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
@@ -143,7 +143,7 @@
           - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
           - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
           - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-          - output.state.private_dns_zone_configs[0].record_sets[0].ttl
+          - output.state.private_dns_zone_configs[0].record_sets[0].ttl is defined
 
     - name: Create zone group for private endpoint - idempotent
       azure.azcollection.azure_rm_privateendpointdnszonegroup:
@@ -175,7 +175,7 @@
           - output.groups[0].provisioning_state == 'Succeeded'
           - output.groups[0].private_dns_zone_configs | length == 1
           - output.groups[0].private_dns_zone_configs[0].name == 'default'
-          - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id
+          - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id is defined
           - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
@@ -183,7 +183,7 @@
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl is defined
 
     - name: Get all zone groups for private endpoint
       azure.azcollection.azure_rm_privateendpointdnszonegroup_info:
@@ -200,7 +200,7 @@
           - output.groups[0].provisioning_state == 'Succeeded'
           - output.groups[0].private_dns_zone_configs | length == 1
           - output.groups[0].private_dns_zone_configs[0].name == 'default'
-          - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id
+          - output.groups[0].private_dns_zone_configs[0].private_dns_zone_id is defined
           - output.groups[0].private_dns_zone_configs[0].record_sets | length == 1
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
@@ -208,7 +208,7 @@
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
           - output.groups[0].private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl
+          - output.groups[0].private_dns_zone_configs[0].record_sets[0].ttl is defined
 
     - name: Update zone group for private endpoint
       azure.azcollection.azure_rm_privateendpointdnszonegroup:
@@ -228,7 +228,7 @@
           - output.state.provisioning_state == 'Succeeded'
           - output.state.private_dns_zone_configs | length == 1
           - output.state.private_dns_zone_configs[0].name == 'default-updated'
-          - output.state.private_dns_zone_configs[0].private_dns_zone_id
+          - output.state.private_dns_zone_configs[0].private_dns_zone_id is defined
           - output.state.private_dns_zone_configs[0].record_sets | length == 1
           - output.state.private_dns_zone_configs[0].record_sets[0].fqdn == 'postgresqlsrv-{{ rpfx }}.privatelink.postgres.database.azure.com'
           - output.state.private_dns_zone_configs[0].record_sets[0].ip_addresses | length == 1
@@ -236,7 +236,7 @@
           - output.state.private_dns_zone_configs[0].record_sets[0].provisioning_state == 'Succeeded'
           - output.state.private_dns_zone_configs[0].record_sets[0].record_set_name == 'postgresqlsrv-{{ rpfx }}'
           - output.state.private_dns_zone_configs[0].record_sets[0].record_type == 'A'
-          - output.state.private_dns_zone_configs[0].record_sets[0].ttl
+          - output.state.private_dns_zone_configs[0].record_sets[0].ttl is defined
 
     - name: Delete zone group for private endpoint - check mode
       azure.azcollection.azure_rm_privateendpointdnszonegroup:
