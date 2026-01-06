@@ -54,7 +54,7 @@
           - output is changed
           - output.state is defined
 
-    - name: Create new managed disk succesfully
+    - name: Create new managed disk successfully
       azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-manageddisk"
         name: "md{{ rpfx }}1"
@@ -319,7 +319,7 @@
         name: 'test{{ rpfx }}'
       register: access_output
 
-    - name: Create new managed disk succesfully
+    - name: Create new managed disk successfully
       azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-manageddisk"
         name: "md{{ rpfx }}7"
