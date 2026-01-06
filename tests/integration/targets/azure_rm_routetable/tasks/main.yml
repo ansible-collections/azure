@@ -40,7 +40,7 @@
           - output is changed
           - output.id is defined
 
-    - name: Create a route table (idemponent)
+    - name: Create a route table (idempotent)
       azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
