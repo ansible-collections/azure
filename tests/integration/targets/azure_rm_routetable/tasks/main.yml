@@ -96,7 +96,7 @@
           - output is changed
           - output.id is defined
 
-    - name: Create route (idemponent)
+    - name: Create route (idempotent)
       azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
@@ -171,7 +171,7 @@
         that:
           - output is changed
 
-    - name: Delete route (idemponent)
+    - name: Delete route (idempotent)
       azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
@@ -203,7 +203,7 @@
         that:
           - output is changed
 
-    - name: Delete route table (idemponent)
+    - name: Delete route table (idempotent)
       azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
