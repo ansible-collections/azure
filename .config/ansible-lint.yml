@@ -2,4 +2,3 @@
 skip_list:
   - yaml[line-length]
   - sanity[cannot-ignore]
-  - no-handler

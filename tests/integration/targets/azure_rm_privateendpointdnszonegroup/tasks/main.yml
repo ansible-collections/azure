@@ -130,7 +130,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state.id
+          - output.state.id is defined
           - output.state.name == 'zone-group-{{ rpfx }}'
           - output.state.provisioning_state == 'Succeeded'
           - output.state.private_dns_zone_configs | length == 1
@@ -170,7 +170,7 @@
         that:
           - output is not changed
           - output.groups | length == 1
-          - output.groups[0].id
+          - output.groups[0].id is defined
           - output.groups[0].name == 'zone-group-{{ rpfx }}'
           - output.groups[0].provisioning_state == 'Succeeded'
           - output.groups[0].private_dns_zone_configs | length == 1
@@ -195,7 +195,7 @@
         that:
           - output is not changed
           - output.groups | length == 1
-          - output.groups[0].id
+          - output.groups[0].id is defined
           - output.groups[0].name == 'zone-group-{{ rpfx }}'
           - output.groups[0].provisioning_state == 'Succeeded'
           - output.groups[0].private_dns_zone_configs | length == 1
@@ -223,7 +223,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.state.id
+          - output.state.id is defined
           - output.state.name == 'zone-group-{{ rpfx }}'
           - output.state.provisioning_state == 'Succeeded'
           - output.state.private_dns_zone_configs | length == 1

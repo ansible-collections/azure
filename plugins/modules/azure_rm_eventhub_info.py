@@ -39,7 +39,7 @@ author:
 
 EXAMPLES = '''
 - name: Get facts of specific Event hub
-  community.azure.azure_rm_eventhub_info:
+  azure.azcollection.azure_rm_eventhub_info:
     resource_group: myResourceGroup
     name: myEventHub
 '''

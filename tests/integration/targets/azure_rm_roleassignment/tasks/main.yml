@@ -110,7 +110,7 @@
         id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/resourceGroups/{{ resource_group | upper }}/providers/Microsoft.Authorization/roleAssignments/{{ uuid }}"
         assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
         role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
-      register: az_role_assignment_create
+      register: az_role_assignment_create_by_id
 
     - name: Create role assignment with name
       azure.azcollection.azure_rm_roleassignment:
@@ -168,10 +168,10 @@
 
     - name: Delete Role Assignment by id
       azure.azcollection.azure_rm_roleassignment:
-        id: "{{ az_role_assignment_create.id }}"
+        id: "{{ az_role_assignment_create_by_id.id }}"
         state: absent
       register: az_role_assignment_delete
-      when: az_role_assignment_create is changed
+      # when: az_role_assignment_create is changed  <- no-handler error by ansible-lint
 
     - name: Create role assignment with name
       azure.azcollection.azure_rm_roleassignment:
@@ -179,7 +179,7 @@
         assignee_object_id: "{{ az_role_assignments.roleassignments[0].principal_id }}"
         role_definition_id: "/subscriptions/{{ az_resource_group.resourcegroups[0].id.split('/')[2] }}/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_guid }}"
         name: "{{ uuid }}"
-      register: az_role_assignment_create
+      register: az_role_assignment_create_by_name
       ignore_errors: true
 
     - name: Delete Role by Name
