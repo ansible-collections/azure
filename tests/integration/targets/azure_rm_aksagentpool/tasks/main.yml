@@ -196,7 +196,7 @@
         #   - 3
       register: output
 
-    - name: Assert the node agent pool udpated
+    - name: Assert the node agent pool updated
       ansible.builtin.assert:
         that:
           - output is changed
