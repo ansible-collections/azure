@@ -111,7 +111,7 @@
           - output is changed
           - output.id is defined
 
-    - name: Create auto scaling (idemponent)
+    - name: Create auto scaling (idempotent)
       azure.azcollection.azure_rm_autoscale:
         resource_group: "{{ resource_group }}-autoscale"
         name: "{{ name_rpfx }}"
