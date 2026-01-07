@@ -1,11 +1,16 @@
 ---
+- name: Normalize RG & subscription for managed identity ops
+  ansible.builtin.set_fact:
+    mi_rg: "{{ new_resource_group | default(resource_group) }}"
+    mi_sub: "{{ azure_subscription_id | default(lookup('env', 'AZURE_SUBSCRIPTION_ID')) }}"
+
 - name: Set user managed identity name
   ansible.builtin.set_fact:
     identity_name: "ansible-test-{{ managed_identity_test_unique }}-identity-{{ managed_identity_unique }}"
 
 - name: Set user managed identity ID base path
   ansible.builtin.set_fact:
-    base_path: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}"
+    base_path: "/subscriptions/{{ mi_sub }}/resourcegroups/{{ mi_rg }}"
 
 - name: Set user managed identity ID
   ansible.builtin.set_fact:
@@ -18,7 +23,7 @@
 
 - name: Create the user managed identity - {{ identity_name }}
   azure.azcollection.azure_rm_resource:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ mi_rg }}"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ identity_name }}"
@@ -31,7 +36,7 @@
 - name: Lookup service principal object id for identity {{ identity_name }}
   azure.azcollection.azure_rm_resource_info:
     api_version: "2023-01-31"
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ mi_rg }}"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ identity_name }}"
@@ -49,7 +54,7 @@
 
 - name: Destroy the user managed identity - {{ identity_name }}
   azure.azcollection.azure_rm_resource:
-    resource_group: "{{ resource_group }}"
+    resource_group: "{{ mi_rg }}"
     provider: ManagedIdentity
     resource_type: userAssignedIdentities
     resource_name: "{{ identity_name }}"

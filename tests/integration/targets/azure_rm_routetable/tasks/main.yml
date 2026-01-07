@@ -23,7 +23,7 @@
     - name: Assert check mode
       ansible.builtin.assert:
         that:
-          - not output.id
+          - output.id is none
           - output is changed
 
     - name: Create a route table
@@ -38,9 +38,9 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
-    - name: Create a route table (idemponent)
+    - name: Create a route table (idempotent)
       azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"
@@ -79,7 +79,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - not output.id
+          - output.id is none
 
     - name: Create route
       azure.azcollection.azure_rm_route:
@@ -94,9 +94,9 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
-    - name: Create route (idemponent)
+    - name: Create route (idempotent)
       azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
@@ -171,7 +171,7 @@
         that:
           - output is changed
 
-    - name: Delete route (idemponent)
+    - name: Delete route (idempotent)
       azure.azcollection.azure_rm_route:
         name: "{{ route_name }}"
         resource_group: "{{ resource_group }}-routetable"
@@ -203,7 +203,7 @@
         that:
           - output is changed
 
-    - name: Delete route table (idemponent)
+    - name: Delete route table (idempotent)
       azure.azcollection.azure_rm_routetable:
         name: "{{ name_rpfx }}"
         resource_group: "{{ resource_group }}-routetable"

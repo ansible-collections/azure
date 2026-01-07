@@ -147,7 +147,7 @@
     - name: Assert certificate facts
       ansible.builtin.assert:
         that:
-          - facts['certificates'][0]['name']
+          - facts['certificates'][0]['name'] is defined
           - facts['certificates'][0]['properties']['tags'] | length == 2
           - facts['certificates'][0]['properties']['attributes']['enabled'] is false
           - facts['certificates'][0]['policy']['validity_in_months'] == 38

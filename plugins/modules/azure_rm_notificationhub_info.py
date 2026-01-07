@@ -42,7 +42,7 @@ author:
 
 EXAMPLES = '''
 - name: Get facts of specific notification hub
-  community.azure.azure_rm_notificationhub_info:
+  azure.azcollection.azure_rm_notificationhub_info:
     resource_group: myResourceGroup
     name: myNotificationHub
 '''

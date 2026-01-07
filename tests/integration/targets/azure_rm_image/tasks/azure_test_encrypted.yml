@@ -36,7 +36,7 @@
   ansible.builtin.assert:
     that:
       - output is changed
-      - output.id
+      - output.id is defined
 
 - name: Create an image from VM (idempotent)
   azure.azcollection.azure_rm_image:
@@ -53,7 +53,7 @@
   ansible.builtin.assert:
     that:
       - output is not changed
-      - output.id
+      - output.id is defined
 
 - name: Gather information about image created
   azure.azcollection.azure_rm_image_info:

@@ -40,7 +40,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
     - name: Update Origin Group (idempotent test)
       azure.azcollection.azure_rm_afdorigingroup:
@@ -85,7 +85,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
     - name: Load info for all Origin Groups
       azure.azcollection.azure_rm_afdorigingroup_info:
@@ -111,7 +111,7 @@
       ansible.builtin.assert:
         that:
           - output is changed
-          - output.id
+          - output.id is defined
 
     - name: Load Origin Group info
       azure.azcollection.azure_rm_afdorigingroup_info:

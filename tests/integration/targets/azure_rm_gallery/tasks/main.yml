@@ -30,7 +30,7 @@
         scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-gallery"
         assignee_object_id: "{{ object_id }}"
         role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_id }}"
-      register: az_role_assignment_create
+      register: az_role_assignment_create_by_id
       ignore_errors: true
 
     - name: Create first key vault
@@ -705,9 +705,9 @@
 
     - name: Delete Role Assignment by id
       azure.azcollection.azure_rm_roleassignment:
-        id: "{{ az_role_assignment_create.id }}"
+        id: "{{ az_role_assignment_create_by_id.id }}"
         state: absent
-      when: az_role_assignment_create is changed
+      # when: az_role_assignment_create is changed  <- no-handler error by ansible-lint
 
     - name: Delete the public IP address
       azure.azcollection.azure_rm_publicipaddress:
