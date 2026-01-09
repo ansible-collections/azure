@@ -73,15 +73,21 @@
     that:
       - datadisk_info_delete.managed_disks | length == 0
 
-- name: NIC should be gone (Delete path)
+- name: Record VM NIC IDs
+  ansible.builtin.set_fact:
+    vm_nic_ids: >-
+      {{ vm_create_delete.ansible_facts.azure_vm.network_profile.network_interfaces
+         | map(attribute='id') | list }}
+
+- name: Default NICs owned by VM should be gone
   azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}-vm01"
   register: nic_info_delete
 
-- name: Assert NIC removed (Delete path)
+- name: Assert VM NICs deleted
   ansible.builtin.assert:
     that:
-      - nic_info_delete.networkinterfaces | length == 0
+      - vm_nic_ids | difference(nic_info_delete.networkinterfaces | map(attribute='id') | list) | length == vm_nic_ids | length
 
 # delete_option=Detach
 - name: Derive names for Detach scenario
@@ -157,15 +163,21 @@
     that:
       - datadisk_info_detach.managed_disks | length == 1
 
-- name: NIC should be gone (Detach path)
+- name: Record VM NIC IDs
+  ansible.builtin.set_fact:
+    vm_nic_ids: >-
+      {{ vm_create_detach.ansible_facts.azure_vm.network_profile.network_interfaces
+         | map(attribute='id') | list }}
+
+- name: Default NICs owned by VM should be gone
   azure.azcollection.azure_rm_networkinterface_info:
     resource_group: "{{ resource_group }}-vm01"
   register: nic_info_detach
 
-- name: Assert NIC removed (Detach path)
+- name: Assert VM NICs deleted
   ansible.builtin.assert:
     that:
-      - nic_info_detach.networkinterfaces | length == 0
+      - vm_nic_ids | difference(nic_info_detach.networkinterfaces | map(attribute='id') | list) | length == vm_nic_ids | length
 
 - name: Delete OS managed disk (Detach path cleanup)
   azure.azcollection.azure_rm_manageddisk:

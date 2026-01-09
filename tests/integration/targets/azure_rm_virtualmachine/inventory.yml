@@ -13,6 +13,10 @@ all:
       network: 10.42.2.0/24
       subnet: 10.42.2.0/28
 
+    azure_test_delete_option:
+      network: 10.42.9.0/24
+      subnet: 10.42.9.0/28
+
     azure_test_skus:
       network: 10.42.3.0/24
       subnet: 10.42.3.0/28
