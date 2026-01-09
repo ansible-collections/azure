@@ -1299,7 +1299,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
                     caching=dict(type='str', choices=['None', 'ReadOnly', 'ReadWrite']),
-                    delete_option=dict(type='str', choices=['Delete','Detach'])
+                    delete_option=dict(type='str', choices=['Delete', 'Detach'])
                 )
             ),
             plan=dict(type='dict'),
