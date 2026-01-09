@@ -42,12 +42,11 @@
       - vm_create_delete.ansible_facts.azure_vm.storage_profile.data_disks[0].delete_option == "Delete"
 
 - name: Trigger Delete (Delete path)
-  ansible.builtin.command: >
-    az vm delete
-    --resource-group {{ resource_group }}-vm01
-    --name {{ vm_name }}
-    --yes
-  changed_when: true
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}"
+    state: absent
+    remove_on_absent: []  # <- Deletes only VM
 
 - name: Short wait to allow ARM to complete eviction (Delete path)
   ansible.builtin.pause:
@@ -129,12 +128,11 @@
       - vm_create_detach.ansible_facts.azure_vm.storage_profile.data_disks[0].delete_option == "Detach"
 
 - name: Trigger Delete (Detach path)
-  ansible.builtin.command: >
-    az vm delete
-    --resource-group {{ resource_group }}-vm01
-    --name {{ vm_name_detach }}
-    --yes
-  changed_when: true
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+    state: absent
+    remove_on_absent: []  # <- Deletes only VM
 
 - name: Short wait to allow ARM to complete eviction (Detach path)
   ansible.builtin.pause:
