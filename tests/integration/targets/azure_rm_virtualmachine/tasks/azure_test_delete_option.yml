@@ -68,7 +68,7 @@
 - name: Assert data disk removed (Delete path)
   ansible.builtin.assert:
     that:
-      - datadisk_info_delete.ansible_info.azure_managed_disks | length == 0
+      - datadisk_info_delete.ansible_info.azure_managed_disk | length == 0
 
 - name: Default NICs owned by VM should be gone
   azure.azcollection.azure_rm_networkinterface_info:
