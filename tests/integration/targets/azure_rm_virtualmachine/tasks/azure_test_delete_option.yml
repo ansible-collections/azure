@@ -48,10 +48,6 @@
     state: absent
     remove_on_absent: []  # <- Deletes only VM
 
-- name: Short wait to allow ARM to complete eviction (Delete path)
-  ansible.builtin.pause:
-    seconds: 30
-
 - name: OS disk should be gone (Delete path)
   azure.azcollection.azure_rm_manageddisk_info:
     resource_group: "{{ resource_group }}-vm01"
@@ -133,10 +129,6 @@
     name: "{{ vm_name_detach }}"
     state: absent
     remove_on_absent: []  # <- Deletes only VM
-
-- name: Short wait to allow ARM to complete eviction (Detach path)
-  ansible.builtin.pause:
-    seconds: 30
 
 # Verify Azure-native behavior preserved attached resources
 - name: OS disk should still exist (Detach path)
