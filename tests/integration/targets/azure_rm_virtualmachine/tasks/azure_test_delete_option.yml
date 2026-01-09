@@ -175,6 +175,18 @@
     name: "{{ vm_name_detach }}-datadisk-0"
     state: absent
 
+- name: Delete the network interface
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    state: absent
+
+- name: Destroy security group
+  azure.azcollection.azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    state: absent
+
 - name: Destroy subnet
   azure.azcollection.azure_rm_subnet:
     resource_group: "{{ resource_group }}-vm01"
