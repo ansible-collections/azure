@@ -353,13 +353,13 @@ options:
             delete_option:
                 description:
                     - Specifies the delete behavior for the data disk when deleting the VM.
+                    - Azure default to Detach if no specified.
                     - When set to C(Delete), the data disk is removed during VM deletion.
                     - When set to C(Detach), the data disk is preserved.
                 type: str
                 choices:
                     - Delete
                     - Detach
-                default: Detach
     public_ip_allocation_method:
         description:
             - Allocation method for the public IP of the VM.
@@ -659,13 +659,13 @@ options:
     os_disk_delete_option:
         description:
             - Specifies the delete behavior for the VM's OS disk when VM is deleted.
+            - Azure default to Detach if no specified.
             - When set to C(Delete), the OS disk will be removed automatically during VM deletion.
             - When set to C(Detach), the OS disk will be preserved.
         type: str
         choices:
             - Delete
             - Detach
-        default: Detach
 
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -1653,7 +1653,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 if self.os_disk_delete_option:
                     cur_os_del = vm_dict['storage_profile']['os_disk'].get('delete_option')
                     if cur_os_del is None:
-                        cur_os_del = 'Detach' # Azure default
+                        cur_os_del = 'Detach'  # Azure default
 
                     if cur_os_del != self.os_disk_delete_option:
                         self.log("CHANGED: OS disk delete_option differs ({} -> {})".format(cur_os_del, self.os_disk_delete_option))
@@ -1908,8 +1908,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             cur_del = 'Detach'
 
                         if req_del != cur_del:
-                            self.log("CHANGED: Data disk LUN {0} delete_option differs ({1} -> {2})."
-                                    .format(req_lun, cur_del, req_del))
+                            self.log("CHANGED: Data disk LUN {0} delete_option differs ({1} -> {2}).".format(req_lun, cur_del, req_del))
                             differences.append("DataDisk delete_option LUN {0}".format(req_lun))
                             changed = True
 
@@ -2253,7 +2252,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 create_option=create_option,
                                 disk_size_gb=data_disk['disk_size_gb'],
                                 managed_disk=data_disk_managed_disk,
-                                delete_option =data_disk.get('delete_option', 'Detach')
+                                delete_option=data_disk.get('delete_option', 'Detach')
                             ))
 
                         vm_resource.storage_profile.data_disks = data_disks
