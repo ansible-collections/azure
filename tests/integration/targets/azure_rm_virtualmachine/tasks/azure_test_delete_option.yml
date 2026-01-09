@@ -57,7 +57,7 @@
 - name: Assert OS disk removed (Delete path)
   ansible.builtin.assert:
     that:
-      - osdisk_info_delete.managed_disks | length == 0
+      - osdisk_info_delete.ansible_info.azure_managed_disk | length == 0
 
 - name: Data disk should be gone (Delete path)
   azure.azcollection.azure_rm_manageddisk_info:
@@ -68,7 +68,7 @@
 - name: Assert data disk removed (Delete path)
   ansible.builtin.assert:
     that:
-      - datadisk_info_delete.managed_disks | length == 0
+      - datadisk_info_delete.ansible_info.azure_managed_disks | length == 0
 
 - name: Default NICs owned by VM should be gone
   azure.azcollection.azure_rm_networkinterface_info:
@@ -140,7 +140,7 @@
 - name: Assert OS disk still present (Detach path)
   ansible.builtin.assert:
     that:
-      - osdisk_info_detach.managed_disks | length == 1
+      - osdisk_info_detach.ansible_info.azure_managed_disk | length == 1
 
 - name: Data disk should still exist (Detach path)
   azure.azcollection.azure_rm_manageddisk_info:
@@ -151,7 +151,7 @@
 - name: Assert data disk still present (Detach path)
   ansible.builtin.assert:
     that:
-      - datadisk_info_detach.managed_disks | length == 1
+      - datadisk_info_detach.ansible_info.azure_managed_disk | length == 1
 
 - name: Default NICs owned by VM should be gone
   azure.azcollection.azure_rm_networkinterface_info:
