@@ -7,7 +7,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     os_type: Linux
     admin_username: adminuser
     ssh_password_enabled: false
@@ -96,7 +96,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name_detach }}"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     os_type: Linux
     admin_username: adminuser
     ssh_password_enabled: false
