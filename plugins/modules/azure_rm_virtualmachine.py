@@ -1653,9 +1653,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 if self.os_disk_delete_option:
                     cur_os_del = vm_dict['storage_profile']['os_disk'].get('delete_option')
                     if cur_os_del is None:
-                        cur_os_del = 'Detach'  # Azure default
+                        self.log("CHANGED: OS disk delete_option missing on remote, requested {}".format(self.os_disk_delete_option))
+                        differences.append('OS Disk delete_option')
+                        changed = True
 
-                    if cur_os_del != self.os_disk_delete_option:
+                    elif cur_os_del != self.os_disk_delete_option:
                         self.log("CHANGED: OS disk delete_option differs ({} -> {})".format(cur_os_del, self.os_disk_delete_option))
                         differences.append('OS Disk delete_option')
                         changed = True
