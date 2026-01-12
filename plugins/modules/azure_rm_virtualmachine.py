@@ -2427,7 +2427,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
                             caching=vm_dict['storage_profile']['os_disk'].get('caching'),
                             disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb')
-                            )
+                        )
                         if delete_opt is not None:
                             os_disk_obj.delete_option = delete_opt
                         storage_profile = self.compute_models.StorageProfile(
