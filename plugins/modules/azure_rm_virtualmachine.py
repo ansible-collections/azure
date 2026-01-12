@@ -1657,10 +1657,12 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         differences.append('OS Disk delete_option')
                         changed = True
 
-                    elif cur_os_del != self.os_disk_delete_option:
-                        self.log("CHANGED: OS disk delete_option differs ({} -> {})".format(cur_os_del, self.os_disk_delete_option))
-                        differences.append('OS Disk delete_option')
-                        changed = True
+                    else:
+                        cur_os_del = str(cur_os_del)
+                        if cur_os_del != self.os_disk_delete_option:
+                            self.log("CHANGED: OS disk delete_option differs ({} -> {})".format(cur_os_del, self.os_disk_delete_option))
+                            differences.append('OS Disk delete_option')
+                            changed = True
 
                 if self.vm_size and \
                    self.vm_size != vm_dict['hardware_profile']['vm_size']:
@@ -1896,20 +1898,21 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         req_lun = int(dd_req['lun'])
                         req_del = dd_req['delete_option']
 
-                        cur_del = None
                         cur = next((d for d in vm_dict['storage_profile']['data_disks']
                                     if int(d.get('lun', -1)) == req_lun), None)
 
+                        cur_del = None
                         if cur:
                             cur_del = cur.get('delete_option')
-                            if cur_del:
+                            if cur_del is not None:
                                 cur_del = str(cur_del)
 
-                        # treat missing as default Detach
                         if cur_del is None:
-                            cur_del = 'Detach'
+                            self.log("CHANGED: Data disk LUN {0} delete_option missing on remote, requested {1}.".format(req_lun, req_del))
+                            differences.append("DataDisk delete_option LUN {0}".format(req_lun))
+                            changed = True
 
-                        if req_del != cur_del:
+                        elif req_del != cur_del:
                             self.log("CHANGED: Data disk LUN {0} delete_option differs ({1} -> {2}).".format(req_lun, cur_del, req_del))
                             differences.append("DataDisk delete_option LUN {0}".format(req_lun))
                             changed = True
@@ -2091,7 +2094,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 caching=self.os_disk_caching,
                                 disk_size_gb=self.os_disk_size_gb,
                                 diff_disk_settings=self.compute_models.DiffDiskSettings(option='Local') if self.ephemeral_os_disk else None,
-                                delete_option=(self.os_disk_delete_option or 'Detach')
+                                delete_option=self.os_disk_delete_option
                             ),
                             image_reference=image_reference
                         )
@@ -2254,7 +2257,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 create_option=create_option,
                                 disk_size_gb=data_disk['disk_size_gb'],
                                 managed_disk=data_disk_managed_disk,
-                                delete_option=data_disk.get('delete_option', 'Detach')
+                                delete_option=data_disk.get('delete_option')
                             ))
 
                         vm_resource.storage_profile.data_disks = data_disks
@@ -2413,8 +2416,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             image_reference=image_reference
                         )
                     else:
-                        storage_profile = self.compute_models.StorageProfile(
-                            os_disk=self.compute_models.OSDisk(
+                        delete_opt = self.os_disk_delete_option
+                        if delete_opt is None:
+                            delete_opt = vm_dict['storage_profile']['os_disk'].get('delete_option')
+                        os_disk_obj = self.compute_models.OSDisk(
                                 name=vm_dict['storage_profile']['os_disk'].get('name'),
                                 vhd=vhd,
                                 managed_disk=managed_disk,
@@ -2422,8 +2427,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
                                 caching=vm_dict['storage_profile']['os_disk'].get('caching'),
                                 disk_size_gb=vm_dict['storage_profile']['os_disk'].get('disk_size_gb'),
-                                delete_option=(self.os_disk_delete_option or vm_dict['storage_profile']['os_disk'].get('delete_option') or 'Detach'),
-                            ),
+                            )
+                        if delete_opt is not None:
+                            os_disk_obj.delete_option = delete_opt
+                        storage_profile = self.compute_models.StorageProfile(
+                            os_disk=os_disk_obj,
                             image_reference=image_reference
                         )
 
@@ -2559,11 +2567,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 data_disk_managed_disk = None
 
                             lun = int(data_disk['lun'])
-                            delete_opt = requested_dd_delete.get(lun, data_disk.get('delete_option'))
+                            delete_opt = requested_dd_delete.get(lun)
                             if delete_opt is None:
-                                delete_opt = 'Detach'
+                                delete_opt = data_disk.get('delete_option')
 
-                            data_disks.append(self.compute_models.DataDisk(
+                            dd_obj = self.compute_models.DataDisk(
                                 lun=lun,
                                 name=data_disk.get('name'),
                                 vhd=data_disk_vhd,
@@ -2571,8 +2579,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                 create_option=data_disk.get('create_option'),
                                 disk_size_gb=int(data_disk.get('disk_size_gb', 0)) or None,
                                 managed_disk=data_disk_managed_disk,
-                                delete_option=delete_opt
-                            ))
+                            )
+                            if delete_opt is not None:
+                                dd_obj.delete_option = delete_opt
+                            data_disks.append(dd_obj)
                         vm_resource.storage_profile.data_disks = data_disks
 
                     if self.security_profile is not None:
