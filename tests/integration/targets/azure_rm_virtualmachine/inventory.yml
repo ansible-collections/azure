@@ -1,6 +1,10 @@
 all:
   hosts:
     azure_test_invalid:
+    azure_test_delete_option:
+      network: 10.42.9.0/24
+      subnet: 10.42.9.0/28
+
     azure_test_public_ip:
       network: 10.42.0.0/24
       subnet: 10.42.0.0/28

@@ -1,0 +1,201 @@
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
+
+# delete_option=Delete
+# default NIC delete_option=Delete
+- name: Create VM (Delete path - default NIC)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}"
+    vm_size: Standard_B1ms
+    os_type: Linux
+    admin_username: adminuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/adminuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    managed_disk_type: Premium_LRS
+    # delete_option flags
+    os_disk_delete_option: Delete
+    data_disks:
+      - lun: 0
+        disk_size_gb: 8
+        managed_disk_type: Premium_LRS
+        delete_option: Delete
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: vm_create_delete
+
+- name: Record VM NIC IDs (Delete path)
+  ansible.builtin.set_fact:
+    vm_nic_ids_delete: >-
+      {{ vm_create_delete.ansible_facts.azure_vm.network_profile.network_interfaces
+         | map(attribute='id') | list }}
+
+- name: Assert delete_option flags applied (Delete path)
+  ansible.builtin.assert:
+    that:
+      - vm_create_delete.ansible_facts.azure_vm.storage_profile.os_disk.delete_option == "Delete"
+      - vm_create_delete.ansible_facts.azure_vm.storage_profile.data_disks[0].delete_option == "Delete"
+
+- name: Trigger Delete (Delete path)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}"
+    state: absent
+    remove_on_absent: []  # <- Deletes only VM
+
+- name: OS disk should be gone (Delete path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}"
+  register: osdisk_info_delete
+
+- name: Assert OS disk removed (Delete path)
+  ansible.builtin.assert:
+    that:
+      - osdisk_info_delete.ansible_info.azure_managed_disk | length == 0
+
+- name: Data disk should be gone (Delete path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-datadisk-0"
+  register: datadisk_info_delete
+
+- name: Assert data disk removed (Delete path)
+  ansible.builtin.assert:
+    that:
+      - datadisk_info_delete.ansible_info.azure_managed_disk | length == 0
+
+- name: Default NICs owned by VM should be gone
+  azure.azcollection.azure_rm_networkinterface_info:
+    resource_group: "{{ resource_group }}-vm01"
+  register: nic_info_delete
+
+- name: Assert VM NICs deleted
+  ansible.builtin.assert:
+    that:
+      - vm_nic_ids_delete | difference(nic_info_delete.networkinterfaces | map(attribute='id') | list) | length == vm_nic_ids_delete | length
+
+# delete_option=Detach
+- name: Derive names for Detach scenario
+  ansible.builtin.set_fact:
+    vm_name_detach: "{{ vm_name }}-detach"
+
+- name: Create VM (Detach path - default NIC)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+    vm_size: Standard_B1ms
+    os_type: Linux
+    admin_username: adminuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/adminuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    managed_disk_type: Premium_LRS
+    # delete_option flags
+    os_disk_delete_option: Detach
+    data_disks:
+      - lun: 0
+        disk_size_gb: 8
+        managed_disk_type: Premium_LRS
+        delete_option: Detach
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: vm_create_detach
+
+- name: Record VM NIC IDs (Detach path)
+  ansible.builtin.set_fact:
+    vm_nic_ids_detach: >-
+      {{ vm_create_detach.ansible_facts.azure_vm.network_profile.network_interfaces
+         | map(attribute='id') | list }}
+
+- name: Assert delete_option flags applied (Detach path)
+  ansible.builtin.assert:
+    that:
+      - vm_create_detach.ansible_facts.azure_vm.storage_profile.os_disk.delete_option == "Detach"
+      - vm_create_detach.ansible_facts.azure_vm.storage_profile.data_disks[0].delete_option == "Detach"
+
+- name: Trigger Delete (Detach path)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+    state: absent
+    remove_on_absent: []  # <- Deletes only VM
+
+# Verify Azure-native behavior preserved attached resources
+- name: OS disk should still exist (Detach path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+  register: osdisk_info_detach
+
+- name: Assert OS disk still present (Detach path)
+  ansible.builtin.assert:
+    that:
+      - osdisk_info_detach.ansible_info.azure_managed_disk | length == 1
+
+- name: Data disk should still exist (Detach path)
+  azure.azcollection.azure_rm_manageddisk_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}-datadisk-0"
+  register: datadisk_info_detach
+
+- name: Assert data disk still present (Detach path)
+  ansible.builtin.assert:
+    that:
+      - datadisk_info_detach.ansible_info.azure_managed_disk | length == 1
+
+- name: Default NICs owned by VM should be gone
+  azure.azcollection.azure_rm_networkinterface_info:
+    resource_group: "{{ resource_group }}-vm01"
+  register: nic_info_detach
+
+- name: Assert VM NICs deleted
+  ansible.builtin.assert:
+    that:
+      - vm_nic_ids_detach | difference(nic_info_detach.networkinterfaces | map(attribute='id') | list) | length == vm_nic_ids_detach | length
+
+- name: Delete OS managed disk (Detach path cleanup)
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}"
+    state: absent
+
+- name: Delete data managed disk (Detach path cleanup)
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name_detach }}-datadisk-0"
+    state: absent
+
+- name: Delete the network interface
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    state: absent
+
+- name: Destroy security group
+  azure.azcollection.azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ interface_name }}"
+    state: absent
+
+- name: Destroy subnet
+  azure.azcollection.azure_rm_subnet:
+    resource_group: "{{ resource_group }}-vm01"
+    virtual_network: "{{ network_name }}"
+    name: "{{ subnet_name }}"
+    state: absent
+
+- name: Destroy virtual network
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ network_name }}"
+    state: absent
