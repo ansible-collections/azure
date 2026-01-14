@@ -265,6 +265,14 @@ jobs:
           test.key: '14'
         "Python${{ parameters.PYTHON_VER }}_15":
           test.key: '15'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          test.key: '16'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          test.key: '17'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          test.key: '18'
+        "Python${{ parameters.PYTHON_VER }}_15":
+          test.key: '19'
 
     steps:
       - task: UsePythonVersion@0
