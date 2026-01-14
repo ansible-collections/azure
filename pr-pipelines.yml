@@ -265,13 +265,13 @@ jobs:
           test.key: '14'
         "Python${{ parameters.PYTHON_VER }}_15":
           test.key: '15'
-        "Python${{ parameters.PYTHON_VER }}_15":
+        "Python${{ parameters.PYTHON_VER }}_16":
           test.key: '16'
-        "Python${{ parameters.PYTHON_VER }}_15":
+        "Python${{ parameters.PYTHON_VER }}_17":
           test.key: '17'
-        "Python${{ parameters.PYTHON_VER }}_15":
+        "Python${{ parameters.PYTHON_VER }}_18":
           test.key: '18'
-        "Python${{ parameters.PYTHON_VER }}_15":
+        "Python${{ parameters.PYTHON_VER }}_19":
           test.key: '19'
 
     steps:
