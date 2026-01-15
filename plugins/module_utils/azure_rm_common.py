@@ -489,7 +489,7 @@ class AzureRMModuleBase(object):
         # self.debug = self.module.params.get('debug')
 
         # delegate auth to AzureRMAuth class (shared with all plugin types)
-        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
+        self.azure_auth = AzureRMAuth(module=self.module, fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
 
         # common parameter validation
         if self.module.params.get('tags'):
@@ -1606,8 +1606,9 @@ class AzureRMAuth(object):
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
                  x509_certificate_path=None, thumbprint=None, track1_cred=False,
-                 disable_instance_discovery=False, **kwargs):
+                 disable_instance_discovery=False, module=None, **kwargs):
 
+        self.module = module
         if fail_impl:
             self._fail_impl = fail_impl
         else:
