@@ -304,7 +304,6 @@ from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import HMAC
 from time import time
-import subprocess
 
 try:
     from urllib import (urlencode, quote_plus)
