@@ -1819,13 +1819,21 @@ class AzureRMAuth(object):
         if not subscription_id:
             try:
                 cmd = ["az", "account", "show", "--query", "id", "-o", "json"]
-                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
+                # subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
+                rc, out, err = self.module.run_command(cmd)
+                if rc != 0:
+                    raise Exception(err)
+                subscription_id = out.strip().strip('"')
             except Exception as ec:
                 raise CLIError("Obtain the az login's subscription occurred exception as {0}".format(ec))
 
         try:
             cmd = ["az", "cloud", "show", "--query", "name", "-o", "json"]
-            cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
+            # cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
+            rc, out, err = self.module.run_command(cmd)
+            if rc != 0:
+                raise Exception(err)
+            cloud_name = out.strip().strip('"')
             all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
             matched_clouds = [x for x in all_clouds if x.name == cloud_name]
         except Exception as ec:
