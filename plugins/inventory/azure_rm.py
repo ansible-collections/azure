@@ -41,7 +41,7 @@ EXAMPLES = '''
 # powerstate: the VM's current power state, eg: 'running', 'stopped', 'deallocated'
 # provisioning_state: the VM's current provisioning state, eg: 'succeeded'
 # tags: dictionary of the VM's defined tag values
-# resource_type: the VM's resource type, eg: 'Microsoft.Compute/virtualMachine', 'Microsoft.Compute/virtualMachineScaleSets/virtualMachines',
+# resource_type: the VM's resource type, eg: 'Microsoft.Compute/virtualMachines', 'Microsoft.Compute/virtualMachineScaleSets/virtualMachines',
 # 'microsoft.azurestackhci/virtualmachineinstances'
 # vmid: the VM's internal SMBIOS ID, eg: '36bca69d-c365-4584-8c06-a62f4a1dc5d2'
 # vmss: if the VM is a member of a scaleset (vmss), a dictionary including the id and name of the parent scaleset
@@ -49,7 +49,7 @@ EXAMPLES = '''
 # creation_time: datetime object of when the VM was created, eg '2023-07-21T09:30:30.4710164+00:00'
 #
 # The following host variables are sometimes available:
-# computer_name: the Operating System's hostname. Will not be available if azure agent is not available and picking it up.
+# computer_name: the Operating System's hostname. Will be available if azure agent is available and picking it up.
 # The following host variables are available for Azure Stack HCI vms:
 # customLocation: the azure arc custom location.
 # virtual_machine_memoryMB: RAM allowed (static)
@@ -160,6 +160,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible.errors import AnsibleParserError, AnsibleError
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils._text import to_native, to_bytes, to_text
+from ansible.utils.display import Display
 from itertools import chain
 from os import environ
 try:
@@ -176,8 +177,6 @@ try:
     from azure.mgmt.core.polling.arm_polling import ARMPolling
     from azure.core.polling import LROPoller
     from netaddr import IPAddress
-    from azure.mgmt.network import NetworkManagementClient
-    from azure.mgmt.compute import ComputeManagementClient
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     Configuration = object
@@ -185,6 +184,9 @@ except ImportError:
     PipelineClient = object
     BearerTokenCredentialPolicy = object
     pass
+
+
+display = Display()
 
 
 class AzureRMRestConfiguration(Configuration):
@@ -222,6 +224,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         # FUTURE: use API profiles with defaults
         self._compute_api_version = '2024-07-01'
         self._network_api_version = '2024-05-01'
+        self._scaleSet_network_api_version = '2025-04-01'
         self._hybridcompute_api_version = '2024-05-20-preview'
         self._stackhci_api_version = '2024-01-01'
 
@@ -498,8 +501,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         try:
             while True:
                 item = self._request_queue.get_nowait()
+                display.vvvv(item.url)
                 resp = self.send_request(item.url, item.api_version)
-                item.handler(resp, **item.handler_args)
+                if resp.status_code == 200:
+                    item.handler(json.loads(resp.body()), **item.handler_args)
+                else:
+                    display.error(item.url)
+                    display.error(resp.text())
         except Empty:
             pass
 
@@ -512,6 +520,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         if 'value' in response:
             for h in response['value']:
+                display.debug("AzureHost raw response:")
+                display.debug(h)
                 # FUTURE: add direct VM filtering by tag here (performance optimization)?
                 self._hosts.append(AzureHost(h, self, vmss=vmss, arcvm=arcvm, legacy_name=self._legacy_hostnames))
 
@@ -522,6 +532,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self._enqueue_get(url=next_link, api_version=self._hybridcompute_api_version, handler=self._on_arc_page_response)
 
         for arcvm in response['value']:
+            display.debug("ArcHost raw response:")
+            display.debug(arcvm)
             self._hosts.append(ArcHost(arcvm, self, legacy_name=self._legacy_hostnames))
 
     def _on_arcvm_page_response(self, response):
@@ -604,6 +616,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 elif status_code in _RETRY_CODES:
                     # 429: Too many requests Error, Backoff and Retry
                     batch_retry = True
+                else:
+                    corresponding_request = [req for req in batch_requests if req['name'] == r['name']]
+                    if len(corresponding_request) > 0:
+                        display.error(corresponding_request[0])
+                    display.error(r['content'])
             if batch_retry:
                 time.sleep(backoff_factor * (2 ** (retry_count)))
                 retry_count += 1
@@ -627,6 +644,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         header = {'x-ms-client-request-id': str(uuid.uuid4())}
         header.update(self._default_header_parameters)
 
+        display.vvvv("Batch:")
+        for r in batched_requests:
+            display.vvvv("  " + r['url'])
+        display.vvvv("EndBatch")
         request_new = self.new_client.post(url, query_parameters, header_parameters, body_content)
         response = self.new_client.send_request(request_new, **operation_config)
 
@@ -661,8 +682,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         body = {}
         request_new = self.new_client.get(url, query_parameters, header_parameters)
         response = self.new_client.send_request(request_new)
-
-        return json.loads(response.body())
+        return response
 
     @staticmethod
     def _legacy_script_compatible_group_sanitization(name):
@@ -753,6 +773,7 @@ class AzureHost(object):
         self._vm_model = vm_model
         self._vmss = vmss
         self._arcvm = arcvm
+        self._type = vm_model['type'].lower()
 
         self._instanceview = None
 
@@ -781,7 +802,13 @@ class AzureHost(object):
         for nic in nic_refs:
             # single-nic instances don't set primary, so figure it out...
             is_primary = nic.get('properties', {}).get('primary', len(nic_refs) == 1)
-            api_version = self._inventory_client._stackhci_api_version if self._arcvm else self._inventory_client._network_api_version
+
+            api_version = self._inventory_client._network_api_version
+            if self._arcvm:
+                api_version = self._inventory_client._stackhci_api_version
+            elif self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
+                api_version = self._inventory_client._scaleSet_network_api_version
+
             inventory_client._enqueue_get(url=nic['id'],
                                           api_version=api_version,
                                           handler=self._on_nic_response,
@@ -812,6 +839,11 @@ class AzureHost(object):
 
         createdAt = self._vm_model.get('systemData', {}).get('createdAt')  # hci specific
 
+        if self._instanceview.get('computerName'):
+            computer_name = self._instanceview['computerName']
+        else:
+            computer_name = self._vm_model['properties'].get('osProfile', {}).get('computerName')
+
         new_hostvars = dict(
             network_interface=[],
             network_interface_properties=[],
@@ -827,7 +859,7 @@ class AzureHost(object):
             id=self._vm_model['id'],
             location=self._arcvm['location'] if self._arcvm else self._vm_model['location'],
             name=self._arcvm['name'] if self._arcvm else self._vm_model['name'],
-            computer_name=self._vm_model['properties'].get('osProfile', {}).get('computerName'),
+            computer_name=computer_name,
             availability_zone=av_zone,
             powerstate=self._powerstate,
             provisioning_state=self._vm_model['properties']['provisioningState'].lower(),
@@ -848,62 +880,21 @@ class AzureHost(object):
             creation_time=createdAt if createdAt else self._vm_model['properties'].get('timeCreated'),
             license_type=self._vm_model['properties'].get('licenseType', 'Unknown')
         )
-        if self._arcvm:
+
+        # Instance view
+        if self._instanceview.get('osName'):
+            new_hostvars['os_name'] = self._instanceview['osName']
+        if self._instanceview.get('osVersion'):
+            new_hostvars['os_version'] = self._instanceview['osVersion']
+        if self._instanceview.get('hyperVGeneration'):
+            new_hostvars['hyper_v_generation'] = self._instanceview['hyperVGeneration']
+
+        if self._type == 'microsoft.azurestackhci/virtualmachineinstances':
             new_hostvars['customLocation'] = self._vm_model.get('extendedLocation', {}).get('name', '').split('/')[-1]
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        rm_endpoint = self._inventory_client.azure_auth._cloud_environment.endpoints.resource_manager.rstrip('/')
-        scopes = [f"{rm_endpoint}/.default"]
-
-        if len(self.nics) == 0 and self._vmss:
-            # Set the attribute information related to the Uniform VMSS instance
-            # Set os compute name, os name, os version and hyper V generation
-            resource_group = new_hostvars['resource_group']
-            vmss_name = new_hostvars['vmss']['name']
-            instance_id = self._vm_model.get('instanceId')
-            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id,
-                                                     base_url=rm_endpoint, credential_scopes=scopes)
-            instance_view = compute_client.virtual_machine_scale_set_vms.get_instance_view(resource_group_name=resource_group,
-                                                                                           vm_scale_set_name=vmss_name,
-                                                                                           instance_id=instance_id)
-            new_hostvars['os_compute_name'] = instance_view.computer_name
-            new_hostvars['os_name'] = instance_view.os_name
-            new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
-
-            # Set Uniform VMSS instance's nic-related values
-            network_client = NetworkManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id,
-                                                     base_url=rm_endpoint, credential_scopes=scopes)
-            nics = network_client.network_interfaces.list_virtual_machine_scale_set_vm_network_interfaces(resource_group_name=resource_group,
-                                                                                                          virtual_machine_scale_set_name=vmss_name,
-                                                                                                          virtualmachine_index=instance_id)
-            for nic in nics:
-                nic = nic.as_dict()
-                new_hostvars['network_interface'].append(nic.get('name'))
-                new_hostvars['network_interface_id'].append(nic.get('id'))
-                new_hostvars['network_interface_properties'].append(nic)
-                if nic.get('dns_settings'):
-                    new_hostvars['public_dns_hostnames'].append(nic['dns_settings'].get('internal_fqdn'))
-                if nic.get('mac_address'):
-                    new_hostvars['mac_address'].append(nic['mac_address'])
-                if nic.get('network_security_group'):
-                    new_hostvars['security_group_id'].append(nic['network_security_group']['id'])
-                    new_hostvars['security_group'].append(parse_resource_id(nic['network_security_group']['id'])['resource_name'])
-                for ipc in nic['ip_configurations']:
-                    if ipc.get('subnet'):
-                        new_hostvars['subnet'].append(ipc.get('subnet'))
-                    if ipc.get('private_ip_address'):
-                        new_hostvars['private_ipv4_addresses'].append(ipc.get('private_ip_address'))
-                    if ipc.get('public_ip_address'):
-                        new_hostvars['public_ip_address'].append(dict(id=ipc['public_ip_address'].get('id'),
-                                                                      name=ipc['public_ip_address'].get('name'),
-                                                                      ipv4_address=ipc['public_ip_address'].get('ip_address')))
-                        new_hostvars['public_ipv4_address'].append(ipc['public_ip_address'].get('ip_address'))
-
-        else:
+        elif self._type == 'microsoft.compute/virtualmachines' or self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
             # set nic-related values from the primary NIC first
             for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
                 # and from the primary IP config per NIC first
@@ -940,16 +931,6 @@ class AzureHost(object):
                     if nic._nic_model['properties'].get('networkSecurityGroup') else None
 
                 new_hostvars['network_interface_properties'].append(nic._nic_model)
-
-            # Set os compute name, os name, os version and hyper V generation
-            compute_client = ComputeManagementClient(credential=self._inventory_client.azure_auth.azure_credential_track2,
-                                                     subscription_id=self._inventory_client.azure_auth.subscription_id,
-                                                     base_url=rm_endpoint, credential_scopes=scopes)
-            instance_view = compute_client.virtual_machines.instance_view(new_hostvars['resource_group'], new_hostvars['name'])
-            new_hostvars['os_compute_name'] = instance_view.computer_name
-            new_hostvars['os_name'] = instance_view.os_name
-            new_hostvars['os_version'] = instance_view.os_version
-            new_hostvars['hyper_v_generation'] = instance_view.hyper_v_generation
 
         # set image and os_disk
         new_hostvars['image'] = {}
@@ -1003,6 +984,8 @@ class AzureHost(object):
                                  for s in vm_instanceview_model.get('statuses', []) if self._powerstate_regex.match(s.get('code', ''))), 'unknown')
 
     def _on_nic_response(self, nic_model, is_primary=False):
+        display.debug("AzureNic raw response:")
+        display.debug(nic_model)
         nic = AzureNic(nic_model=nic_model, inventory_client=self._inventory_client, is_primary=is_primary)
         self.nics.append(nic)
 
@@ -1022,6 +1005,8 @@ class AzureNic(object):
                     self._inventory_client._enqueue_get(url=pip['id'], api_version=self._inventory_client._network_api_version, handler=self._on_pip_response)
 
     def _on_pip_response(self, pip_model):
+        display.debug("AzurePip raw response:")
+        display.debug(pip_model)
         self.public_ips[pip_model['id']] = AzurePip(pip_model)
 
 
