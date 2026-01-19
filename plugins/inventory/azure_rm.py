@@ -701,7 +701,7 @@ class ArcHost(object):
         self._inventory_client = inventory_client
         self._arc_model = arc_model
         self._instanceview = self._arc_model
-        self._status = self._arc_model['properties'].get('status', {}).lower()  # 'Connected'
+        self._status = self._arc_model['properties'].get('status', '').lower()  # 'Connected'
         self._powerstate = self._status.replace('connected', 'running')
 
         self._hostvars = {}
