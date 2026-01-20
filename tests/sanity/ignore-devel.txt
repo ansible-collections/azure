@@ -1,2 +1,1 @@
-plugins/module_utils/azure_rm_common.py ansible-bad-function
-plugins/module_utils/azure_rm_common.py ansible-bad-function
+plugins/module_utils/azure_rm_common.py pylint:ansible-bad-function

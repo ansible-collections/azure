@@ -5,4 +5,3 @@ plugins/modules/azure_rm_keyvault_info.py validate-modules:bad-return-value-key
 plugins/modules/azure_rm_servicebussaspolicy.py validate-modules:bad-return-value-key
 plugins/modules/azure_rm_tags_info.py validate-modules:bad-return-value-key
 plugins/modules/azure_rm_vmsku_info.py validate-modules:bad-return-value-key
-
