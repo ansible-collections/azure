@@ -543,9 +543,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self._enqueue_get(url=next_link, api_version=self._hybridcompute_api_version, handler=self._on_archcivm_page_response)
 
         for archcivm in response['value']:
-            url = '{0}/providers/Microsoft.AzureStackHCI/virtualMachineInstances'.format(archcivm['id'])
-            # Stack HCI instances look close enough to regular VMs that we can share the handler impl...
-            self._enqueue_get(url=url, api_version=self._stackhci_api_version, handler=self._on_vm_page_response, handler_args=dict(archcivm=archcivm))
+            if archcivm.get('kind') == 'HCI':
+                url = '{0}/providers/Microsoft.AzureStackHCI/virtualMachineInstances'.format(archcivm['id'])
+                # Stack HCI instances look close enough to regular VMs that we can share the handler impl...
+                self._enqueue_get(url=url, api_version=self._stackhci_api_version, handler=self._on_vm_page_response, handler_args=dict(archcivm=archcivm))
 
     def _on_vmss_page_response(self, response):
         next_link = response.get('nextLink')
