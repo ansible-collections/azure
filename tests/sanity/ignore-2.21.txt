@@ -5,5 +5,4 @@ plugins/modules/azure_rm_keyvault_info.py validate-modules:bad-return-value-key
 plugins/modules/azure_rm_servicebussaspolicy.py validate-modules:bad-return-value-key
 plugins/modules/azure_rm_tags_info.py validate-modules:bad-return-value-key
 plugins/modules/azure_rm_vmsku_info.py validate-modules:bad-return-value-key
-plugins/module_utils/azure_rm_common.py ansible-bad-function
-plugins/module_utils/azure_rm_common.py ansible-bad-function
+
