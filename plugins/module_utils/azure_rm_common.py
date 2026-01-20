@@ -304,6 +304,7 @@ from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import HMAC
 from time import time
+import subprocess
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -489,7 +490,7 @@ class AzureRMModuleBase(object):
         # self.debug = self.module.params.get('debug')
 
         # delegate auth to AzureRMAuth class (shared with all plugin types)
-        self.azure_auth = AzureRMAuth(module=self.module, fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
+        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
 
         # common parameter validation
         if self.module.params.get('tags'):
@@ -1606,9 +1607,8 @@ class AzureRMAuth(object):
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
                  x509_certificate_path=None, thumbprint=None, track1_cred=False,
-                 disable_instance_discovery=False, module=None, **kwargs):
+                 disable_instance_discovery=False , **kwargs):
 
-        self.module = module
         if fail_impl:
             self._fail_impl = fail_impl
         else:
@@ -1819,21 +1819,13 @@ class AzureRMAuth(object):
         if not subscription_id:
             try:
                 cmd = ["az", "account", "show", "--query", "id", "-o", "json"]
-                # subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
-                rc, out, err = self.module.run_command(cmd)
-                if rc != 0:
-                    raise Exception(err)
-                subscription_id = out.strip().strip('"')
+                subscription_id = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')  # allow subprocess
             except Exception as ec:
                 raise CLIError("Obtain the az login's subscription occurred exception as {0}".format(ec))
 
         try:
             cmd = ["az", "cloud", "show", "--query", "name", "-o", "json"]
-            # cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')
-            rc, out, err = self.module.run_command(cmd)
-            if rc != 0:
-                raise Exception(err)
-            cloud_name = out.strip().strip('"')
+            cloud_name = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().strip('"')  # allow subprocess
             all_clouds = [x[1] for x in inspect.getmembers(azure_cloud) if isinstance(x[1], azure_cloud.Cloud)]
             matched_clouds = [x for x in all_clouds if x.name == cloud_name]
         except Exception as ec:
