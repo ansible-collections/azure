@@ -871,6 +871,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             self.source_url,
         ])
 
+
 def main():
     AzureRMStorageBlob()
 
