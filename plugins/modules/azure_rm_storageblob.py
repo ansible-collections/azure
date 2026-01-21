@@ -414,8 +414,12 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                     else:
                         self.delete_container()
                 else:
-                    # Management-plane
-                    self.delete_container()
+                    # Management-plane only (no data-plane client).
+                    if self.force:
+                        self.delete_container()
+                    else:
+                        # Keep behaviour: do not delete when contents unknown and force is False.
+                        self.log("Not deleting container {0} without force since contents cannot be verified.".format(self.container))
             elif self.container_obj and self.blob_obj:
                 # Delete blob
                 self.delete_blob()
