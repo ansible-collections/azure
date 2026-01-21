@@ -402,10 +402,22 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                     self.update_blob_tier()
 
         elif self.state == 'absent':
-            if self.container_obj and not self.blob:
-                # Delete container
+            if not self.blob:
+                # Delete Container
+                # Ensure we can enforce "don't delete non-empty without force".
+                # If we don't already have a data-plane client and the caller didn't set force,
+                # try to initialize one just for the emptiness check.
+                if not self.blob_service_client and not self.force:
+                    try:
+                        self.blob_service_client = self.get_blob_service_client(
+                            self.resource_group, self.storage_account_name, self.auth_mode
+                        )
+                    except Exception:
+                        # No data-plane permissions or connectivity. Fall back to a straight management-plane delete.
+                        self.blob_service_client = None
+
                 if self.blob_service_client:
-                    # Data-plane
+                    # Data plane
                     if self.container_has_blobs():
                         if self.force:
                             self.delete_container()
@@ -414,12 +426,9 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                     else:
                         self.delete_container()
                 else:
-                    # Management-plane only (no data-plane client).
-                    if self.force:
-                        self.delete_container()
-                    else:
-                        # Keep behaviour: do not delete when contents unknown and force is False.
-                        self.log("Not deleting container {0} without force since contents cannot be verified.".format(self.container))
+                    # Management plane
+                    self.delete_container()
+
             elif self.container_obj and self.blob_obj:
                 # Delete blob
                 self.delete_blob()
