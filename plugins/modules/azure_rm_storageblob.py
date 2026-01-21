@@ -404,9 +404,7 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         elif self.state == 'absent':
             if not self.blob:
                 # Delete Container
-                # Ensure we can enforce "don't delete non-empty without force".
-                # If we don't already have a data-plane client and the caller didn't set force,
-                # try to initialize one just for the emptiness check.
+                # Initialize a data-plane client if caller force=false
                 if not self.blob_service_client and not self.force:
                     try:
                         self.blob_service_client = self.get_blob_service_client(
