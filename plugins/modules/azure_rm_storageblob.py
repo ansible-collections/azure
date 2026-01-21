@@ -268,6 +268,7 @@ import time
 try:
     from azure.storage.blob._models import BlobType, ContentSettings, StandardBlobTier
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.mgmt.storage.models import BlobContainer
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -352,9 +353,12 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         # add file path validation
 
-        self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name, self.auth_mode)
+        if self.requires_data_plane_access():
+            # Data plane client
+            self.blob_service_client = self.get_blob_service_client(self.resource_group, self.storage_account_name, self.auth_mode)
+
         self.container_obj = self.get_container()
-        if self.blob:
+        if self.blob and self.requires_data_plane_access():
             self.blob_obj = self.get_blob()
 
         if self.state == 'present':
@@ -398,16 +402,31 @@ class AzureRMStorageBlob(AzureRMModuleBase):
                     self.update_blob_tier()
 
         elif self.state == 'absent':
-            if self.container_obj and not self.blob:
-                # Delete container
-                if self.container_has_blobs():
-                    if self.force:
-                        self.delete_container()
+            if not self.blob:
+                # Delete Container
+                # Initialize a data-plane client if caller force=false
+                if not self.blob_service_client and not self.force:
+                    try:
+                        self.blob_service_client = self.get_blob_service_client(
+                            self.resource_group, self.storage_account_name, self.auth_mode
+                        )
+                    except Exception:
+                        # No data-plane permissions or connectivity. Fall back to a straight management-plane delete.
+                        self.blob_service_client = None
+
+                if self.blob_service_client:
+                    # Data plane
+                    if self.container_has_blobs():
+                        if self.force:
+                            self.delete_container()
+                        else:
+                            self.log("Cannot delete container {0}. It contains blobs. Use the force option.".format(self.container))
                     else:
-                        self.log("Cannot delete container {0}. It contains blobs. Use the force option.".format(
-                            self.container))
+                        self.delete_container()
                 else:
+                    # Management plane
                     self.delete_container()
+
             elif self.container_obj and self.blob_obj:
                 # Delete blob
                 self.delete_blob()
@@ -506,20 +525,26 @@ class AzureRMStorageBlob(AzureRMModuleBase):
             return BlobType.AppendBlob
 
     def get_container(self):
-        result = {}
-        container = None
-        if self.container:
+        if self.requires_data_plane_access():
             try:
                 container = self.blob_service_client.get_container_client(container=self.container).get_container_properties()
+                return dict(
+                    name=container["name"],
+                    tags=container["metadata"],
+                    last_modified=container["last_modified"].strftime('%d-%b-%Y %H:%M:%S %z'),
+                )
             except ResourceNotFoundError:
-                pass
-        if container:
-            result = dict(
-                name=container["name"],
-                tags=container["metadata"],
-                last_modified=container["last_modified"].strftime('%d-%b-%Y %H:%M:%S %z'),
-            )
-        return result
+                return {}
+        else:
+            try:
+                container = self.storage_client.blob_containers.get(self.resource_group, self.storage_account_name, self.container)
+                return dict(
+                    name=container.name,
+                    tags=container.metadata or {},
+                    last_modified=container.last_modified_time.strftime('%d-%b-%Y %H:%M:%S %z') if container.last_modified_time else None,
+                )
+            except Exception:
+                return {}
 
     def get_blob(self):
         result = dict()
@@ -558,8 +583,20 @@ class AzureRMStorageBlob(AzureRMModuleBase):
 
         if not self.check_mode:
             try:
-                client = self.blob_service_client.get_container_client(container=self.container)
-                client.create_container(metadata=tags, public_access=self.public_access)
+                if self.requires_data_plane_access():
+                    client = self.blob_service_client.get_container_client(container=self.container)
+                    client.create_container(metadata=tags, public_access=self.public_access)
+                else:
+                    blob_container = BlobContainer(
+                        public_access=self.public_access,
+                        metadata=tags
+                    )
+                    self.storage_client.blob_containers.create(
+                        self.resource_group,
+                        self.storage_account_name,
+                        self.container,
+                        blob_container
+                    )
             except Exception as exc:
                 self.fail("Error creating container {0} - {1}".format(self.container, str(exc)))
         self.container_obj = self.get_container()
@@ -727,7 +764,14 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def delete_container(self):
         if not self.check_mode:
             try:
-                self.blob_service_client.get_container_client(container=self.container).delete_container()
+                if self.requires_data_plane_access():
+                    self.blob_service_client.get_container_client(container=self.container).delete_container()
+                else:
+                    self.storage_client.blob_containers.delete(
+                        self.resource_group,
+                        self.storage_account_name,
+                        self.container
+                    )
             except Exception as exc:
                 self.fail("Error deleting container {0} - {1}".format(self.container, str(exc)))
 
@@ -757,7 +801,16 @@ class AzureRMStorageBlob(AzureRMModuleBase):
     def update_container_tags(self, tags):
         if not self.check_mode:
             try:
-                self.blob_service_client.get_container_client(container=self.container).set_container_metadata(metadata=tags)
+                if self.requires_data_plane_access():
+                    self.blob_service_client.get_container_client(container=self.container).set_container_metadata(metadata=tags)
+                else:
+                    blob_container = BlobContainer(metadata=tags)
+                    self.storage_client.blob_containers.update(
+                        self.resource_group,
+                        self.storage_account_name,
+                        self.container,
+                        blob_container
+                    )
             except Exception as exc:
                 self.fail("Error updating container tags {0} - {1}".format(self.container, str(exc)))
         self.container_obj = self.get_container()
@@ -818,6 +871,16 @@ class AzureRMStorageBlob(AzureRMModuleBase):
         self.results['actions'].append("updated blob {0}:{1} content settings.".format(self.container, self.blob))
         self.results['container'] = self.container_obj
         self.results['blob'] = self.blob_obj
+
+    def requires_data_plane_access(self):
+        """Determine if operation requires data plane access."""
+        return any([
+            self.blob,
+            self.src,
+            self.dest,
+            self.batch_upload_src,
+            self.source_url,
+        ])
 
 
 def main():
