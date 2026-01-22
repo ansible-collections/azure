@@ -5,7 +5,7 @@ azure-containerregistry==1.2.0
 azure-core==1.38.0
 azure-eventhub==5.15.0
 azure-identity==1.19.0
-azure-iot-hub==2.6.1
+azure-iot-hub==2.6.1;platform_machine=="x86_64"
 azure-keyvault==4.2.0
 azure-keyvault-securitydomain==1.0.0b1
 azure-mgmt-apimanagement==4.0.1
