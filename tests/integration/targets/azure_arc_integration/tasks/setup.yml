@@ -1,0 +1,110 @@
+---
+- name: Set some variables
+  ansible.builtin.set_fact:
+    vm_name: "arc-onboarding-vm-{{ 999999999 | random }}"
+    location: eastus2
+    vm_size: Standard_DS1_v2
+    admin_username: arcadmin
+
+- name: Create virtual network
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}-vnet"
+    address_prefixes: "10.0.0.0/16"
+    location: "{{ location }}"
+
+- name: Create subnet
+  azure.azcollection.azure_rm_subnet:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}-subnet"
+    virtual_network: "{{ vm_name }}-vnet"
+    address_prefix: "10.0.1.0/24"
+
+- name: Create public IP
+  azure.azcollection.azure_rm_publicipaddress:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}-public-ip"
+    allocation_method: Static
+    sku: Standard
+    location: "{{ location }}"
+
+- name: Create NSG with inbound SSH access
+  azure.azcollection.azure_rm_securitygroup:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}-nsg"
+    location: "{{ location }}"
+    rules:
+      - name: AllowSSH
+        protocol: Tcp
+        destination_port_range: 22
+        access: Allow
+        priority: 1001
+        direction: Inbound
+
+- name: Create NIC
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}-nic"
+    virtual_network: "{{ vm_name }}-vnet"
+    subnet: "{{ vm_name }}-subnet"
+    ip_configurations:
+      - name: default
+        primary: true
+        public_ip_address_name: "{{ vm_name }}-public-ip"
+    security_group_name: "{{ vm_name }}-nsg"
+    location: "{{ location }}"
+
+- name: Read the public key for SSH authentication
+  ansible.builtin.slurp:
+    src: "~/.ansible/test/id_rsa.pub"
+  register: ssh_public_key_content
+
+- name: Create Azure VM for Arc evaluation (Ubuntu 20.04 LTS)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}"
+    vm_size: "{{ vm_size }}"
+    location: "{{ location }}"
+    admin_username: "{{ admin_username }}"
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
+        key_data: "{{ ssh_public_key_content.content | b64decode | trim }}"
+    network_interfaces: "{{ vm_name }}-nic"
+    managed_disk_type: StandardSSD_LRS
+    os_disk_caching: ReadWrite
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts-gen2
+      version: latest
+
+- name: Get VM public IP for connection
+  azure.azcollection.azure_rm_publicipaddress_info:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ vm_name }}-public-ip"
+  register: vm_public_ip
+
+- name: Set VM connection facts
+  ansible.builtin.set_fact:
+    vm_ssh_host: "{{ vm_public_ip.publicipaddresses[0].ip_address }}"
+    vm_ssh_user: "{{ admin_username }}"
+
+- name: Wait for SSH to become available
+  ansible.builtin.wait_for:
+    host: "{{ vm_ssh_host }}"
+    port: 22
+    delay: 30
+    timeout: 300
+    state: started
+  delegate_to: localhost
+
+- name: Add VM to inventory
+  ansible.builtin.add_host:
+    name: arc_test_vm
+    ansible_host: "{{ vm_ssh_host }}"
+    ansible_user: "{{ admin_username }}"
+    ansible_connection: ssh
+    ansible_ssh_private_key_file: "~/.ansible/test/id_rsa"
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+    ansible_python_interpreter: /usr/bin/python3

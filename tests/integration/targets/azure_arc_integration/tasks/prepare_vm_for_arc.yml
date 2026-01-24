@@ -1,0 +1,46 @@
+---
+# Prepare Azure VM for Arc evaluation per the following documentation:
+# https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine
+
+# Set required env variable
+- name: Add MSFT_ARC_TEST to bashrc
+  ansible.builtin.lineinfile:
+    path: ~/.bashrc
+    line: 'export MSFT_ARC_TEST=true'
+  delegate_to: arc_test_vm
+
+- name: Set MSFT_ARC_TEST for systemd services
+  ansible.builtin.shell: |
+    systemctl set-environment MSFT_ARC_TEST=true
+  become: true
+  delegate_to: arc_test_vm
+
+# Stop and disable Azure VM Guest Agent
+- name: Stop Azure VM Guest Agent (walinuxagent)
+  ansible.builtin.systemd:
+    name: walinuxagent
+    state: stopped
+  become: true
+  delegate_to: arc_test_vm
+  ignore_errors: true
+
+- name: Disable Azure VM Guest Agent (walinuxagent)
+  ansible.builtin.systemd:
+    name: walinuxagent
+    enabled: false
+  become: true
+  delegate_to: arc_test_vm
+  ignore_errors: true
+
+- name: Verify walinuxagent is disabled
+  ansible.builtin.systemd:
+    name: walinuxagent
+  become: true
+  delegate_to: arc_test_vm
+
+# Block access to Azure IMDS endpoint
+- name: Block access to Azure IMDS endpoints via iptables
+  ansible.builtin.shell: |
+    iptables -I OUTPUT 1 -d 169.254.169.254 -j REJECT
+  become: true
+  delegate_to: arc_test_vm

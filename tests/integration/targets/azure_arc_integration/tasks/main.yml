@@ -1,0 +1,27 @@
+---
+- name: Set Arc test resource group name
+  ansible.builtin.set_fact:
+    arc_onboarding_rg: "{{ resource_group }}-arc-onboarding"
+    
+- name: Create resource group for Azure Arc test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ arc_onboarding_rg }}"
+    location: eastus2
+
+- name: Run Azure Arc tests 
+  block:
+    - name: Create Azure VM
+      ansible.builtin.include_tasks: setup.yml
+
+    - name: Prepare Azure VM for Azure Arc
+      ansible.builtin.include_tasks: prepare_vm_for_arc.yml
+
+    - name: Test basic Azure Arc functionality
+      ansible.builtin.include_tasks: test_basic.yml
+
+  always:
+    - name: Force delete the entire resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ arc_onboarding_rg }}"
+        force_delete_nonempty: true
+        state: absent
