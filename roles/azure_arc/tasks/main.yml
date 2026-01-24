@@ -11,6 +11,16 @@
   ansible.builtin.set_fact:
     azure_arc_proxy_url: "http://{{ proxy['hostname'] }}:{{ proxy['port'] }}"
 
+- name: Set helper fact for desired_version if needed
+  when: desired_version is defined
+  ansible.builtin.set_fact:
+    azure_arc_desired_version: "{{ desired_version }}"
+
+- name: Set helper fact for altdownload if needed
+  when: altdownload is defined
+  ansible.builtin.set_fact:
+    azure_arc_altdownload: "{{ altdownload }}"
+
 - name: Gather Resource Group info
   azure.azcollection.azure_rm_resourcegroup_info:
     name: "{{ azure_arc_resource_group }}"
@@ -74,7 +84,7 @@
 - name: Connect if not already connected to azure
   when: not azure_arc_show.resourceId
   block:
-    - name: Get a token using the ARC service principal
+    - name: Get access token for arc onboarding
       # Run on localhost, so that service principal secrets don't leave control node
       delegate_to: localhost
       # This command produces output that includes an access token
@@ -82,6 +92,7 @@
       azure.azcollection.azure_rm_accesstoken_info:
         scopes:
           - https://management.azure.com/.default
+        auth_source: "{{ auth_source | default(omit) }}"
       register: azure_arc_access_token
 
     - name: Include Connect tasks for Linux

@@ -42,3 +42,11 @@ argument_specs:
           port:
             description:
               - Port that the proxy is listening on.
+      desired_version:
+        description:
+          - Desired version of the azcmagent to install.
+        required: false
+      altdownload:
+        description:
+          - Alternative download URL for the azcmagent package.
+        required: false
