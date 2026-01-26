@@ -21,7 +21,7 @@ galaxy_info:
       versions:
         - bullseye
         - bookworm
-    - name: EL  # RHEL
+    - name: EL
       versions:
         - "7"
         - "8"
