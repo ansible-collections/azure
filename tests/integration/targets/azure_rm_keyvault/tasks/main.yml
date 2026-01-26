@@ -482,6 +482,17 @@
         that:
           - output is not changed
 
+    - name: Delete instance of Key Vault (RBAC Test)
+      azure.azcollection.azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-keyvault"
+        vault_name: "vault{{ rpfx }}-rbac-default"
+        state: absent
+      register: output
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
     #
     # azure.azcollection.azure_rm_keyvault hsm setup and test
     #
