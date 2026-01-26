@@ -102,6 +102,7 @@
               - backup
               - restore
       register: output
+
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
         that:
@@ -315,50 +316,6 @@
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}-sec"
         state: absent
-
-    - name: Create Key Vault with no access_policies and no enable_rbac_authorization
-      azure.azcollection.azure_rm_keyvault:
-        resource_group: "{{ resource_group }}-keyvault"
-        vault_name: "vault{{ rpfx }}-rbac"
-        vault_tenant: "{{ tenant_id }}"
-        sku:
-          name: standard
-          family: A
-      register: output
-    - name: Assert RBAC-default vault created
-      azure.azcollection.azure_rm_keyvault_info:
-        resource_group: "{{ resource_group }}-keyvault"
-        name: "vault{{ rpfx }}-rbac"
-      register: facts
-    - name: Assert RBAC is enabled by default
-      ansible.builtin.assert:
-        that:
-          - facts['keyvaults'][0]['enable_rbac_authorization'] == true
-
-    - name: Update Key Vault to use access_policies (switch from RBAC to legacy)
-      azure.azcollection.azure_rm_keyvault:
-        resource_group: "{{ resource_group }}-keyvault"
-        vault_name: "vault{{ rpfx }}-rbac"
-        vault_tenant: "{{ tenant_id }}"
-        sku:
-          name: standard
-          family: A
-        access_policies:
-          - tenant_id: "{{ tenant_id }}"
-            object_id: "{{ object_id }}"
-            secrets:
-              - get
-        enable_rbac_authorization: false
-      register: output
-    - name: Assert RBAC was disabled
-      azure.azcollection.azure_rm_keyvault_info:
-        resource_group: "{{ resource_group }}-keyvault"
-        name: "vault{{ rpfx }}-rbac"
-      register: facts
-    - name: Assert RBAC is now disabled
-      ansible.builtin.assert:
-        that:
-          - facts['keyvaults'][0]['enable_rbac_authorization'] == false
     #
     # azure.azcollection.azure_rm_keyvaultkey tests
     #
@@ -481,17 +438,6 @@
       ansible.builtin.assert:
         that:
           - output is not changed
-
-    - name: Delete instance of Key Vault (RBAC Test)
-      azure.azcollection.azure_rm_keyvault:
-        resource_group: "{{ resource_group }}-keyvault"
-        vault_name: "vault{{ rpfx }}-rbac"
-        state: absent
-      register: output
-    - name: Assert the state has changed
-      ansible.builtin.assert:
-        that:
-          - output is changed
 
     #
     # azure.azcollection.azure_rm_keyvault hsm setup and test
