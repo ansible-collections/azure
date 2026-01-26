@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  author: Bill Peck and Klaas Demter
+  author: Bill Peck, Klaas Demter and Stefano Ochoa
   description: Role to setup ARC on an existing host.
 
   license: GPL-3.0-or-later
@@ -8,6 +8,35 @@ galaxy_info:
   min_ansible_version: 2.15.0
 
   # Supported platforms: see https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
+  platforms:
+    - name: Amazon Linux
+      versions:
+        - "2"
+        - "2023"
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    - name: SLES
+      versions:
+        - 12SP5
+        - 15SP3
+        - 15SP4
+        - 15SP5
+        - 15SP6
+        - 15SP7
+    - name: Ubuntu
+      versions:
+        - 18.04
+        - 20.04
+        - 22.04
+        - 24.04
 
   galaxy_tags:
     - linux
