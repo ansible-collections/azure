@@ -319,7 +319,7 @@
     - name: Create Key Vault with no access_policies and no enable_rbac_authorization
       azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
-        vault_name: "vault{{ rpfx }}-rbac-default"
+        vault_name: "vault{{ rpfx }}-rbac"
         vault_tenant: "{{ tenant_id }}"
         sku:
           name: standard
@@ -328,7 +328,7 @@
     - name: Assert RBAC-default vault created
       azure.azcollection.azure_rm_keyvault_info:
         resource_group: "{{ resource_group }}-keyvault"
-        name: "vault{{ rpfx }}-rbac-default"
+        name: "vault{{ rpfx }}-rbac"
       register: facts
     - name: Assert RBAC is enabled by default
       ansible.builtin.assert:
@@ -338,7 +338,7 @@
     - name: Update Key Vault to use access_policies (switch from RBAC to legacy)
       azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
-        vault_name: "vault{{ rpfx }}-rbac-default"
+        vault_name: "vault{{ rpfx }}-rbac"
         vault_tenant: "{{ tenant_id }}"
         sku:
           name: standard
@@ -353,7 +353,7 @@
     - name: Assert RBAC was disabled
       azure.azcollection.azure_rm_keyvault_info:
         resource_group: "{{ resource_group }}-keyvault"
-        name: "vault{{ rpfx }}-rbac-default"
+        name: "vault{{ rpfx }}-rbac"
       register: facts
     - name: Assert RBAC is now disabled
       ansible.builtin.assert:
@@ -485,7 +485,7 @@
     - name: Delete instance of Key Vault (RBAC Test)
       azure.azcollection.azure_rm_keyvault:
         resource_group: "{{ resource_group }}-keyvault"
-        vault_name: "vault{{ rpfx }}-rbac-default"
+        vault_name: "vault{{ rpfx }}-rbac"
         state: absent
       register: output
     - name: Assert the state has changed
