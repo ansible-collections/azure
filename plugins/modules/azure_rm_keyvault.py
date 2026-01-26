@@ -210,6 +210,7 @@ options:
             - When I(enable_rbac_authorization=false), the key vault will use the access policies specified in vault properties,
               and any policy stored on Azure Resource Manager will be ignored.
             - If null or not specified, the value of this property will not change.
+            - Starting with API version 2026-02-01, Azure defaults this to true (RBAC) if not specified.
         type: bool
     soft_delete_retention_in_days:
         description:
