@@ -9,6 +9,10 @@ galaxy_info:
 
   # Supported platforms: see https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
   platforms:
+    - name: AlmaLinux
+      versions:
+        - "8"
+        - "9"
     - name: Amazon Linux
       versions:
         - "2"
@@ -17,26 +21,26 @@ galaxy_info:
       versions:
         - bullseye
         - bookworm
-    - name: EL
+    - name: EL  # RHEL
       versions:
         - "7"
         - "8"
         - "9"
         - "10"
+    - name: Rocky
+      versions:
+        - all
+    # Actual supported: 12 SP5, 15 SP3-SP7 (see Azure Arc docs)
+    # Galaxy schema doesn't support these version strings, so using 'all'
     - name: SLES
       versions:
-        - 12SP5
-        - 15SP3
-        - 15SP4
-        - 15SP5
-        - 15SP6
-        - 15SP7
+        - all
     - name: Ubuntu
       versions:
-        - 18.04
-        - 20.04
-        - 22.04
-        - 24.04
+        - bionic
+        - focal
+        - jammy
+        - noble
 
   galaxy_tags:
     - linux
