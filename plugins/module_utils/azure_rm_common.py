@@ -128,7 +128,7 @@ AZURE_API_PROFILES = {
         'IotHubClient': 'latest',
         'RecoveryServicesBackupClient': 'latest',
         'DataFactoryManagementClient': 'latest',
-        'KeyVaultManagementClient': '2021-10-01',
+        'KeyVaultManagementClient': '2026-02-01',
         'HDInsightManagementClient': 'latest',
         'DevTestLabsClient': 'latest',
         'CosmosDBManagementClient': 'latest',
