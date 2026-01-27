@@ -1,4 +1,26 @@
 # Change Log
+## v3.14.0 (2026-01-27)
+
+### FEATURE ENHANCEMENT
+  - requirements.txt:
+    - Bump azure-core from 1.33.0 to 1.38.0 ([#2146](https://github.com/ansible-collections/azure/pull/2146))
+    - Temporary fix azure-iot-hub dependency issue ([#2153](https://github.com/ansible-collections/azure/pull/2153))
+    - Bump azure-mgmt-keyvault from 10.3.1 to 12.1.1 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
+  - plugins/modules/azure_rm_virtualmachine.py: Adding delete_option for data disk and os disk ([#2136](https://github.com/ansible-collections/azure/pull/2136))
+  - plugins/module_utils/azure_rm_common.py:
+    - Update latest PostgreSQL API version ([#2135](https://github.com/ansible-collections/azure/pull/2135))
+    - Update KeyVaultManagementClient to use API version 2026-02-01 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
+  - plugins/modules/azure_rm_keyvault.py: Update KeyVaultManagementClient to use API version 2026-02-01 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_aks.py: Make azure_rm_aks correctly detect and apply changes in aad_profile for Managed Entra ID (AAD) integration ([#2131](https://github.com/ansible-collections/azure/pull/2131))
+  - plugins/inventory/azure_rm.py:
+    - Fix inventory plugin broken with AzureStackHCI VMs and fix ScaleSets network interfaces ([#2077](https://github.com/ansible-collections/azure/pull/2077))
+    - Fix ARC get of status if status does not exist ([#2148](https://github.com/ansible-collections/azure/pull/2148))
+    - Improve HCI calls ([#2151](https://github.com/ansible-collections/azure/pull/2151))
+  - plugins/modules/azure_rm_storageblob.py: Ensure container-only operations use ARM management-plane instead of requiring data-plane access ([#2152](https://github.com/ansible-collections/azure/pull/2152))
+
+
 ## v3.13.0 (2025-12-31)
 
 ### NEW MODULES
