@@ -1,0 +1,167 @@
+- name: Create a new resource group for app configuration test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-appconfig"
+    location: eastus
+
+- name: For App Configuration test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        tenant_id: "{{ azure_tenant }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-appconfig"
+      register: __rg_info
+
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: "eastus2"
+        # location: "{{ __rg_info.resourcegroups.0.location }}"
+        managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-appconfig"
+
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'AppConfig'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+
+    - name: Create App Configuration Store
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        sku: standard
+        identity:
+          type: SystemAssigned
+        disable_local_auth: false
+        public_network_access: Enabled
+        replicas:
+          - name: replica1
+            location: westus
+          - name: replica2
+            location: eastus2
+        state: present
+      register: create_result
+    - name: Assert the resource instance is well created
+      ansible.builtin.assert:
+        that:
+          - create_result is changed
+
+    - name: Create instance of App Configuration Store again (idempotent)
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        sku: standard
+        identity:
+          type: SystemAssigned
+        disable_local_auth: false
+        public_network_access: Enabled
+        replicas:
+          - name: replica1
+            location: westus
+          - name: replica2
+            location: eastus2
+        state: present
+      register: create_again
+    - name: Assert state not changed on idempotent create
+      ansible.builtin.assert:
+        that:
+          - create_again is not changed
+
+    - name: Update existing App Configuration (attach UAMI; PNA Disabled; change replicas)
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        sku: standard
+        identity:
+          type: "SystemAssigned, UserAssigned"
+          user_assigned_identity_ids:
+          - "{{ managed_identity_ids[0] }}"
+        disable_local_auth: true
+        public_network_access: Disabled
+        replicas:
+          - name: replica1
+            location: westus
+          - name: replica3
+            location: westus2
+        state: present
+      register: update_result
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - update_result is changed
+
+    - name: Get App Configuration facts (single store, with replicas)
+      azure.azcollection.azure_rm_appconfiguration_info:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        include_replicas: true
+      register: facts_single
+
+    - name: Assert the facts are properly set (single + replicas)
+      ansible.builtin.assert:
+        that:
+          - facts_single.appconfigurations | length == 1
+          - facts_single.appconfigurations[0].appconfig_name == appconfig{{ rpfx }}
+          - facts_single.appconfigurations[0].public_network_access | lower == 'disabled'
+          - facts_single.appconfigurations[0].disable_local_auth | bool == true
+          - "'replica1' in (facts_single.appconfigurations[0].replicas | map(attribute='name') | list)"
+          - "'replica3' in (facts_single.appconfigurations[0].replicas | map(attribute='name') | list)"
+
+    - name: Delete App Configuration (soft delete)
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        state: absent
+      register: delete_result
+    - name: Assert the state has changed
+      ansible.builtin.assert:
+        that:
+          - delete_result is changed
+
+    - name: Delete unexisting App Configuration (no-op)
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        state: absent
+      register: delete_again
+    - name: Assert the state has no changed
+      ansible.builtin.assert:
+        that:
+          - delete_again is not changed
+
+    - name: Purge the deleted vault
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfig"
+        appconfig_name: "appconfig{{ rpfx }}"
+        is_purge_deleted: true
+        state: absent
+      register: purge_result
+    - name: Show purge result
+      ansible.builtin.debug:
+        var: purge_result
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'AppConfig'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-appconfig"
+        force_delete_nonempty: true
+        state: absent
