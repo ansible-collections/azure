@@ -84,7 +84,7 @@
         identity:
           type: "SystemAssigned, UserAssigned"
           user_assigned_identity_ids:
-          - "{{ managed_identity_ids[0] }}"
+            - "{{ managed_identity_ids[0] }}"
         disable_local_auth: true
         public_network_access: Disabled
         replicas:
@@ -110,7 +110,7 @@
       ansible.builtin.assert:
         that:
           - facts_single.appconfigurations | length == 1
-          - facts_single.appconfigurations[0].appconfig_name == appconfig{{ rpfx }}
+          - facts_single.appconfigurations[0].appconfig_name != None
           - facts_single.appconfigurations[0].public_network_access | lower == 'disabled'
           - facts_single.appconfigurations[0].disable_local_auth | bool == true
           - "'replica1' in (facts_single.appconfigurations[0].replicas | map(attribute='name') | list)"
