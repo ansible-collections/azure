@@ -42,8 +42,9 @@ options:
     cloud_environment:
         description:
             - For cloud environments other than the US public cloud, the environment name (as defined by Azure Python SDK, eg, C(AzureChinaCloud),
-              C(AzureUSGovernment)), or a metadata discovery endpoint URL (required for Azure Stack). Can also be set via credential file profile or
-              the C(AZURE_CLOUD_ENVIRONMENT) environment variable.
+              C(AzureUSGovernment)), or a resource manager URL (required for Azure Stack). Can also be set via credential file profile or
+              the C(AZURE_CLOUD_ENVIRONMENT) environment variable. If setting to a URL, you must also set the ARM_CLOUD_METADATA_URL if the cloud
+              is not registered with azcli.
         type: str
         default: AzureCloud
         version_added: '0.0.1'
