@@ -40,7 +40,7 @@ Example Playbook
       tasks:
         - name: Configure Arc Hosts
           ansible.builtin.include_role:
-            name: azure.azure_arc
+            name: azure.azcollection.azure_arc
 
 Example Inventory
 -----------------
