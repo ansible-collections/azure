@@ -5,7 +5,7 @@ galaxy_info:
 
   license: GPL-3.0-or-later
 
-  min_ansible_version: 2.15.0
+  min_ansible_version: 2.16.0
 
   # Supported platforms: see https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
   platforms:
