@@ -62,7 +62,7 @@ License
 
 GNU General Public License v3.0 or later
 
-See [LICENCE](https://github.com/ansible-collections/azure/blob/dev/LICENSE to see the full text.
+See [LICENCE](https://github.com/ansible-collections/azure/blob/dev/LICENSE) to see the full text.
 
 Author Information
 ------------------
