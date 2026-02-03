@@ -1,7 +1,7 @@
 ---
 argument_specs:
   main:
-    version_added: 6.1.0
+    version_added: 3.15.0
     short_description: A role to Configure an Azure ARC Host.
     description:
       - A role to Configure an Azure ARC host.
