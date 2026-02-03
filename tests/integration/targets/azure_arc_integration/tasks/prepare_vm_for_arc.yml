@@ -15,6 +15,7 @@
   become: true
   delegate_to: arc_test_vm
   changed_when: true
+  # noqa
 
 # Stop and disable Azure VM Guest Agent
 - name: Stop Azure VM Guest Agent (walinuxagent)

@@ -8,7 +8,7 @@
     name: "{{ arc_onboarding_rg }}"
     location: eastus2
 
-- name: Run Azure Arc tests 
+- name: Run Azure Arc tests
   block:
     - name: Create Azure VM
       ansible.builtin.include_tasks: setup.yml

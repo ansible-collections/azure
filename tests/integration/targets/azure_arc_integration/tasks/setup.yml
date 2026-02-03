@@ -2,7 +2,7 @@
 - name: Set some variables
   ansible.builtin.set_fact:
     vm_name: "arc-onboarding-vm-{{ 999999999 | random }}"
-    location: eastus2
+    location: eastus
     vm_size: Standard_DS1_v2
     admin_username: arcadmin
 
