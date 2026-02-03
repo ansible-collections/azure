@@ -1675,7 +1675,7 @@ class AzureRMAuth(object):
                 if not urlparse.urlparse(raw_cloud_env).scheme:
                     self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
                 try:
-                    self._cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(raw_cloud_env)
+                    self._cloud_environment = self._get_cloud_from_metadata_endpoint(raw_cloud_env)
                 except Exception as e:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(raw_cloud_env, e.message), exception=traceback.format_exc())
 
@@ -1792,7 +1792,7 @@ class AzureRMAuth(object):
                 if not urlparse.urlparse(_cloud_environment).scheme:
                     self.fail("cloud_environment must be an endpoint discovery URL or one of {0}".format([x.name for x in all_clouds]))
                 try:
-                    cloud_environment = azure_cloud.get_cloud_from_metadata_endpoint(_cloud_environment)
+                    cloud_environment = self._get_cloud_from_metadata_endpoint(_cloud_environment)
                 except Exception as exc:
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
@@ -1923,6 +1923,10 @@ class AzureRMAuth(object):
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
 
         return None
+
+    def _get_cloud_from_metadata_endpoint(self, metadata_endpoint):
+        _knownClouds = azure_cloud.KNOWN_CLOUDS
+        return next(cloud for cloud in _knownClouds if cloud.endpoints.resource_manager.lower().rstrip('/') == metadata_endpoint.lower().rstrip('/'))
 
     def log(self, msg, pretty_print=False):
         pass
