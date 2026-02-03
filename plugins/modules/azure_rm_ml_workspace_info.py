@@ -58,7 +58,7 @@ EXAMPLES = '''
   azure.azcollection.azure_rm_ml_workspace_info:
     resource_group: test_ml_workspace
     filtered_kinds:
-        - hub
+      - hub
   register: results
 '''
 

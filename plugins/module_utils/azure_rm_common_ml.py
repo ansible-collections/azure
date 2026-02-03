@@ -1,3 +1,10 @@
+# Copyright (c) 2026 Bill Peck, <bpeck@redhat.com>
+#
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
     from azure.ai.ml import MLClient
