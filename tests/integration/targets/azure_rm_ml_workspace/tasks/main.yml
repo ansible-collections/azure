@@ -1,0 +1,143 @@
+- name: Create a new resource group for ml-workspace test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-workspace"
+    location: westus3
+
+- name: For ml-workspace topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-workspace"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-workspace"
+        workspace_name: "workspace-{{ rpfx }}"
+        description: "Workspace Integration Tests"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          managed_network:
+            isolation_mode: allow_only_approved_outbound
+            outbound_rules:
+            - name: microsoft
+              destination: 'microsoft.com'
+              type: fqdn
+            - name: servicetag-w-prefixes
+              destination:
+                port_ranges: 80, 8080-8089
+                protocol: TCP
+                service_tag: sometag
+                address_prefixes: ["168.63.129.16","10.0.0.0/24"]
+              type: service_tag
+        tags:
+          foo: bar
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create ML Workspace (Idempotent)
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          managed_network:
+            isolation_mode: allow_only_approved_outbound
+            outbound_rules:
+            - name: microsoft
+              destination: 'microsoft.com'
+              type: fqdn
+            - name: servicetag-w-prefixes
+              destination:
+                port_ranges: 80, 8080-8089
+                protocol: TCP
+                service_tag: sometag
+                address_prefixes: ["168.63.129.16","10.0.0.0/24"]
+              type: service_tag
+        tags:
+          foo: bar
+      register: results
+
+    - name: Assert the ML Workspace is not changed
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: Update ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        display_name: "foo_bar"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          managed_network:
+            isolation_mode: allow_only_approved_outbound
+            outbound_rules:
+            - name: microsoft
+              destination: 'microsoft.com'
+              type: fqdn
+            - name: servicetag-w-prefixes
+              destination:
+                port_ranges: 80, 8080-8089
+                protocol: TCP
+                service_tag: sometag
+                address_prefixes: ["168.63.129.16","10.0.0.0/24"]
+              type: service_tag
+        tags:
+          foo: bar
+      register: results
+
+    - name: Assert the ML Workspace updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Lookup ml workspace by name
+      azure.azcollection.azure_rm_ml_workspace_info:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+      register: results
+
+    - name: Assert the ML Workspace updated
+      ansible.builtin.assert:
+        that:
+          - results.ml_workspaces[0].display_name == "foo_bar"
+
+    # cleanup
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
