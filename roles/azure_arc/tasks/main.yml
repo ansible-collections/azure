@@ -54,7 +54,7 @@
 
 # When registered with Azure, validate current configuration is equal to expected configuration and set the resource id as ansible fact
 - name: Assert that configuration is matching expected values and set resource id fact
-  when: azure_arc_show.resourceId
+  when: azure_arc_show.resourceId | default('') != ''
   block:
     - name: Set resource id as variable for easy access in other roles (already connected to azure arc)
       ansible.builtin.set_fact:
@@ -70,7 +70,7 @@
           - azure_arc_show.subscriptionId == azure_arc_subscription_id
 
 - name: Connect if not already connected to azure
-  when: not azure_arc_show.resourceId
+  when: azure_arc_show.resourceId | default('') == ''
   block:
     - name: Get access token for arc onboarding
       # Run on localhost, so that service principal secrets don't leave control node
