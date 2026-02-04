@@ -2,7 +2,7 @@
 - name: Set Arc test resource group name
   ansible.builtin.set_fact:
     arc_onboarding_rg: "{{ resource_group }}-arc-onboarding"
-    
+
 - name: Create resource group for Azure Arc test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ arc_onboarding_rg }}"
