@@ -1,0 +1,219 @@
+- name: Create a new resource group for app configuration key test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-appconfigkey"
+    location: eastus
+
+- name: For App Configuration key test
+  block:
+    - name: Prepare random prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+        tenant_id: "{{ azure_tenant }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-appconfigkey"
+      register: __rg_info
+
+    - name: Create App Configuration Store
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfigkey"
+        appconfig_name: "appconfig{{ rpfx }}"
+        sku: standard
+        identity:
+          type: SystemAssigned
+        disable_local_auth: false
+        public_network_access: Enabled
+        state: present
+      register: create_result
+    - name: Assert the resource instance is created
+      ansible.builtin.assert:
+        that:
+          - create_result is changed
+
+    - name: Get existing AppConfig store
+      azure.azcollection.azure_rm_appconfiguration_info:
+        resource_group: "{{ resource_group }}-appconfigkey"
+        appconfig_name: "appconfig{{ rpfx }}"
+        include_replicas: false
+      register: store_info
+
+    - name: Extract endpoint
+      ansible.builtin.set_fact:
+        endpoint: "{{ store_info.appconfigurations[0].endpoint }}"
+
+    - name: Create KV setting
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+        type: kv
+        value: "45"
+        content_type: "text/plain"
+        read_only: false
+        state: present
+      register: kv_create
+    - name: Assert KV created
+      ansible.builtin.assert:
+        that:
+          - kv_create is changed
+
+    - name: Recreate KV setting (idempotent)
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+        type: kv
+        value: "45"
+        content_type: "text/plain"
+        read_only: false
+        state: present
+      register: kv_idem
+    - name: Assert KV setting is idempotent
+      ansible.builtin.assert:
+        that:
+          - kv_idem is not changed
+
+    - name: Get KV setting facts
+      azure.azcollection.azure_rm_appconfigurationkey_info:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+      register: kv_info
+    - name: Assert info module returns KV
+      ansible.builtin.assert:
+        that:
+          - kv_info.settings | length == 1
+          - kv_info.settings[0].type == 'kv'
+          - kv_info.settings[0].value == '45'
+
+    - name: Update KV value and content_type
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+        type: kv
+        value: "60"
+        content_type: "application/json"
+        read_only: true
+        state: present
+      register: kv_update
+    - name: Assert KV updated
+      ansible.builtin.assert:
+        that:
+          - kv_update is changed
+
+    - name: Get KV info after update
+      azure.azcollection.azure_rm_appconfigurationkey_info:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+      register: kv_info_after
+    - name: Assert KV updated facts
+      ansible.builtin.assert:
+        that:
+          - kv_info_after.settings[0].value == '60'
+          - kv_info_after.settings[0].content_type == 'application/json'
+          - kv_info_after.settings[0].read_only == true
+
+    - name: Create Vault reference setting (dummy URI)
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:ApiKey"
+        label: "vault-prod"
+        type: vault
+        vault_key_reference: "https://dummyvault.vault.azure.net/secrets/mysecret/1234567890abcdef"
+        read_only: false
+        state: present
+      register: vault_create
+    - name: Assert vault reference is created
+      ansible.builtin.assert:
+        that:
+          - vault_create is changed
+
+    - name: Get vault reference info
+      azure.azcollection.azure_rm_appconfigurationkey_info:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:ApiKey"
+        label: "vault-prod"
+      register: vault_info
+    - name: Assert vault info
+      ansible.builtin.assert:
+        that:
+          - vault_info.settings | length == 1
+          - vault_info.settings[0].type == 'vault'
+          - vault_info.settings[0].vault_key_reference is not none
+
+    - name: Unlock KV setting
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+        read_only: false
+        state: present
+      register: kv_unlock
+
+    - name: Assert KV unlocked
+      ansible.builtin.assert:
+        that:
+          - kv_unlock is changed
+
+    - name: Delete KV setting
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:TimeoutSeconds"
+        label: "dev"
+        state: absent
+      register: kv_delete
+
+    - name: Assert KV deleted
+      ansible.builtin.assert:
+        that:
+          - kv_delete is changed
+
+    - name: Delete vault reference
+      azure.azcollection.azure_rm_appconfigurationkey:
+        endpoint: "{{ endpoint }}"
+        key: "Payments:ApiKey"
+        label: "vault-prod"
+        state: absent
+      register: vault_delete
+
+    - name: Assert vault reference deleted
+      ansible.builtin.assert:
+        that:
+          - vault_delete is changed
+
+    - name: Delete App Configuration store (soft delete)
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfigkey"
+        appconfig_name: "appconfig{{ rpfx }}"
+        state: absent
+      register: appconf_delete
+
+    - name: Assert AppConfig is deleted
+      ansible.builtin.assert:
+        that:
+          - appconf_delete is changed
+
+    - name: Purge deleted App Configuration
+      azure.azcollection.azure_rm_appconfiguration:
+        resource_group: "{{ resource_group }}-appconfigkey"
+        appconfig_name: "appconfig{{ rpfx }}"
+        is_purge_deleted: true
+        location: eastus
+        state: absent
+      register: appconf_purge
+
+    - name: Assert purge done
+      ansible.builtin.assert:
+        that:
+          - appconf_purge is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-appconfigkey"
+        force_delete_nonempty: true
+        state: absent
