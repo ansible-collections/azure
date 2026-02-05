@@ -904,7 +904,9 @@ class AzureHost(object):
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        elif self._type == 'microsoft.compute/virtualmachines' or self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
+        if self._type == 'microsoft.compute/virtualmachines' or \
+            self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines' or \
+            self._type == 'microsoft.azurestackhci/virtualmachineinstances':
             # set nic-related values from the primary NIC first
             for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
                 # and from the primary IP config per NIC first
