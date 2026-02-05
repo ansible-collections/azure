@@ -107,7 +107,6 @@ EXAMPLES = '''
     key: "Legacy:Flag"
     label: "prod"
     state: absent
-
 '''
 
 RETURN = '''
@@ -120,7 +119,7 @@ id:
 '''  # NOQA
 
 import json
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -137,7 +136,7 @@ class Actions:
     NoAction, Create, Update, Delete = range(4)
 
 
-class AzureRMAppConfigurationKey(AzureRMModuleBase):
+class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
             endpoint=dict(type='str', required=True),
