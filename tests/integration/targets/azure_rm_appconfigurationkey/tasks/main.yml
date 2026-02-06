@@ -24,7 +24,7 @@
         identity:
           type: SystemAssigned
         disable_local_auth: true
-        public_network_access: Disabled
+        public_network_access: Enabled
         state: present
       register: create_result
     - name: Assert the resource instance is created
@@ -43,7 +43,7 @@
       ansible.builtin.set_fact:
         endpoint: "{{ store_info.appconfigurations[0].endpoint }}"
 
-    - name:  Set AppConfig principalId
+    - name: Set AppConfig principalId
       ansible.builtin.set_fact:
         appconfig_principal_id: "{{ store_info.appconfigurations[0].identity.principal_id }}"
 
