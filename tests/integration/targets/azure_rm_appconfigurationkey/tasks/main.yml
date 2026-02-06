@@ -16,32 +16,13 @@
         name: "{{ resource_group }}-appconfigkey"
       register: __rg_info
 
-    - name: Set location and managed_identity_ids
-      ansible.builtin.set_fact:
-        location: "eastus"
-        managed_identity_ids: []
-        new_resource_group: "{{ resource_group }}-appconfigkey"
-
-    - name: Create user managed identities
-      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-      vars:
-        managed_identity_test_unique: 'AppConfig'
-        managed_identity_unique: "{{ item }}"
-        managed_identity_action: 'create'
-        managed_identity_location: "{{ location }}"
-        resource_group: "{{ new_resource_group }}"
-      with_items:
-        - '1'
-
     - name: Create App Configuration Store
       azure.azcollection.azure_rm_appconfiguration:
         resource_group: "{{ resource_group }}-appconfigkey"
         appconfig_name: "appconfig{{ rpfx }}"
         sku: standard
         identity:
-          type: UserAssigned
-        user_assigned_identity_ids:
-          - "{{ managed_identity_ids[0] }}"
+          type: SystemAssigned
         disable_local_auth: true
         public_network_access: Disabled
         state: present
@@ -61,6 +42,17 @@
     - name: Extract endpoint
       ansible.builtin.set_fact:
         endpoint: "{{ store_info.appconfigurations[0].endpoint }}"
+
+    - name:  Set AppConfig principalId
+      ansible.builtin.set_fact:
+        appconfig_principal_id: "{{ store_info.appconfigurations[0].identity.principal_id }}"
+
+    - name: Assign App Configuration Data Owner role to managed identity
+      azure.azcollection.azure_rm_roleassignment:
+        scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-appconfigkey/providers/Microsoft.AppConfiguration/configurationStores/appconfig{{ rpfx }}"
+        role_definition_id: "/subscriptions/{{ azure_subscription_id }}/providers/Microsoft.Authorization/roleDefinitions/5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b"  # App Configuration Data Owner
+        assignee_object_id: "{{ appconfig_principal_id }}"
+        state: present
 
     - name: Create KV setting
       azure.azcollection.azure_rm_appconfigurationkey:
