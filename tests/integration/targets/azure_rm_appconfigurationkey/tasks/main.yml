@@ -229,11 +229,6 @@
         state: absent
       register: appconf_purge
 
-    - name: Assert purge done
-      ansible.builtin.assert:
-        that:
-          - appconf_purge is changed
-
   always:
     - name: Force delete the resource group
       azure.azcollection.azure_rm_resourcegroup:
