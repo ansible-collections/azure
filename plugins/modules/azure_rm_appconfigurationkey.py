@@ -118,6 +118,7 @@ id:
     example: https://myappconf.azconfig.io/kv/Payments:TimeoutSeconds?label=prod
 '''  # NOQA
 
+import traceback
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
@@ -288,7 +289,10 @@ class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
         if response:
             self.results['id'] = self._compose_id(self.endpoint, self.key, self.label)
 
-        return self.results
+        try:
+            return self.results
+        except Exception as e:
+            self.fail("Module crashed during return: {}\n{}".format(str(e), traceback.format_exc()))    
 
     def get_setting(self):
         '''
