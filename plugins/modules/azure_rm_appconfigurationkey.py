@@ -298,11 +298,16 @@ class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
         :return: The configuration setting as a dictionary, or False if not found.
         '''
         try:
-            response = self.dataplane_client.get_configuration_setting(key=self.key,
-                                                                       label=self.label)
+            response = self.dataplane_client.get_configuration_setting(
+                key=self.key,
+                label=self.label
+            )
             return response.as_dict()
         except ResourceNotFoundError:
             return False
+        except Exception as e:
+            # Catch SDK bug: empty response causes JSONDecodeError
+            self.fail("Failed to retrieve setting '{}': {}\n{}".format(self.key, str(e), traceback.format_exc()))
 
     def upsert_setting(self):
         '''
@@ -402,17 +407,9 @@ class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
         return f"{base}/kv/{key}"
 
 
-# def main():
-#     """Main execution"""
-#     AzureRMAppConfigurationKey()
-
 def main():
     """Main execution"""
-    try:
-        AzureRMAppConfigurationKey()
-    except Exception as e:
-        import traceback
-        raise Exception("Module failed during initialisation: {}\n{}".format(str(e), traceback.format_exc()))   
+    AzureRMAppConfigurationKey()
 
 
 if __name__ == '__main__':
