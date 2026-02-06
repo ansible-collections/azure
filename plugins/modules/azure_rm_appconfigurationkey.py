@@ -412,8 +412,7 @@ def main():
         AzureRMAppConfigurationKey()
     except Exception as e:
         import traceback
-        from ansible.module_utils.basic import AnsibleModule
-        AnsibleModule(argument_spec={}).fail_json(msg="Module failed during initialisation: {}\n{}".format(str(e), traceback.format_exc()))
+        raise Exception("Module failed during initialisation: {}\n{}".format(str(e), traceback.format_exc()))   
 
 
 if __name__ == '__main__':
