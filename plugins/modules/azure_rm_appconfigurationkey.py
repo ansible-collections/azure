@@ -5,6 +5,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+import traceback
 __metaclass__ = type
 
 
@@ -118,7 +119,6 @@ id:
     example: https://myappconf.azconfig.io/kv/Payments:TimeoutSeconds?label=prod
 '''  # NOQA
 
-import traceback
 import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
@@ -289,10 +289,7 @@ class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
         if response:
             self.results['id'] = self._compose_id(self.endpoint, self.key, self.label)
 
-        try:
-            return self.results
-        except Exception as e:
-            self.fail("Module crashed during return: {}\n{}".format(str(e), traceback.format_exc()))    
+        return self.results
 
     def get_setting(self):
         '''
@@ -405,9 +402,18 @@ class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
         return f"{base}/kv/{key}"
 
 
+# def main():
+#     """Main execution"""
+#     AzureRMAppConfigurationKey()
+
 def main():
     """Main execution"""
-    AzureRMAppConfigurationKey()
+    try:
+        AzureRMAppConfigurationKey()
+    except Exception as e:
+        import traceback
+        from ansible.module_utils.basic import AnsibleModule
+        AnsibleModule(argument_spec={}).fail_json(msg="Module failed during initialisation: {}\n{}".format(str(e), traceback.format_exc()))
 
 
 if __name__ == '__main__':
