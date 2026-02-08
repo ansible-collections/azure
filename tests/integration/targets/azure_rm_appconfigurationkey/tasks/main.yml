@@ -43,29 +43,6 @@
       ansible.builtin.set_fact:
         endpoint: "{{ store_info.appconfigurations[0].endpoint }}"
 
-    - name: Set AppConfig principalId
-      ansible.builtin.set_fact:
-        appconfig_principal_id: "{{ store_info.appconfigurations[0].identity.principal_id }}"
-
-    - name: Lookup service principal object id
-      ansible.builtin.set_fact:
-        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
-                       azure_client_id=azure_client_id,
-                       azure_secret=azure_secret,
-                       azure_tenant=tenant_id) }}"
-      register: object_id_facts
-
-    - name: Assign App Configuration Data Owner role to managed identity
-      azure.azcollection.azure_rm_roleassignment:
-        scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-appconfigkey/providers/Microsoft.AppConfiguration/configurationStores/appconfig{{ rpfx }}"
-        role_definition_id: "/subscriptions/{{ azure_subscription_id }}/providers/Microsoft.Authorization/roleDefinitions/5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b"  # App Configuration Data Owner
-        assignee_object_id: "{{ object_id }}"
-        state: present
-
-    - name: Wait for data-plane RBAC to propagate
-      ansible.builtin.pause:
-        seconds: 120
-
     - name: Create KV setting
       azure.azcollection.azure_rm_appconfigurationkey:
         endpoint: "{{ endpoint }}"
