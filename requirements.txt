@@ -1,4 +1,5 @@
 aiohttp>=3.13.0
+azure-appconfiguration==1.8.0
 azure-cli-core==2.75.0
 azure-common==1.1.28
 azure-containerregistry==1.2.0

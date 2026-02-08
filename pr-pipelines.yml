@@ -37,6 +37,7 @@ parameters:
       - "azure_rm_aksagentpool"
       - "azure_rm_apimanagement"
       - "azure_rm_appconfiguration"
+      - "azure_rm_appconfigurationkey"
       - "azure_rm_appgateway"
       - "azure_rm_appserviceplan"
       - "azure_rm_automationaccount"
