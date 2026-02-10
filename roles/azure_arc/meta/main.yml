@@ -20,7 +20,8 @@ galaxy_info:
     # Actual supported: "2", "2023" (see Azure Arc docs)
     - name: Amazon Linux
       versions:
-        - all
+        - "2"
+        - "2023"
     # Actual supported: "bullseye", "bookworm" (see Azure Arc docs)
     - name: Debian
       versions:
