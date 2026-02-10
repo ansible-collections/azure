@@ -244,6 +244,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         '''
         if super(InventoryModule, self).verify_file(path):
             if re.match(r'.{0,}azure_rm\.y(a)?ml$', path):
+                display.vvv("Matching extension for azure_rm.py inventory plugin")
                 return True
         # display.debug("azure_rm inventory filename must end with 'azure_rm.yml' or 'azure_rm.yaml'")
         raise AnsibleError("azure_rm inventory filename must end with 'azure_rm.yml' or 'azure_rm.yaml'")
@@ -430,22 +431,30 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             hostvars = h.get("hostvars")
             # FUTURE: track hostnames to warn if a hostname is repeated (can happen for legacy and for composed inventory_hostname)
             inventory_hostname = self._get_hostname(h, hostnames=constructable_hostnames, strict=constructable_config_strict)
+            display.vvvv(f"Populate {inventory_hostname}")
+
             if self._filter_exclude_host(inventory_hostname, hostvars):
                 continue
             if not self._filter_include_host(inventory_hostname, hostvars):
                 continue
-            self.inventory.add_host(inventory_hostname)
-            # FUTURE: configurable default IP list? can already do this via hostvar_expressions
-            self.inventory.set_variable(inventory_hostname, "ansible_host",
-                                        next(chain(hostvars['public_ipv4_address'], hostvars['private_ipv4_addresses']), None))
-            for k, v in hostvars.items():
-                # FUTURE: configurable hostvar prefix? Makes docs harder...
-                self.inventory.set_variable(inventory_hostname, k, v)
 
-            # constructable delegation
-            self._set_composite_vars(constructable_config_compose, hostvars, inventory_hostname, strict=constructable_config_strict)
-            self._add_host_to_composed_groups(constructable_config_groups, hostvars, inventory_hostname, strict=constructable_config_strict)
-            self._add_host_to_keyed_groups(constructable_config_keyed_groups, hostvars, inventory_hostname, strict=constructable_config_strict)
+            try:
+                self.inventory.add_host(inventory_hostname)
+                # FUTURE: configurable default IP list? can already do this via hostvar_expressions
+
+                self.inventory.set_variable(inventory_hostname, "ansible_host",
+                                            next(chain(hostvars['public_ipv4_address'], hostvars['private_ipv4_addresses']), None))
+                for k, v in hostvars.items():
+                    # FUTURE: configurable hostvar prefix? Makes docs harder...
+                    self.inventory.set_variable(inventory_hostname, k, v)
+
+                # constructable delegation
+                self._set_composite_vars(constructable_config_compose, hostvars, inventory_hostname, strict=constructable_config_strict)
+                self._add_host_to_composed_groups(constructable_config_groups, hostvars, inventory_hostname, strict=constructable_config_strict)
+                self._add_host_to_keyed_groups(constructable_config_keyed_groups, hostvars, inventory_hostname, strict=constructable_config_strict)
+                display.vvvv(f"Done Populate {inventory_hostname}")
+            except Exception as e:
+                display.error(f"Exception in _populate of {inventory_hostname}: {e}")
 
     # FUTURE: fix underlying inventory stuff to allow us to quickly access known groupvars from reconciled host
     def _filter_host(self, filter, inventory_hostname, hostvars):
@@ -895,7 +904,10 @@ class AzureHost(object):
             new_hostvars['virtual_machine_memoryMB'] = self._vm_model['properties']['hardwareProfile'].get('memoryMB')
             new_hostvars['virtual_machine_processors'] = self._vm_model['properties']['hardwareProfile'].get('processors')
 
-        elif self._type == 'microsoft.compute/virtualmachines' or self._type == 'microsoft.compute/virtualmachinescalesets/virtualmachines':
+        if (self._type in [
+                'microsoft.compute/virtualmachines',
+                'microsoft.compute/virtualmachinescalesets/virtualmachines',
+                'microsoft.azurestackhci/virtualmachineinstances']):
             # set nic-related values from the primary NIC first
             for nic in sorted(self.nics, key=lambda n: n.is_primary, reverse=True):
                 # and from the primary IP config per NIC first
