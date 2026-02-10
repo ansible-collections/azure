@@ -9,34 +9,22 @@ galaxy_info:
 
   # Supported platforms: see https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
   platforms:
-    # Actual supported: "8", "9" (see Azure Arc docs)
-    # Galaxy schema doesn't support these version strings, so using 'all'
-    - name: AlmaLinux
-      versions:
-        - "8"
-        - "9"
-    # Actual supported: "2", "2023" (see Azure Arc docs)
     - name: Amazon Linux
       versions:
         - "2"
         - "2023"
-    # Actual supported: "bullseye", "bookworm" (see Azure Arc docs)
     - name: Debian
       versions:
         - bullseye
         - bookworm
-    # Actual supported: "7", "8", "9", "10" (see Azure Arc docs)
     - name: EL
       versions:
         - "7"
         - "8"
         - "9"
         - "10"
-    - name: Rocky
-      versions:
-        - "8"
-        - "9"
     # Actual supported: 12 SP5, 15 SP3-SP7 (see Azure Arc docs)
+    # Update when https://github.com/ansible/ansible-lint/pull/4938 is in a release
     - name: SLES
       versions:
         - all
