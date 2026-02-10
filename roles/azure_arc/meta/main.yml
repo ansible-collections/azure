@@ -15,7 +15,8 @@ galaxy_info:
     # Galaxy schema doesn't support these version strings, so using 'all'
     - name: AlmaLinux
       versions:
-        - all
+        - "8"
+        - "9"
     # Actual supported: "2", "2023" (see Azure Arc docs)
     - name: Amazon Linux
       versions:
