@@ -28,7 +28,10 @@ galaxy_info:
     # Actual supported: "7", "8", "9", "10" (see Azure Arc docs)
     - name: EL
       versions:
-        - all
+        - "7"
+        - "8"
+        - "9"
+        - "10"
     - name: Rocky
       versions:
         - all
