@@ -57,7 +57,7 @@ cd "${TEST_DIR}"
 mkdir -p shippable/testresults
 pip install  -I -r "${TEST_DIR}/requirements.txt"
 pip install  -I -r "${TEST_DIR}/sanity-requirements.txt"
-pip install ansible-lint==25.8.1
+pip install ansible-lint==26.1.1
 
 timeout=360
 

@@ -1,0 +1,27 @@
+---
+- name: Use azure arc agent to connect to azure
+  become: true
+  # This command produces output that includes an access token
+  no_log: true
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/azcmagent
+      - connect
+      - --resource-group
+      - "{{ azure_arc_resource_group }}"
+      - --tenant-id
+      - "{{ azure_arc_tenant_id }}"
+      - --location
+      - "{{ azure_arc_location }}"
+      - --subscription-id
+      - "{{ azure_arc_subscription_id }}"
+      - --cloud
+      - "{{ azure_arc_cloud }}"
+      - --tags
+      - "{{ azure_arc_processed_tags }}"
+      - --access-token
+      - "{{ azure_arc_access_token.access_token }}"
+      - --json
+  # If this command is run, it will always change the connection status from unconnected to connected
+  changed_when: true
+  register: azure_arc_azcmagent_connect_json

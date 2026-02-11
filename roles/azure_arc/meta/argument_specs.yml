@@ -1,0 +1,52 @@
+---
+argument_specs:
+  main:
+    version_added: 3.15.0
+    short_description: A role to Configure an Azure ARC Host.
+    description:
+      - A role to Configure an Azure ARC host.
+      - This role requires an resource_group, tenant id and subscription_id.
+    options:
+      azure_arc_cloud:
+        description:
+          - Which azure cloud to use.
+        default: "AzureCloud"
+      azure_arc_resource_group:
+        description:
+          - Resource group on/from which the Arc Host will reside.
+        required: true
+      azure_arc_location:
+        description:
+          - Location where the Arc Host will reside.
+          - Default will be location of azure_arc_resource_group
+        required: false
+      azure_arc_tenant_id:
+        description: An Azure tenant id.
+        required: true
+      azure_arc_subscription_id:
+        description: An Azure subscription id.
+        required: true
+      azure_arc_tags:
+        description: Dictionary of tags to apply to the Arc Host entry in Azure.
+        type: "dict"
+        default:
+          ArcSQLServerExtensionDeployment: "Disabled"
+        required: false
+      proxy:
+        description:
+          - Define proxy if your host needs to use a proxy to get to the Internet.
+        options:
+          hostname:
+            description:
+              - Hostname of the proxy server.
+          port:
+            description:
+              - Port that the proxy is listening on.
+      desired_version:
+        description:
+          - Desired version of the azcmagent to install.
+        required: false
+      altdownload:
+        description:
+          - Alternative download URL for the azcmagent package.
+        required: false
