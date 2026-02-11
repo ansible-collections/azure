@@ -55,7 +55,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         managed_disk_type: Standard_LRS
         admin_username: adminuser
         ssh_password_enabled: false
@@ -192,7 +192,7 @@
         resource_group: "{{ resource_group }}-image"
         name: "{{ vm_name }}"
         state: absent
-        vm_size: Standard_A0
+        vm_size: Standard_D2s_v3
       register: output
 
     - name: Delete public ip

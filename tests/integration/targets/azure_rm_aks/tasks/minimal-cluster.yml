@@ -29,7 +29,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -84,7 +84,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -124,7 +124,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -180,7 +180,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -220,7 +220,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -269,7 +269,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -336,7 +336,7 @@
         agent_pool_profiles:
           - name: default
             count: 2
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
             security_profile:
               enable_vtpm: true
@@ -378,7 +378,7 @@
         agent_pool_profiles:
           - name: default
             count: 2
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
             security_profile:
               enable_vtpm: true
@@ -420,7 +420,7 @@
         agent_pool_profiles:
           - name: default
             count: 2
-            vm_size: Standard_B2s
+            vm_size: Standard_B2pls_v2
             mode: System
             security_profile:
               enable_vtpm: false

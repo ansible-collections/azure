@@ -47,7 +47,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     storage_account: "{{ storage_account }}"
     storage_container: "{{ vm_name }}"
     storage_blob: "{{ vm_name }}.vhd"
@@ -214,7 +214,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     storage_account: "{{ storage_account }}"
     storage_container: "{{ vm_name }}"
     storage_blob: "{{ vm_name }}.vhd"
@@ -243,7 +243,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
-    vm_size: Standard_A1_v2
+    vm_size: Standard_D2s_v3
     storage_account: "{{ storage_account }}"
     storage_container: "{{ vm_name }}"
     storage_blob: "{{ vm_name }}.vhd"
@@ -268,14 +268,14 @@
   ansible.builtin.assert:
     that:
       - resize_result is changed
-      - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_A1_v2"
+      - resize_result.ansible_facts.azure_vm.hardware_profile.vm_size == "Standard_D2s_v3"
 
 - name: Delete VM
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     state: absent
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
 
 - name: NIC should be gone
   azure.azcollection.azure_rm_networkinterface_info:

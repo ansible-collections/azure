@@ -335,7 +335,7 @@
         task_scheduling_policy:
           node_fill_type: Pack
         task_slots_per_node: 1
-        vm_size: STANDARD_D2S_V3
+        vm_size: Standard_D2s_v3
         upgrade_policy:
           mode: manual
           rolling_upgrade_policy:
@@ -394,7 +394,7 @@
         task_scheduling_policy:
           node_fill_type: Pack
         task_slots_per_node: 1
-        vm_size: STANDARD_D2S_V3
+        vm_size: Standard_D2s_v3
         upgrade_policy:
           mode: manual
           rolling_upgrade_policy:
@@ -457,7 +457,7 @@
         task_scheduling_policy:
           node_fill_type: Pack
         task_slots_per_node: 1
-        vm_size: STANDARD_D2S_V3
+        vm_size: Standard_D2s_v3
         upgrade_policy:
           mode: manual
           rolling_upgrade_policy:
@@ -520,7 +520,7 @@
         task_scheduling_policy:
           node_fill_type: Pack
         task_slots_per_node: 1
-        vm_size: STANDARD_D2S_V3
+        vm_size: Standard_D2s_v3
         upgrade_policy:
           mode: manual
           rolling_upgrade_policy:
