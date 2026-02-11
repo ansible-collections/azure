@@ -165,7 +165,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         single_placement_group: false
         platform_fault_domain_count: 1
@@ -208,7 +208,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         single_placement_group: false
         platform_fault_domain_count: 1
@@ -270,7 +270,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         priority: Spot
         eviction_policy: Deallocate
@@ -322,7 +322,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         priority: Spot
         eviction_policy: Delete

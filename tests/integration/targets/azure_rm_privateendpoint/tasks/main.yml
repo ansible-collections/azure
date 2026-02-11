@@ -46,7 +46,7 @@
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "postflexible{{ rpfx }}"
         sku:
-          name: Standard_D2s_v3
+          name: Standard_B1ms
           tier: Burstable
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"
@@ -73,7 +73,7 @@
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "postflexible{{ rpfx }}02"
         sku:
-          name: Standard_D2s_v3
+          name: Standard_B1ms
           tier: Burstable
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"
@@ -100,7 +100,7 @@
         resource_group: "{{ resource_group }}-privateendpoint"
         name: "postflexible{{ rpfx }}03"
         sku:
-          name: Standard_D2s_v3
+          name: Standard_B1ms
           tier: Burstable
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"

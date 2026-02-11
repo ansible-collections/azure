@@ -19,7 +19,7 @@
   azure.azcollection.azure_rm_vmsku_info:
     location: westus2
     resource_type: "virtualMachines"
-    size: "standard_B1"
+    size: "Standard_D2s_v3"
     zone: true
   register: available_skus_result
 

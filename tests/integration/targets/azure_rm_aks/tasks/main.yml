@@ -14,7 +14,7 @@
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
         noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
-        location: westus2
+        location: eastus
 
     - name: Create User Managed Identity
       azure.azcollection.azure_rm_resource:
@@ -63,7 +63,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable"}
@@ -104,7 +104,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable"}
@@ -142,7 +142,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
         enable_rbac: true
@@ -174,7 +174,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
         enable_rbac: true
@@ -219,7 +219,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable", "environment":"dev"}
@@ -278,7 +278,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -317,7 +317,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -361,7 +361,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -401,7 +401,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -442,7 +442,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -479,7 +479,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -490,7 +490,7 @@
               - 2
           - name: default2
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: User
         node_resource_group: "node{{ noderpfx }}"
@@ -527,7 +527,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -537,7 +537,7 @@
               - 2
           - name: default2
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: User
         node_resource_group: "node{{ noderpfx }}"
@@ -568,7 +568,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -579,7 +579,7 @@
               - 2
           - name: default2
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -616,7 +616,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -626,7 +626,7 @@
               - 2
           - name: default2
             count: 1
-            vm_size: Standard_B2pls_v2
+            vm_size: Standard_DS2_v2
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
