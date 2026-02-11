@@ -199,6 +199,53 @@ AZURE_API_PROFILES = {
     }
 }
 
+# Critical dependency Python Packages listed in requirements.txt
+AZURE_PYTHON_PKG_REQUIREMENTS = [
+    'packaging',
+    'azure-mgmt-core',
+    'azure-mgmt-network',
+    'azure-mgmt-resource',
+    'azure-mgmt-managementgroups',
+    'azure-mgmt-storage',
+    'azure-mgmt-compute',
+    'azure-mgmt-dns',
+    'azure-mgmt-privatedns',
+    'azure-mgmt-monitor',
+    'azure-mgmt-web',
+    'azure-mgmt-containerservice',
+    'azure-mgmt-marketplaceordering',
+    'azure-mgmt-trafficmanager',
+    'azure-storage-blob',
+    'azure-mgmt-authorization',
+    'azure-mgmt-sql',
+    'azure-mgmt-servicebus',
+    'azure-mgmt-rdbms',
+    'azure-mgmt-postgresqlflexibleservers',
+    'azure-mgmt-mysqlflexibleservers',
+    'azure-mgmt-containerregistry',
+    'azure-mgmt-containerinstance',
+    'azure-mgmt-loganalytics',
+    'azure-mgmt-automation',
+    'azure-mgmt-iothub',
+    'azure-mgmt-recoveryservicesbackup',
+    'azure-mgmt-search',
+    'azure-mgmt-notificationhubs',
+    'azure-mgmt-eventhub',
+    'azure-mgmt-datafactory',
+    'azure-identity',
+    'microsoft-kiota-authentication-azure',
+    'msgraph-core',
+    'msgraph-sdk',
+    'azure-mgmt-batch',
+    'azure-mgmt-resourcehealth',
+    'azure-mgmt-cdn',
+    'azure-cli-core' # avoid azure-cli dependency
+    # 'msal',
+    # 'msal-extensions',
+    # 'msrest',
+    # 'msrestazure',
+]
+
 AZURE_TAG_ARGS = dict(
     tags=dict(type='dict'),
     append_tags=dict(type='bool', default=True),
@@ -229,6 +276,17 @@ except ImportError:
     # This passes the sanity import test, but does not provide a user friendly error message.
     # Doing so would require catching Exception for all imports of Azure dependencies in modules and module_utils.
     importlib = None
+
+# Import all dependencies from Py List literal and catch exceptions,
+# concat exceptions into string for later stdout via
+# missing_required_lib provided by ansible.module_utils.basic
+HAS_AZURE_ERROR_MSG=""
+for PY_PKG_NAME in AZURE_PYTHON_PKG_REQUIREMENTS:
+    try:
+        import PY_PKG_NAME
+    except ImportError as e:
+        HAS_AZURE_ERROR_MSG+=f"{PY_PKG_NAME!r}, "
+        HAS_AZURE = False
 
 try:
     from packaging.version import Version
@@ -389,9 +447,6 @@ AZURE_PKG_VERSIONS = {
 } if HAS_AZURE else {}
 
 
-AZURE_MIN_RELEASE = '2.0.0'
-
-
 class AzureRMModuleBase(object):
     def __init__(self, derived_arg_spec, bypass_checks=False, no_log=False,
                  check_invalid_arguments=None, mutually_exclusive=None, required_together=None,
@@ -430,7 +485,7 @@ class AzureRMModuleBase(object):
                       exception=HAS_PACKAGING_VERSION_EXC)
 
         if not HAS_AZURE:
-            self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
+            self.fail(msg=missing_required_lib('{0})'.format(HAS_AZURE_ERROR_MSG)),
                       exception=HAS_AZURE_EXC)
 
         self._authorization_client = None
