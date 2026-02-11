@@ -33,7 +33,7 @@
         resource_group: "{{ resource_group }}-privateendpointdnszonegroup"
         name: "postgresqlsrv-{{ rpfx }}"
         sku:
-          name: Standard_B1ms
+          name: Standard_D2s_v3
           tier: Burstable
         administrator_login: azureuser
         administrator_login_password: "{{ password }}"
