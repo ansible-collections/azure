@@ -219,7 +219,6 @@ AZURE_SUCCESS_STATE = "Succeeded"
 AZURE_FAILED_STATE = "Failed"
 
 HAS_AZURE = True
-HAS_AZURE_EXC = None
 HAS_AZURE_CLI_CORE = True
 HAS_AZURE_CLI_CORE_EXC = None
 
@@ -239,67 +238,372 @@ except ImportError:
     HAS_PACKAGING_VERSION = False
     HAS_PACKAGING_VERSION_EXC = traceback.format_exc()
 
+
+# Import all dependencies separately and catch exceptions,
+# concat exceptions into string for later stdout via
+# missing_required_lib provided by ansible.module_utils.basic
+
+# The following dependency Python Packages listed in requirements are not imported now
+# aiohttp
+# azure-appconfiguration
+# azure-common
+# azure-containerregistry
+# azure-core
+# azure-eventhub
+# azure-iot-hub
+# azure-keyvault
+# azure-keyvault-securitydomain
+# azure-mgmt-apimanagement
+# azure-mgmt-appconfiguration
+# azure-mgmt-cosmosdb
+# azure-mgmt-devtestlabs
+# azure-mgmt-hdinsight
+# azure-mgmt-keyvault
+# azure-mgmt-managedservices
+# azure-mgmt-nspkg
+# azure-mgmt-recoveryservices
+# azure-mgmt-redis
+# azure-mgmt-resourcegraph
+# azure-mgmt-eventgrid
+# azure-ai-ml
+# azure-nspkg
+# azure-servicebus
+# netaddr
+# oras
+# packaging
+# pandas
+# requests
+# xmltodict
+
+HAS_AZURE_ERR=""
+HAS_AZURE_EXC=""
+
 try:
     from enum import Enum
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.network import NetworkManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.network import models as NetworkModels
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.resource.resources import ResourceManagementClient
-    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.resource.subscriptions import SubscriptionClient
-    from azure.mgmt.storage import StorageManagementClient
-    from azure.mgmt.compute import ComputeManagementClient
-    from azure.mgmt.dns import DnsManagementClient
-    from azure.mgmt.privatedns import PrivateDnsManagementClient
-    import azure.mgmt.privatedns.models as PrivateDnsModels
-    from azure.mgmt.monitor import MonitorManagementClient
-    from azure.mgmt.web import WebSiteManagementClient
-    from azure.mgmt.containerservice import ContainerServiceClient
-    from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
-    from azure.mgmt.trafficmanager import TrafficManagerManagementClient
-    from azure.storage.blob import BlobServiceClient
-    from azure.mgmt.authorization import AuthorizationManagementClient
-    from azure.mgmt.sql import SqlManagementClient
-    from azure.mgmt.servicebus import ServiceBusManagementClient
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
-    from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
-    from azure.mgmt.rdbms.mysql import MySQLManagementClient
-    from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
-    from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
-    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
-    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
-    from azure.mgmt.loganalytics import LogAnalyticsManagementClient
-    import azure.mgmt.loganalytics.models as LogAnalyticsModels
-    from azure.mgmt.automation import AutomationClient
-    import azure.mgmt.automation.models as AutomationModel
-    from azure.mgmt.iothub import IotHubClient
-    from azure.mgmt.iothub import models as IoTHubModels
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.resource.locks import ManagementLockClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.storage import StorageManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.compute import ComputeManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.dns import DnsManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.privatedns import PrivateDnsManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    import azure.mgmt.privatedns.models as PrivateDnsModels
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.monitor import MonitorManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.web import WebSiteManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.containerservice import ContainerServiceClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.trafficmanager import TrafficManagerManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.storage.blob import BlobServiceClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.authorization import AuthorizationManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.sql import SqlManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.servicebus import ServiceBusManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.rdbms.mysql import MySQLManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.loganalytics import LogAnalyticsManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    import azure.mgmt.loganalytics.models as LogAnalyticsModels
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.automation import AutomationClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    import azure.mgmt.automation.models as AutomationModel
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.iothub import IotHubClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.iothub import models as IoTHubModels
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
     try:
         #  Older versions of the library exposed the modules at the root of the package
         import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
     except ImportError:
         import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
-    from azure.mgmt.search import SearchManagementClient
-    from azure.mgmt.notificationhubs import NotificationHubsManagementClient
-    from azure.mgmt.eventhub import EventHubManagementClient
-    from azure.mgmt.datafactory import DataFactoryManagementClient
-    import azure.mgmt.datafactory.models as DataFactoryModel
-    from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential
-    from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
-    from msgraph_core import GraphClientFactory, NationalClouds
-    from msgraph import GraphRequestAdapter, GraphServiceClient
-    from azure.mgmt.batch import BatchManagementClient
-    from azure.mgmt.batch import models as BatchManagementModel
-    from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
-    from azure.mgmt.cdn import CdnManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
 
-except ImportError as exc:
-    Authentication = object
-    HAS_AZURE_EXC = traceback.format_exc()
+try:
+    from azure.mgmt.search import SearchManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.notificationhubs import NotificationHubsManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.eventhub import EventHubManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.datafactory import DataFactoryManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    import azure.mgmt.datafactory.models as DataFactoryModel
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.identity import AzureCliCredential
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from msgraph_core import GraphClientFactory, NationalClouds
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from msgraph import GraphRequestAdapter, GraphServiceClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.batch import BatchManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.batch import models as BatchManagementModel
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.mgmt.cdn import CdnManagementClient
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.cli.core.util import CLIError
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+try:
+    from azure.cli.core import cloud as azure_cloud
+except ImportError as e:
+    HAS_AZURE_ERR += traceback.format_exc(limit=0)
+    HAS_AZURE_EXC += traceback.format_exc()
+
+# Flag for any caught import error
+if HAS_AZURE_EXC != "":
     HAS_AZURE = False
+
 
 from base64 import b64encode, b64decode
 from hashlib import sha256
@@ -389,9 +693,6 @@ AZURE_PKG_VERSIONS = {
 } if HAS_AZURE else {}
 
 
-AZURE_MIN_RELEASE = '2.0.0'
-
-
 class AzureRMModuleBase(object):
     def __init__(self, derived_arg_spec, bypass_checks=False, no_log=False,
                  check_invalid_arguments=None, mutually_exclusive=None, required_together=None,
@@ -430,7 +731,8 @@ class AzureRMModuleBase(object):
                       exception=HAS_PACKAGING_VERSION_EXC)
 
         if not HAS_AZURE:
-            self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
+            HAS_AZURE_ERR_STRIP = HAS_AZURE_ERR.replace("\n", "").replace("ModuleNotFoundError: No module named","").strip()
+            self.fail(msg=missing_required_lib('{0}'.format(HAS_AZURE_ERR_STRIP)),
                       exception=HAS_AZURE_EXC)
 
         self._authorization_client = None
