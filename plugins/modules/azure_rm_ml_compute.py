@@ -496,7 +496,7 @@ class AzureRMMLCompute(MLClientCommon):
         return params_override
 
     # Convert list to a list of dictionaries
-    def _process_user_assigned_identities(self, resource_ids: list) -> list[dict]:
+    def _process_user_assigned_identities(self, resource_ids):
         return [{"resource_id": resource_id} for resource_id in resource_ids]
 
     def get(self, name, as_dict=False):
