@@ -1,0 +1,219 @@
+- name: Create a new resource group for ml-compute test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-compute"
+    location: eastus
+
+- name: For ml-compute topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-compute"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-compute"
+        workspace_name: "workspace-{{ rpfx }}"
+        amlcompute_name: "aml{{ rpfx }}comp"
+        computeinstance_name: "comp{{ rpfx }}inst"
+        description: "Compute Integration Tests"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+        tags:
+          foo: bar
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: "Create ML Compute type:amlcompute"
+      azure.azcollection.azure_rm_ml_compute:
+        location: "{{ location }}"
+        name: "{{ amlcompute_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "amlcompute"
+        min_instances: 0
+        max_instances: 8
+        tags:
+          created_by: "Ansible"
+      register: results
+
+    - name: Assert the ML Compute created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: "Create ML Compute type:amlcompute (idempotent)"
+      azure.azcollection.azure_rm_ml_compute:
+        location: "{{ location }}"
+        name: "{{ amlcompute_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "amlcompute"
+        min_instances: 0
+        max_instances: 8
+        tags:
+          created_by: "Ansible"
+      register: results
+
+    - name: "Assert the ML Compute type:amlcompute is idempotent"
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: "Update ML Compute type:amlcompute"
+      azure.azcollection.azure_rm_ml_compute:
+        location: "{{ location }}"
+        name: "{{ amlcompute_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "amlcompute"
+        min_instances: 0
+        max_instances: 200
+        tags:
+          created_by: "Ansible"
+      register: results
+
+    - name: "Assert the ML Compute type:amlcompute updated"
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: "Create ML Compute type:computeinstance"
+      azure.azcollection.azure_rm_ml_compute:
+        location: "{{ location }}"
+        name: "{{ computeinstance_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        description: "{{ description }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "computeinstance"
+        resource_definition: |
+          size: Standard_DS3_v2
+          ssh_public_access_enabled: false
+          ssh_settings:
+             admin_username: azureuser
+             ssh_key_value: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDWm/4TTHMZdzZVJcob2aFRWDmIyJLxk028AKh7K03RDgR8bz/Knd9DgB2V3sipjY9wYJ1U9YbsUoAt24+CWZFpnoB79J6vaoqwUb7c6nGkaNrWoGZKI+v26GOX8O2MUjjOyBuPEinJtQ432J4affHfeRI+1iDQXuwFUKhNbRVpxh2h9otXF+J1UvSUaPYggS7Iivyha/x8HJzFcNnIPrAZkPiT/Nb/Qk7FyoFTEw64cIl1ByvmF3ewSOeVXKDpb2d4vrSDTVmXFKRrWduhM3sHO5dckREKc+tSQ0M+SpfBqaBgRTAie4jFVSIiSHCvL2BRQXBMRiyPgNlpiJWTPLp/ administrator@MININT-7IP9G6S
+          identity:
+             type: system_assigned
+        tags:
+          created_by: "Ansible"
+      register: results
+
+    - name: "Assert the ML Compute type:computeinstace created"
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: "Stop ML Compute type:computeinstance"
+      azure.azcollection.azure_rm_ml_compute:
+        name: "{{ computeinstance_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        state: stop
+      register: results
+
+    - name: "Assert the ML Compute type:computeinstace stopped"
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.ml_compute.state == "Stopped"
+
+    - name: "List ML Compute instances"
+      azure.azcollection.azure_rm_ml_compute_info:
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+      register: results
+        
+    - name: "Assert xmlcompute in results"
+      ansible.builtin.assert:
+        that:
+          - results.ml_computes | length == 2
+
+    - name: "List ML Compute instances type:amlcompute"
+      azure.azcollection.azure_rm_ml_compute_info:
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "amlcompute"
+      register: results
+        
+    - name: "Assert xmlcompute in results"
+      ansible.builtin.assert:
+        that:
+          - results.ml_computes | length == 1
+          - results.ml_computes[0].name == amlcompute_name
+
+    - name: "List ML Compute instances type:computeinstance"
+      azure.azcollection.azure_rm_ml_compute_info:
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "computeinstance"
+      register: results
+        
+    - name: "Assert xmlcompute in results"
+      ansible.builtin.assert:
+        that:
+          - results.ml_computes | length == 1
+          - results.ml_computes[0].name == computeinstance_name
+
+    # cleanup
+    - name: "Delete ML Compute type:amlcompute"
+      azure.azcollection.azure_rm_ml_compute:
+        name: "{{ amlcompute_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+      register: results
+
+    - name: "Assert the ML Compute type:amlcompute deleted"
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: "Delete ML Compute type:computeinstance"
+      azure.azcollection.azure_rm_ml_compute:
+        name: "{{ computeinstance_name }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+      register: results
+
+    - name: "Assert the ML Compute type:computeinstance deleted"
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
