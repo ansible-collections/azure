@@ -834,7 +834,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}3
-        vm_size: Standard_DS2_v2
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -865,7 +865,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}3
-        vm_size: Standard_DS2_v2
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
