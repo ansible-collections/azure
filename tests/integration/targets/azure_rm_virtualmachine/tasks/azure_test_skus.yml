@@ -17,22 +17,17 @@
 
 - name: List available VM SKUs
   azure.azcollection.azure_rm_vmsku_info:
-    location: australiaeast
+    location: eastus
     resource_type: "virtualMachines"
-    size: "Standard_D2s_v3"
-    zone: true
+    size: "Standard_D2s"
   register: available_skus_result
 
 - name: Create desired capabilities list
   ansible.builtin.set_fact:
     desired_capabilities: [
       {
-        "name": "MaxResourceVolumeMB",
-        "value": "4096"
-      },
-      {
         "name": "MemoryGB",
-        "value": "2"
+        "value": "8"
       }]
 
 - name: Init skus_result
@@ -55,7 +50,7 @@
   azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ network_name }}"
-    location: westus2
+    location: eastus
     address_prefixes: "{{ network }}"
 
 - name: SETUP | Create subnet
@@ -73,7 +68,7 @@
       - 33
     virtual_network: "{{ network_name }}"
     subnet: "{{ subnet_name }}"
-    location: westus2
+    location: eastus
 
 - name: Create VM with first sku in avilable skus list
   azure.azcollection.azure_rm_virtualmachine:
@@ -89,7 +84,7 @@
     vm_size: "{{ skus_result[0] }}"
     network_interfaces: "{{ interface_name }}"
     virtual_network: "{{ network_name }}"
-    location: westus2
+    location: eastus
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
