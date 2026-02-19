@@ -510,11 +510,11 @@ class AzureRMMLWorkspace(MLClientCommon):
         if self.state == 'present':
             if ml_workspace_info:
                 # Update
-                ml_workspace_info = self.ws_to_dict(ml_workspace_info,
-                                                    filter=True)
+                ml_workspace_info = self.entity_to_dict(ml_workspace_info)
+                ml_workspace_info = self.filter_required(ml_workspace_info)
                 changed = not self.default_compare({},
-                                                   self.ws_to_dict(ml_workspace,
-                                                                   filter=True),
+                                                   self.filter_required(
+                                                       self.entity_to_dict(ml_workspace)),
                                                    ml_workspace_info,
                                                    '',
                                                    self.results)
@@ -523,7 +523,7 @@ class AzureRMMLWorkspace(MLClientCommon):
                                                                    update_dependent_resources=self.update_dependent_resources
                                                                    )
                     ml_workspace_object = self.get_poller_result(response)
-                    ml_workspace_info = self.ws_to_dict(ml_workspace_object)
+                    ml_workspace_info = self.entity_to_dict(ml_workspace_object)
 
             else:
                 # Create
@@ -533,7 +533,7 @@ class AzureRMMLWorkspace(MLClientCommon):
                         workspace=ml_workspace,
                         update_dependent_resources=self.update_dependent_resources)
                     ml_workspace_object = self.get_poller_result(response)
-                    ml_workspace_info = self.ws_to_dict(ml_workspace_object)
+                    ml_workspace_info = self.entity_to_dict(ml_workspace_object)
         else:
             # Delete
             if ml_workspace_info:

@@ -5,7 +5,9 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import traceback
 try:
+    from typing import Dict
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
     from azure.ai.ml import MLClient
     import json
@@ -25,17 +27,28 @@ class MLClientCommon(AzureRMModuleBaseExt):
                                     self.ml_workspace)
         return self._client
 
-    def ws_to_dict(self, ws, filter=False):
+    def entity_to_dict(self, entity):
         """
-        Workspace._to_dict() returns an OrderedDict so we abuse json
+        ENTITY._to_dict() returns and OrderedDict so we abuse json
         dumps and loads to return a Dict
         """
-        workspace = json.loads(json.dumps(ws._to_dict()))
+        if isinstance(entity, Dict):
+            return entity
+        try:
+            entity = json.loads(json.dumps(entity._to_dict()))
+            return entity
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            self.module.warn("Failed to deserialize response: %s", str(err))
+            self.module.warn(str(entity))
+            self.module.debug(traceback.format_exc())
 
-        # Filter out required networks which are automatically
-        # added so we can be idempotent.
-        if filter and \
-                "managed_network" in workspace and \
+    def filter_required(self, workspace):
+        """
+        Filter out required networks which are automatically
+        added so we can be idempotent.
+        """
+
+        if "managed_network" in workspace and \
                 "outbound_rules" in workspace["managed_network"]:
             outbound_rules = workspace["managed_network"].pop("outbound_rules")
             updated_rules = []

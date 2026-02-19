@@ -347,14 +347,14 @@ class AzureRMMLWorkspaceInfo(MLClientCommon):
         if self.name:
             try:
                 result = self.client.workspaces.get(self.name)
-                ml_workspaces = [self.ws_to_dict(result)]
+                ml_workspaces = [self.entity_to_dict(result)]
             except ResourceNotFoundError:
                 ml_workspaces = []
         else:
             scope = Scope.RESOURCE_GROUP if self.resource_group else Scope.SUBSCRIPTION
             results = self.client.workspaces.list(scope=scope,
                                                   filtered_kinds=','.join(self.filtered_kinds))
-            ml_workspaces = list(map(self.ws_to_dict, results))
+            ml_workspaces = list(map(self.entity_to_dict, results))
 
         self.results['ml_workspaces'] = ml_workspaces
 
