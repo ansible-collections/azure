@@ -110,7 +110,7 @@
             node_labels: {"release":"stable"}
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
