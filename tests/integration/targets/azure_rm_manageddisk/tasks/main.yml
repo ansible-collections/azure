@@ -439,7 +439,7 @@
         resource_group: "{{ resource_group }}-manageddisk"
         name: "tr{{ rpfx }}"
         state: absent
-        vm_size: Standard_DS1_v2
+        vm_size: Standard_D2s_v3
 
     - name: Delete public ip
       azure.azcollection.azure_rm_publicipaddress:

@@ -29,7 +29,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     storage_account: "{{ storage_account }}"
     storage_container: "{{ vm_name }}"
     storage_blob: "{{ vm_name }}.vhd"
@@ -91,7 +91,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
     storage_account: "{{ storage_account }}"
     storage_container: "{{ vm_name }}"
     storage_blob: "{{ vm_name }}.vhd"
@@ -145,6 +145,6 @@
     resource_group: "{{ resource_group }}-vm01"  # Should this be resource_group_secondary?
     name: "{{ vm_name }}"
     state: absent
-    vm_size: Standard_B1ms
+    vm_size: Standard_D2s_v3
   async: 5000
   poll: 0

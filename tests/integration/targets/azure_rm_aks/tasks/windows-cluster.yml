@@ -39,7 +39,7 @@
             os_sku: Ubuntu
           - name: def
             count: 1
-            vm_size: Standard_D2as_v4
+            vm_size: Standard_D2s_v3
             mode: User
             os_type: Windows
             os_sku: Windows2022
@@ -98,7 +98,7 @@
             os_sku: Ubuntu
           - name: def
             count: 1
-            vm_size: Standard_D2as_v4
+            vm_size: Standard_D2s_v3
             mode: User
             os_type: Windows
             os_sku: Windows2022
