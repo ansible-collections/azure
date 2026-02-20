@@ -1871,7 +1871,7 @@ class AzureRMAuth(object):
 
         if auth_source == 'cli':
             if not HAS_AZURE_CLI_CORE:
-                self.fail(msg=missing_required_lib('azure-cli', reason='for `cli` auth_source'),
+                self.fail(msg=missing_required_lib('azure-cli-core', reason='for `cli` auth_source'),
                           exception=HAS_AZURE_CLI_CORE_EXC)
             try:
                 self.log('Retrieving credentials from Azure CLI profile')
