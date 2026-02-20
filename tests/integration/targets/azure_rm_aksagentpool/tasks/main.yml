@@ -49,7 +49,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             mode: System
         api_server_access_profile:
           authorized_ip_ranges:
@@ -115,7 +115,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
-        vm_size: Standard_B2s
+        vm_size: Standard_D2s_v3
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -142,7 +142,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
-        vm_size: Standard_B2s
+        vm_size: Standard_D2s_v3
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -180,7 +180,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default03
         count: 1
-        vm_size: Standard_B2s
+        vm_size: Standard_D2s_v3
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -226,7 +226,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default06
         count: 1
-        vm_size: Standard_B2s
+        vm_size: Standard_D2s_v3
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}
@@ -270,7 +270,7 @@
         cluster_name: "min{{ rpfx }}"
         name: default06
         count: 1
-        vm_size: Standard_B2s
+        vm_size: Standard_D2s_v3
         type_properties_type: VirtualMachineScaleSets
         mode: System
         node_labels: {"release":"stable"}

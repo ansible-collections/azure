@@ -14,7 +14,7 @@
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
         noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
-        location: westus2
+        location: eastus
 
     - name: Create User Managed Identity
       azure.azcollection.azure_rm_resource:
@@ -63,13 +63,13 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable"}
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -104,13 +104,13 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable"}
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -142,7 +142,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
         enable_rbac: true
@@ -174,7 +174,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
         enable_rbac: true
@@ -198,7 +198,7 @@
         that:
           - "fact.aks | length == 1"
           - fact.aks[0].id == output.id
-          - fact.aks[0].agent_pool_profiles[0].availability_zones == ["2"]
+          - fact.aks[0].agent_pool_profiles[0].availability_zones == ["1"]
           - fact.aks[0].agent_pool_profiles[0].mode == "System"
           - fact.aks[0].agent_pool_profiles[0].node_labels | length == 1
 
@@ -219,13 +219,13 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable", "environment":"dev"}
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -278,12 +278,12 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -317,12 +317,12 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         addon:
           http_application_routing:
@@ -361,12 +361,12 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         addon:
           http_application_routing:
@@ -401,7 +401,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -409,7 +409,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -442,7 +442,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -450,7 +450,7 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
         node_resource_group: "node{{ noderpfx }}"
         enable_rbac: true
         network_profile:
@@ -479,7 +479,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -487,10 +487,10 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
           - name: default2
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: User
         node_resource_group: "node{{ noderpfx }}"
@@ -527,17 +527,17 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
           - name: default2
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: User
         node_resource_group: "node{{ noderpfx }}"
@@ -568,7 +568,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -576,10 +576,10 @@
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
           - name: default2
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -616,17 +616,17 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
             min_count: 1
             max_pods: 42
             availability_zones:
-              - 2
+              - 1
           - name: default2
             count: 1
-            vm_size: Standard_B2s
+            vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"

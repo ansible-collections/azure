@@ -28,7 +28,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-autoscale"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         ssh_password_enabled: false
         ssh_public_keys:

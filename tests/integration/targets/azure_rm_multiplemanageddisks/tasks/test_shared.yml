@@ -100,7 +100,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         virtual_network: "vnet-{{ item.name }}"
         network_interfaces: "interface-{{ item.name }}"
         managed_disk_type: Standard_LRS
