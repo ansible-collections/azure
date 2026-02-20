@@ -1,0 +1,76 @@
+---
+- name: Check if azcmagent is installed
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  register: azure_arc_azcmagent_version_cmd
+  failed_when: false
+  changed_when: false
+
+- name: Set azcmagent installed fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_installed: "{{ azure_arc_azcmagent_version_cmd.rc == 0 }}"
+
+- name: Create temp directory for azcmagent install script
+  when: not azure_arc_azcmagent_installed
+  become: true
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: _azure_arc
+  register: azure_arc_tmpdir
+
+- name: Set install script path fact
+  when: not azure_arc_azcmagent_installed
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_script_path: "{{ azure_arc_tmpdir.path }}/azcmagent-linux.sh"
+
+- name: Download azcmagent install script
+  when: not azure_arc_azcmagent_installed
+  become: true
+  ansible.builtin.get_url:
+    url: https://aka.ms/azcmagent
+    dest: "{{ azure_arc_azcmagent_install_script_path }}"
+    mode: '0700'
+
+- name: Initialize azcmagent install script argv
+  when: not azure_arc_azcmagent_installed
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_script_argv:
+      - "/bin/bash"
+      - "{{ azure_arc_azcmagent_install_script_path }}"
+
+- name: Add proxy args to azcmagent install script argv
+  when:
+    - not azure_arc_azcmagent_installed
+    - azure_arc_proxy_url is defined
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--proxy', azure_arc_proxy_url] }}"
+
+- name: Add desired version args to azcmagent install script argv
+  when:
+    - not azure_arc_azcmagent_installed
+    - azure_arc_desired_version is defined
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--desiredversion', azure_arc_desired_version] }}"
+
+- name: Add altdownload args to azcmagent installer argv
+  when:
+    - not azure_arc_azcmagent_installed
+    - azure_arc_altdownload is defined
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--altdownload', azure_arc_altdownload] }}"
+
+- name: Run azcmagent install script
+  when: not azure_arc_azcmagent_installed
+  become: true
+  ansible.builtin.command:
+    argv: "{{ azure_arc_azcmagent_install_script_argv }}"
+  register: azure_arc_azcmagent_install_cmd
+  changed_when: false
+  failed_when: azure_arc_azcmagent_install_cmd.rc != 0
+
+- name: Remove temp directory for azcmagent install script
+  when: not azure_arc_azcmagent_installed
+  become: true
+  ansible.builtin.file:
+    state: absent
+    path: "{{ azure_arc_tmpdir.path }}"

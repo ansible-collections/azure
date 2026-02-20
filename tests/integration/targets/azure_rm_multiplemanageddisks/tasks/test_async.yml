@@ -35,7 +35,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-multidisk"
         name: "{{ async_virtual_machine_prefix }}-{{ item }}"
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         managed_disk_type: Standard_LRS
         virtual_network: "{{ async_virtual_network }}-{{ item }}"
         network_interfaces: "{{ async_interface }}-{{ item }}"

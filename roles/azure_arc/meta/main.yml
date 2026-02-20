@@ -1,0 +1,48 @@
+---
+galaxy_info:
+  author: Bill Peck, Klaas Demter and Stefano Ochoa
+  description: Role to setup ARC on an existing host.
+
+  license: GPL-3.0-or-later
+
+  min_ansible_version: 2.16.0
+
+  # Supported platforms: see https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
+  platforms:
+    - name: Amazon Linux
+      versions:
+        - "2"
+        - "2023"
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+    # Actual supported: 12 SP5, 15 SP3-SP7 (see Azure Arc docs)
+    # Update when https://github.com/ansible/ansible-lint/pull/4938 is in a release
+    - name: SLES
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+        - jammy
+        - noble
+
+  galaxy_tags:
+    - linux
+    - system
+    - ansible
+    - microsoft
+    - azure
+    - arc
+
+dependencies: []
+collections: []
+...

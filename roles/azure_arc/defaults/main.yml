@@ -1,0 +1,15 @@
+---
+# defaults file for configure archost
+azure_arc_tags:
+  ArcSQLServerExtensionDeployment: "Disabled"
+azure_arc_cloud: AzureCloud
+
+# Mandatory variables for role:
+# azure_arc_resource_group: NoDefault
+# azure_arc_subscription_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+# azure_arc_tenant_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+# proxy is an optional variable, only set when needed, example:
+# proxy:
+#   hostname: proxy.company.tld
+#   port: 8080

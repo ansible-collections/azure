@@ -1,0 +1,96 @@
+---
+- name: Generate tags string
+  ansible.builtin.set_fact:
+    azure_arc_processed_tags: |-
+      {%- for k, v in azure_arc_tags.items() %}
+      {{ k | quote }}={{ v | replace(",", "\,") | quote }}{% if not loop.last %},{% endif %}
+      {%- endfor %}
+
+- name: Set helper fact for proxy proxy.url if needed
+  when: proxy is defined
+  ansible.builtin.set_fact:
+    azure_arc_proxy_url: "http://{{ proxy['hostname'] }}:{{ proxy['port'] }}"
+
+- name: Set helper fact for desired_version if needed
+  when: desired_version is defined
+  ansible.builtin.set_fact:
+    azure_arc_desired_version: "{{ desired_version }}"
+
+- name: Set helper fact for altdownload if needed
+  when: altdownload is defined
+  ansible.builtin.set_fact:
+    azure_arc_altdownload: "{{ altdownload }}"
+
+- name: Gather Resource Group info
+  azure.azcollection.azure_rm_resourcegroup_info:
+    name: "{{ azure_arc_resource_group }}"
+  register: __azure_arc_rg_info
+  delegate_to: localhost
+  when: azure_arc_location is not defined
+
+- name: Set azure_location from resource_group
+  ansible.builtin.set_fact:
+    azure_arc_location: "{{ __azure_arc_rg_info.resourcegroups.0.location }}"
+  when: azure_arc_location is not defined
+
+- name: Include install tasks for Linux
+  ansible.builtin.include_tasks: "linux_install.yml"
+  when: ansible_system == 'Linux'
+
+- name: Include show tasks for Linux
+  ansible.builtin.include_tasks: "linux_show.yml"
+  when: ansible_system == 'Linux'
+
+- name: Set helper fact for configuration
+  ansible.builtin.set_fact:
+    azure_arc_show: "{{ azure_arc_show_json.stdout | ansible.builtin.from_json }}"
+
+- name: Set azcmagent proxy setting if not already set correctly
+  when: azure_arc_proxy_url is defined and azure_arc_show.httpsProxy != azure_arc_proxy_url
+  block:
+    - name: Include proxy tasks for Linux
+      ansible.builtin.include_tasks: "linux_proxy.yml"
+      when: ansible_system == 'Linux'
+
+# When registered with Azure, validate current configuration is equal to expected configuration and set the resource id as ansible fact
+- name: Assert that configuration is matching expected values and set resource id fact
+  when: azure_arc_show.resourceId | default('') != ''
+  block:
+    - name: Set resource id as variable for easy access in other roles (already connected to azure arc)
+      ansible.builtin.set_fact:
+        azure_arc_resource_id: "{{ azure_arc_show.resourceId }}"
+
+    - name: Verify configuration settings match expected values
+      ansible.builtin.assert:
+        that:
+          - azure_arc_show.cloud == azure_arc_cloud
+          - azure_arc_show.resourceGroup == azure_arc_resource_group
+          - azure_arc_show.location == azure_arc_location
+          - azure_arc_show.tenantId == azure_arc_tenant_id
+          - azure_arc_show.subscriptionId == azure_arc_subscription_id
+
+- name: Connect if not already connected to azure
+  when: azure_arc_show.resourceId | default('') == ''
+  block:
+    - name: Get access token for arc onboarding
+      # Run on localhost, so that service principal secrets don't leave control node
+      delegate_to: localhost
+      # This command produces output that includes an access token
+      no_log: true
+      azure.azcollection.azure_rm_accesstoken_info:
+        scopes:
+          - https://management.azure.com/.default
+        auth_source: "{{ auth_source | default(omit) }}"
+      register: azure_arc_access_token
+
+    - name: Include Connect tasks for Linux
+      ansible.builtin.include_tasks: "linux_connect.yml"
+      when: ansible_system == 'Linux'
+
+    - name: Transform json stdout output to variable
+      ansible.builtin.set_fact:
+        azure_arc_azcmagent_connect: "{{ azure_arc_azcmagent_connect_json.stdout | ansible.builtin.from_json }}"
+
+    - name: Set resource id as variable for easy access in other roles (newly registered system in azure arc)
+      ansible.builtin.set_fact:
+        azure_arc_resource_id: "{{ azure_arc_azcmagent_connect.resourceId }}"

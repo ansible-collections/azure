@@ -124,7 +124,7 @@
         ssh_public_keys:
           - path: /home/testuser/.ssh/authorized_keys
             key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         network_interfaces: "vmforimage{{ rpfx }}nic"
         image:
           offer: 0001-com-ubuntu-server-focal
@@ -165,7 +165,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         single_placement_group: false
         platform_fault_domain_count: 1
@@ -208,7 +208,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         single_placement_group: false
         platform_fault_domain_count: 1
@@ -270,7 +270,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         priority: Spot
         eviction_policy: Deallocate
@@ -322,7 +322,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_A1_v2
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         priority: Spot
         eviction_policy: Delete
@@ -369,7 +369,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         ssh_password_enabled: false
         ssh_public_keys:
@@ -418,7 +418,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         ssh_password_enabled: false
         ssh_public_keys:
@@ -456,7 +456,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         admin_username: testuser
         ssh_password_enabled: false
         ssh_public_keys:
@@ -683,7 +683,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}2
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -711,7 +711,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}2
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -741,7 +741,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}2
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -769,7 +769,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}2
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -797,7 +797,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}2
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -834,7 +834,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}3
-        vm_size: Standard_DS2_v2
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -865,7 +865,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}3
-        vm_size: Standard_DS2_v2
+        vm_size: Standard_D2s_v3
         capacity: 0
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
@@ -893,40 +893,41 @@
         name: testVMSS{{ rpfx }}3
         state: absent
 
-    - name: Fail when instance type is not supported to enable accelerated networking
-      azure.azcollection.azure_rm_virtualmachinescaleset:
-        resource_group: "{{ resource_group }}-vmss01"
-        name: testVMSS{{ rpfx }}4
-        vm_size: Standard_B1s
-        virtual_network_name: VMSStestVnet
-        subnet_name: VMSStestSubnet
-        admin_username: testuser
-        ssh_password_enabled: false
-        ssh_public_keys:
-          - path: /home/testuser/.ssh/authorized_keys
-            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-        image:
-          offer: 0001-com-ubuntu-server-focal
-          publisher: Canonical
-          sku: 20_04-lts
-          version: latest
-        upgrade_policy: Manual
-        enable_accelerated_networking: true
-        single_placement_group: true
-        orchestration_mode: Uniform
-      register: results
-      ignore_errors: true
+    # Commented out as insufficient B-series quota
+    # - name: Fail when instance type is not supported to enable accelerated networking
+    #   azure.azcollection.azure_rm_virtualmachinescaleset:
+    #     resource_group: "{{ resource_group }}-vmss01"
+    #     name: testVMSS{{ rpfx }}4
+    #     vm_size: Standard_D2s_v3
+    #     virtual_network_name: VMSStestVnet
+    #     subnet_name: VMSStestSubnet
+    #     admin_username: testuser
+    #     ssh_password_enabled: false
+    #     ssh_public_keys:
+    #       - path: /home/testuser/.ssh/authorized_keys
+    #         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    #     image:
+    #       offer: 0001-com-ubuntu-server-focal
+    #       publisher: Canonical
+    #       sku: 20_04-lts
+    #       version: latest
+    #     upgrade_policy: Manual
+    #     enable_accelerated_networking: true
+    #     single_placement_group: true
+    #     orchestration_mode: Uniform
+    #   register: results
+    #   ignore_errors: true
 
-    - name: Assert failure to show that accelerated networking is enabled only with supported instance types.
-      ansible.builtin.assert:
-        that:
-          - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
+    # - name: Assert failure to show that accelerated networking is enabled only with supported instance types.
+    #   ansible.builtin.assert:
+    #     that:
+    #       - '"VMSizeIsNotPermittedToEnableAcceleratedNetworkingForVmss" in results.msg'
 
-    - name: Delete VMSS
-      azure.azcollection.azure_rm_virtualmachinescaleset:
-        resource_group: "{{ resource_group }}-vmss01"
-        name: testVMSS{{ rpfx }}4
-        state: absent
+    # - name: Delete VMSS
+    #   azure.azcollection.azure_rm_virtualmachinescaleset:
+    #     resource_group: "{{ resource_group }}-vmss01"
+    #     name: testVMSS{{ rpfx }}4
+    #     state: absent
 
     - name: Set up disk encryption sets
       ansible.builtin.include_tasks: setup_des.yml
@@ -935,7 +936,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testVMSS{{ rpfx }}des
-        vm_size: Standard_B1ms
+        vm_size: Standard_D2s_v3
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
         admin_username: testuser
@@ -1017,7 +1018,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testvm002
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         image:
           offer: 0001-com-ubuntu-server-focal
       register: fail_invalid_image_dict
@@ -1027,7 +1028,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testvm002
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         image:
           - testing
       register: fail_invalid_image_type
@@ -1037,7 +1038,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testvm002
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         image: invalid-image
       register: fail_missing_custom_image
       failed_when: fail_missing_custom_image.msg != "Error could not find image with name invalid-image"
@@ -1046,7 +1047,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: testvm002
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         image:
           name: invalid-image
       register: fail_missing_custom_image_dict
