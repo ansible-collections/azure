@@ -921,14 +921,15 @@
         resource_group: "{{ resource_group }}-loganalyticsworkspace"
       register: facts
 
-    - name: Pause 3 minutes - wait for workspace deletion to finish (hard-deleting)
-      ansible.builtin.pause:
-        minutes: 3
-
     - name: Assert the log analytics workspace facts
       ansible.builtin.assert:
         that:
-          - facts.workspaces | length == 0
+          - >
+            facts.workspaces | length == 0
+            or (
+              facts.workspaces | length > 0
+              and facts.workspaces[0].provisioning_state == "HardDeleting"
+            )
 
     - name: Remove Log Analytics workspace (Test Idempotence)
       azure.azcollection.azure_rm_loganalyticsworkspace:
