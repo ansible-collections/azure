@@ -808,7 +808,7 @@ class AzureHost(object):
                                           api_version=self._inventory_client._compute_api_version,
                                           handler=self._on_instanceview_response)
 
-        nic_refs = vm_model['properties']['networkProfile']['networkInterfaces']
+        nic_refs = vm_model['properties'].get('networkProfile', dict()).get('networkInterfaces', [])
         for nic in nic_refs:
             # single-nic instances don't set primary, so figure it out...
             is_primary = nic.get('properties', {}).get('primary', len(nic_refs) == 1)
@@ -849,7 +849,7 @@ class AzureHost(object):
 
         createdAt = self._vm_model.get('systemData', {}).get('createdAt')  # hci specific
 
-        if self._instanceview.get('computerName'):
+        if self._instanceview and self._instanceview.get('computerName'):
             computer_name = self._instanceview['computerName']
         else:
             computer_name = self._vm_model['properties'].get('osProfile', {}).get('computerName')
@@ -892,12 +892,13 @@ class AzureHost(object):
         )
 
         # Instance view
-        if self._instanceview.get('osName'):
-            new_hostvars['os_name'] = self._instanceview['osName']
-        if self._instanceview.get('osVersion'):
-            new_hostvars['os_version'] = self._instanceview['osVersion']
-        if self._instanceview.get('hyperVGeneration'):
-            new_hostvars['hyper_v_generation'] = self._instanceview['hyperVGeneration']
+        if self._instanceview:
+            if self._instanceview.get('osName'):
+                new_hostvars['os_name'] = self._instanceview['osName']
+            if self._instanceview.get('osVersion'):
+                new_hostvars['os_version'] = self._instanceview['osVersion']
+            if self._instanceview.get('hyperVGeneration'):
+                new_hostvars['hyper_v_generation'] = self._instanceview['hyperVGeneration']
 
         if self._type == 'microsoft.azurestackhci/virtualmachineinstances':
             new_hostvars['customLocation'] = self._vm_model.get('extendedLocation', {}).get('name', '').split('/')[-1]
