@@ -111,14 +111,10 @@ except ImportError:
 try:
     from azure.keyvault.securitydomain import SecurityDomainClient
     from azure.keyvault.securitydomain.models import CertificateInfo, SecurityDomainJsonWebKey
-    HAS_AZURE_CLI = True
-    HAS_AZURE_CLI_EXC = None
 except ImportError:
     CertificateInfo = None
     SecurityDomainJsonWebKey = None
     SecurityDomainClient = None
-    HAS_AZURE_CLI = False
-    HAS_AZURE_CLI_EXC = traceback.format_exc()
 
 
 class AzureRMVaultSecurityDomain(AzureRMModuleBaseExt):
@@ -145,7 +141,7 @@ class AzureRMVaultSecurityDomain(AzureRMModuleBaseExt):
             ),
             no_wait=dict(
                 type='bool',
-                default='False'
+                default=False
             ),
             action=dict(
                 type='str',
@@ -177,10 +173,6 @@ class AzureRMVaultSecurityDomain(AzureRMModuleBaseExt):
         if not HAS_CRYPTO:
             self.fail(msg=missing_required_lib('cryptography'),
                       exception=HAS_CRYPTO_EXC)
-
-        if not HAS_AZURE_CLI:
-            self.fail(msg=missing_required_lib('azure-cli'),
-                      exception=HAS_AZURE_CLI_EXC)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
