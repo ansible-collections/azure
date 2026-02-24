@@ -924,12 +924,7 @@
     - name: Assert the log analytics workspace facts
       ansible.builtin.assert:
         that:
-          - >
-            facts.workspaces | length == 0
-            or (
-              facts.workspaces | length > 0
-              and facts.workspaces[0].provisioning_state == "HardDeleting"
-            )
+          - facts.workspaces | length == 0
 
     - name: Remove Log Analytics workspace (Test Idempotence)
       azure.azcollection.azure_rm_loganalyticsworkspace:
