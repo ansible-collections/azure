@@ -1,5 +1,5 @@
 voluptuous==0.15.2
 pycodestyle==2.13.0
 yamllint==1.37.1
-cryptography==45.0.3
+cryptography==46.0.5
 pylint==3.3.7

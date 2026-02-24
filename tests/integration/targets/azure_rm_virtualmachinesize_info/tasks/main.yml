@@ -5,7 +5,7 @@
 - name: Get specific size information for a specific location
   azure.azcollection.azure_rm_virtualmachinesize_info:
     location: "{{ location }}"
-    name: Standard_A1_v2
+    name: Standard_D2s_v3
   register: output
 
 - name: Assert the virtuam machine size
