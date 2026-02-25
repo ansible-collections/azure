@@ -352,6 +352,7 @@ class AzureRMMLCompute(MLClientCommon):
 
         self._client = None
         self.ml_compute = None
+        self.ml_registry = None
         self.state = None
 
         self.results = dict(

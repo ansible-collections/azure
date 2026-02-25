@@ -455,6 +455,7 @@ class AzureRMMLWorkspace(MLClientCommon):
 
         self._client = None
         self.ml_workspace = None
+        self.ml_registry = None
         self.state = None
 
         self.results = dict(
