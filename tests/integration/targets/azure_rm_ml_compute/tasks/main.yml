@@ -140,7 +140,7 @@
         ml_workspace: "{{ workspace_name }}"
         resource_group: "{{ new_resource_group }}"
       register: results
-        
+
     - name: "Assert xmlcompute in results"
       ansible.builtin.assert:
         that:
@@ -152,7 +152,7 @@
         resource_group: "{{ new_resource_group }}"
         type: "amlcompute"
       register: results
-        
+
     - name: "Assert xmlcompute in results"
       ansible.builtin.assert:
         that:
@@ -165,7 +165,7 @@
         resource_group: "{{ new_resource_group }}"
         type: "computeinstance"
       register: results
-        
+
     - name: "Assert xmlcompute in results"
       ansible.builtin.assert:
         that:
