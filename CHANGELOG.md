@@ -26,6 +26,7 @@
     - Fix missing networking infos for Azure Local (Azure StackHCI) VMs ([#2162](https://github.com/ansible-collections/azure/pull/2162))
     - Fix crashes when processing VMs in failed or creating states ([#2164](https://github.com/ansible-collections/azure/pull/2164))
   - plugins/modules/azure_rm_keyvaultsecuritydomain.py: Remove azure-cli mentions ([#2175](https://github.com/ansible-collections/azure/pull/2175))
+  - plugins/lookup/azure_keyvault_secret.py: Support client_id for MSI ([#2179](https://github.com/ansible-collections/azure/pull/2179))
 
 
 ## v3.14.0 (2026-01-27)
