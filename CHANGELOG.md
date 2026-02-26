@@ -13,7 +13,7 @@
 
 ### FEATURE ENHANCEMENT
   - roles/azure_arc: Add role for Azure ARC Onboarding ([#2067](https://github.com/ansible-collections/azure/pull/2067))
-  - plugins/modules/azure_rm_keyvaultinfo.py: Migrate to support API 2026-02-01 ([#2163](https://github.com/ansible-collections/azure/pull/2163))
+  - plugins/modules/azure_rm_keyvaultinfo.py: Migrate to support API 2026-02-01 (Note that there is a breaking change on the default value of enable_rbac_authorization) ([#2163](https://github.com/ansible-collections/azure/pull/2163))
   - sanity-requirements.txt: Bump cryptography from 45.0.3 to 46.0.5 ([#2165](https://github.com/ansible-collections/azure/pull/2165))
   - requirements.txt: Bump azure-identity from 1.19.0 to 1.25.2 ([#2174](https://github.com/ansible-collections/azure/pull/2174))
   - plugins/modules/azure_rm_loganalyticsworkspace.py: Add LROPoller when deleting log analytics workspace ([#2176](https://github.com/ansible-collections/azure/pull/2176))
@@ -39,7 +39,7 @@
   - plugins/module_utils/azure_rm_common.py:
     - Update latest PostgreSQL API version ([#2135](https://github.com/ansible-collections/azure/pull/2135))
     - Update KeyVaultManagementClient to use API version 2026-02-01 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
-  - plugins/modules/azure_rm_keyvault.py: Update KeyVaultManagementClient to use API version 2026-02-01 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
+  - plugins/modules/azure_rm_keyvault.py: Migrate to support API 2026-02-01 (Note that there is a breaking change on the default value of enable_rbac_authorization) ([#2154](https://github.com/ansible-collections/azure/pull/2154))
 
 ### BUG FIXING
   - plugins/modules/azure_rm_aks.py: Make azure_rm_aks correctly detect and apply changes in aad_profile for Managed Entra ID (AAD) integration ([#2131](https://github.com/ansible-collections/azure/pull/2131))
