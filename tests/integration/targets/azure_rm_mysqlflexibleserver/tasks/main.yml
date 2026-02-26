@@ -147,7 +147,7 @@
       azure.azcollection.azure_rm_mysqlflexibleserver:
         resource_group: "{{ resource_group }}-mysqlflexibleserver"
         location: "{{ location }}"
-        name: postflexible-restore{{ rpfx }}
+        name: mysqlflexible-restore{{ rpfx }}
         source_server_resource_id: "{{ output.servers[0].id }}"
         restore_point_in_time: "{{ now(utc=true, fmt='%Y-%m-%dT%H:%M:%SZ') }}"  # set current time
       check_mode: true
@@ -314,6 +314,18 @@
       register: output
 
     - name: Assert the flexible server deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the restored mysql flexible server
+      azure.azcollection.azure_rm_mysqlflexibleserver:
+        resource_group: "{{ resource_group }}-mysqlflexibleserver"
+        name: mysqlflexible-restore{{ rpfx }}
+        state: absent
+      register: output
+
+    - name: Assert the restored flexible server deleted
       ansible.builtin.assert:
         that:
           - output is changed
