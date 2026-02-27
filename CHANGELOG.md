@@ -1,4 +1,34 @@
 # Change Log
+## v3.15.0 (2026-02-27)
+
+### NEW MODULES
+  - azure_rm_appconfiguration.py:([#2156](https://github.com/ansible-collections/azure/pull/2156))
+  - azure_rm_appconfiguration_info.py:([#2156](https://github.com/ansible-collections/azure/pull/2156))
+  - azure_rm_appconfigurationkey.py:([#2160](https://github.com/ansible-collections/azure/pull/2160))
+  - azure_rm_appconfigurationkey_info.py:([#2160](https://github.com/ansible-collections/azure/pull/2160))
+  - azure_rm_ml_workspace.py:([#2159](https://github.com/ansible-collections/azure/pull/2159))
+  - azure_rm_ml_workspace_info.py:([#2159](https://github.com/ansible-collections/azure/pull/2159))
+  - azure_rm_ml_compute.py:([#2172](https://github.com/ansible-collections/azure/pull/2172))
+  - azure_rm_ml_compute_info.py:([#2172](https://github.com/ansible-collections/azure/pull/2172))
+
+### FEATURE ENHANCEMENT
+  - roles/azure_arc: Add role for Azure ARC Onboarding ([#2067](https://github.com/ansible-collections/azure/pull/2067))
+  - plugins/modules/azure_rm_keyvaultinfo.py: Migrate to support API 2026-02-01 (Note that there is a breaking change on the default value of enable_rbac_authorization) ([#2163](https://github.com/ansible-collections/azure/pull/2163))
+  - sanity-requirements.txt: Bump cryptography from 45.0.3 to 46.0.5 ([#2165](https://github.com/ansible-collections/azure/pull/2165))
+  - requirements.txt: Bump azure-identity from 1.19.0 to 1.25.2 ([#2174](https://github.com/ansible-collections/azure/pull/2174))
+  - plugins/modules/azure_rm_loganalyticsworkspace.py: Add LROPoller when deleting log analytics workspace ([#2176](https://github.com/ansible-collections/azure/pull/2176))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_common.py: 
+    - Fix support for Azure Stack and other clouds when using Metadata Endpoint ([#2158](https://github.com/ansible-collections/azure/pull/2158))
+    - Remove azure-cli mentions ([#2175](https://github.com/ansible-collections/azure/pull/2175))
+  - plugins/inventory/azure_rm.py: 
+    - Fix missing networking infos for Azure Local (Azure StackHCI) VMs ([#2162](https://github.com/ansible-collections/azure/pull/2162))
+    - Fix crashes when processing VMs in failed or creating states ([#2164](https://github.com/ansible-collections/azure/pull/2164))
+  - plugins/modules/azure_rm_keyvaultsecuritydomain.py: Remove azure-cli mentions ([#2175](https://github.com/ansible-collections/azure/pull/2175))
+  - plugins/lookup/azure_keyvault_secret.py: Support client_id for MSI ([#2179](https://github.com/ansible-collections/azure/pull/2179))
+
+
 ## v3.14.0 (2026-01-27)
 
 ### FEATURE ENHANCEMENT
@@ -10,7 +40,7 @@
   - plugins/module_utils/azure_rm_common.py:
     - Update latest PostgreSQL API version ([#2135](https://github.com/ansible-collections/azure/pull/2135))
     - Update KeyVaultManagementClient to use API version 2026-02-01 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
-  - plugins/modules/azure_rm_keyvault.py: Update KeyVaultManagementClient to use API version 2026-02-01 ([#2154](https://github.com/ansible-collections/azure/pull/2154))
+  - plugins/modules/azure_rm_keyvault.py: Migrate to support API 2026-02-01 (Note that there is a breaking change on the default value of enable_rbac_authorization) ([#2154](https://github.com/ansible-collections/azure/pull/2154))
 
 ### BUG FIXING
   - plugins/modules/azure_rm_aks.py: Make azure_rm_aks correctly detect and apply changes in aad_profile for Managed Entra ID (AAD) integration ([#2131](https://github.com/ansible-collections/azure/pull/2131))
