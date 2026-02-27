@@ -46,6 +46,7 @@ notes:
     - If ansible is running on Azure Virtual Machine with MSI enabled, client_id, secret and tenant are not required.
     - For enabling MSI on Azure VM, please refer to this doc https://docs.microsoft.com/en-us/azure/active-directory/managed-service-identity/
     - After enabling MSI on Azure VM, remember to grant access of the Key Vault to the VM by adding a new Acess Policy in Azure Portal.
+    - If multiple managed identities are assigned to the VM, set I(client_id) to select the correct user-assigned identity when using MSI.
     - If MSI is not enabled on ansible host, it's required to provide a valid service principal which has access to the key vault.
     - To authenticate via service principal, pass client_id, secret and tenant or set environment variables
       AZURE_CLIENT_ID, AZURE_CLIENT_SECRET and AZURE_TENANT_ID.
@@ -72,6 +73,17 @@ EXAMPLE = """
           'azure.azcollection.azure_keyvault_secret',
           'testSecret/version',
           vault_url='https://yourvault.vault.azure.net'
+        )
+      }}"
+
+- name: Look up secret when ansible host is MSI with specific UAMI
+  debug:
+    msg: "the value of this secret is {{
+        lookup(
+          'azure.azcollection.azure_keyvault_secret',
+          'testSecret/version',
+          vault_url='https://yourvault.vault.azure.net',
+          client_id='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
         )
       }}"
 
@@ -192,6 +204,7 @@ class LookupModule(LookupBase):
         # Default auth_source is auto, but we still try MSI first unless explicitly disabled.
         auth_source = self.get_option('auth_source')
         vault_url = self.get_option('vault_url')
+        client_id = self.get_option('client_id')
         use_msi = self.get_option('use_msi')
         TOKEN_ACQUIRED = False
         token = None
@@ -200,6 +213,9 @@ class LookupModule(LookupBase):
             'api-version': '2018-02-01',
             'resource': 'https://vault.{0}.net'.format(self.get_option('cloud_type') or 'azure')
         }
+
+        if client_id:
+            token_params['client_id'] = client_id
 
         token_headers = {
             'Metadata': 'true'
