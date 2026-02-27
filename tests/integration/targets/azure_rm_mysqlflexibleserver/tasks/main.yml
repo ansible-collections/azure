@@ -146,7 +146,6 @@
     - name: Restore MySQL flexible server from a point-in-time backup
       azure.azcollection.azure_rm_mysqlflexibleserver:
         resource_group: "{{ resource_group }}-mysqlflexibleserver"
-        location: "{{ location }}"
         name: mysqlflexible-restore{{ rpfx }}
         source_server_resource_id: "{{ output.servers[0].id }}"
         restore_point_in_time: "{{ now(utc=true, fmt='%Y-%m-%dT%H:%M:%SZ') }}"  # set current time
