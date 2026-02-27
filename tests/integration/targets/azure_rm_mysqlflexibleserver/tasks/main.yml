@@ -149,12 +149,12 @@
         name: mysqlflexible-restore{{ rpfx }}
         source_server_resource_id: "{{ output.servers[0].id }}"
         restore_point_in_time: "{{ now(utc=true, fmt='%Y-%m-%dT%H:%M:%SZ') }}"  # set current time
-      check_mode: true
+      register: restore_output
 
-    - name: Assert the resource is updated
+    - name: Assert the MySQL flexible server is restored
       ansible.builtin.assert:
         that:
-          - output is changed
+          - restore_output is changed
 
     - name: Create a MySQL flexible database
       azure.azcollection.azure_rm_mysqlflexibledatabase:
