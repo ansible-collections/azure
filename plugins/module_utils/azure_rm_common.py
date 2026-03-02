@@ -216,10 +216,8 @@ CIDR_PATTERN = re.compile(r"(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.)
                           r"[0-9]{2}|2[0-4][0-9]|25[0-5])(/([0-9]|[1-2][0-9]|3[0-2]))")
 
 AZURE_SUCCESS_STATE = "Succeeded"
-AZURE_FAILED_STATE = "Failed"
 
-HAS_AZURE = True
-HAS_AZURE_EXC = None
+AZURE_IMPORT_ERROR = None
 
 try:
     import importlib
@@ -295,8 +293,7 @@ try:
     from azure.mgmt.cdn import CdnManagementClient
 except ImportError as exc:
     Authentication = object
-    HAS_AZURE_EXC = traceback.format_exc()
-    HAS_AZURE = False
+    AZURE_IMPORT_ERROR = traceback.format_exc()
 
 from base64 import b64encode, b64decode
 from hashlib import sha256
@@ -336,52 +333,6 @@ def format_resource_id(val, subscription_id, namespace, types, resource_group):
 
 def normalize_location_name(name):
     return name.replace(' ', '').lower()
-
-
-# FUTURE: either get this from the requirements file (if we can be sure it's always available at runtime)
-# or generate the requirements files from this so we only have one source of truth to maintain...
-AZURE_PKG_VERSIONS = {
-    'StorageManagementClient': {
-        'package_name': 'storage',
-        'expected_version': '19.0.0'
-    },
-    'ComputeManagementClient': {
-        'package_name': 'compute',
-        'expected_version': '4.4.0'
-    },
-    'ContainerInstanceManagementClient': {
-        'package_name': 'containerinstance',
-        'expected_version': '9.0.0'
-    },
-    'NetworkManagementClient': {
-        'package_name': 'network',
-        'expected_version': '26.0.0'
-    },
-    'ResourceManagementClient': {
-        'package_name': 'resource',
-        'expected_version': '2.1.0'
-    },
-    'DnsManagementClient': {
-        'package_name': 'dns',
-        'expected_version': '8.0.0'
-    },
-    'PrivateDnsManagementClient': {
-        'package_name': 'privatedns',
-        'expected_version': '1.0.0'
-    },
-    'WebSiteManagementClient': {
-        'package_name': 'web',
-        'expected_version': '6.1.0'
-    },
-    'TrafficManagerManagementClient': {
-        'package_name': 'trafficmanager',
-        'expected_version': '1.0.0'
-    },
-    'EventHubManagementClient': {
-        'package_name': 'azure-mgmt-eventhub',
-        'expected_version': '2.0.0'
-    },
-} if HAS_AZURE else {}
 
 
 AZURE_MIN_RELEASE = '2.0.0'
@@ -424,9 +375,9 @@ class AzureRMModuleBase(object):
             self.fail(msg=missing_required_lib('packaging'),
                       exception=HAS_PACKAGING_VERSION_EXC)
 
-        if not HAS_AZURE:
+        if AZURE_IMPORT_ERROR:
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
-                      exception=HAS_AZURE_EXC)
+                      exception=AZURE_IMPORT_ERROR)
 
         self._authorization_client = None
         self._network_client = None
@@ -497,23 +448,8 @@ class AzureRMModuleBase(object):
             self.module.exit_json(**res)
 
     def check_client_version(self, client_type):
-        # Ensure Azure modules are at least 2.0.0rc5.
-        package_version = AZURE_PKG_VERSIONS.get(client_type.__name__, None)
-        if package_version is not None:
-            client_name = package_version.get('package_name')
-            try:
-                client_module = importlib.import_module(client_type.__module__)
-                client_version = client_module.VERSION
-            except (RuntimeError, AttributeError):
-                # can't get at the module version for some reason, just fail silently...
-                return
-            expected_version = package_version.get('expected_version')
-            if Version(client_version) < Version(expected_version):
-                self.fail("Installed azure-mgmt-{0} client version is {1}. The minimum supported version is {2}. Try "
-                          "`pip install ansible[azure]`".format(client_name, client_version, expected_version))
-            if Version(client_version) != Version(expected_version):
-                self.module.warn("Installed azure-mgmt-{0} client version is {1}. The expected version is {2}. Try "
-                                 "`pip install ansible[azure]`".format(client_name, client_version, expected_version))
+        # Deprecated: dependency management handled by requirements/constraints.
+        return
 
     def exec_module(self, **kwargs):
         self.fail("Error: {0} failed to implement exec_module method.".format(self.__class__.__name__))
