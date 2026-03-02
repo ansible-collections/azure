@@ -227,7 +227,6 @@ except ImportError:
     importlib = None
 
 try:
-    from packaging.version import Version
     HAS_PACKAGING_VERSION = True
     HAS_PACKAGING_VERSION_EXC = None
 except ImportError:
