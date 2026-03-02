@@ -33,7 +33,7 @@ azure-mgmt-managedservices==7.0.0b2
 azure-mgmt-managementgroups==1.1.0b2
 azure-mgmt-marketplaceordering==1.2.0b2
 azure-mgmt-monitor==6.0.2
-azure-mgmt-mysqlflexibleservers==1.0.0b3
+azure-mgmt-mysqlflexibleservers==1.0.0
 azure-mgmt-network==28.0.0
 azure-mgmt-notificationhubs==8.1.0b1
 azure-mgmt-nspkg==3.0.2

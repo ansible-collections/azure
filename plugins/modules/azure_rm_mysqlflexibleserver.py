@@ -93,10 +93,12 @@ options:
     restore_point_in_time:
         description:
             - Restore point creation time (ISO8601 format), specifying the time to restore from.
+            - Required when C(source_server_resource_id) is specified.
         type: str
     source_server_resource_id:
         description:
             - The source MySQL server id.
+            - Required when C(restore_point_in_time) is specified.
         type: str
     backup:
         description:
@@ -195,6 +197,13 @@ EXAMPLES = '''
       backup_retention_days: 7
       geo_redundant_backup: Disabled
     availability_zone: 1
+
+- name: Restore MySQL flexible server from a point-in-time backup
+  azure_rm_mysqlflexibleserver:
+    resource_group: "{{ resource_group }}"
+    name: postflexible-restore{{ rpfx }}
+    source_server_resource_id: "{{ mysql_flexible_server_id }}"
+    restore_point_in_time: "2026-02-26T02:27:14Z"
 '''
 
 RETURN = '''
@@ -517,8 +526,11 @@ class AzureRMMySqlFlexibleServers(AzureRMModuleBaseExt):
         self.state = None
         self.to_do = Actions.NoAction
 
+        required_together = [['restore_point_in_time', 'source_server_resource_id']]
+
         super(AzureRMMySqlFlexibleServers, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                           supports_check_mode=True,
+                                                          required_together=required_together,
                                                           supports_tags=True)
 
     def exec_module(self, **kwargs):
@@ -558,6 +570,10 @@ class AzureRMMySqlFlexibleServers(AzureRMModuleBaseExt):
                     self.parameters['network'] = kwargs[key]
 
         self.parameters['tags'] = self.tags
+
+        # If this is a PointInTimeRestore, set create_mode to PointInTimeRestore
+        if self.parameters.get('source_server_resource_id') and self.parameters.get('restore_point_in_time'):
+            self.parameters['create_mode'] = 'PointInTimeRestore'
 
         old_response = None
         response = None
