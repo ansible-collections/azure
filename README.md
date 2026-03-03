@@ -16,10 +16,15 @@ Documentation of individual modules is [available at the Ansible Galaxy](https:/
 
 ## Installation
 
-Before using this collection, you need to install it with the Ansible Galaxy command-line tool:
+Before using this collection, you need to install/force-install it with the Ansible Galaxy command-line tool:
 
 ```
 ansible-galaxy collection install azure.azcollection
+```
+
+or force-install
+```
+ansible-galaxy collection install azure.azcollection --force
 ```
 
 You can also include it in a requirements.yml file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
@@ -45,7 +50,7 @@ See [using Ansible collections](https://docs.ansible.com/ansible/devel/user_guid
 
 ---
 
-After the collection is installed, please install the dependencies required by the collection (adjust path to collection if necessary):
+After the collection is installed, please install the dependencies ([requirements.txt](https://github.com/ansible-collections/azure/blob/dev/requirements.txt)) required by the collection (adjust path to collection if necessary):
 
 ```bash
 pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
