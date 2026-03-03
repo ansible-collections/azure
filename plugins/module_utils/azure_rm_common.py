@@ -261,6 +261,8 @@ try:
     import azure.mgmt.loganalytics.models as LogAnalyticsModels
     from azure.mgmt.automation import AutomationClient
     import azure.mgmt.automation.models as AutomationModel
+    from azure.mgmt.iothub import IotHubClient
+    from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
@@ -1398,13 +1400,6 @@ class AzureRMModuleBase(object):
     def IoThub_client(self):
         self.log('Getting iothub client')
         if not self._IoThub_client:
-            try:
-                from azure.mgmt.iothub import IotHubClient
-            except ImportError as exc:
-                self.fail(missing_required_lib('azure-mgmt-iothub',
-                                               reason="IoT Hub management requires azure-mgmt-iothub. "
-                                               "Installation may fail due to uamqp wheel build issues.",
-                                               exception=exc))
             self._IoThub_client = self.get_mgmt_svc_client(IotHubClient,
                                                            api_version='2023-06-30-preview',
                                                            base_url=self._cloud_environment.endpoints.resource_manager)
@@ -1412,13 +1407,6 @@ class AzureRMModuleBase(object):
 
     @property
     def IoThub_models(self):
-        try:
-            from azure.mgmt.iothub import models as IoTHubModels
-        except ImportError as exc:
-            self.fail(missing_required_lib('azure-mgmt-iothub',
-                                           reason="IoT Hub management requires azure-mgmt-iothub. "
-                                           "Installation may fail due to uamqp wheel build issues.",
-                                           exception=exc))
         return IoTHubModels
 
     @property
