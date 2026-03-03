@@ -325,7 +325,7 @@ state:
 import copy
 
 from ansible.module_utils.basic import _load_params
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase, HAS_AZURE
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -392,7 +392,7 @@ RECORDSET_VALUE_MAP = dict(
     SOA=dict(attrname='soa_record', classobj='SoaRecord', is_list=False),
     CAA=dict(attrname='caa_records', classobj='CaaRecord', is_list=True)
     # FUTURE: add missing record types from https://github.com/Azure/azure-sdk-for-python/blob/master/azure-mgmt-dns/azure/mgmt/dns/models/record_set.py
-) if HAS_AZURE else {}
+)
 
 
 class AzureRMRecordSet(AzureRMModuleBase):

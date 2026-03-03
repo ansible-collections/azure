@@ -176,13 +176,17 @@ iot_devices:
     }
 '''  # NOQA
 
+import traceback
+
+from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 try:
     from azure.iot.hub import IoTHubRegistryManager
 except ImportError:
-    # This is handled in azure_rm_common
-    pass
+    AZURE_IOT_HUB_IMPORT_ERROR = traceback.format_exc()
+else:
+    AZURE_IOT_HUB_IMPORT_ERROR = None
 
 
 class AzureRMIoTDeviceFacts(AzureRMModuleBase):
@@ -216,6 +220,11 @@ class AzureRMIoTDeviceFacts(AzureRMModuleBase):
         self._base_url = None
 
         super(AzureRMIoTDeviceFacts, self).__init__(self.module_arg_spec, supports_check_mode=True)
+
+        if AZURE_IOT_HUB_IMPORT_ERROR:
+            self.fail(msg=missing_required_lib('azure-iot-hub', reason=("This module requires the Azure IoT Hub data-plane SDK (azure-iot-hub). "
+                                                                        "Installation may fail on some platforms due to uamqp wheel build issues.")),
+                      exception=AZURE_IOT_HUB_IMPORT_ERROR)
 
     def exec_module(self, **kwargs):
 
