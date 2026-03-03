@@ -217,6 +217,8 @@ CIDR_PATTERN = re.compile(r"(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.)
 
 AZURE_SUCCESS_STATE = "Succeeded"
 
+AZURE_IMPORT_ERROR = None
+
 
 try:
     import importlib
@@ -226,55 +228,58 @@ except ImportError:
     importlib = None
 
 # Imports
-from enum import Enum
-from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
-from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.network import models as NetworkModels
-from azure.mgmt.resource.resources import ResourceManagementClient
-from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
-from azure.mgmt.resource.subscriptions import SubscriptionClient
-from azure.mgmt.storage import StorageManagementClient
-from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.dns import DnsManagementClient
-from azure.mgmt.privatedns import PrivateDnsManagementClient
-import azure.mgmt.privatedns.models as PrivateDnsModels
-from azure.mgmt.monitor import MonitorManagementClient
-from azure.mgmt.web import WebSiteManagementClient
-from azure.mgmt.containerservice import ContainerServiceClient
-from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
-from azure.mgmt.trafficmanager import TrafficManagerManagementClient
-from azure.storage.blob import BlobServiceClient
-from azure.mgmt.authorization import AuthorizationManagementClient
-from azure.mgmt.sql import SqlManagementClient
-from azure.mgmt.servicebus import ServiceBusManagementClient
-from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
-from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
-from azure.mgmt.rdbms.mysql import MySQLManagementClient
-from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
-from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
-from azure.mgmt.containerregistry import ContainerRegistryManagementClient
-from azure.mgmt.containerinstance import ContainerInstanceManagementClient
-from azure.mgmt.loganalytics import LogAnalyticsManagementClient
-import azure.mgmt.loganalytics.models as LogAnalyticsModels
-from azure.mgmt.automation import AutomationClient
-import azure.mgmt.automation.models as AutomationModel
-from azure.mgmt.resource.locks import ManagementLockClient
-from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
-import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
-from azure.mgmt.search import SearchManagementClient
-from azure.mgmt.notificationhubs import NotificationHubsManagementClient
-from azure.mgmt.eventhub import EventHubManagementClient
-from azure.mgmt.datafactory import DataFactoryManagementClient
-import azure.mgmt.datafactory.models as DataFactoryModel
-from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-from azure.identity import AzureCliCredential
-from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
-from msgraph_core import GraphClientFactory, NationalClouds
-from msgraph import GraphRequestAdapter, GraphServiceClient
-from azure.mgmt.batch import BatchManagementClient
-from azure.mgmt.batch import models as BatchManagementModel
-from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
-from azure.mgmt.cdn import CdnManagementClient
+try:
+    from enum import Enum
+    from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
+    from azure.mgmt.network import NetworkManagementClient
+    from azure.mgmt.network import models as NetworkModels
+    from azure.mgmt.resource.resources import ResourceManagementClient
+    from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
+    from azure.mgmt.resource.subscriptions import SubscriptionClient
+    from azure.mgmt.storage import StorageManagementClient
+    from azure.mgmt.compute import ComputeManagementClient
+    from azure.mgmt.dns import DnsManagementClient
+    from azure.mgmt.privatedns import PrivateDnsManagementClient
+    import azure.mgmt.privatedns.models as PrivateDnsModels
+    from azure.mgmt.monitor import MonitorManagementClient
+    from azure.mgmt.web import WebSiteManagementClient
+    from azure.mgmt.containerservice import ContainerServiceClient
+    from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
+    from azure.mgmt.trafficmanager import TrafficManagerManagementClient
+    from azure.storage.blob import BlobServiceClient
+    from azure.mgmt.authorization import AuthorizationManagementClient
+    from azure.mgmt.sql import SqlManagementClient
+    from azure.mgmt.servicebus import ServiceBusManagementClient
+    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
+    from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
+    from azure.mgmt.rdbms.mysql import MySQLManagementClient
+    from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
+    from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
+    from azure.mgmt.containerregistry import ContainerRegistryManagementClient
+    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+    from azure.mgmt.loganalytics import LogAnalyticsManagementClient
+    import azure.mgmt.loganalytics.models as LogAnalyticsModels
+    from azure.mgmt.automation import AutomationClient
+    import azure.mgmt.automation.models as AutomationModel
+    from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
+    import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
+    from azure.mgmt.search import SearchManagementClient
+    from azure.mgmt.notificationhubs import NotificationHubsManagementClient
+    from azure.mgmt.eventhub import EventHubManagementClient
+    from azure.mgmt.datafactory import DataFactoryManagementClient
+    import azure.mgmt.datafactory.models as DataFactoryModel
+    from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
+    from azure.identity import AzureCliCredential
+    from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
+    from msgraph_core import GraphClientFactory, NationalClouds
+    from msgraph import GraphRequestAdapter, GraphServiceClient
+    from azure.mgmt.batch import BatchManagementClient
+    from azure.mgmt.batch import models as BatchManagementModel
+    from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
+    from azure.mgmt.cdn import CdnManagementClient
+except ImportError as exc:
+    AZURE_IMPORT_ERROR = traceback.format_exc()
 
 from base64 import b64encode, b64decode
 from hashlib import sha256
@@ -351,6 +356,10 @@ class AzureRMModuleBase(object):
                                     supports_check_mode=supports_check_mode,
                                     required_if=merged_required_if,
                                     required_by=required_by)
+        
+        if AZURE_IMPORT_ERROR:
+            self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
+                      exception=AZURE_IMPORT_ERROR)
 
         self._authorization_client = None
         self._network_client = None
@@ -419,10 +428,6 @@ class AzureRMModuleBase(object):
         if not skip_exec:
             res = self.exec_module(**self.module.params)
             self.module.exit_json(**res)
-
-    def check_client_version(self, client_type):
-        # Deprecated: dependency management handled by requirements/constraints.
-        return
 
     def exec_module(self, **kwargs):
         self.fail("Error: {0} failed to implement exec_module method.".format(self.__class__.__name__))
@@ -841,7 +846,6 @@ class AzureRMModuleBase(object):
 
     def get_mgmt_svc_client(self, client_type, base_url=None, api_version=None, suppress_subscription_id=False):
         self.log('Getting management service client {0}'.format(client_type.__name__))
-        self.check_client_version(client_type)
 
         client_argspec = inspect.signature(client_type.__init__)
 
