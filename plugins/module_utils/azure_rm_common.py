@@ -356,7 +356,7 @@ class AzureRMModuleBase(object):
                                     supports_check_mode=supports_check_mode,
                                     required_if=merged_required_if,
                                     required_by=required_by)
-        
+
         if AZURE_IMPORT_ERROR:
             self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
                       exception=AZURE_IMPORT_ERROR)
@@ -1416,9 +1416,9 @@ class AzureRMModuleBase(object):
             from azure.mgmt.iothub import models as IoTHubModels
         except ImportError as exc:
             self.fail(missing_required_lib('azure-mgmt-iothub',
-                                            reason="IoT Hub management requires azure-mgmt-iothub. "
-                                            "Installation may fail due to uamqp wheel build issues.",
-                                            exception=exc))
+                                           reason="IoT Hub management requires azure-mgmt-iothub. "
+                                           "Installation may fail due to uamqp wheel build issues.",
+                                           exception=exc))
         return IoTHubModels
 
     @property

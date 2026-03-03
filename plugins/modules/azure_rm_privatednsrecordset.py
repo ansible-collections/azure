@@ -313,6 +313,7 @@ RECORDSET_VALUE_MAP = dict(
     CAA=dict(attrname='caa_records', classobj='CaaRecord', is_list=True)
 )
 
+
 class AzureRMPrivateDNSRecordSet(AzureRMModuleBase):
 
     def __init__(self):
