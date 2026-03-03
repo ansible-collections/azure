@@ -223,7 +223,7 @@ class AzureRMIoTDeviceModule(AzureRMModuleBase):
         if AZURE_IOT_HUB_IMPORT_ERROR:
             self.fail(msg=missing_required_lib('azure-iot-hub', reason=("This module requires the Azure IoT Hub data-plane SDK (azure-iot-hub). "
                                                                         "Installation may fail on some platforms due to uamqp wheel build issues.")),
-                                                                        exception=AZURE_IOT_HUB_IMPORT_ERROR)
+                      exception=AZURE_IOT_HUB_IMPORT_ERROR)
 
     def exec_module(self, **kwargs):
 
