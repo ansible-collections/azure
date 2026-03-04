@@ -24,8 +24,10 @@ try:
     from ansible.module_utils.ansible_release import __version__ as ANSIBLE_VERSION
 except Exception:
     ANSIBLE_VERSION = 'unknown'
-from ansible.module_utils.six.moves import configparser
-import ansible.module_utils.six.moves.urllib.parse as urlparse
+import configparser
+from urllib import parse as urlparse
+from ansible.module_utils.urls import open_url
+import urllib.request
 
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
@@ -230,8 +232,6 @@ AZURE_IMPORT_ERROR = None
 
 try:
     import importlib
-    import urllib.request
-    import urllib.parse
 except ImportError:
     # This passes the sanity import test, but does not provide a user friendly error message.
     # Doing so would require catching Exception for all imports of Azure dependencies in modules and module_utils.
@@ -1623,9 +1623,9 @@ class AzureRMAuth(object):
         #    Used by Azure DevOps Workload Identity Federation and AKS.
         # 2. Request-URL based OIDC (ACTIONS_ID_TOKEN_REQUEST_URL)
         #    Used by GitHub Actions.
-        # Platform is responsible for issuing and refreshing OIDC tokens. 
+        # Platform is responsible for issuing and refreshing OIDC tokens.
         elif self.credentials.get('auth_source') == 'workload_identity' or \
-            (self.credentials.get('federated_token_file') and self.credentials.get('client_id') and self.credentials.get('tenant')):
+        (self.credentials.get('federated_token_file') and self.credentials.get('client_id') and self.credentials.get('tenant')):
             self.azure_credential_track2 = WorkloadIdentityCredential(tenant_id=self.credentials['tenant'],
                                                                       client_id=self.credentials['client_id'],
                                                                       token_file_path=self.credentials['federated_token_file'])
@@ -1774,7 +1774,8 @@ class AzureRMAuth(object):
             'auth_source': 'msi'
         }
 
-    def _get_workload_identity_credentials(self, subscription_id=None, client_id=None, tenant=None, federated_token_file=None, cloud_environment=None, **kwargs):
+    def _get_workload_identity_credentials(self, subscription_id=None, client_id=None, tenant=None,
+                                           federated_token_file=None, cloud_environment=None, **kwargs):
         """
         Return a credentials dict suitable for WorkloadIdentityCredential
         Use _get_env().
@@ -1794,31 +1795,30 @@ class AzureRMAuth(object):
             'cloud_environment': cloud_environment
         }
 
+    
     def _fetch_oidc_token_from_request_endpoint(self, request_url, request_token, audience):
-        # append audience (audience defaults to api://AzureADTokenExchange)
-        parsed = urllib.parse.urlparse(request_url)
-        q = urllib.parse.parse_qs(parsed.query)
-        if 'audience' not in q:
-            q['audience'] = [audience]
-            new_query = urllib.parse.urlencode(q, doseq=True)
-            request_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
+        parsed = urlparse.urlparse(request_url)
+        q = urlparse.parse_qs(parsed.query)
+        q.setdefault('audience', [audience])
+        q.setdefault('api-version', ['2.0'])
 
-        req = urllib.request.Request(
-            request_url,
-            headers={
-                "Authorization": f"Bearer {request_token}",
-                "Accept": "application/json",
-            },
-            method="GET",
-        )
-        with urllib.request.urlopen(req) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
+        new_query = urlparse.urlencode(q, doseq=True)
+        request_url = urlparse.urlunparse(parsed._replace(query=new_query))
+
+        headers = {
+            "Authorization": "Bearer {0}".format(request_token),
+            "Accept": "application/json",
+        }
+
+        resp = open_url(request_url, method="GET", headers=headers)
+        payload = json.loads(resp.read().decode("utf-8"))
+
         token = payload.get("value") or payload.get("token") or payload.get("id_token")
         if not token:
             self.fail("OIDC token response did not include a token field.")
         return token
 
-    def _get_oidc_request_credentials(self, subscription_id=None, client_id=None, tenant=None, 
+    def _get_oidc_request_credentials(self, subscription_id=None, client_id=None, tenant=None,
                                       oidc_request_url=None, oidc_request_token=None, oidc_audience=None, **kwargs):
         tenant = tenant or self._get_env('tenant')
         client_id = client_id or self._get_env('client_id')
@@ -1910,7 +1910,7 @@ class AzureRMAuth(object):
             profile = params.get('profile') or 'default'
             default_credentials = self._get_profile(profile)
             return default_credentials
-        
+
         if auth_source == 'workload_identity':
             self.log('Retrieving credentials from workload identity')
             return self._get_workload_identity_credentials(subscription_id=params.get('subscription_id'),
@@ -1918,7 +1918,7 @@ class AzureRMAuth(object):
                                                            tenant=params.get('tenant'),
                                                            federated_token_file=params.get('federated_token_file'),
                                                            cloud_environment=params.get('cloud_environment'))
-        
+
         if auth_source == 'oidc':
             self.log('Retrieving credentials from OIDC request')
             return self._get_oidc_request_credentials(**params)
@@ -1929,7 +1929,7 @@ class AzureRMAuth(object):
             self.log('Retrieving credentials with profile parameter.')
             credentials = self._get_profile(arg_credentials['profile'])
             return credentials
-        
+
         if os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN'):
             arg_credentials['auth_source'] = 'oidc'
             arg_credentials['oidc_request_url'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL')

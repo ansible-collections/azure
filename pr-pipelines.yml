@@ -27,7 +27,6 @@ parameters:
       - 'all'
       - "setup_azure"
       - 'sanity'
-      - "auth_oidc_request_url"
       - "auth_workload_identity"
       - "inventory_azure" # Group 1
       - 'azure_rm_adapplication'
@@ -279,6 +278,8 @@ jobs:
           test.key: '18'
         "Python${{ parameters.PYTHON_VER }}_19":
           test.key: '19'
+        "Python${{ parameters.PYTHON_VER }}_20":
+          test.key: '20'
 
     steps:
       - task: UsePythonVersion@0
@@ -286,7 +287,6 @@ jobs:
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
 
-      
       - task: AzureCLI@2
         name: PrepareWorkloadIdentity
         displayName: 'Prepare Workload Identity'
@@ -309,7 +309,6 @@ jobs:
             echo "##vso[task.setvariable variable=AZURE_TENANT]$tenantId"
 
             echo "Prepared federated token file at $TOKEN_FILE"
-
 
       - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
