@@ -27,6 +27,8 @@ parameters:
       - 'all'
       - "setup_azure"
       - 'sanity'
+      - "auth_oidc_request_url"
+      - "auth_workload_identity"
       - "inventory_azure" # Group 1
       - 'azure_rm_adapplication'
       - "azure_rm_acs"
@@ -284,6 +286,31 @@ jobs:
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
 
+      
+      - task: AzureCLI@2
+        name: PrepareWorkloadIdentity
+        displayName: 'Prepare Workload Identity'
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            set -e
+
+            TOKEN_FILE="$(Agent.TempDirectory)/ado-oidc-token.jwt"
+
+            # Get federated access token from ADO workload identity
+            az account get-access-token \
+              --resource https://management.azure.com/ \
+              --query accessToken -o tsv > "$TOKEN_FILE"
+
+            echo "##vso[task.setvariable variable=AZURE_FEDERATED_TOKEN_FILE]$TOKEN_FILE"
+            echo "##vso[task.setvariable variable=AZURE_CLIENT_ID]$servicePrincipalId"
+            echo "##vso[task.setvariable variable=AZURE_TENANT]$tenantId"
+
+            echo "Prepared federated token file at $TOKEN_FILE"
+
+
       - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
           SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
@@ -296,6 +323,7 @@ jobs:
           AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+          AZURE_FEDERATED_TOKEN_FILE: $(AZURE_FEDERATED_TOKEN_FILE)
         displayName: 'Running Tests'
 
   - job: CleanupResourceGroups

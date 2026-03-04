@@ -1,0 +1,19 @@
+- name: Skip when workload identity env vars are not present
+  meta: end_play
+  when: >
+    (lookup('env','AZURE_FEDERATED_TOKEN_FILE') | length) == 0 or
+    (lookup('env','AZURE_CLIENT_ID') | length) == 0 or
+    (lookup('env','AZURE_TENANT') | length) == 0 or
+    (lookup('env','AZURE_SUBSCRIPTION_ID') | length) == 0
+
+- name: Workload identity can get subscription info
+  azure.azcollection.azure_rm_account_info:
+    auth_source: workload_identity
+  register: acct
+
+- name: Assert at least one subscription back
+  ansible.builtin.assert:
+    that:
+      - acct is not failed
+      - acct.subscriptions is defined
+      - acct.subscriptions | length > 0
