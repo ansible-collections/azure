@@ -30,7 +30,7 @@ import ansible.module_utils.six.moves.urllib.parse as urlparse
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
         type='str',
-        choices=['auto', 'cli', 'env', 'credential_file', 'msi'],
+        choices=['auto', 'cli', 'env', 'credential_file', 'msi', 'workload_identity', 'oidc'],
         fallback=(env_fallback, ['ANSIBLE_AZURE_AUTH_SOURCE']),
         default="auto"
     ),
@@ -50,6 +50,10 @@ AZURE_COMMON_ARGS = dict(
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
     disable_instance_discovery=dict(type='bool', default=False),
+    federated_token_file=dict(type='path', no_log=True),
+    oidc_request_url=dict(type='str', no_log=True),
+    oidc_request_token=dict(type='str', no_log=True),
+    oidc_audience=dict(type='str', default='api://AzureADTokenExchange'),
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -65,7 +69,11 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
     thumbprint='AZURE_THUMBPRINT',
-    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY'
+    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY',
+    federated_token_file='AZURE_FEDERATED_TOKEN_FILE',
+    oidc_request_url='ACTIONS_ID_TOKEN_REQUEST_URL',
+    oidc_request_token='ACTIONS_ID_TOKEN_REQUEST_TOKEN',
+    oidc_audience='ACTIONS_ID_TOKEN_AUDIENCE'
 )
 
 
@@ -222,6 +230,8 @@ AZURE_IMPORT_ERROR = None
 
 try:
     import importlib
+    import urllib.request
+    import urllib.parse
 except ImportError:
     # This passes the sanity import test, but does not provide a user friendly error message.
     # Doing so would require catching Exception for all imports of Azure dependencies in modules and module_utils.
@@ -272,7 +282,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential
+    from azure.identity import AzureCliCredential, WorkloadIdentityCredential, ClientAssertionCredential
     from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
     from msgraph_core import GraphClientFactory, NationalClouds
     from msgraph import GraphRequestAdapter, GraphServiceClient
@@ -1593,6 +1603,9 @@ class AzureRMAuth(object):
         # get authentication authority
         # for adfs, user could pass in authority or not.
         # for others, use default authority from cloud environment
+        # adfs_authority_url is ONLY used for ADFS / legacy auth flows
+        # (client_secret, certificate, username/password).
+        # It MUST NOT be applied to workload identity, MSI or AzureCLI auth.
         if self.credentials.get('adfs_authority_url') is None:
             self._adfs_authority_url = self._cloud_environment.endpoints.active_directory
         else:
@@ -1604,6 +1617,39 @@ class AzureRMAuth(object):
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
+
+        # OIDC authentication supports two platform-driven flavours:
+        # 1. File-based workload identity (AZURE_FEDERATED_TOKEN_FILE)
+        #    Used by Azure DevOps Workload Identity Federation and AKS.
+        # 2. Request-URL based OIDC (ACTIONS_ID_TOKEN_REQUEST_URL)
+        #    Used by GitHub Actions.
+        # Platform is responsible for issuing and refreshing OIDC tokens. 
+        elif self.credentials.get('auth_source') == 'workload_identity' or \
+            (self.credentials.get('federated_token_file') and self.credentials.get('client_id') and self.credentials.get('tenant')):
+            self.azure_credential_track2 = WorkloadIdentityCredential(tenant_id=self.credentials['tenant'],
+                                                                      client_id=self.credentials['client_id'],
+                                                                      token_file_path=self.credentials['federated_token_file'])
+
+        elif self.credentials.get('auth_source') == 'oidc':
+            missing = []
+            for k in ('tenant', 'client_id', 'oidc_request_url', 'oidc_request_token'):
+                if not self.credentials.get(k):
+                    missing.append(k)
+            if missing:
+                self.fail("OIDC (request URL) authentication selected but missing required values: {0}. "
+                          "This flow is intended for platforms like GitHub Actions which expose "
+                          "ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN.".format(", ".join(missing)))
+            request_url = self.credentials['oidc_request_url']
+            request_token = self.credentials['oidc_request_token']
+            audience = self.credentials.get('oidc_audience') or 'api://AzureADTokenExchange'
+
+            def _get_assertion():
+                return self._fetch_oidc_token_from_request_endpoint(request_url, request_token, audience)
+
+            self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
+                                                                     client_id=self.credentials['client_id'],
+                                                                     func=_get_assertion)
+
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
@@ -1646,10 +1692,17 @@ class AzureRMAuth(object):
                                                                                     disable_instance_discovery=self._disable_instance_discovery)
 
         else:
-            self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
-                      "Credentials must include client_id, secret and tenant or ad_user and password, or "
-                      "ad_user, password, client_id, tenant and adfs_authority_url(optional) for ADFS authentication, or "
-                      "be logged in using AzureCLI.")
+            self.fail(
+                "Failed to authenticate with provided credentials. Some attributes were missing.\n\n"
+                "Supported authentication methods:\n"
+                "- Service principal: client_id, secret, tenant\n"
+                "- Certificate auth: client_id, tenant, x509_certificate_path, thumbprint\n"
+                "- User/password: ad_user, password (optionally client_id, tenant)\n"
+                "- ADFS: ad_user/password or client credentials with adfs_authority_url\n"
+                "- OIDC (request URL): tenant, client_id + ACTIONS_ID_TOKEN_REQUEST_URL/ACTIONS_ID_TOKEN_REQUEST_TOKEN (GitHub Actions)\n"
+                "- Workload identity: client_id, tenant, federated_token_file "
+                "(or AZURE_FEDERATED_TOKEN_FILE env var)\n"
+                "- Azure CLI: `az login`\n")
 
     def fail(self, msg, exception=None, **kwargs):
         self._fail_impl(msg)
@@ -1719,6 +1772,70 @@ class AzureRMAuth(object):
             'subscription_id': subscription_id,
             'cloud_environment': cloud_environment,
             'auth_source': 'msi'
+        }
+
+    def _get_workload_identity_credentials(self, subscription_id=None, client_id=None, tenant=None, federated_token_file=None, cloud_environment=None, **kwargs):
+        """
+        Return a credentials dict suitable for WorkloadIdentityCredential
+        Use _get_env().
+        """
+        tenant = tenant or self._get_env('tenant')
+        client_id = client_id or self._get_env('client_id')
+        federated_token_file = federated_token_file or self._get_env('federated_token_file')
+        subscription_id = subscription_id or self._get_env('subscription_id')
+        cloud_environment = cloud_environment or self._get_env('cloud_environment')
+
+        return {
+            'auth_source': 'workload_identity',
+            'tenant': tenant,
+            'client_id': client_id,
+            'federated_token_file': federated_token_file,
+            'subscription_id': subscription_id,
+            'cloud_environment': cloud_environment
+        }
+
+    def _fetch_oidc_token_from_request_endpoint(self, request_url, request_token, audience):
+        # append audience (audience defaults to api://AzureADTokenExchange)
+        parsed = urllib.parse.urlparse(request_url)
+        q = urllib.parse.parse_qs(parsed.query)
+        if 'audience' not in q:
+            q['audience'] = [audience]
+            new_query = urllib.parse.urlencode(q, doseq=True)
+            request_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
+
+        req = urllib.request.Request(
+            request_url,
+            headers={
+                "Authorization": f"Bearer {request_token}",
+                "Accept": "application/json",
+            },
+            method="GET",
+        )
+        with urllib.request.urlopen(req) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+        token = payload.get("value") or payload.get("token") or payload.get("id_token")
+        if not token:
+            self.fail("OIDC token response did not include a token field.")
+        return token
+
+    def _get_oidc_request_credentials(self, subscription_id=None, client_id=None, tenant=None, 
+                                      oidc_request_url=None, oidc_request_token=None, oidc_audience=None, **kwargs):
+        tenant = tenant or self._get_env('tenant')
+        client_id = client_id or self._get_env('client_id')
+        subscription_id = subscription_id or self._get_env('subscription_id')
+        oidc_request_url = oidc_request_url or self._get_env('oidc_request_url')
+        oidc_request_token = oidc_request_token or self._get_env('oidc_request_token')
+        oidc_audience = oidc_audience or os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
+
+        return {
+            'auth_source': 'oidc',
+            'tenant': tenant,
+            'client_id': client_id,
+            'subscription_id': subscription_id,
+            'oidc_request_url': oidc_request_url,
+            'oidc_request_token': oidc_request_token,
+            'oidc_audience': oidc_audience,
+            'cloud_environment': kwargs.get('cloud_environment') or self._get_env('cloud_environment'),
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None):
@@ -1793,6 +1910,18 @@ class AzureRMAuth(object):
             profile = params.get('profile') or 'default'
             default_credentials = self._get_profile(profile)
             return default_credentials
+        
+        if auth_source == 'workload_identity':
+            self.log('Retrieving credentials from workload identity')
+            return self._get_workload_identity_credentials(subscription_id=params.get('subscription_id'),
+                                                           client_id=params.get('client_id'),
+                                                           tenant=params.get('tenant'),
+                                                           federated_token_file=params.get('federated_token_file'),
+                                                           cloud_environment=params.get('cloud_environment'))
+        
+        if auth_source == 'oidc':
+            self.log('Retrieving credentials from OIDC request')
+            return self._get_oidc_request_credentials(**params)
 
         # auto, precedence: module parameters -> environment variables -> default profile in ~/.azure/credentials -> azure cli
         # try module params
@@ -1800,8 +1929,22 @@ class AzureRMAuth(object):
             self.log('Retrieving credentials with profile parameter.')
             credentials = self._get_profile(arg_credentials['profile'])
             return credentials
+        
+        if os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN'):
+            arg_credentials['auth_source'] = 'oidc'
+            arg_credentials['oidc_request_url'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL')
+            arg_credentials['oidc_request_token'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN')
+            if not arg_credentials.get('oidc_audience'):
+                arg_credentials['oidc_audience'] = os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
+            # tenant/client_id/subscription_id still come from params or AZURE_* envs
+            return arg_credentials
 
         if arg_credentials['client_id'] or arg_credentials['ad_user']:
+            # If workload identity env var is present, allow federated auth even when only client_id/tenant were passed
+            if not arg_credentials.get('federated_token_file'):
+                arg_credentials['federated_token_file'] = os.environ.get('AZURE_FEDERATED_TOKEN_FILE')
+            if arg_credentials.get('federated_token_file') and arg_credentials.get('tenant') and arg_credentials.get('client_id'):
+                arg_credentials['auth_source'] = 'workload_identity'
             self.log('Received credentials from parameters.')
             return arg_credentials
 
