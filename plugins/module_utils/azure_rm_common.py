@@ -1624,7 +1624,9 @@ class AzureRMAuth(object):
         #    Used by GitHub Actions.
         # Platform is responsible for issuing and refreshing OIDC tokens.
         elif self.credentials.get('auth_source') == 'workload_identity' or \
-            (self.credentials.get('federated_token_file') and self.credentials.get('client_id') and self.credentials.get('tenant')):
+            (self.credentials.get('federated_token_file') and
+             self.credentials.get('client_id') and
+             self.credentials.get('tenant')):
             self.azure_credential_track2 = WorkloadIdentityCredential(tenant_id=self.credentials['tenant'],
                                                                       client_id=self.credentials['client_id'],
                                                                       token_file_path=self.credentials['federated_token_file'])

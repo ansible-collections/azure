@@ -63,6 +63,10 @@ options:
               environment variable C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if the resource is granted
               access to more than one subscription, otherwise the first subscription is chosen.
             - The C(msi) was added in Ansible 2.6.
+            - When set to C(workload_identity), authentication uses a federated OIDC token file
+              provided by Azure DevOps Workload Identity Federation or AKS.
+            - When set to C(oidc), authentication uses an OIDC request URL and request token,
+              typically provided by GitHub Actions
         type: str
         default: auto
         choices:
@@ -70,6 +74,8 @@ options:
         - cli
         - env
         - msi
+        - workload_identity
+        - oidc
         env:
           - name: ANSIBLE_AZURE_AUTH_SOURCE
 requirements:
@@ -86,6 +92,16 @@ notes:
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
     - "Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
       a [default] section and the following keys: subscription_id, client_id, secret and tenant."
+    - Authentication using workload identity federation is supported without client secrets.
+    - To authenticate using Azure DevOps Workload Identity Federation or AKS, set:
+      C(auth_source=workload_identity) and ensure the following environment variables are present:
+      C(AZURE_CLIENT_ID), C(AZURE_TENANT), C(AZURE_SUBSCRIPTION_ID),
+      and C(AZURE_FEDERATED_TOKEN_FILE).
+    - To authenticate using GitHub Actions OIDC, set:
+      C(auth_source=oidc) and ensure the following environment variables are present:
+      C(ACTIONS_ID_TOKEN_REQUEST_URL) and C(ACTIONS_ID_TOKEN_REQUEST_TOKEN),
+      along with C(AZURE_CLIENT_ID), C(AZURE_TENANT), and C(AZURE_SUBSCRIPTION_ID).
+    - The OIDC token is exchanged for an Azure access token at runtime and is not persisted.
 
 seealso:
     - name: Sign in with Azure CLI
