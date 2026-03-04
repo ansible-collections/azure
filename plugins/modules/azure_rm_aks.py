@@ -1046,6 +1046,9 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         vm_size=profile.vm_size,
         name=profile.name,
         os_disk_size_gb=profile.os_disk_size_gb,
+        scale_set_priority=getattr(profile, 'scale_set_priority', None),
+        scale_set_eviction_policy=getattr(profile, 'scale_set_eviction_policy', None),
+        spot_max_price=getattr(profile, 'spot_max_price', None),
         vnet_subnet_id=profile.vnet_subnet_id,
         availability_zones=profile.availability_zones,
         os_type=profile.os_type,
@@ -1111,6 +1114,9 @@ agent_pool_profile_spec = dict(
     count=dict(type='int', required=True),
     vm_size=dict(type='str', required=True),
     os_disk_size_gb=dict(type='int'),
+    scale_set_priority=dict(type='str', choices=['Regular', 'Spot']),
+    scale_set_eviction_policy=dict(type='str', choices=['Delete', 'Deallocate']),
+    spot_max_price=dict(type='float'),
     dns_prefix=dict(type='str'),
     ports=dict(type='list', elements='int'),
     storage_profiles=dict(type='str', choices=[
@@ -1620,6 +1626,13 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                                        bool(security_profile['enable_vtpm']) != bool(profile_result['security_profile']['enable_vtpm']):
                                         self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                         to_be_updated = True
+                                # Preserve immutable VMSS settings if not explicitly provided
+                                if profile_self.get('scale_set_priority') is None and profile_result.get('scale_set_priority') is not None:
+                                    profile_self['scale_set_priority'] = profile_result.get('scale_set_priority')
+                                if profile_self.get('scale_set_eviction_policy') is None and profile_result.get('scale_set_eviction_policy') is not None:
+                                    profile_self['scale_set_eviction_policy'] = profile_result.get('scale_set_eviction_policy')
+                                if profile_self.get('spot_max_price') is None and profile_result.get('spot_max_price') is not None:
+                                    profile_self['spot_max_price'] = profile_result.get('spot_max_price')
 
                         if not matched:
                             self.log("Agent Pool not found")
@@ -1824,6 +1837,9 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     count=profile["count"],
                     vm_size=profile["vm_size"],
                     os_disk_size_gb=profile["os_disk_size_gb"],
+                    scale_set_priority=profile.get("scale_set_priority"),
+                    scale_set_eviction_policy=profile.get("scale_set_eviction_policy"),
+                    spot_max_price=profile.get("spot_max_price"),
                     max_count=profile["max_count"],
                     node_labels=profile["node_labels"],
                     min_count=profile["min_count"],
