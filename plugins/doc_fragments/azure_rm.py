@@ -78,7 +78,7 @@ options:
               useful for troubleshooting.
         default: true
     default_host_filters:
-        description: 
+        description:
             - A default set of filters that is applied in addition to the conditions in
               C(exclude_host_filters) to exclude powered-off and not-fully-provisioned hosts. Set this to a different
               value or empty list if you need to include hosts in these states.
