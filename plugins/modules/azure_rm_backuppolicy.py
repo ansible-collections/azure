@@ -353,7 +353,6 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
                 if self.check_mode:
                     self.results.update(old_res)
-                    self.results['changed'] = True
                     return self.results
                 else:
                     if self.results['changed']:

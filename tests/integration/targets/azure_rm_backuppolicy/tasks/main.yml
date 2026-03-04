@@ -110,6 +110,48 @@
           - backup_policy_exists_enhanced.name == daily_policy_output_enhanced.name
           - backup_policy_exists_enhanced.type == daily_policy_output_enhanced.type
 
+    - name: Check mode idempotence for daily enhanced VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily_enhanced }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        policy_type: V2
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 7
+        daily_retention_count: 12
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 14
+      check_mode: true
+      register: daily_policy_output_enhanced_check_idempotent
+
+    - name: Assert check mode reports no change for unchanged enhanced daily policy
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_enhanced_check_idempotent is not changed
+
+    - name: Check mode change detection for daily enhanced VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_daily_enhanced }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        policy_type: V2
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 8
+        daily_retention_count: 12
+        time_zone: "Pacific Standard Time"
+        schedule_run_time: 14
+      check_mode: true
+      register: daily_policy_output_enhanced_check_changed
+
+    - name: Assert check mode reports change for modified enhanced daily policy
+      ansible.builtin.assert:
+        that:
+          - daily_policy_output_enhanced_check_changed is changed
+
     - name: Update daily VM backup policy
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
