@@ -27,7 +27,6 @@ except Exception:
 import configparser
 from urllib import parse as urlparse
 from ansible.module_utils.urls import open_url
-import urllib.request
 
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
@@ -1625,7 +1624,7 @@ class AzureRMAuth(object):
         #    Used by GitHub Actions.
         # Platform is responsible for issuing and refreshing OIDC tokens.
         elif self.credentials.get('auth_source') == 'workload_identity' or \
-        (self.credentials.get('federated_token_file') and self.credentials.get('client_id') and self.credentials.get('tenant')):
+            (self.credentials.get('federated_token_file') and self.credentials.get('client_id') and self.credentials.get('tenant')):
             self.azure_credential_track2 = WorkloadIdentityCredential(tenant_id=self.credentials['tenant'],
                                                                       client_id=self.credentials['client_id'],
                                                                       token_file_path=self.credentials['federated_token_file'])
@@ -1795,7 +1794,6 @@ class AzureRMAuth(object):
             'cloud_environment': cloud_environment
         }
 
-    
     def _fetch_oidc_token_from_request_endpoint(self, request_url, request_token, audience):
         parsed = urlparse.urlparse(request_url)
         q = urlparse.parse_qs(parsed.query)
