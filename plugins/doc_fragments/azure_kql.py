@@ -13,10 +13,6 @@ class ModuleDocFragment(object):
     # Azure doc fragment
     DOCUMENTATION = r'''
 options:
-    plugin:
-        description: marks this as an instance of the 'azure_rm' plugin
-        required: true
-        choices: ['azure_kql', 'azure.azcollection.azure_kql']
     graph_query:
         description: A graph query which will retrieve the inventory of hosts you are interested in.
             You must return inventory_hostname as a field from your query.
