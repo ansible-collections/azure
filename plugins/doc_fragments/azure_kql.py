@@ -17,7 +17,9 @@ options:
         description:
             - Marks this as an instance of the 'azure_rm' plugin.
         required: true
-        choices: ['azure_kql', 'azure.azcollection.azure_kql']
+        choices:
+            - 'azure_kql'
+            - 'azure.azcollection.azure_kql'
     graph_query:
         description:
             - A graph query which will retrieve the inventory of hosts you are interested in.
@@ -26,7 +28,9 @@ options:
         description:
             - When false, template failures during group and filter processing are silently ignored (eg,
             - if a filter or group expression refers to an undefined host variable)
-        choices: [True, False]
+        choices:
+            - True
+            - False
         default: True
     keyed_groups:
         description:
@@ -51,5 +55,5 @@ options:
         - Use C(default_inventory_hostname) to access the default hostname generator's value in any of the Jinja2 expressions.
         type: list
         elements: str
-        default: [default]
+        default: 'default'
 '''

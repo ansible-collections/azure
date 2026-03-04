@@ -17,13 +17,15 @@ options:
         description:
             - Marks this as an instance of the 'azure_rm' plugin.
         required: true
-        choices: ['azure_rm', 'azure.azcollection.azure_rm']
+        choices:
+            - 'azure_rm'
+            - 'azure.azcollection.azure_rm'
     include_vm_resource_groups:
         description:
             - A list of resource group names to search for virtual machines. '\*' will include all resource
               groups in the subscription. Can also be set comma separated resource group names via the
               C(ANSIBLE_AZURE_VM_RESOURCE_GROUPS) environment variable.
-        default: ['*']
+        default: ['*'
     include_hcivm_resource_groups:
         description:
             - A list of resource group names to search for Azure StackHCI virtual machines. '\*' will
@@ -43,7 +45,9 @@ options:
         description:
             - When false, template failures during group and filter processing are silently ignored (eg,
               if a filter or group expression refers to an undefined host variable)
-        choices: [True, False]
+        choices:
+            - True
+            - False
         default: True
     keyed_groups:
         description:
@@ -70,7 +74,7 @@ options:
             - Include hosts from the inventory with a list of Jinja2 conditional expressions. Each
               expression in the list is evaluated for each host; when the expression is true, the host is included
               in the inventory, all hosts are included in the inventory by default.
-        default: [true]
+        default: true
     batch_fetch:
         description:
             - To improve performance, results are fetched using an unsupported batch API. Disabling
@@ -117,5 +121,5 @@ options:
         - Use C(default_inventory_hostname) to access the default hostname generator's value in any of the Jinja2 expressions.
         type: list
         elements: str
-        default: [default]
+        default: 'default'
 '''
