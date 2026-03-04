@@ -12,7 +12,6 @@ class ModuleDocFragment(object):
 
     # Azure doc fragment
     DOCUMENTATION = r'''
-
 options:
     subscription_id:
         description:
