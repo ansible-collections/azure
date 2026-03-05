@@ -676,7 +676,7 @@
             scale_set_priority: Spot
             scale_set_eviction_policy: Delete
             spot_max_price: -1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "node{{ rpfx }}-spot"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -725,7 +725,7 @@
         name: "aks{{ rpfx }}-spot"
         resource_group: "{{ resource_group }}-aks"
         location: "{{ location }}"
-        dns_prefix: "aks{{ rpfx }}spot"
+        dns_prefix: "aks{{ rpfx }}-spot"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         service_principal:
           client_id: "{{ azure_client_id }}"
