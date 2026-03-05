@@ -6,18 +6,30 @@
 - name: Create resource group for Azure Arc test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ arc_onboarding_rg }}"
-    location: eastus2
+    location: australiaeast
 
 - name: Run Azure Arc tests
   block:
-    - name: Create Azure VM
+    # Setup VMs
+    - name: Create Linux Azure VM
       ansible.builtin.include_tasks: setup.yml
 
-    - name: Prepare Azure VM for Azure Arc
+    - name: Create Windows Azure VM
+      ansible.builtin.include_tasks: setup_windows.yml
+
+    # Prepare VMs for Arc
+    - name: Prepare Linux Azure VM for Azure Arc
       ansible.builtin.include_tasks: prepare_vm_for_arc.yml
 
-    - name: Test basic Azure Arc functionality
+    - name: Prepare Windows Azure VM for Azure Arc
+      ansible.builtin.include_tasks: prepare_vm_for_arc_windows.yml
+
+    # Run tests
+    - name: Test basic Azure Arc functionality on Linux
       ansible.builtin.include_tasks: test_basic.yml
+
+    - name: Test basic Azure Arc functionality on Windows
+      ansible.builtin.include_tasks: test_basic_windows.yml
 
   always:
     - name: Force delete the entire resource group

@@ -1,0 +1,136 @@
+---
+- name: Set Windows VM variables
+  ansible.builtin.set_fact:
+    win_vm_name: "arcwin{{ 99999 | random }}"
+    win_location: australiaeast
+    win_vm_size: Standard_D2s_v3
+    win_admin_username: arcadmin
+    win_admin_password: "ArcTest!{{ 999999 | random }}#"
+
+- name: Create virtual network for Windows VM
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}-vnet"
+    address_prefixes: "10.1.0.0/16"
+    location: "{{ win_location }}"
+
+- name: Create subnet for Windows VM
+  azure.azcollection.azure_rm_subnet:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}-subnet"
+    virtual_network: "{{ win_vm_name }}-vnet"
+    address_prefix: "10.1.1.0/24"
+
+- name: Create public IP for Windows VM
+  azure.azcollection.azure_rm_publicipaddress:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}-public-ip"
+    allocation_method: Static
+    sku: Standard
+    location: "{{ win_location }}"
+
+- name: Create NSG with inbound WinRM access
+  azure.azcollection.azure_rm_securitygroup:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}-nsg"
+    location: "{{ win_location }}"
+    rules:
+      - name: AllowWinRM
+        protocol: Tcp
+        destination_port_range: 5986
+        access: Allow
+        priority: 1001
+        direction: Inbound
+
+- name: Create NIC for Windows VM
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}-nic"
+    virtual_network: "{{ win_vm_name }}-vnet"
+    subnet: "{{ win_vm_name }}-subnet"
+    ip_configurations:
+      - name: default
+        primary: true
+        public_ip_address_name: "{{ win_vm_name }}-public-ip"
+    security_group_name: "{{ win_vm_name }}-nsg"
+    location: "{{ win_location }}"
+
+- name: Create Windows VM for Arc evaluation (Windows Server 2022)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}"
+    vm_size: "{{ win_vm_size }}"
+    location: "{{ win_location }}"
+    admin_username: "{{ win_admin_username }}"
+    admin_password: "{{ win_admin_password }}"
+    network_interfaces: "{{ win_vm_name }}-nic"
+    managed_disk_type: StandardSSD_LRS
+    os_disk_caching: ReadWrite
+    os_type: Windows
+    image:
+      offer: WindowsServer
+      publisher: MicrosoftWindowsServer
+      sku: 2022-datacenter-azure-edition
+      version: latest
+
+- name: Configure WinRM via Custom Script Extension
+  azure.azcollection.azure_rm_virtualmachineextension:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: ConfigureWinRM
+    virtual_machine_name: "{{ win_vm_name }}"
+    publisher: Microsoft.Compute
+    virtual_machine_extension_type: CustomScriptExtension
+    type_handler_version: "1.10"
+    settings:
+      commandToExecute: >-
+        powershell.exe -ExecutionPolicy Bypass -Command "
+        Set-ExecutionPolicy Bypass -Scope Process -Force;
+        Enable-PSRemoting -Force -SkipNetworkProfileCheck;
+        $cert = New-SelfSignedCertificate -DnsName $env:COMPUTERNAME -CertStoreLocation Cert:\LocalMachine\My;
+        Remove-Item -Path WSMan:\localhost\Listener\* -Recurse -Force -ErrorAction SilentlyContinue;
+        New-Item -Path WSMan:\localhost\Listener -Transport HTTPS -Address * -CertificateThumbPrint $cert.Thumbprint -Force;
+        New-NetFirewallRule -DisplayName 'WinRM HTTPS' -Direction Inbound -LocalPort 5986 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue;
+        Set-Item WSMan:\localhost\Service\Auth\Basic -Value $true;
+        Set-Item WSMan:\localhost\Service\AllowUnencrypted -Value $false;
+        Restart-Service WinRM -Force
+        "
+    auto_upgrade_minor_version: true
+  register: winrm_extension
+  retries: 5
+  delay: 30
+  until: winrm_extension is succeeded
+
+- name: Get Windows VM public IP for connection
+  azure.azcollection.azure_rm_publicipaddress_info:
+    resource_group: "{{ arc_onboarding_rg }}"
+    name: "{{ win_vm_name }}-public-ip"
+  register: win_vm_public_ip
+
+- name: Set Windows VM connection facts
+  ansible.builtin.set_fact:
+    win_vm_host: "{{ win_vm_public_ip.publicipaddresses[0].ip_address }}"
+    win_vm_user: "{{ win_admin_username }}"
+    win_vm_password: "{{ win_admin_password }}"
+
+- name: Wait for WinRM to become available
+  ansible.builtin.wait_for:
+    host: "{{ win_vm_host }}"
+    port: 5986
+    delay: 30
+    timeout: 900
+    state: started
+  delegate_to: localhost
+
+- name: Add Windows VM to inventory
+  ansible.builtin.add_host:
+    name: arc_test_vm_windows
+    ansible_host: "{{ win_vm_host }}"
+    ansible_user: "{{ win_vm_user }}"
+    ansible_password: "{{ win_vm_password }}"
+    ansible_connection: winrm
+    ansible_winrm_transport: basic
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5986
+    ansible_winrm_connection_timeout: 120
+    ansible_winrm_read_timeout_sec: 120
+    ansible_winrm_operation_timeout_sec: 60

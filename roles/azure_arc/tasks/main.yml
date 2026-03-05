@@ -1,4 +1,8 @@
 ---
+- name: Gather facts if not already available
+  ansible.builtin.setup:
+  when: ansible_system is not defined
+
 - name: Generate tags string
   ansible.builtin.set_fact:
     azure_arc_processed_tags: |-
@@ -37,9 +41,17 @@
   ansible.builtin.include_tasks: "linux_install.yml"
   when: ansible_system == 'Linux'
 
+- name: Include install tasks for Windows
+  ansible.builtin.include_tasks: "windows_install.yml"
+  when: ansible_os_family == 'Windows'
+
 - name: Include show tasks for Linux
   ansible.builtin.include_tasks: "linux_show.yml"
   when: ansible_system == 'Linux'
+
+- name: Include show tasks for Windows
+  ansible.builtin.include_tasks: "windows_show.yml"
+  when: ansible_os_family == 'Windows'
 
 - name: Set helper fact for configuration
   ansible.builtin.set_fact:
@@ -51,6 +63,10 @@
     - name: Include proxy tasks for Linux
       ansible.builtin.include_tasks: "linux_proxy.yml"
       when: ansible_system == 'Linux'
+
+    - name: Include proxy tasks for Windows
+      ansible.builtin.include_tasks: "windows_proxy.yml"
+      when: ansible_os_family == 'Windows'
 
 # When registered with Azure, validate current configuration is equal to expected configuration and set the resource id as ansible fact
 - name: Assert that configuration is matching expected values and set resource id fact
@@ -90,6 +106,10 @@
     - name: Include Connect tasks for Linux
       ansible.builtin.include_tasks: "linux_connect.yml"
       when: ansible_system == 'Linux'
+
+    - name: Include Connect tasks for Windows
+      ansible.builtin.include_tasks: "windows_connect.yml"
+      when: ansible_os_family == 'Windows'
 
     - name: Transform json stdout output to variable
       ansible.builtin.set_fact:

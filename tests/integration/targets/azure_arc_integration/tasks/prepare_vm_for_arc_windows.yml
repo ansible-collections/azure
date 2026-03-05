@@ -1,0 +1,32 @@
+---
+# Prepare Windows Azure VM for Arc evaluation per the following documentation:
+# https://learn.microsoft.com/en-us/azure/azure-arc/servers/plan-evaluate-on-azure-virtual-machine
+#
+# NOTE: We use ansible.builtin.raw instead of ansible.windows modules because
+# the ansible.windows collection may not be installed on the test controller.
+
+# Set required env variable (system-wide for Windows)
+- name: Set MSFT_ARC_TEST environment variable
+  ansible.builtin.raw: >-
+    PowerShell -Command "[Environment]::SetEnvironmentVariable('MSFT_ARC_TEST', 'true', 'Machine')"
+  delegate_to: arc_test_vm_windows
+
+# Stop and disable Windows Azure Guest Agent
+- name: Stop Windows Azure Guest Agent (WindowsAzureGuestAgent)
+  ansible.builtin.raw: >-
+    PowerShell -Command "Stop-Service -Name WindowsAzureGuestAgent -Force -ErrorAction SilentlyContinue"
+  delegate_to: arc_test_vm_windows
+  failed_when: false
+
+- name: Disable Windows Azure Guest Agent (WindowsAzureGuestAgent)
+  ansible.builtin.raw: >-
+    PowerShell -Command "Set-Service -Name WindowsAzureGuestAgent -StartupType Disabled -ErrorAction SilentlyContinue"
+  delegate_to: arc_test_vm_windows
+  failed_when: false
+
+# Block access to Azure IMDS endpoint via Windows Firewall
+- name: Block access to Azure IMDS endpoint via Windows Firewall
+  ansible.builtin.raw: >-
+    PowerShell -Command "New-NetFirewallRule -DisplayName 'Block Azure IMDS' -Direction Outbound -RemoteAddress 169.254.169.254 -Action Block -ErrorAction SilentlyContinue"
+  delegate_to: arc_test_vm_windows
+  failed_when: false
