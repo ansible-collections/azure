@@ -371,7 +371,6 @@ class AzureRMModuleBase(object):
                                     required_if=merged_required_if,
                                     required_by=required_by)
 
-        
         missing_mod = _extract_missing_module(AZURE_IMPORT_ERROR)
 
         if missing_mod:
