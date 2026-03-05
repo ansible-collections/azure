@@ -371,21 +371,22 @@ class AzureRMModuleBase(object):
                                     required_if=merged_required_if,
                                     required_by=required_by)
 
-        missing_mod = _extract_missing_module(AZURE_IMPORT_ERROR)
+        if AZURE_IMPORT_ERROR:
+            missing_mod = _extract_missing_module(AZURE_IMPORT_ERROR)
 
-        if missing_mod:
-            msg = (
-                "Failed to import the required Python library ({0}). "
-                "Please install them by running: "
-                "pip install -r requirements.txt. "
-                "If the required library is installed, but Ansible is using the wrong "
-                "Python interpreter, please consult the documentation on "
-                "ansible_python_interpreter."
-            ).format(missing_mod)
-        else:
-            msg = missing_required_lib("Azure SDK dependencies")
+            if missing_mod:
+                msg = (
+                    "Failed to import the required Python library ({0}). "
+                    "Please install them by running: "
+                    "pip install -r requirements.txt. "
+                    "If the required library is installed, but Ansible is using the wrong "
+                    "Python interpreter, please consult the documentation on "
+                    "ansible_python_interpreter."
+                ).format(missing_mod)
+            else:
+                msg = missing_required_lib("Azure SDK dependencies")
 
-        self.fail(msg=msg, exception=AZURE_IMPORT_ERROR)
+            self.fail(msg=msg, exception=AZURE_IMPORT_ERROR)
 
         self._authorization_client = None
         self._network_client = None
