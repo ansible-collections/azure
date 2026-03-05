@@ -706,10 +706,11 @@
             type: VirtualMachineScaleSets
             mode: System
           - name: spotpool
-            count: 2  # trigger update
+            count: 1
             vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: User
+            node_labels: {"environment":"test"}  # trigger update
         network_profile:
           load_balancer_sku: standard
       register: spot_update
@@ -738,7 +739,7 @@
             type: VirtualMachineScaleSets
             mode: System
           - name: spotpool
-            count: 2
+            count: 1
             vm_size: Standard_D2s_v3
             type: VirtualMachineScaleSets
             mode: User
