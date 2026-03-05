@@ -200,6 +200,34 @@ options:
                             - Whether to disable or enabled the secure boot.
                         default: false
                         type: bool
+            scale_set_priority:
+                description:
+                    - Virtual Vachine Scale Set priority for the agent pool.
+                    - C(Regular) uses standard on-demand VMs.
+                    - C(Spot) uses Azure Spot VMs which can be evicted at any time.
+                    - This property is immutable after the agent pool is created.
+                type: str
+                choices:
+                    - Regular
+                    - Spot
+            scale_set_eviction_policy:
+                description:
+                    - Eviction policy for Spot VM agent pools.
+                    - Only applicable when I(scale_set_priority=Spot).
+                    - C(Delete) removes the VM and its disk on eviction.
+                    - C(Deallocate) deallocates the VM, but retains the disk on eviction.
+                    - This property is immutable after the agent pool is created.
+                type: str
+                choices:
+                    - Delete
+                    - Deallocate
+            spot_max_price:
+                description:
+                    - The maximum price (in USD per hour) for Spot VMs in the agent pool.
+                    - Use C(-1) to indicate the on-demand price.
+                    - Only applicable when I(scale_set_priority=Spot).
+                    - This property is immutable after the agent pool is created.
+                type: float
     security_profile:
         description:
             - Security profile for the container service cluster.
@@ -813,6 +841,36 @@ EXAMPLES = '''
       load_balancer_sku: standard
       network_plugin: azure
       outbound_type: loadBalancer
+
+- name: Create an AKS instance with a Spot user node pool
+  azure_rm_aks:
+    name: myAKSWithSpot
+    resource_group: myResourceGroup
+    location: eastus
+    dns_prefix: aksspot
+    kubernetes_version: 1.28.5
+    linux_profile:
+      admin_username: azureuser
+      ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+    service_principal:
+      client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+      client_secret: "Password1234!"
+    enable_rbac: true
+    agent_pool_profiles:
+      - name: systempool
+        count: 1
+        vm_size: Standard_B2s
+        mode: System
+      - name: spotpool
+        count: 2
+        vm_size: Standard_D2_v2
+        mode: User
+        scale_set_priority: Spot
+        scale_set_eviction_policy: Deallocate
+        spot_max_price: -1
+        enable_auto_scaling: true
+        min_count: 1
+        max_count: 5
 
 - name: Remove a managed Azure Container Services (AKS) instance
   azure_rm_aks:
