@@ -200,6 +200,34 @@ options:
                             - Whether to disable or enabled the secure boot.
                         default: false
                         type: bool
+            scale_set_priority:
+                description:
+                    - Virtual Vachine Scale Set priority for the agent pool.
+                    - C(Regular) uses standard on-demand VMs.
+                    - C(Spot) uses Azure Spot VMs which can be evicted at any time.
+                    - This property is immutable after the agent pool is created.
+                type: str
+                choices:
+                    - Regular
+                    - Spot
+            scale_set_eviction_policy:
+                description:
+                    - Eviction policy for Spot VM agent pools.
+                    - Only applicable when I(scale_set_priority=Spot).
+                    - C(Delete) removes the VM and its disk on eviction.
+                    - C(Deallocate) deallocates the VM, but retains the disk on eviction.
+                    - This property is immutable after the agent pool is created.
+                type: str
+                choices:
+                    - Delete
+                    - Deallocate
+            spot_max_price:
+                description:
+                    - The maximum price (in USD per hour) for Spot VMs in the agent pool.
+                    - Use C(-1) to indicate the on-demand price.
+                    - Only applicable when I(scale_set_priority=Spot).
+                    - This property is immutable after the agent pool is created.
+                type: float
     security_profile:
         description:
             - Security profile for the container service cluster.
@@ -814,6 +842,36 @@ EXAMPLES = '''
       network_plugin: azure
       outbound_type: loadBalancer
 
+- name: Create an AKS instance with a Spot user node pool
+  azure_rm_aks:
+    name: myAKSWithSpot
+    resource_group: myResourceGroup
+    location: eastus
+    dns_prefix: aksspot
+    kubernetes_version: 1.28.5
+    linux_profile:
+      admin_username: azureuser
+      ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAA...
+    service_principal:
+      client_id: "cf72ca99-f6b9-4004-b0e0-bee10c521948"
+      client_secret: "Password1234!"
+    enable_rbac: true
+    agent_pool_profiles:
+      - name: systempool
+        count: 1
+        vm_size: Standard_B2s
+        mode: System
+      - name: spotpool
+        count: 2
+        vm_size: Standard_D2_v2
+        mode: User
+        scale_set_priority: Spot
+        scale_set_eviction_policy: Deallocate
+        spot_max_price: -1
+        enable_auto_scaling: true
+        min_count: 1
+        max_count: 5
+
 - name: Remove a managed Azure Container Services (AKS) instance
   azure_rm_aks:
     name: myAKS
@@ -1046,6 +1104,9 @@ def create_agent_pool_profiles_dict(agentpoolprofiles):
         vm_size=profile.vm_size,
         name=profile.name,
         os_disk_size_gb=profile.os_disk_size_gb,
+        scale_set_priority=getattr(profile, 'scale_set_priority', None),
+        scale_set_eviction_policy=getattr(profile, 'scale_set_eviction_policy', None),
+        spot_max_price=getattr(profile, 'spot_max_price', None),
         vnet_subnet_id=profile.vnet_subnet_id,
         availability_zones=profile.availability_zones,
         os_type=profile.os_type,
@@ -1111,6 +1172,9 @@ agent_pool_profile_spec = dict(
     count=dict(type='int', required=True),
     vm_size=dict(type='str', required=True),
     os_disk_size_gb=dict(type='int'),
+    scale_set_priority=dict(type='str', choices=['Regular', 'Spot']),
+    scale_set_eviction_policy=dict(type='str', choices=['Delete', 'Deallocate']),
+    spot_max_price=dict(type='float'),
     dns_prefix=dict(type='str'),
     ports=dict(type='list', elements='int'),
     storage_profiles=dict(type='str', choices=[
@@ -1620,6 +1684,13 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                                        bool(security_profile['enable_vtpm']) != bool(profile_result['security_profile']['enable_vtpm']):
                                         self.log(("Agent Profile Diff - Origin {0} / Update {1}".format(str(profile_result), str(profile_self))))
                                         to_be_updated = True
+                                # Preserve immutable VMSS settings if not explicitly provided
+                                if profile_self.get('scale_set_priority') is None and profile_result.get('scale_set_priority') is not None:
+                                    profile_self['scale_set_priority'] = profile_result.get('scale_set_priority')
+                                if profile_self.get('scale_set_eviction_policy') is None and profile_result.get('scale_set_eviction_policy') is not None:
+                                    profile_self['scale_set_eviction_policy'] = profile_result.get('scale_set_eviction_policy')
+                                if profile_self.get('spot_max_price') is None and profile_result.get('spot_max_price') is not None:
+                                    profile_self['spot_max_price'] = profile_result.get('spot_max_price')
 
                         if not matched:
                             self.log("Agent Pool not found")
@@ -1824,6 +1895,9 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     count=profile["count"],
                     vm_size=profile["vm_size"],
                     os_disk_size_gb=profile["os_disk_size_gb"],
+                    scale_set_priority=profile.get("scale_set_priority"),
+                    scale_set_eviction_policy=profile.get("scale_set_eviction_policy"),
+                    spot_max_price=profile.get("spot_max_price"),
                     max_count=profile["max_count"],
                     node_labels=profile["node_labels"],
                     min_count=profile["min_count"],
