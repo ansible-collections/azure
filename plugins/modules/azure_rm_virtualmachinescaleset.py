@@ -1062,6 +1062,13 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     changed = True
                     vmss_dict['sku']['capacity'] = self.capacity
 
+                if self.vm_size and \
+                   self.vm_size != vmss_dict['sku']['name']:
+                    self.log('CHANGED: virtual machine scale set {0} - VM Size'.format(self.name))
+                    differences.append('VM Size')
+                    changed = True
+                    vmss_dict['sku']['name'] = self.vm_size
+
                 if self.data_disks and \
                    len(self.data_disks) != len(vmss_dict['virtual_machine_profile']['storage_profile'].get('data_disks', [])):
                     self.log('CHANGED: virtual machine scale set {0} - Data Disks'.format(self.name))
@@ -1439,6 +1446,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     vmss_resource = self.get_vmss()
                     vmss_resource.virtual_machine_profile.storage_profile.os_disk.caching = self.os_disk_caching
                     vmss_resource.sku.capacity = self.capacity
+                    vmss_resource.sku.name = self.vm_size
                     vmss_resource.orchestration_mode = self.orchestration_mode
                     vmss_resource.platform_fault_domain_count = self.platform_fault_domain_count
                     vmss_resource.overprovision = self.overprovision

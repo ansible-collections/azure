@@ -332,7 +332,19 @@ def normalize_location_name(name):
     return name.replace(' ', '').lower()
 
 
-AZURE_MIN_RELEASE = '2.0.0'
+def _extract_missing_module(import_error):
+    """
+    Extract missing module name from ImportError traceback.
+    Returns None if not detectable.
+    """
+    if not import_error:
+        return None
+
+    match = re.search(r"No module named '([^']+)'", import_error)
+    if match:
+        return match.group(1)
+
+    return None
 
 
 class AzureRMModuleBase(object):
@@ -369,8 +381,21 @@ class AzureRMModuleBase(object):
                                     required_by=required_by)
 
         if AZURE_IMPORT_ERROR:
-            self.fail(msg=missing_required_lib('ansible[azure] (azure >= {0})'.format(AZURE_MIN_RELEASE)),
-                      exception=AZURE_IMPORT_ERROR)
+            missing_mod = _extract_missing_module(AZURE_IMPORT_ERROR)
+
+            if missing_mod:
+                msg = (
+                    "Failed to import the required Python library ({0}). "
+                    "Please install them by running: "
+                    "pip install -r requirements.txt. "
+                    "If the required library is installed, but Ansible is using the wrong "
+                    "Python interpreter, please consult the documentation on "
+                    "ansible_python_interpreter."
+                ).format(missing_mod)
+            else:
+                msg = missing_required_lib("Azure SDK dependencies")
+
+            self.fail(msg=msg, exception=AZURE_IMPORT_ERROR)
 
         self._authorization_client = None
         self._network_client = None

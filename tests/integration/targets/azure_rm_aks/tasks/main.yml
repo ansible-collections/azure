@@ -648,6 +648,110 @@
           - "fact.aks | length == 1"
           - fact.aks[0].kube_config == output.kube_config
 
+    - name: Create AKS with Spot agent pool
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}-spot"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}-spot"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: systempool
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+          - name: spotpool
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: User
+            scale_set_priority: Spot
+            scale_set_eviction_policy: Delete
+            spot_max_price: -1
+        node_resource_group: "node{{ noderpfx }}-spot"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+      register: spot_create
+
+    - name: Assert Spot AKS created
+      ansible.builtin.assert:
+        that:
+          - spot_create is changed
+          - spot_create.provisioning_state == 'Succeeded'
+
+    - name: Update AKS Spot pool WITHOUT specifying Spot fields
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}-spot"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}-spot"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        enable_rbac: true
+        agent_pool_profiles:
+          - name: systempool
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+          - name: spotpool
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: User
+            node_labels: {"environment":"test"}  # trigger update
+        network_profile:
+          load_balancer_sku: standard
+      register: spot_update
+
+    - name: Assert Spot pool update succeeded (no ScaleSetPriority immutable error)
+      ansible.builtin.assert:
+        that:
+          - spot_update is changed
+          - spot_update.provisioning_state == 'Succeeded'
+
+    - name: Update AKS Spot pool again (idempotent)
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}-spot"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}-spot"
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        enable_rbac: true
+        agent_pool_profiles:
+          - name: systempool
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+          - name: spotpool
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: User
+        network_profile:
+          load_balancer_sku: standard
+      register: spot_update_idem
+
+    - name: Assert Spot pool update idempotent
+      ansible.builtin.assert:
+        that:
+          - spot_update_idem is not changed
+
     - name: Delete the AKS instance
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
@@ -659,6 +763,18 @@
       ansible.builtin.assert:
         that:
           - output is changed
+
+    - name: Delete the AKS Spot instance
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}-spot"
+        resource_group: "{{ resource_group }}-aks"
+        state: absent
+      register: output_spot_delete
+
+    - name: Assert the AKS Spot instance is well deleted
+      ansible.builtin.assert:
+        that:
+          - output_spot_delete is changed
 
     - name: Delete the AKS instance (idempotent)
       azure.azcollection.azure_rm_aks:
