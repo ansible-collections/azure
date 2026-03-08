@@ -1,0 +1,132 @@
+- name: Create a new resource group for ml-datastore test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-datastore"
+    location: eastus
+
+- name: For ml-datastore topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-datastore"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-datastore"
+        workspace_name: "workspace{{ rpfx }}"
+        datastore_name: "datastore{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: List ML Datastores
+      azure.azcollection.azure_rm_ml_datastore_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Set account_name  variable
+      ansible.builtin.set_fact:
+        account_name: "{{ results.ml_datastores.0.account_name }}"
+        container_name: "{{ datastore_name }}-{{ datastore_name | to_uuid }}"
+
+    - name: Create Datastore
+      azure.azcollection.azure_rm_ml_datastore:
+        name: "{{ datastore_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          # my_blob_datastore.yml
+          $schema: https://azuremlschemas.azureedge.net/latest/azureBlob.schema.json
+          name: {{ datastore_name }}
+          type: azure_blob
+          description: here is a description
+          account_name: {{ account_name }}
+          container_name: {{ container_name }}
+      register: results
+
+    - name: Assert the ML Datastore created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Datastore (idempotent)
+      azure.azcollection.azure_rm_ml_datastore:
+        name: "{{ datastore_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          # my_blob_datastore.yml
+          $schema: https://azuremlschemas.azureedge.net/latest/azureBlob.schema.json
+          name: {{ datastore_name }}
+          type: azure_blob
+          description: here is a description
+          account_name: {{ account_name }}
+          container_name: {{ container_name }}
+      register: results
+
+    - name: Assert the ML Datastore created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Datastores
+      azure.azcollection.azure_rm_ml_datastore_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        name: "{{ datastore_name }}"
+      register: results
+
+    - name: Assert datastore is found
+      ansible.builtin.assert:
+        that:
+          - results.ml_datastores | length == 1
+
+    # cleanup
+    - name: Delete ML Datastore
+      azure.azcollection.azure_rm_ml_datastore:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        name: "{{ datastore_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Datastore deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent

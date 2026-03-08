@@ -22,9 +22,10 @@ class MLClientCommon(AzureRMModuleBaseExt):
         self.log('Getting client')
         if not self._client:
             self._client = MLClient(self.azure_auth.azure_credential_track2,
-                                    self.subscription_id,
-                                    self.resource_group,
-                                    self.ml_workspace)
+                                    subscription_id=self.subscription_id,
+                                    resource_group_name=self.resource_group,
+                                    workspace_name=self.ml_workspace,
+                                    registry_name=self.ml_registry)
         return self._client
 
     def entity_to_dict(self, entity):

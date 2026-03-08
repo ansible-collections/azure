@@ -174,6 +174,7 @@ class AzureRMMLComputeInfo(MLClientCommon):
 
         self._client = None
         self.ml_compute = None
+        self.ml_registry = None
 
         self.results = dict(
             ml_computes=[]

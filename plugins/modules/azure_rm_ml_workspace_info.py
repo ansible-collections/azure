@@ -325,6 +325,7 @@ class AzureRMMLWorkspaceInfo(MLClientCommon):
 
         self._client = None
         self.ml_workspace = None
+        self.ml_registry = None
 
         required_by = {'name': 'resource_group'}
 

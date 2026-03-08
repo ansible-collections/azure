@@ -85,6 +85,8 @@ parameters:
       - "azure_rm_mariadbserver"
       - "azure_rm_ml_workspace"
       - "azure_rm_ml_compute"
+      - "azure_rm_ml_data"
+      - "azure_rm_ml_datastore"
       - "azure_rm_monitoractiongroups"
       - "azure_rm_monitoractivitylogalerts"
       - "azure_rm_monitordatacollectionrules"
