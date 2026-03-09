@@ -96,18 +96,27 @@ then
 else
     # See: https://github.com/ansible/ansible/blob/23a84902cb9599fe958a86e7a95520837964726a/test/lib/ansible_test/config/cloud-config-azure.ini.template
     config_file="${TEST_DIR}"/tests/integration/cloud-config-azure.ini
-    cat <<EOF >> "$config_file"
+
+if [ "$MODULE_NAME" = "auth_workload_identity" ]; then
+  cat <<EOF > "$config_file"
+[default]
+AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
+AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
+AZURE_TENANT:${AZURE_TENANT}
+RESOURCE_GROUP:${RESOURCE_GROUP}
+RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
+EOF
+else
+  cat <<EOF > "$config_file"
 [default]
 AZURE_CLIENT_ID:${AZURE_CLIENT_ID}
 AZURE_SECRET:${AZURE_SECRET}
 AZURE_SUBSCRIPTION_ID:${AZURE_SUBSCRIPTION_ID}
-AZURE_SUBSCRIPTION_SEC_ID:${AZURE_SUBSCRIPTION_SEC_ID}
 AZURE_TENANT:${AZURE_TENANT}
 RESOURCE_GROUP:${RESOURCE_GROUP}
 RESOURCE_GROUP_SECONDARY:${RESOURCE_GROUP_SECONDARY}
-AZURE_PRINCIPAL_ID:${AZURE_PRINCIPAL_ID}
-AZURE_MANAGED_BY_TENANT_ID:${AZURE_MANAGED_BY_TENANT_ID}
 EOF
+fi
     ansible-test integration --color -v --retry-on-error "shippable/azure/group${GROUP_NO}/" --allow-destructive || { rm "$config_file"; die "failed to run integration test"; }
     rm "$config_file"
 fi
