@@ -10,18 +10,21 @@
   ansible.builtin.raw: >-
     PowerShell -Command "[Environment]::SetEnvironmentVariable('MSFT_ARC_TEST', 'true', 'Machine')"
   delegate_to: arc_test_vm_windows
+  changed_when: false
 
 # Stop and disable Windows Azure Guest Agent
 - name: Stop Windows Azure Guest Agent (WindowsAzureGuestAgent)
   ansible.builtin.raw: >-
     PowerShell -Command "Stop-Service -Name WindowsAzureGuestAgent -Force -ErrorAction SilentlyContinue"
   delegate_to: arc_test_vm_windows
+  changed_when: false
   failed_when: false
 
 - name: Disable Windows Azure Guest Agent (WindowsAzureGuestAgent)
   ansible.builtin.raw: >-
     PowerShell -Command "Set-Service -Name WindowsAzureGuestAgent -StartupType Disabled -ErrorAction SilentlyContinue"
   delegate_to: arc_test_vm_windows
+  changed_when: false
   failed_when: false
 
 # Block access to Azure IMDS endpoint via Windows Firewall
@@ -29,4 +32,5 @@
   ansible.builtin.raw: >-
     PowerShell -Command "New-NetFirewallRule -DisplayName 'Block Azure IMDS' -Direction Outbound -RemoteAddress 169.254.169.254 -Action Block -ErrorAction SilentlyContinue"
   delegate_to: arc_test_vm_windows
+  changed_when: false
   failed_when: false
