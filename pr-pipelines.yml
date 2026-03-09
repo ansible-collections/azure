@@ -296,6 +296,9 @@ jobs:
           inlineScript: |
             echo "Azure DevOps Workload Identity active"
             az account show
+        env:
+          ACTIONS_ID_TOKEN_AUDIENCE: ""
+          AZURE_AD_TOKEN_AUDIENCE: ""
 
       - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
