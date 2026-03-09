@@ -294,22 +294,8 @@ jobs:
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
-            set -euo pipefail
-
-            echo "Using Azure DevOps Workload Identity"
-
-            echo "##vso[task.setvariable variable=AZURE_FEDERATED_TOKEN_FILE]$AZURE_FEDERATED_TOKEN_FILE"
-            echo "##vso[task.setvariable variable=AZURE_CLIENT_ID]$AZURE_CLIENT_ID"
-            echo "##vso[task.setvariable variable=AZURE_TENANT]$AZURE_TENANT"
-
-            AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-            echo "##vso[task.setvariable variable=AZURE_SUBSCRIPTION_ID]$AZURE_SUBSCRIPTION_ID"
-
-            echo "Exported workload identity variables:"
-            echo "  AZURE_FEDERATED_TOKEN_FILE=$AZURE_FEDERATED_TOKEN_FILE"
-            echo "  AZURE_CLIENT_ID=$AZURE_CLIENT_ID"
-            echo "  AZURE_TENANT=$AZURE_TENANT"
-            echo "  AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID"
+            echo "Azure DevOps Workload Identity active"
+            az account show
 
       - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
