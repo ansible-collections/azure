@@ -287,19 +287,6 @@ jobs:
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
 
-      - task: AzureCLI@2
-        displayName: 'Azure Login (Workload Identity)'
-        inputs:
-          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            echo "Azure DevOps Workload Identity active"
-            az account show
-        env:
-          ACTIONS_ID_TOKEN_AUDIENCE: ""
-          AZURE_AD_TOKEN_AUDIENCE: ""
-
       - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
           SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
@@ -312,7 +299,7 @@ jobs:
           AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-          # AZURE_FEDERATED_TOKEN_FILE: $(AZURE_FEDERATED_TOKEN_FILE)
+          AZURE_FEDERATED_TOKEN_FILE: $(AZURE_FEDERATED_TOKEN_FILE)
         displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
