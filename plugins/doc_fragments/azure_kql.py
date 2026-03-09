@@ -15,7 +15,7 @@ class ModuleDocFragment(object):
 options:
     plugin:
         description:
-            - Marks this as an instance of the 'azure_rm' plugin.
+            - Marks this as an instance of the 'azure_kql' plugin.
         required: true
         choices:
             - 'azure_kql'
@@ -27,7 +27,7 @@ options:
     fail_on_template_errors:
         description:
             - When false, template failures during group and filter processing are silently ignored (eg,
-            - if a filter or group expression refers to an undefined host variable)
+              if a filter or group expression refers to an undefined host variable)
         choices:
             - True
             - False
@@ -48,11 +48,10 @@ options:
               plugin runs).
     hostnames:
         description:
-        - A list of Jinja2 expressions in order of precedence to compose inventory_hostname.
-        - Ignores expression if result is an empty string or None value.
-        - An expression of C(default) will force using the default hostname generator if no previous hostname expression
-          resulted in a valid hostname.
-        - Use C(default_inventory_hostname) to access the default hostname generator's value in any of the Jinja2 expressions.
+            - A list of Jinja2 expressions in order of precedence to compose inventory_hostname.
+            - Ignores expression if result is an empty string or None value.
+            - An expression of C(default) will force using the default hostname generator if no previous hostname expression resulted in a valid hostname.
+            - Use C(default_inventory_hostname) to access the default hostname generator's value in any of the Jinja2 expressions.
         type: list
         elements: str
         default: 'default'

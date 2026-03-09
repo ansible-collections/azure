@@ -9,17 +9,17 @@ DOCUMENTATION = r'''
     version_added: "3.7.0"
     short_description: Azure Resource Manager inventory plugin using Graph QL
     extends_documentation_fragment:
-      - azure.azcollection.azure
-      - azure.azcollection.azure_kql
-      - constructed
-      - inventory_cache
+        - azure.azcollection.azure
+        - azure.azcollection.azure_kql
+        - constructed
+        - inventory_cache
     description:
         - Query VM details from Azure Resource Manager using Graph QL
         - See https://learn.microsoft.com/en-us/azure/virtual-machines/resource-graph-samples?tabs=azure-cli
-          for how to craft your own query.  The one requirement is that you need to provide inventory_hostname.
+          for how to craft your own query. The one requirement is that you need to provide inventory_hostname.
         - Requires a YAML configuration file whose name ends with 'azure_kql.(yml|yaml)'
         - Be aware that currently Azure Resource Graph may not be consistent with the actual state of your
-          resources.  It can take up to 30 minutes for updates to propagate.  This applies both for resources
+          resources. It can take up to 30 minutes for updates to propagate. This applies both for resources
           to appear and to dissapear.
 '''
 

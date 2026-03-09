@@ -25,7 +25,7 @@ options:
             - A list of resource group names to search for virtual machines. '\*' will include all resource
               groups in the subscription. Can also be set comma separated resource group names via the
               C(ANSIBLE_AZURE_VM_RESOURCE_GROUPS) environment variable.
-        default: ['*'
+        default: ['*']
     include_hcivm_resource_groups:
         description:
             - A list of resource group names to search for Azure StackHCI virtual machines. '\*' will

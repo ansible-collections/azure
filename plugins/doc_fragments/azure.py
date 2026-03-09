@@ -16,13 +16,11 @@ class ModuleDocFragment(object):
 options:
     ad_user:
         description:
-            - Active Directory username. Use when authenticating with an Active Directory user rather than service
-              principal.
+            - Active Directory username. Use when authenticating with an Active Directory user rather than service principal.
         type: str
     password:
         description:
-            - Active Directory user password. Use when authenticating with an Active Directory user rather than service
-              principal.
+            - Active Directory user password. Use when authenticating with an Active Directory user rather than service principal.
         type: str
     profile:
         description:
@@ -69,8 +67,8 @@ options:
     disable_instance_discovery:
         description:
             - Determines whether or not instance discovery is performed when attempting to authenticate.
-              Setting this to true will completely disable both instance discovery and authority validation.
-              This functionality is intended for use in scenarios where the metadata endpoint cannot be reached
+            - Setting this to true will completely disable both instance discovery and authority validation.
+            - This functionality is intended for use in scenarios where the metadata endpoint cannot be reached
               such as in private clouds or Azure Stack. The process of instance discovery entails retrieving
               authority metadata from https://login.microsoft.com/ to validate the authority. By setting this
               to **True**, the validation of the authority is disabled. As a result, it is crucial to ensure
@@ -83,7 +81,7 @@ options:
         description:
             - Controls the source of the credentials to use for authentication.
             - Can also be set via the C(ANSIBLE_AZURE_AUTH_SOURCE) environment variable.
-            - When set to C(auto) (the default) the precedence is module parameters -> C(env) -> C(credential_file) -> C(cli).
+            - When set to C(auto) (the default) the precedence is module parameters, then C(env), then C(credential_file), then C(cli).
             - When set to C(env), the credentials will be read from the environment variables
             - When set to C(credential_file), it will read the profile from C(~/.azure/credentials).
             - When set to C(cli), the credentials will be sources from the Azure CLI profile. C(subscription_id) or the environment variable
@@ -99,18 +97,18 @@ options:
         type: str
         default: auto
         choices:
-        - auto
-        - cli
-        - credential_file
-        - env
-        - msi
-        - workload_identity
-        - oidc
+            - auto
+            - cli
+            - credential_file
+            - env
+            - msi
+            - workload_identity
+            - oidc
         version_added: '0.0.1'
     api_profile:
         description:
-        - Selects an API profile to use when communicating with Azure services. Default value of C(latest) is appropriate for public clouds;
-          future values will allow use with Azure Stack.
+            - Selects an API profile to use when communicating with Azure services. Default value of C(latest) is appropriate for public clouds;
+              future values will allow use with Azure Stack.
         type: str
         default: latest
         version_added: '0.0.1'
@@ -177,7 +175,7 @@ requirements:
 
 notes:
     - For authentication with Azure you can pass parameters, set environment variables, use a profile stored
-      in ~/.azure/credentials, or log in before you run your tasks or playbook with C(az login).
+      in C(~/.azure/credentials), or log in before you run your tasks or playbook with C(az login).
     - Authentication is also possible using a service principal or Active Directory user.
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
@@ -188,14 +186,10 @@ notes:
       subscription_id, ad_user and password. It is also possible to add additional profiles. Specify the profile
       by passing profile or setting AZURE_PROFILE in the environment."
     - Authentication using workload identity federation is supported without client secrets.
-    - To authenticate using Azure DevOps Workload Identity Federation or AKS, set:
-      C(auth_source=workload_identity) and ensure the following environment variables are present:
-      C(AZURE_CLIENT_ID), C(AZURE_TENANT), C(AZURE_SUBSCRIPTION_ID),
-      and C(AZURE_FEDERATED_TOKEN_FILE).
-    - To authenticate using GitHub Actions OIDC, set:
-      C(auth_source=oidc) and ensure the following environment variables are present:
-      C(ACTIONS_ID_TOKEN_REQUEST_URL) and C(ACTIONS_ID_TOKEN_REQUEST_TOKEN),
-      along with C(AZURE_CLIENT_ID), C(AZURE_TENANT), and C(AZURE_SUBSCRIPTION_ID).
+    - To authenticate using Azure DevOps Workload Identity Federation or AKS, set C(auth_source=workload_identity) and ensure the C(AZURE_CLIENT_ID),
+      C(AZURE_TENANT), C(AZURE_SUBSCRIPTION_ID), and C(AZURE_FEDERATED_TOKEN_FILE) are present.
+    - To authenticate using GitHub Actions OIDC, set C(auth_source=oidc) and ensure the C(ACTIONS_ID_TOKEN_REQUEST_URL)
+      and C(ACTIONS_ID_TOKEN_REQUEST_TOKEN), along with C(AZURE_CLIENT_ID), C(AZURE_TENANT), and C(AZURE_SUBSCRIPTION_ID) are present.
     - The OIDC token is exchanged for an Azure access token at runtime and is not persisted.
 
 seealso:
