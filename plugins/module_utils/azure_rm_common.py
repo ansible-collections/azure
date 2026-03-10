@@ -1965,12 +1965,18 @@ class AzureRMAuth(object):
             return credentials
 
         if os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN'):
+            env_credentials = self._get_env_credentials() or {}
+
             arg_credentials['auth_source'] = 'oidc'
             arg_credentials['oidc_request_url'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL')
             arg_credentials['oidc_request_token'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN')
             if not arg_credentials.get('oidc_audience'):
                 arg_credentials['oidc_audience'] = os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
-            # tenant/client_id/subscription_id still come from params or AZURE_* envs
+
+                for k in ('tenant', 'client_id', 'subscription_id', 'cloud_environment'):
+                    if not arg_credentials.get(k):
+                        arg_credentials[k] = env_credentials.get(k)
+
             return arg_credentials
 
         if arg_credentials['client_id'] or arg_credentials['ad_user']:
