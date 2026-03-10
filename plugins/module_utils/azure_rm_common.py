@@ -28,6 +28,13 @@ import configparser
 from urllib import parse as urlparse
 from ansible.module_utils.urls import open_url
 
+# Auth Precedence:
+# 1. Explicit auth_source
+# 2. GitHub Actions OIDC (ACTIONS_ID_TOKEN_REQUEST_URL)
+# 3. Module params
+# 4. Environment variables
+# 5. Azure credential file
+# 6. Azure CLI
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
         type='str',
@@ -53,7 +60,6 @@ AZURE_COMMON_ARGS = dict(
     disable_instance_discovery=dict(type='bool', default=False),
     federated_token_file=dict(type='path', no_log=True),
     oidc_request_url=dict(type='str', no_log=True),
-    oidc_request_token=dict(type='str', no_log=True),
     oidc_audience=dict(type='str', default='api://AzureADTokenExchange'),
 )
 
@@ -73,8 +79,7 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY',
     federated_token_file='AZURE_FEDERATED_TOKEN_FILE',
     oidc_request_url='ACTIONS_ID_TOKEN_REQUEST_URL',
-    oidc_request_token='ACTIONS_ID_TOKEN_REQUEST_TOKEN',
-    oidc_audience='ACTIONS_ID_TOKEN_AUDIENCE'
+    oidc_request_token='ACTIONS_ID_TOKEN_REQUEST_TOKEN'
 )
 
 
@@ -1662,9 +1667,12 @@ class AzureRMAuth(object):
                 if not self.credentials.get(k):
                     missing.append(k)
             if missing:
-                self.fail("OIDC (request URL) authentication selected but missing required values: {0}. "
-                          "This flow is intended for platforms like GitHub Actions which expose "
-                          "ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN.".format(", ".join(missing)))
+                self.fail(
+                    "OIDC authentication selected but missing: {0}. "
+                    "GitHub Actions must provide ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN."
+                    .format(", ".join(missing))
+                )
+
             request_url = self.credentials['oidc_request_url']
             request_token = self.credentials['oidc_request_token']
             audience = self.credentials.get('oidc_audience') or 'api://AzureADTokenExchange'
@@ -1672,9 +1680,11 @@ class AzureRMAuth(object):
             def _get_assertion():
                 return self._fetch_oidc_token_from_request_endpoint(request_url, request_token, audience)
 
-            self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
-                                                                     client_id=self.credentials['client_id'],
-                                                                     func=_get_assertion)
+            self.azure_credential_track2 = ClientAssertionCredential(
+                tenant_id=self.credentials['tenant'],
+                client_id=self.credentials['client_id'],
+                func=_get_assertion
+            )
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
@@ -1827,8 +1837,7 @@ class AzureRMAuth(object):
         q.setdefault('audience', [audience])
         q.setdefault('api-version', ['2.0'])
 
-        new_query = urlparse.urlencode(q, doseq=True)
-        request_url = urlparse.urlunparse(parsed._replace(query=new_query))
+        request_url = urlparse.urlunparse(parsed._replace(query=urlparse.urlencode(q, doseq=True)))
 
         headers = {
             "Authorization": "Bearer {0}".format(request_token),
@@ -1844,12 +1853,12 @@ class AzureRMAuth(object):
         return token
 
     def _get_oidc_request_credentials(self, subscription_id=None, client_id=None, tenant=None,
-                                      oidc_request_url=None, oidc_request_token=None, oidc_audience=None, **kwargs):
+                                      oidc_request_url=None, oidc_audience=None, **kwargs):
         tenant = tenant or self._get_env('tenant')
         client_id = client_id or self._get_env('client_id')
         subscription_id = subscription_id or self._get_env('subscription_id')
         oidc_request_url = oidc_request_url or self._get_env('oidc_request_url')
-        oidc_request_token = oidc_request_token or self._get_env('oidc_request_token')
+        oidc_request_token = self._get_env('oidc_request_token')
         oidc_audience = oidc_audience or os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
 
         return {

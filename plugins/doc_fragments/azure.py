@@ -150,14 +150,6 @@ options:
               C(ACTIONS_ID_TOKEN_REQUEST_URL) environment variable.
         type: str
         version_added: '3.16.0'
-    oidc_request_token:
-        description:
-            - OIDC request token used to authenticate the request to C(oidc_request_url).
-            - Used with C(auth_source=oidc).
-            - This value is typically provided by GitHub Actions via the
-              C(ACTIONS_ID_TOKEN_REQUEST_TOKEN) environment variable.
-        type: str
-        version_added: '3.16.0'
     oidc_audience:
         description:
             - Audience value used when requesting the OIDC token.
@@ -181,10 +173,10 @@ notes:
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
     - To authenticate via Active Directory user, pass ad_user and password, or set AZURE_AD_USER and
       AZURE_PASSWORD in the environment.
-    - "Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
+    - Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
       a [default] section and the following keys: subscription_id, client_id, secret and tenant or
       subscription_id, ad_user and password. It is also possible to add additional profiles. Specify the profile
-      by passing profile or setting AZURE_PROFILE in the environment."
+      by passing profile or setting AZURE_PROFILE in the environment.
     - Authentication using workload identity federation is supported without client secrets.
     - To authenticate using Azure DevOps Workload Identity Federation or AKS, set C(auth_source=workload_identity) and ensure the C(AZURE_CLIENT_ID),
       C(AZURE_TENANT), C(AZURE_SUBSCRIPTION_ID), and C(AZURE_FEDERATED_TOKEN_FILE) are present.
