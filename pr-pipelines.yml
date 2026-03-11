@@ -27,7 +27,6 @@ parameters:
       - 'all'
       - "setup_azure"
       - 'sanity'
-      - "auth_workload_identity"
       - "inventory_azure" # Group 1
       - 'azure_rm_adapplication'
       - "azure_rm_acs"
@@ -278,8 +277,6 @@ jobs:
           test.key: '18'
         "Python${{ parameters.PYTHON_VER }}_19":
           test.key: '19'
-        "Python${{ parameters.PYTHON_VER }}_20":
-          test.key: '20'
 
     steps:
       - task: UsePythonVersion@0
@@ -299,7 +296,6 @@ jobs:
           AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-          AZURE_FEDERATED_TOKEN_FILE: $(AZURE_FEDERATED_TOKEN_FILE)
         displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
