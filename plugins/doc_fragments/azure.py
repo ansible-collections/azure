@@ -166,15 +166,16 @@ requirements:
     - Full installation instructions may be found https://galaxy.ansible.com/azure/azcollection
 
 notes:
-    - For authentication with Azure you can pass parameters, set environment variables, use a profile stored
-      in C(~/.azure/credentials), or log in before you run your tasks or playbook with C(az login).
-    - Authentication is also possible using a service principal or Active Directory user.
+    - Azure authentication supports multiple mechanisms including service principals, user credentials, managed identity, workload identity federation,
+      and OIDC-based federation.
+    - Credentials can be provided via module parameters, environment variables, a credential profile stored in C(~/.azure/credentials), or an existing
+      Azure CLI login (C(az login)).
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
     - To authenticate via Active Directory user, pass ad_user and password, or set AZURE_AD_USER and
       AZURE_PASSWORD in the environment.
     - Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
-      a [default] section and keys such as subscription_id, client_id, secret and tenant or
+      a [default] section and the following keys: subscription_id, client_id, secret and tenant or
       subscription_id, ad_user and password. It is also possible to add additional profiles. Specify the profile
       by passing profile or setting AZURE_PROFILE in the environment.
     - Authentication using workload identity federation is supported without client secrets.

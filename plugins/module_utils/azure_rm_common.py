@@ -1976,7 +1976,7 @@ class AzureRMAuth(object):
         if os.environ.get('AZURE_FEDERATED_TOKEN_FILE'):
             self.log('Retrieving credentials from workload identity')
             return self._get_workload_identity_credentials(**params)
-        
+
         # c. Module parameters (SP, user, cert, etc.)
         if arg_credentials.get('client_id') or arg_credentials.get('ad_user'):
             self.log('Using credentials from module parameters')
