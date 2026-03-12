@@ -1802,7 +1802,7 @@ class AzureRMAuth(object):
         Return a credentials dict suitable for WorkloadIdentityCredential
         Use _get_env().
         """
-        tenant = params.get('tenant') or self._get_env('tenant')
+        tenant = params.get('tenant') or self._get_env('tenant') or os.environ.get('AZURE_TENANT_ID')  # allow AZURE_TENANT_ID
         client_id = params.get('client_id') or self._get_env('client_id')
         federated_token_file = params.get('federated_token_file') or self._get_env('federated_token_file')
         subscription_id = params.get('subscription_id') or self._get_env('subscription_id')
