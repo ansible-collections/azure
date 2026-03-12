@@ -231,6 +231,38 @@ jobs:
           echo "Active group number: $group_no"
         displayName: "Determine the target ansible test group number"
 
+  - job: AuthOIDCWorkloadIdentity
+    displayName: "Auth: Azure DevOps Workload Identity (OIDC)"
+    dependsOn: InitializationTest
+    timeoutInMinutes: 30
+
+    steps:
+      - checkout: self
+
+      - task: AzureCLI@2
+        displayName: "Run auth_oidc_workload_identity test"
+        inputs:
+          azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'  # WIF service connection
+          scriptType: bash
+          scriptLocation: inlineScript
+          addSpnToEnvironment: true
+          inlineScript: |
+            set -euo pipefail
+
+            echo "=== OIDC env visible only in THIS job ==="
+            env | grep -E 'AZURE_|SYSTEM_|idToken|tenantId' || true
+
+            python3 -m pip install --upgrade pip
+            python3 -m pip install ansible-core
+
+            ansible-galaxy collection install . --force
+            python3 -m pip install \
+              -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
+
+            ansible-playbook \
+              tests/integration/targets/auth_oidc_workload_identity/tasks/main.yml \
+              -vvv
+
   - job: RunTests
     dependsOn: InitializationTest
     timeoutInMinutes: 360
@@ -302,6 +334,7 @@ jobs:
     dependsOn:
       - InitializationTest
       - RunTests
+      - AuthOIDCWorkloadIdentity
     condition: always()
     variables:
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]

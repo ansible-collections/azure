@@ -1,0 +1,19 @@
+- name: Validate Azure DevOps Workload Identity auth (auth_source=workload_identity)
+  azure.azcollection.azure_rm_resourcegroup_info:
+    auth_source: workload_identity
+  register: rg_result
+
+- name: Assert workload identity returned results
+  assert:
+    that:
+      - rg_result.resourcegroups is defined
+
+- name: Validate Azure DevOps Workload Identity auth (auth_source=auto)
+  azure.azcollection.azure_rm_resourcegroup_info:
+    auth_source: auto
+  register: rg_result_auto
+
+- name: Assert workload identity returned results (auth_source=auto)
+  assert:
+    that:
+      - rg_result_auto.resourcegroups is defined
