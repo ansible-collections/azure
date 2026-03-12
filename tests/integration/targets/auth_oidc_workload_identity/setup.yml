@@ -4,4 +4,5 @@
   gather_facts: false
 
   tasks:
-    - ansible.builtin.import_tasks: tasks/main.yml
+    - name: Get RGs using OIDC for authentication
+      ansible.builtin.import_tasks: tasks/main.yml
