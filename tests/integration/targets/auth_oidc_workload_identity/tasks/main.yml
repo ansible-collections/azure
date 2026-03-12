@@ -1,6 +1,6 @@
-- name: Validate Azure DevOps Workload Identity auth (auth_source=workload_identity)
+- name: Validate Azure DevOps Workload Identity auth (auth_source=oidc)
   azure.azcollection.azure_rm_resourcegroup_info:
-    auth_source: workload_identity
+    auth_source: oidc
   register: rg_result
 
 - name: Assert workload identity returned results
