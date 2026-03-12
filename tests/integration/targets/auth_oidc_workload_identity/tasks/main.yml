@@ -4,7 +4,7 @@
   register: rg_result
 
 - name: Assert workload identity returned results
-  assert:
+  ansible.builtin.assert:
     that:
       - rg_result.resourcegroups is defined
 
@@ -14,6 +14,6 @@
   register: rg_result_auto
 
 - name: Assert workload identity returned results (auth_source=auto)
-  assert:
+  ansible.builtin.assert:
     that:
       - rg_result_auto.resourcegroups is defined

@@ -3,8 +3,5 @@
   connection: local
   gather_facts: false
 
-  collections:
-    - azure.azcollection
-
   tasks:
-    - import_tasks: tasks/main.yml
+    - ansible.builtin.import_tasks: tasks/main.yml
