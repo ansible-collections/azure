@@ -93,7 +93,7 @@ notes:
     - To authenticate via Active Directory user, pass ad_user and password, or set AZURE_AD_USER and
       AZURE_PASSWORD in the environment.
     - Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
-      a [default] section and the following keys: subscription_id, client_id, secret and tenant or
+      a [default] section and the keys, including subscription_id, client_id, secret and tenant or
       subscription_id, ad_user and password. It is also possible to add additional profiles. Specify the profile
       by passing profile or setting AZURE_PROFILE in the environment.
     - Authentication using workload identity federation is supported without client secrets.

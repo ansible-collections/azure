@@ -28,13 +28,6 @@ import configparser
 from urllib import parse as urlparse
 from ansible.module_utils.urls import open_url
 
-# Auth Precedence:
-# 1. Explicit auth_source
-# 2. GitHub Actions OIDC (ACTIONS_ID_TOKEN_REQUEST_URL)
-# 3. Module params
-# 4. Environment variables
-# 5. Azure credential file
-# 6. Azure CLI
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
         type='str',
