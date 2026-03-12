@@ -260,7 +260,7 @@ jobs:
               -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
 
             ansible-playbook \
-              tests/integration/targets/auth_oidc_workload_identity/tasks/main.yml \
+              tests/integration/targets/auth_oidc_workload_identity/setup.yml \
               -vvv
 
   - job: RunTests

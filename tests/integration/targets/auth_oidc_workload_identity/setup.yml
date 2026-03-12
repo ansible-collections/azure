@@ -1,0 +1,10 @@
+- name: Auth OIDC Workload Identity (Azure DevOps)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  collections:
+    - azure.azcollection
+
+  tasks:
+    - import_tasks: tasks/main.yml
