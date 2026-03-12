@@ -1647,12 +1647,6 @@ class AzureRMAuth(object):
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
 
-        # OIDC authentication supports two platform-driven flavours:
-        # 1. File-based workload identity (AZURE_FEDERATED_TOKEN_FILE)
-        #    Used by Azure DevOps Workload Identity Federation and AKS.
-        # 2. Request-URL based OIDC (ACTIONS_ID_TOKEN_REQUEST_URL)
-        #    Used by GitHub Actions.
-        # Platform is responsible for issuing and refreshing OIDC tokens.
         elif self.credentials.get('auth_source') == 'workload_identity' or \
             (self.credentials.get('federated_token_file') and
              self.credentials.get('client_id') and
@@ -1810,17 +1804,19 @@ class AzureRMAuth(object):
             'auth_source': 'msi'
         }
 
-    def _get_workload_identity_credentials(self, subscription_id=None, client_id=None, tenant=None,
-                                           federated_token_file=None, cloud_environment=None, **kwargs):
+    def _get_workload_identity_credentials(self, **params):
         """
         Return a credentials dict suitable for WorkloadIdentityCredential
         Use _get_env().
         """
-        tenant = tenant or self._get_env('tenant')
-        client_id = client_id or self._get_env('client_id')
-        federated_token_file = federated_token_file or self._get_env('federated_token_file')
-        subscription_id = subscription_id or self._get_env('subscription_id')
-        cloud_environment = cloud_environment or self._get_env('cloud_environment')
+        tenant = params.get('tenant') or self._get_env('tenant')
+        client_id = params.get('client_id') or self._get_env('client_id')
+        federated_token_file = params.get('federated_token_file') or self._get_env('federated_token_file')
+        subscription_id = params.get('subscription_id') or self._get_env('subscription_id')
+        cloud_environment = params.get('cloud_environment') or self._get_env('cloud_environment')
+
+        if not all([tenant, client_id, federated_token_file]):
+            self.fail("Workload Identity environment is incomplete.")
 
         return {
             'auth_source': 'workload_identity',
@@ -1852,24 +1848,27 @@ class AzureRMAuth(object):
             self.fail("OIDC token response did not include a token field.")
         return token
 
-    def _get_oidc_request_credentials(self, subscription_id=None, client_id=None, tenant=None,
-                                      oidc_request_url=None, oidc_audience=None, **kwargs):
-        tenant = tenant or self._get_env('tenant')
-        client_id = client_id or self._get_env('client_id')
-        subscription_id = subscription_id or self._get_env('subscription_id')
-        oidc_request_url = oidc_request_url or self._get_env('oidc_request_url')
+    def _get_oidc_request_credentials(self, **params):
+        tenant = params.get('tenant') or self._get_env('tenant')
+        client_id = params.get('client_id') or self._get_env('client_id')
+        subscription_id = params.get('subscription_id') or self._get_env('subscription_id')
+        oidc_request_url = params.get('oidc_request_url') or self._get_env('oidc_request_url')
         oidc_request_token = self._get_env('oidc_request_token')
-        oidc_audience = oidc_audience or os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
+        oidc_audience = params.get('oidc_audience') or os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
+        cloud_environment = params.get('cloud_environment') or self._get_env('cloud_environment')
+
+        if not all([tenant, client_id, oidc_request_url, oidc_request_token]):
+            self.fail("OIDC environment is incomplete.")
 
         return {
-            'auth_source': 'oidc',
+            "auth_source": "oidc",
             'tenant': tenant,
             'client_id': client_id,
             'subscription_id': subscription_id,
             'oidc_request_url': oidc_request_url,
             'oidc_request_token': oidc_request_token,
             'oidc_audience': oidc_audience,
-            'cloud_environment': kwargs.get('cloud_environment') or self._get_env('cloud_environment'),
+            'cloud_environment': cloud_environment,
         }
 
     def _get_azure_cli_credentials(self, subscription_id=None):
@@ -1914,13 +1913,27 @@ class AzureRMAuth(object):
             return env_credentials
 
     def _get_credentials(self, auth_source=None, **params):
+        """
+        Resolve Azure authentication credentials.
+
+        Resolution order:
+        1. Explicit auth_source (always honored)
+        2. Auto-detection (if auth_source is not specified/auto), in the following order:
+           a. GitHub Actions OIDC
+           b. Workload Identity
+           c. Module parameters
+           d. Environment variables
+           e. Default profile in ~/.azure/credentials
+           f. Azure CLI
+        """
         # Get authentication credentials.
         self.log('Getting credentials')
 
         arg_credentials = dict()
-        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
+        for attribute, env_viable in AZURE_CREDENTIAL_ENV_MAPPING.items():
             arg_credentials[attribute] = params.get(attribute, None)
 
+        # 1. Explicit auth_source (short circuit, no guess)
         if auth_source == 'msi':
             self.log('Retrieving credentials from MSI')
             return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'),
@@ -1947,59 +1960,41 @@ class AzureRMAuth(object):
 
         if auth_source == 'workload_identity':
             self.log('Retrieving credentials from workload identity')
-            return self._get_workload_identity_credentials(subscription_id=params.get('subscription_id'),
-                                                           client_id=params.get('client_id'),
-                                                           tenant=params.get('tenant'),
-                                                           federated_token_file=params.get('federated_token_file'),
-                                                           cloud_environment=params.get('cloud_environment'))
+            return self._get_workload_identity_credentials(**params)
 
         if auth_source == 'oidc':
             self.log('Retrieving credentials from OIDC request')
             return self._get_oidc_request_credentials(**params)
 
-        # auto, precedence: module parameters -> environment variables -> default profile in ~/.azure/credentials -> azure cli
-        # try module params
-        if arg_credentials['profile'] is not None:
-            self.log('Retrieving credentials with profile parameter.')
-            credentials = self._get_profile(arg_credentials['profile'])
-            return credentials
-
+        # 2. Auto-detection (OIDC -> Workload Identity -> Module Params -> Env -> Credential file -> Azure CLI)
+        # a. GitHub Actions OIDC
         if os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN'):
-            env_credentials = self._get_env_credentials() or {}
+            self.log('Retrieving credentials from OIDC request')
+            return self._get_oidc_request_credentials(**params)
 
-            arg_credentials['auth_source'] = 'oidc'
-            arg_credentials['oidc_request_url'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL')
-            arg_credentials['oidc_request_token'] = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN')
-            if not arg_credentials.get('oidc_audience'):
-                arg_credentials['oidc_audience'] = os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
-
-                for k in ('tenant', 'client_id', 'subscription_id', 'cloud_environment'):
-                    if not arg_credentials.get(k):
-                        arg_credentials[k] = env_credentials.get(k)
-
+        # b. Workload Identity
+        if os.environ.get('AZURE_FEDERATED_TOKEN_FILE'):
+            self.log('Retrieving credentials from workload identity')
+            return self._get_workload_identity_credentials(**params)
+        
+        # c. Module parameters (SP, user, cert, etc.)
+        if arg_credentials.get('client_id') or arg_credentials.get('ad_user'):
+            self.log('Using credentials from module parameters')
             return arg_credentials
 
-        if arg_credentials['client_id'] or arg_credentials['ad_user']:
-            # If workload identity env var is present, allow federated auth even when only client_id/tenant were passed
-            if not arg_credentials.get('federated_token_file'):
-                arg_credentials['federated_token_file'] = os.environ.get('AZURE_FEDERATED_TOKEN_FILE')
-            if arg_credentials.get('federated_token_file') and arg_credentials.get('tenant') and arg_credentials.get('client_id'):
-                arg_credentials['auth_source'] = 'workload_identity'
-            self.log('Received credentials from parameters.')
-            return arg_credentials
-
-        # try environment
+        # d. Environment variables
         env_credentials = self._get_env_credentials()
         if env_credentials:
             self.log('Received credentials from env.')
             return env_credentials
 
-        # try default profile from ~./azure/credentials
+        # e. Default profile from ~/.azure/credentials
         default_credentials = self._get_profile()
         if default_credentials:
             self.log('Retrieved default profile credentials from ~/.azure/credentials.')
             return default_credentials
 
+        # f. Azure CLI
         try:
             self.log('Retrieving credentials from AzureCLI profile')
             cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
