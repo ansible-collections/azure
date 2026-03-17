@@ -1,8 +1,0 @@
-- name: Auth OIDC Workload Identity (Azure DevOps)
-  hosts: localhost
-  connection: local
-  gather_facts: false
-
-  tasks:
-    - name: Get RGs using OIDC for authentication
-      ansible.builtin.import_tasks: tasks/main.yml

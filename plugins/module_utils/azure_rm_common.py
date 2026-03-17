@@ -31,7 +31,7 @@ from ansible.module_utils.urls import open_url
 AZURE_COMMON_ARGS = dict(
     auth_source=dict(
         type='str',
-        choices=['auto', 'cli', 'env', 'credential_file', 'msi', 'workload_identity', 'oidc'],
+        choices=['auto', 'cli', 'env', 'credential_file', 'msi', 'oidc'],
         fallback=(env_fallback, ['ANSIBLE_AZURE_AUTH_SOURCE']),
         default="auto"
     ),
@@ -51,7 +51,8 @@ AZURE_COMMON_ARGS = dict(
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
     disable_instance_discovery=dict(type='bool', default=False),
-    federated_token_file=dict(type='path', no_log=True),
+    oidc_token_file_path=dict(type='path', no_log=True),
+    oidc_token=dict(type='str', no_log=True),
     oidc_request_url=dict(type='str', no_log=True),
     oidc_audience=dict(type='str', default='api://AzureADTokenExchange'),
 )
@@ -70,9 +71,9 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
     thumbprint='AZURE_THUMBPRINT',
     disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY',
-    federated_token_file='AZURE_FEDERATED_TOKEN_FILE',
-    oidc_request_url='ACTIONS_ID_TOKEN_REQUEST_URL',
-    oidc_request_token='ACTIONS_ID_TOKEN_REQUEST_TOKEN'
+    oidc_token_file_path='AZURE_FEDERATED_TOKEN_FILE',
+    oidc_request_url=('ACTIONS_ID_TOKEN_REQUEST_URL', 'SYSTEM_OIDCREQUESTURI'),
+    oidc_request_token=('ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'SYSTEM_ACCESSTOKEN'),
 )
 
 
@@ -1640,38 +1641,70 @@ class AzureRMAuth(object):
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
 
-        elif self.credentials.get('auth_source') == 'workload_identity' or \
-            (self.credentials.get('federated_token_file') and
-             self.credentials.get('client_id') and
-             self.credentials.get('tenant')):
-            self.azure_credential_track2 = WorkloadIdentityCredential(tenant_id=self.credentials['tenant'],
-                                                                      client_id=self.credentials['client_id'],
-                                                                      token_file_path=self.credentials['federated_token_file'])
-
         elif self.credentials.get('auth_source') == 'oidc':
-            missing = []
-            for k in ('tenant', 'client_id', 'oidc_request_url', 'oidc_request_token'):
-                if not self.credentials.get(k):
-                    missing.append(k)
-            if missing:
-                self.fail(
-                    "OIDC authentication selected but missing: {0}. "
-                    "GitHub Actions must provide ACTIONS_ID_TOKEN_REQUEST_URL and ACTIONS_ID_TOKEN_REQUEST_TOKEN."
-                    .format(", ".join(missing))
-                )
+            mode = self.credentials.get('oidc_mode')
 
-            request_url = self.credentials['oidc_request_url']
-            request_token = self.credentials['oidc_request_token']
+            # tenant/client_id required across all OIDC modes
+            missing = [k for k in ('tenant', 'client_id') if not self.credentials.get(k)]
+            if missing:
+                self.fail(f"OIDC authentication selected but missing: {', '.join(missing)}")
+
+            tenant_id = self.credentials['tenant']
+            client_id = self.credentials['client_id']
             audience = self.credentials.get('oidc_audience') or 'api://AzureADTokenExchange'
 
-            def _get_assertion():
-                return self._fetch_oidc_token_from_request_endpoint(request_url, request_token, audience)
+            if mode == 'request':
+                # Request endpoint flow (GitHub Actions / Azure DevOps)
+                missing = [k for k in ('oidc_request_url', 'oidc_request_token') if not self.credentials.get(k)]
+                if missing:
+                    self.fail(
+                        "OIDC request-endpoint mode selected but missing: {0}. "
+                        "GitHub Actions: ACTIONS_ID_TOKEN_REQUEST_URL / ACTIONS_ID_TOKEN_REQUEST_TOKEN. "
+                        "Azure DevOps: SYSTEM_OIDCREQUESTURI / SYSTEM_ACCESSTOKEN."
+                        .format(", ".join(missing))
+                    )
 
-            self.azure_credential_track2 = ClientAssertionCredential(
-                tenant_id=self.credentials['tenant'],
-                client_id=self.credentials['client_id'],
-                func=_get_assertion
-            )
+                request_url = self.credentials['oidc_request_url']
+                request_token = self.credentials['oidc_request_token']
+
+                def _get_assertion():
+                    return self._fetch_oidc_token_from_request_endpoint(request_url, request_token, audience)
+
+                self.azure_credential_track2 = ClientAssertionCredential(
+                    tenant_id=tenant_id,
+                    client_id=client_id,
+                    func=_get_assertion
+                )
+
+            elif mode == 'file':
+                # Token file flow (AKS). Azure SDK expects a token file path. [3](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.workloadidentitycredential?view=azure-python)
+                token_file_path = self.credentials.get('oidc_token_file_path')
+                if not token_file_path:
+                    self.fail(
+                        "OIDC token-file mode selected but missing oidc_token_file_path "
+                        "(expected AZURE_FEDERATED_TOKEN_FILE or module parameter)."
+                    )
+
+                self.azure_credential_track2 = WorkloadIdentityCredential(
+                    tenant_id=tenant_id,
+                    client_id=client_id,
+                    token_file_path=token_file_path
+                )
+
+            elif mode == 'token':
+                # Plain token flow (generic OIDC providers)
+                tok = self.credentials.get('oidc_token')
+                if not tok:
+                    self.fail("OIDC plain-token mode selected but missing oidc_token.")
+
+                def _get_assertion():
+                    return tok
+
+                self.azure_credential_track2 = ClientAssertionCredential(
+                    tenant_id=tenant_id,
+                    client_id=client_id,
+                    func=_get_assertion
+                )
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
@@ -1735,7 +1768,16 @@ class AzureRMAuth(object):
 
     def _get_env(self, module_key, default=None):
         "Read envvar matching module parameter"
-        return os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING[module_key], default)
+        keys = AZURE_CREDENTIAL_ENV_MAPPING.get(module_key)
+        if not keys:
+            return default
+        if isinstance(keys, str):
+            keys = (keys,)
+        for k in keys:
+            v = os.environ.get(k)
+            if v not in (None, ''):
+                return v
+        return default
 
     def _get_profile(self, profile="default"):
         path = expanduser("~/.azure/credentials")
@@ -1797,72 +1839,102 @@ class AzureRMAuth(object):
             'auth_source': 'msi'
         }
 
-    def _get_workload_identity_credentials(self, **params):
-        """
-        Return a credentials dict suitable for WorkloadIdentityCredential
-        Use _get_env().
-        """
-        tenant = params.get('tenant') or self._get_env('tenant') or os.environ.get('AZURE_TENANT_ID')  # allow AZURE_TENANT_ID
-        client_id = params.get('client_id') or self._get_env('client_id')
-        federated_token_file = params.get('federated_token_file') or self._get_env('federated_token_file')
-        subscription_id = params.get('subscription_id') or self._get_env('subscription_id')
-        cloud_environment = params.get('cloud_environment') or self._get_env('cloud_environment')
-
-        if not all([tenant, client_id, federated_token_file]):
-            self.fail("Workload Identity environment is incomplete.")
-
-        return {
-            'auth_source': 'workload_identity',
-            'tenant': tenant,
-            'client_id': client_id,
-            'federated_token_file': federated_token_file,
-            'subscription_id': subscription_id,
-            'cloud_environment': cloud_environment
-        }
-
     def _fetch_oidc_token_from_request_endpoint(self, request_url, request_token, audience):
         parsed = urlparse.urlparse(request_url)
-        q = urlparse.parse_qs(parsed.query)
-        q.setdefault('audience', [audience])
-        q.setdefault('api-version', ['2.0'])
-
-        request_url = urlparse.urlunparse(parsed._replace(query=urlparse.urlencode(q, doseq=True)))
 
         headers = {
-            "Authorization": "Bearer {0}".format(request_token),
+            "Authorization": f"Bearer {request_token}",
             "Accept": "application/json",
+            "Content-Type": "application/json",
         }
+
+        # Heuristic: Azure DevOps OIDC request URI is a REST endpoint for oidctoken
+        # documented as POST .../oidctoken?api-version=7.1-preview.1 returning "oidcToken" 
+        is_ado = "dev.azure.com" in parsed.netloc or "oidctoken" in parsed.path or "SYSTEM_OIDCREQUESTURI" in request_url
+
+        if is_ado:
+            q = urlparse.parse_qs(parsed.query)
+            q.setdefault("api-version", ["7.1-preview.1"])
+            request_url = urlparse.urlunparse(parsed._replace(query=urlparse.urlencode(q, doseq=True)))
+
+            # ADO expects POST with empty body (Content-Length: 0 works too)
+            resp = open_url(request_url, method="POST", headers=headers, data=b"")
+            payload = json.loads(resp.read().decode("utf-8"))
+            token = payload.get("oidcToken") or payload.get("value") or payload.get("token") or payload.get("id_token")
+            if not token:
+                self.fail("OIDC token response did not include an oidcToken/token field.")
+            return token
+
+        # GitHub Actions-style OIDC request endpoint (GET; query includes audience + api-version=2.0)
+        q = urlparse.parse_qs(parsed.query)
+        q.setdefault("audience", [audience])
+        q.setdefault("api-version", ["2.0"])
+        request_url = urlparse.urlunparse(parsed._replace(query=urlparse.urlencode(q, doseq=True)))
 
         resp = open_url(request_url, method="GET", headers=headers)
         payload = json.loads(resp.read().decode("utf-8"))
-
         token = payload.get("value") or payload.get("token") or payload.get("id_token")
         if not token:
             self.fail("OIDC token response did not include a token field.")
-        return token
 
-    def _get_oidc_request_credentials(self, **params):
+    def _get_oidc_credentials(self, **params):
+        """
+        Unified OIDC credentials resolver:
+        - request endpoint: oidc_request_url + oidc_request_token (GHA/ADO)
+        - token file: oidc_token_file_path (AKS)
+        - plain token: oidc_token (generic)
+        """
+
+        # Common fields
         tenant = params.get('tenant') or self._get_env('tenant')
         client_id = params.get('client_id') or self._get_env('client_id')
         subscription_id = params.get('subscription_id') or self._get_env('subscription_id')
-        oidc_request_url = params.get('oidc_request_url') or self._get_env('oidc_request_url')
-        oidc_request_token = self._get_env('oidc_request_token')
-        oidc_audience = params.get('oidc_audience') or os.environ.get('ACTIONS_ID_TOKEN_AUDIENCE') or 'api://AzureADTokenExchange'
         cloud_environment = params.get('cloud_environment') or self._get_env('cloud_environment')
+        audience = params.get('oidc_audience') or self._get_env('oidc_audience') or 'api://AzureADTokenExchange'
 
-        if not all([tenant, client_id, oidc_request_url, oidc_request_token]):
-            self.fail("OIDC environment is incomplete.")
+        token_file = (params.get('oidc_token_file_path') or self._get_env('oidc_token_file_path'))
 
-        return {
-            "auth_source": "oidc",
+        # Request endpoint flow
+        request_url = params.get('oidc_request_url') or self._get_env('oidc_request_url')
+        request_token = params.get('oidc_request_token') or self._get_env('oidc_request_token')
+
+        # Plain token flow
+        oidc_token = params.get('oidc_token') or self._get_env('oidc_token')
+
+        # Decide mode (prefer explicit > request endpoint > token file > plain token)
+        mode = None
+        if request_url and request_token:
+            mode = 'request'
+        elif token_file:
+            mode = 'file'
+        elif oidc_token:
+            mode = 'token'
+
+        if not mode:
+            self.fail("OIDC authentication selected but no OIDC token source was provided "
+                      "(expected request endpoint, token file path, or plain token).")
+
+        # tenant + client_id are required for all OIDC flows
+        if not tenant or not client_id:
+            self.fail("OIDC authentication selected but tenant/client_id missing.")
+
+        cred = {
+            'auth_source': 'oidc',
             'tenant': tenant,
             'client_id': client_id,
             'subscription_id': subscription_id,
-            'oidc_request_url': oidc_request_url,
-            'oidc_request_token': oidc_request_token,
-            'oidc_audience': oidc_audience,
             'cloud_environment': cloud_environment,
+            'oidc_audience': audience,
+            'oidc_mode': mode,
         }
+        if mode == 'request':
+            cred.update({'oidc_request_url': request_url, 'oidc_request_token': request_token})
+        elif mode == 'file':
+            cred.update({'oidc_token_file_path': token_file})
+        else:
+            cred.update({'oidc_token': oidc_token})
+
+        return cred
 
     def _get_azure_cli_credentials(self, subscription_id=None):
         subscription_id = subscription_id or self._get_env('subscription_id')
@@ -1893,17 +1965,17 @@ class AzureRMAuth(object):
 
     def _get_env_credentials(self):
         env_credentials = dict()
-        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
-            env_credentials[attribute] = os.environ.get(env_variable, None)
 
-        if env_credentials['profile']:
-            credentials = self._get_profile(env_credentials['profile'])
-            return credentials
+        for attribute in AZURE_CREDENTIAL_ENV_MAPPING.keys():
+            env_credentials[attribute] = self._get_env(attribute, None)
+
+        if env_credentials.get('profile'):
+            return self._get_profile(env_credentials['profile'])
 
         if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
             return None
-        else:
-            return env_credentials
+
+        return env_credentials
 
     def _get_credentials(self, auth_source=None, **params):
         """
@@ -1912,12 +1984,11 @@ class AzureRMAuth(object):
         Resolution order:
         1. Explicit auth_source (always honored)
         2. Auto-detection (if auth_source is not specified/auto), in the following order:
-           a. GitHub Actions OIDC
-           b. Workload Identity
-           c. Module parameters
-           d. Environment variables
-           e. Default profile in ~/.azure/credentials
-           f. Azure CLI
+           a. OIDC
+           b. Module parameters
+           c. Environment variables
+           d. Default profile in ~/.azure/credentials
+           e. Azure CLI
         """
         # Get authentication credentials.
         self.log('Getting credentials')
@@ -1951,43 +2022,38 @@ class AzureRMAuth(object):
             default_credentials = self._get_profile(profile)
             return default_credentials
 
-        if auth_source == 'workload_identity':
-            self.log('Retrieving credentials from workload identity')
-            return self._get_workload_identity_credentials(**params)
-
         if auth_source == 'oidc':
-            self.log('Retrieving credentials from OIDC request')
-            return self._get_oidc_request_credentials(**params)
+            self.log('Retrieving credentials from OIDC (unified)')
+            return self._get_oidc_credentials(**params)
 
-        # 2. Auto-detection (OIDC -> Workload Identity -> Module Params -> Env -> Credential file -> Azure CLI)
-        # a. GitHub Actions OIDC
-        if os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN'):
-            self.log('Retrieving credentials from OIDC request')
-            return self._get_oidc_request_credentials(**params)
+        # 2. Auto-detection (OIDC -> Module Params -> Env -> Credential file -> Azure CLI)
+        # a. OIDC
+        if ((os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN')) or
+            (os.environ.get('SYSTEM_OIDCREQUESTURI') and os.environ.get('SYSTEM_ACCESSTOKEN')) or
+            os.environ.get('AZURE_FEDERATED_TOKEN_FILE') or
+            params.get('oidc_token_file_path') or params.get('federated_token_file') or
+            params.get('oidc_token')):
+            self.log('Auto-detected OIDC (unified)')
+            return self._get_oidc_credentials(**params)
 
-        # b. Workload Identity
-        if os.environ.get('AZURE_FEDERATED_TOKEN_FILE'):
-            self.log('Retrieving credentials from workload identity')
-            return self._get_workload_identity_credentials(**params)
-
-        # c. Module parameters (SP, user, cert, etc.)
+        # b. Module parameters (SP, user, cert, etc.)
         if arg_credentials.get('client_id') or arg_credentials.get('ad_user'):
             self.log('Using credentials from module parameters')
             return arg_credentials
 
-        # d. Environment variables
+        # c. Environment variables
         env_credentials = self._get_env_credentials()
         if env_credentials:
             self.log('Received credentials from env.')
             return env_credentials
 
-        # e. Default profile from ~/.azure/credentials
+        # d. Default profile from ~/.azure/credentials
         default_credentials = self._get_profile()
         if default_credentials:
             self.log('Retrieved default profile credentials from ~/.azure/credentials.')
             return default_credentials
 
-        # f. Azure CLI
+        # e. Azure CLI
         try:
             self.log('Retrieving credentials from AzureCLI profile')
             cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
