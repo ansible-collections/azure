@@ -51,9 +51,11 @@ AZURE_COMMON_ARGS = dict(
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
     disable_instance_discovery=dict(type='bool', default=False),
+
     oidc_token_file_path=dict(type='path', no_log=True),
     oidc_token=dict(type='str', no_log=True),
     oidc_request_url=dict(type='str', no_log=True),
+    oidc_request_token=dict(type='str', no_log=True)
     oidc_audience=dict(type='str', default='api://AzureADTokenExchange'),
 )
 
