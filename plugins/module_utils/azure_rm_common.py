@@ -1679,7 +1679,8 @@ class AzureRMAuth(object):
                 )
 
             elif mode == 'file':
-                # Token file flow (AKS). Azure SDK expects a token file path. [3](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.workloadidentitycredential?view=azure-python)
+                # Token file flow (AKS). Azure SDK expects a token file path.
+                # (https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.workloadidentitycredential?view=azure-python)
                 token_file_path = self.credentials.get('oidc_token_file_path')
                 if not token_file_path:
                     self.fail(
@@ -1851,7 +1852,7 @@ class AzureRMAuth(object):
         }
 
         # Heuristic: Azure DevOps OIDC request URI is a REST endpoint for oidctoken
-        # documented as POST .../oidctoken?api-version=7.1-preview.1 returning "oidcToken" 
+        # documented as POST .../oidctoken?api-version=7.1-preview.1 returning "oidcToken"
         is_ado = "dev.azure.com" in parsed.netloc or "oidctoken" in parsed.path or "SYSTEM_OIDCREQUESTURI" in request_url
 
         if is_ado:
@@ -2032,9 +2033,8 @@ class AzureRMAuth(object):
         # a. OIDC
         if ((os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL') and os.environ.get('ACTIONS_ID_TOKEN_REQUEST_TOKEN')) or
             (os.environ.get('SYSTEM_OIDCREQUESTURI') and os.environ.get('SYSTEM_ACCESSTOKEN')) or
-            os.environ.get('AZURE_FEDERATED_TOKEN_FILE') or
-            params.get('oidc_token_file_path') or params.get('federated_token_file') or
-            params.get('oidc_token')):
+            os.environ.get('AZURE_FEDERATED_TOKEN_FILE') or params.get('oidc_token_file_path') or
+           params.get('federated_token_file') or params.get('oidc_token')):
             self.log('Auto-detected OIDC (unified)')
             return self._get_oidc_credentials(**params)
 
