@@ -1851,16 +1851,13 @@ class AzureRMAuth(object):
             "Content-Type": "application/json",
         }
 
-        # Heuristic: Azure DevOps OIDC request URI is a REST endpoint for oidctoken
-        # documented as POST .../oidctoken?api-version=7.1-preview.1 returning "oidcToken"
-        is_ado = "dev.azure.com" in parsed.netloc or "oidctoken" in parsed.path or "SYSTEM_OIDCREQUESTURI" in request_url
+        is_ado = "dev.azure.com" in parsed.netloc or "oidctoken" in parsed.path
 
         if is_ado:
             q = urlparse.parse_qs(parsed.query)
             q.setdefault("api-version", ["7.1-preview.1"])
             request_url = urlparse.urlunparse(parsed._replace(query=urlparse.urlencode(q, doseq=True)))
 
-            # ADO expects POST with empty body (Content-Length: 0 works too)
             resp = open_url(request_url, method="POST", headers=headers, data=b"")
             payload = json.loads(resp.read().decode("utf-8"))
             token = payload.get("oidcToken") or payload.get("value") or payload.get("token") or payload.get("id_token")
@@ -1868,7 +1865,7 @@ class AzureRMAuth(object):
                 self.fail("OIDC token response did not include an oidcToken/token field.")
             return token
 
-        # GitHub Actions-style OIDC request endpoint (GET; query includes audience + api-version=2.0)
+        # GitHub Actions-style OIDC request endpoint
         q = urlparse.parse_qs(parsed.query)
         q.setdefault("audience", [audience])
         q.setdefault("api-version", ["2.0"])
@@ -1879,6 +1876,7 @@ class AzureRMAuth(object):
         token = payload.get("value") or payload.get("token") or payload.get("id_token")
         if not token:
             self.fail("OIDC token response did not include a token field.")
+        return token
 
     def _get_oidc_credentials(self, **params):
         """
