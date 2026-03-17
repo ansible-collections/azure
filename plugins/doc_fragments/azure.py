@@ -91,9 +91,8 @@ options:
               environment variable C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if the resource is granted
               access to more than one subscription, otherwise the first subscription is chosen.
             - The C(msi) was added in Ansible 2.6.
-            - When set to C(workload_identity), authentication uses a federated OIDC token file, typically provided by Azure DevOps Workload Identity
-              or AKS.
-            - When set to C(oidc), authentication uses OIDC request URL and request token, typically provided by GitHub Actions.
+            - When set to C(oidc), authentication uses OpenID Connect (OIDC) federation. This supports request-endpoint based
+              OIDC (GitHub Actions, Azure DevOps) and token-file based OIDC (Azure Kubernetes Service workload identity).
         type: str
         default: auto
         choices:
@@ -102,7 +101,6 @@ options:
             - credential_file
             - env
             - msi
-            - workload_identity
             - oidc
         version_added: '0.0.1'
     api_profile:
@@ -137,17 +135,17 @@ options:
     federated_token_file:
         description:
             - Path to a file containing a federated OIDC token.
-            - Used with C(auth_source=workload_identity).
-            - This file is typically provided by Azure DevOps Workload Identity or AKS.
-            - Can also be set via the C(AZURE_FEDERATED_TOKEN_FILE) environment variable.
+            - Used with C(auth_source=oidc) when authenticating via OIDC token-file mode
+              (for example, Azure Kubernetes Service workload identity).
+            - This file is typically provided automatically via the C(AZURE_FEDERATED_TOKEN_FILE) environment variable.
         type: path
         version_added: '3.16.0'
     oidc_request_url:
         description:
             - OIDC request URL used to retrieve a short-lived OIDC token.
-            - Used with C(auth_source=oidc).
-            - This value is typically provided by GitHub Actions via the
-              C(ACTIONS_ID_TOKEN_REQUEST_URL) environment variable.
+            - Used with C(auth_source=oidc) in request-endpoint mode.
+            - This value is typically provided automatically by GitHub Actions via C(ACTIONS_ID_TOKEN_REQUEST_URL)
+              and Azure DevOps via C(SYSTEM_OIDCREQUESTURI)
         type: str
         version_added: '3.16.0'
     oidc_audience:
@@ -159,6 +157,14 @@ options:
         type: str
         default: api://AzureADTokenExchange
         version_added: '3.16.0'
+    oidc_request_token:
+        description:
+            - OIDC request token used to authorize calls to the OIDC request endpoint.
+            - Used with C(auth_source=oidc) in request-endpoint mode.
+            - This value is typically provided automatically by GitHub Actions via C(ACTIONS_ID_TOKEN_REQUEST_TOKEN)
+              and Azure DevOps via C(SYSTEM_ACCESSTOKEN)
+        type: str
+        version_added: '3.16.0'
 requirements:
     - python >= 2.7
     - The host that executes this module must have the azure.azcollection collection installed via galaxy
@@ -166,8 +172,7 @@ requirements:
     - Full installation instructions may be found https://galaxy.ansible.com/azure/azcollection
 
 notes:
-    - Azure authentication supports multiple mechanisms including service principals, user credentials, managed identity, workload identity federation,
-      and OIDC-based federation.
+    - Azure authentication supports multiple mechanisms including service principals, user credentials, managed identity and OIDC-based federation.
     - Credentials can be provided via module parameters, environment variables, a credential profile stored in C(~/.azure/credentials), or an existing
       Azure CLI login (C(az login)).
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
@@ -178,12 +183,11 @@ notes:
       a [default] section and the keys, including subscription_id, client_id, secret and tenant or
       subscription_id, ad_user and password. It is also possible to add additional profiles. Specify the profile
       by passing profile or setting AZURE_PROFILE in the environment.
-    - Authentication using workload identity federation is supported without client secrets.
-    - To authenticate using Azure DevOps Workload Identity Federation or AKS, set C(auth_source=workload_identity) and ensure the C(AZURE_CLIENT_ID),
-      C(AZURE_TENANT), C(AZURE_SUBSCRIPTION_ID), and C(AZURE_FEDERATED_TOKEN_FILE) are present.
-    - To authenticate using GitHub Actions OIDC, set C(auth_source=oidc) and ensure the C(ACTIONS_ID_TOKEN_REQUEST_URL)
-      and C(ACTIONS_ID_TOKEN_REQUEST_TOKEN), along with C(AZURE_CLIENT_ID), C(AZURE_TENANT), and C(AZURE_SUBSCRIPTION_ID) are present.
+    - To authenticate using OIDC, set C(auth_source=oidc).
+    - OIDC federation supports multiple environments, GitHub Actions via OIDC request endpoint, Azure DevOps Pipelines via OIDC request endpoint or
+      Azure Kubernetes Service via OIDC token file.
     - The OIDC token is exchanged for an Azure access token at runtime and is not persisted.
+    - No client secrets are required when using OIDC-based authentication.
 
 seealso:
     - name: Sign in with Azure CLI

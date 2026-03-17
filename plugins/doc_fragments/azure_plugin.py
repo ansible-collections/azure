@@ -53,8 +53,8 @@ options:
         description:
             - Controls the source of the credentials to use for Azure authentication.
             - Can also be set via the C(ANSIBLE_AZURE_AUTH_SOURCE) environment variable.
-            - When set to C(auto) (the default) the precedence is automatically detected following this order, GitHub Actions OIDC ->
-              Workload Identity Federation -> Module parameters -> Environment variables -> Credential file C(~/.azure/credentials) -> Azure CLI.
+            - When set to C(auto) (the default) the precedence is automatically detected following this order, OIDC -> Module parameters ->
+              Environment variables -> Credential file C(~/.azure/credentials) -> Azure CLI.
             - When set to C(env), the credentials will be read from the environment variables
             - When set to C(credential_file), credentials will be read from the profile in C(~/.azure/credentials).
             - When set to C(cli), the credentials will be sources from the Azure CLI profile. C(subscription_id) or the environment variable
@@ -63,9 +63,8 @@ options:
             - When set to C(msi), the host machine must be an azure resource with an enabled MSI extension. C(subscription_id) or the
               environment variable C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if the resource is granted
               access to more than one subscription, otherwise the first subscription is chosen. Added in Ansible 2.6.
-            - When set to C(workload_identity), authentication uses a federated OIDC token file, typically provided by Azure DevOps Workload Identity
-              or AKS.
-            - When set to C(oidc), authentication uses OIDC request URL and request token, typically provided by GitHub Actions.
+            - When set to C(oidc), authentication uses OpenID Connect (OIDC) federation. This supports request-endpoint based
+              OIDC (GitHub Actions, Azure DevOps) and token-file based OIDC (Azure Kubernetes Service workload identity).
         type: str
         default: auto
         choices:
@@ -73,7 +72,6 @@ options:
         - cli
         - env
         - msi
-        - workload_identity
         - oidc
         env:
           - name: ANSIBLE_AZURE_AUTH_SOURCE
@@ -84,8 +82,7 @@ requirements:
     - Full installation instructions may be found https://galaxy.ansible.com/azure/azcollection
 
 notes:
-    - Azure authentication supports multiple mechanisms including service principals, user credentials, managed identity, workload identity federation,
-      and OIDC-based federation.
+    - Azure authentication supports multiple mechanisms including service principals, user credentials, managed identity and OIDC-based federation.
     - Credentials can be provided via module parameters, environment variables, a credential profile stored in C(~/.azure/credentials), or an existing
       Azure CLI login (C(az login)).
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
@@ -96,12 +93,11 @@ notes:
       a [default] section and the keys, including subscription_id, client_id, secret and tenant or
       subscription_id, ad_user and password. It is also possible to add additional profiles. Specify the profile
       by passing profile or setting AZURE_PROFILE in the environment.
-    - Authentication using workload identity federation is supported without client secrets.
-    - To authenticate using Azure DevOps Workload Identity Federation or AKS, set C(auth_source=workload_identity) and ensure the C(AZURE_CLIENT_ID),
-      C(AZURE_TENANT), C(AZURE_SUBSCRIPTION_ID), and C(AZURE_FEDERATED_TOKEN_FILE) are present.
-    - To authenticate using GitHub Actions OIDC, set C(auth_source=oidc) and ensure the C(ACTIONS_ID_TOKEN_REQUEST_URL)
-      and C(ACTIONS_ID_TOKEN_REQUEST_TOKEN), along with C(AZURE_CLIENT_ID), C(AZURE_TENANT), and C(AZURE_SUBSCRIPTION_ID) are present.
+    - To authenticate using OIDC, set C(auth_source=oidc).
+    - OIDC federation supports multiple environments, GitHub Actions via OIDC request endpoint, Azure DevOps Pipelines via OIDC request endpoint or
+      Azure Kubernetes Service via OIDC token file.
     - The OIDC token is exchanged for an Azure access token at runtime and is not persisted.
+    - No client secrets are required when using OIDC-based authentication.
 
 seealso:
     - name: Sign in with Azure CLI
