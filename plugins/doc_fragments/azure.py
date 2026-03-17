@@ -132,7 +132,7 @@ options:
             - Required if I(x509_certificate_path) is defined.
         type: str
         version_added: '1.14.0'
-    federated_token_file:
+    oidc_token_file_path:
         description:
             - Path to a file containing a federated OIDC token.
             - Used with C(auth_source=oidc) when authenticating via OIDC token-file mode
@@ -165,6 +165,13 @@ options:
               and Azure DevOps via C(SYSTEM_ACCESSTOKEN)
         type: str
         version_added: '3.16.0'
+    oidc_token:
+        description:
+            - Plain OIDC token (JWT) used directly for authentication.
+            - Used with C(auth_source=oidc) in token mode.
+            - This is an advanced option intended for custom OIDC providers or testing scenarios.
+        type: str
+        version_added: '3.16.0'
 requirements:
     - python >= 2.7
     - The host that executes this module must have the azure.azcollection collection installed via galaxy
@@ -185,7 +192,7 @@ notes:
       by passing profile or setting AZURE_PROFILE in the environment.
     - To authenticate using OIDC, set C(auth_source=oidc).
     - OIDC federation supports multiple environments, GitHub Actions via OIDC request endpoint, Azure DevOps Pipelines via OIDC request endpoint or
-      Azure Kubernetes Service via OIDC token file.
+      Azure Kubernetes Service via OIDC token file or raw token string via OIDC token parameter.
     - The OIDC token is exchanged for an Azure access token at runtime and is not persisted.
     - No client secrets are required when using OIDC-based authentication.
 

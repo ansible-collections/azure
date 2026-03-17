@@ -95,7 +95,7 @@ notes:
       by passing profile or setting AZURE_PROFILE in the environment.
     - To authenticate using OIDC, set C(auth_source=oidc).
     - OIDC federation supports multiple environments, GitHub Actions via OIDC request endpoint, Azure DevOps Pipelines via OIDC request endpoint or
-      Azure Kubernetes Service via OIDC token file.
+      Azure Kubernetes Service via OIDC token file or raw token string via OIDC token parameter.
     - The OIDC token is exchanged for an Azure access token at runtime and is not persisted.
     - No client secrets are required when using OIDC-based authentication.
 
