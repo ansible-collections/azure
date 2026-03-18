@@ -280,6 +280,10 @@ jobs:
           test.key: '19'
 
     steps:
+      # oidc
+      - checkout: self
+        persistCredentials: true
+
       - task: UsePythonVersion@0
         displayName: 'Use Python ${{ parameters.PYTHON_VER }}'
         inputs:
