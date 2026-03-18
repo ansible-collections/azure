@@ -235,7 +235,6 @@ jobs:
     dependsOn: InitializationTest
     timeoutInMinutes: 360
     variables:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)  # oidc
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.InitializationTest.outputs['setvar.resource_group_secondary'] ]
     strategy:
@@ -280,35 +279,44 @@ jobs:
           test.key: '19'
 
     steps:
-      # oidc
-      - checkout: self
-        persistCredentials: true
-
       - task: UsePythonVersion@0
         displayName: 'Use Python ${{ parameters.PYTHON_VER }}'
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
 
-      # oidc
-      - bash: |
-          echo "SYSTEM_OIDCREQUESTURI is: ${SYSTEM_OIDCREQUESTURI:+set}"
-          echo "SYSTEM_ACCESSTOKEN is: ${SYSTEM_ACCESSTOKEN:+set}"
-        displayName: "DEBUG: ADO OIDC env"
+      # - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
+      #   env:
+      #     SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
+      #     AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+      #     AZURE_SECRET: $(AZURE_SECRET)
+      #     AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+      #     AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
+      #     AZURE_TENANT: $(AZURE_TENANT)
+      #     AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
+      #     AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
+      #     RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
+      #     RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+      #   displayName: 'Running Tests'
 
-      - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
+      # oidc
+      - task: AzureCLI@2
+        displayName: 'Run Ansible tests via ADO OIDC'
+        inputs:
+          azureSubscription: $(SUBSCRIPTION_FULL_NAME)  # WIF-enabled service connection
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            set -e
+            echo "Running Ansible under AzureCLI@2 (OIDC-enabled)"
+            tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
           SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
           AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-          # AZURE_SECRET: $(AZURE_SECRET)
           AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
-          AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
           AZURE_TENANT: $(AZURE_TENANT)
-          AZURE_PRINCIPAL_ID: $(AZURE_PRINCIPAL_ID)
-          AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-          ANSIBLE_AZURE_AUTH_SOURCE: "oidc"  # oidc
-        displayName: 'Running Tests'
+          ANSIBLE_AZURE_AUTH_SOURCE: oidc
 
   - job: CleanupResourceGroups
     dependsOn:
