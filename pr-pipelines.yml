@@ -316,7 +316,6 @@ jobs:
           AZURE_TENANT: $(AZURE_TENANT)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-          ANSIBLE_AZURE_AUTH_SOURCE: oidc
 
   - job: CleanupResourceGroups
     dependsOn:
