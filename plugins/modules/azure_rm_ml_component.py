@@ -9,9 +9,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_ml_component
 version_added: "3.16.0"
-short_description: Create, Update or Delete an Azure Machine Learning Component
+short_description: Create, Archive or Restore an Azure Machine Learning Component
 description:
-    - Create, Update or Delete an Azure Machine Learning Component.
+    - Create, Archive or Restore an Azure Machine Learning Component.
 options:
     name:
         description:
