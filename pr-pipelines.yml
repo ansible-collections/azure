@@ -284,11 +284,16 @@ jobs:
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
 
+      - bash: |
+          echo "SYSTEM_OIDCREQUESTURI is: ${SYSTEM_OIDCREQUESTURI:+set}"
+          echo "SYSTEM_ACCESSTOKEN is: ${SYSTEM_ACCESSTOKEN:+set}"
+        displayName: "DEBUG: ADO OIDC env"
+
       - script: tests/utils/ado/ado.sh $(test.key) ${{ parameters.ANSIBLE_VER }} ${{ parameters.MODULE_NAME }}
         env:
           SHIPPABLE_BUILD_DIR: $(Build.Repository.LocalPath)
           AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-          AZURE_SECRET: $(AZURE_SECRET)
+          # AZURE_SECRET: $(AZURE_SECRET)
           AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
           AZURE_SUBSCRIPTION_SEC_ID: $(AZURE_SUBSCRIPTION_SEC_ID)
           AZURE_TENANT: $(AZURE_TENANT)
@@ -296,6 +301,7 @@ jobs:
           AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
+          ANSIBLE_AZURE_AUTH_SOURCE: "oidc"
         displayName: 'Running Tests'
 
   - job: CleanupResourceGroups
