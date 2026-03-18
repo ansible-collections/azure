@@ -155,7 +155,6 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ml import MLClientCommon
     from azure.core.exceptions import ResourceNotFoundError
     from azure.ai.ml.entities._load_functions import load_data
-    from azure.ai.ml._restclient.v2022_02_01_preview.models import ListViewType
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -308,7 +307,7 @@ class AzureRMMLData(MLClientCommon):
                     ml_data_asset_info = self.entity_to_dict(response)
         elif self.state == 'archive':
             # Archive
-            list_view_type = ListViewType.ACTIVE_ONLY
+            list_view_type = self.get_list_view_type('active')
             results = self.client.data.list(list_view_type=list_view_type)
             ml_data_assets = [x.name for x in results]
 
@@ -324,7 +323,7 @@ class AzureRMMLData(MLClientCommon):
                                               as_dict=True)
         elif self.state == 'restore':
             # Restore
-            list_view_type = ListViewType.ARCHIVED_ONLY
+            list_view_type = self.get_list_view_type('archived')
             results = self.client.data.list(list_view_type=list_view_type)
             ml_data_assets = [x.name for x in results]
 

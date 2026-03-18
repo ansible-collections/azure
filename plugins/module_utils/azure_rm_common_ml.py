@@ -10,6 +10,7 @@ try:
     from typing import Dict
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
     from azure.ai.ml import MLClient
+    from azure.ai.ml._restclient.v2022_02_01_preview.models import ListViewType
     import json
 except ImportError:
     pass
@@ -59,3 +60,9 @@ class MLClientCommon(AzureRMModuleBaseExt):
             workspace["managed_network"]["outbound_rules"] = updated_rules
 
         return workspace
+
+    def get_list_view_type(self, list_type):
+        list_types = dict(active=ListViewType.ACTIVE_ONLY,
+                          archived=ListViewType.ARCHIVED_ONLY,
+                          all=ListViewType.ALL)
+        return list_types.get(list_type, ListViewType.ACTIVE_ONLY)
