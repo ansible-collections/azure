@@ -235,6 +235,7 @@ jobs:
     dependsOn: InitializationTest
     timeoutInMinutes: 360
     variables:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)  # oidc
       TEST_RESOURCE_GROUP: $[ dependencies.InitializationTest.outputs['setvar.resource_group'] ]
       TEST_RESOURCE_GROUP_SECONDARY: $[ dependencies.InitializationTest.outputs['setvar.resource_group_secondary'] ]
     strategy:
@@ -284,6 +285,7 @@ jobs:
         inputs:
           versionSpec: '${{ parameters.PYTHON_VER }}'
 
+      # oidc
       - bash: |
           echo "SYSTEM_OIDCREQUESTURI is: ${SYSTEM_OIDCREQUESTURI:+set}"
           echo "SYSTEM_ACCESSTOKEN is: ${SYSTEM_ACCESSTOKEN:+set}"
@@ -301,7 +303,7 @@ jobs:
           AZURE_MANAGED_BY_TENANT_ID: $(AZURE_MANAGED_BY_TENANT_ID)
           RESOURCE_GROUP: $(TEST_RESOURCE_GROUP)
           RESOURCE_GROUP_SECONDARY: $(TEST_RESOURCE_GROUP_SECONDARY)
-          ANSIBLE_AZURE_AUTH_SOURCE: "oidc"
+          ANSIBLE_AZURE_AUTH_SOURCE: "oidc"  # oidc
         displayName: 'Running Tests'
 
   - job: CleanupResourceGroups

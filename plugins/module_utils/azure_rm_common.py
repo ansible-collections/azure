@@ -1758,10 +1758,14 @@ class AzureRMAuth(object):
                 "- Certificate auth: client_id, tenant, x509_certificate_path, thumbprint\n"
                 "- User/password: ad_user, password (optionally client_id, tenant)\n"
                 "- ADFS: ad_user/password or client credentials with adfs_authority_url\n"
-                "- OIDC (request URL): tenant, client_id + ACTIONS_ID_TOKEN_REQUEST_URL/ACTIONS_ID_TOKEN_REQUEST_TOKEN (GitHub Actions)\n"
-                "- Workload identity: client_id, tenant, federated_token_file "
-                "(or AZURE_FEDERATED_TOKEN_FILE env var)\n"
-                "- Azure CLI: `az login`\n")
+                "- OIDC (request endpoint): tenant, client_id + OIDC request URL/token\n"
+                "  (e.g. GitHub Actions via ACTIONS_ID_TOKEN_REQUEST_URL/\n"
+                "   ACTIONS_ID_TOKEN_REQUEST_TOKEN, or Azure DevOps via\n"
+                "   SYSTEM_OIDCREQUESTURI/SYSTEM_ACCESSTOKEN)\n"
+                "- OIDC (token file): tenant, client_id + federated OIDC token file\n"
+                "  (e.g. AKS via AZURE_FEDERATED_TOKEN_FILE)\n"
+                "- OIDC (plain token): tenant, client_id + oidc_token (advanced)\n"
+                "- Azure CLI: run `az login`\n")
 
     def fail(self, msg, exception=None, **kwargs):
         self._fail_impl(msg)
