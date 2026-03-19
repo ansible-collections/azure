@@ -112,7 +112,6 @@ ml_data_assets:
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ml import MLClientCommon
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.ai.ml._restclient.v2022_02_01_preview.models import ListViewType
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -188,20 +187,13 @@ class AzureRMMLDataInfo(MLClientCommon):
             except ResourceNotFoundError:
                 ml_data_assets = []
         else:
-            list_view_type = get_list_view_type(self.list_type)
+            list_view_type = self.get_list_view_type(self.list_type)
             results = self.client.data.list(list_view_type=list_view_type)
 
             ml_data_assets = [self.entity_to_dict(self.client.data.get(name=x.name, version=x.latest_version)) for x in results]
 
         self.results['ml_data_assets'] = ml_data_assets
         return self.results
-
-
-def get_list_view_type(list_type):
-    list_types = dict(active=ListViewType.ACTIVE_ONLY,
-                      archived=ListViewType.ARCHIVED_ONLY,
-                      all=ListViewType.ALL)
-    return list_types.get(list_type, ListViewType.ACTIVE_ONLY)
 
 
 def main():
