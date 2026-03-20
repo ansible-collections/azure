@@ -162,9 +162,9 @@ class AzureRMADPassword(AzureRMModuleBase):
 
         if self.state == 'present':
             if self.key_id and self.key_exists(passwords):
-                self.update_password(passwords)
+                self.update_password()
             else:
-                self.create_password(passwords)
+                self.create_password()
         else:
             if self.key_id is None:
                 self.delete_all_passwords(passwords)
@@ -243,11 +243,10 @@ class AzureRMADPassword(AzureRMModuleBase):
                     self.fail("failed to delete password with key id {0} - {1}".format(self.app_id, str(ge)))
                 break
 
-    def create_password(self, old_passwords):
+    def create_password(self):
         start_date = datetime.datetime.now(datetime.timezone.utc)
         end_date = self.end_date or start_date + relativedelta(years=1)
         display_name = self.display_name
-        num_of_passwords_before_add = len(old_passwords)
 
         try:
             request_body = AddPasswordPostRequestBody(
@@ -259,14 +258,13 @@ class AzureRMADPassword(AzureRMModuleBase):
             )
             pd = asyncio.get_event_loop().run_until_complete(self.add_password(request_body))
 
-            num_of_passwords_after_add = len(self.get_all_passwords())
-            if num_of_passwords_after_add != num_of_passwords_before_add:
-                self.results['changed'] = True
-                self.results.update(self.to_dict(pd))
+            self.results['changed'] = True
+            self.results.update(self.to_dict(pd))
+
         except Exception as ge:
             self.fail("failed to create new password: {0}".format(str(ge)))
 
-    def update_password(self, old_passwords):
+    def update_password(self):
         self.fail("update existing password is not supported")
 
     def to_dict(self, pd):
