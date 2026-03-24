@@ -1,32 +1,32 @@
 trigger:
-- none
+  - none
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- checkout: self
+  - checkout: self
 
-- task: AzureCLI@2
-  displayName: "Verify ADO OIDC via Ansible (PR code)"
-  inputs:
-    azureSubscription: $(SUBSCRIPTION_FULL_NAME)
-    scriptType: bash
-    scriptLocation: inlineScript
-    inlineScript: |
-      set -e
+  - task: AzureCLI@2
+    displayName: "Verify ADO OIDC via Ansible (PR code)"
+    inputs:
+      azureSubscription: $(SUBSCRIPTION_FULL_NAME)
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -e
 
-      echo "=== Azure identity (OIDC via AzureCLI@2) ==="
-      az account show
+        echo "=== Azure identity (OIDC via AzureCLI@2) ==="
+        az account show
 
-      echo "=== Setup Python & Ansible ==="
-      python -m venv venv
-      source venv/bin/activate
-      pip install ansible-core
+        echo "=== Setup Python & Ansible ==="
+        python -m venv venv
+        source venv/bin/activate
+        pip install ansible-core
 
-      echo "=== Use collection from PR checkout ==="
-      export ANSIBLE_COLLECTIONS_PATHS=$(pwd)
+        echo "=== Use collection from PR checkout ==="
+        export ANSIBLE_COLLECTIONS_PATHS=$(pwd)
 
-      echo "=== Run OIDC verification playbook ==="
-      ANSIBLE_AZURE_AUTH_SOURCE=cli \
-        ansible-playbook -vv tests/integration/targets/oidc_test/main.yml
+        echo "=== Run OIDC verification playbook ==="
+        ANSIBLE_AZURE_AUTH_SOURCE=cli \
+          ansible-playbook -vv tests/integration/targets/oidc_test/main.yml
