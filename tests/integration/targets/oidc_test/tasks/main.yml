@@ -1,0 +1,10 @@
+- name: Get resource groups via OIDC (read-only)
+  azure.azcollection.azure_rm_resourcegroup_info:
+    auth_source: auto
+  register: rg_info
+
+- name: Assert ARM access worked (auth OK)
+  ansible.builtin.assert:
+    that:
+      - rg_info is defined
+    success_msg: "OIDC auth succeeded and ARM call completed."
