@@ -1,4 +1,35 @@
 # Change Log
+## v3.16.0 (2026-03-25)
+
+### NEW MODULES
+  - azure_rm_ml_data.py:([#2190](https://github.com/ansible-collections/azure/pull/2190))
+  - azure_rm_ml_data_info.py:([#2190](https://github.com/ansible-collections/azure/pull/2190))
+  - azure_rm_ml_datastore.py:([#2190](https://github.com/ansible-collections/azure/pull/2190))
+  - azure_rm_ml_datastore_info.py:([#2190](https://github.com/ansible-collections/azure/pull/2190))
+  - azure_rm_ml_component.py:([#2196](https://github.com/ansible-collections/azure/pull/2196))
+  - azure_rm_ml_component_info.py:([#2196](https://github.com/ansible-collections/azure/pull/2196))
+  - azure_rm_ml_environment.py:([#2198](https://github.com/ansible-collections/azure/pull/2198))
+  - azure_rm_ml_environment_info.py:([#2198](https://github.com/ansible-collections/azure/pull/2198))
+
+### FEATURE ENHANCEMENT
+  - plugins/module_utils/azure_rm_common.py:
+    - Clean up dependency handling and import logic ([#2183](https://github.com/ansible-collections/azure/pull/2183))
+    - Add helper function to extract missing lib from traceback log ([#2188](https://github.com/ansible-collections/azure/pull/2188))
+  - plugins/modules/azure_rm_dnsrecordset.py: Clean up import logic ([#2183](https://github.com/ansible-collections/azure/pull/2183))
+  - plugins/modules/azure_rm_iotdevice.py: Clean up import logic and provide clear error message ([#2183](https://github.com/ansible-collections/azure/pull/2183))
+  - plugins/modules/azure_rm_iotdevice_info.py: Clean up import logic and provide clear error message ([#2183](https://github.com/ansible-collections/azure/pull/2183))
+  - plugins/modules/azure_rm_iotdevicemodule.py: Clean up import logic and provide clear error message ([#2183](https://github.com/ansible-collections/azure/pull/2183))
+  - plugins/modules/azure_rm_privatednsrecordset.py: Clean up import logic ([#2183](https://github.com/ansible-collections/azure/pull/2183))
+  - plugins/modules/azure_rm_virtualmachinescaleset.py: Support changing VM size in azure_rm_virtualmachinescaleset ([#2187](https://github.com/ansible-collections/azure/pull/2187))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_mysqlflexibleserver.py: Point-in-Time Restore for MySQL Flexible Server ([#2178](https://github.com/ansible-collections/azure/pull/2178))
+  - plugins/modules/azure_rm_backuppolicy.py: Enable azure_rm_backuppolicy idempotency in check mode ([#2185](https://github.com/ansible-collections/azure/pull/2185))
+  - plugins/modules/azure_rm_aks.py: Fix ScaleSetPriority is immutable when performing upgrade on an existing cluster ([#2186](https://github.com/ansible-collections/azure/pull/2186))
+  - requirements.txt: Skip azure-iot-hub on Python 3.14+ uamqp build failure ([#2193](https://github.com/ansible-collections/azure/pull/2193))
+  - plugins/modules/azure_rm_adpassword.py: Fix secret text not return upon creating password ([#2197](https://github.com/ansible-collections/azure/pull/2197))
+
+
 ## v3.15.0 (2026-02-27)
 
 ### NEW MODULES
