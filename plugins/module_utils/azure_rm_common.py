@@ -1791,10 +1791,13 @@ class AzureRMAuth(object):
         return cli_credentials
 
     def _get_env_credentials(self):
-        env_credentials = {attr: os.environ.get(env_var) for attr, env_var in AZURE_CREDENTIAL_ENV_MAPPING.items()}
+        env_credentials = dict()
+        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
+            env_credentials[attribute] = os.environ.get(env_variable, None)
 
-        if env_credentials.get('profile'):
-            return self._get_profile(env_credentials['profile'])
+        if env_credentials['profile']:
+            credentials = self._get_profile(env_credentials['profile'])
+            return credentials
 
         # Must have subscription_id for ARM resources
         if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
