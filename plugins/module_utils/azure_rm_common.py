@@ -1633,11 +1633,11 @@ class AzureRMAuth(object):
                 self.credentials.get('tenant') is not None and \
                 os.environ.get('AZURE_FEDERATED_TOKEN_FILE') is not None:
             token_file = os.environ["AZURE_FEDERATED_TOKEN_FILE"]
-            
+
             def _load_assertion():
                 with open(token_file, "r") as f:
                     return f.read()
-            
+
             self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
                                                                      client_id=self.credentials['client_id'],
                                                                      client_assertion=_load_assertion,
@@ -1789,18 +1789,25 @@ class AzureRMAuth(object):
         return cli_credentials
 
     def _get_env_credentials(self):
-        env_credentials = dict()
-        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
-            env_credentials[attribute] = os.environ.get(env_variable, None)
+        env_credentials = {attr: os.environ.get(env_var) for attr, env_var in AZURE_CREDENTIAL_ENV_MAPPING.items()}
 
-        if env_credentials['profile']:
-            credentials = self._get_profile(env_credentials['profile'])
-            return credentials
+        if env_credentials.get('profile'):
+            return self._get_profile(env_credentials['profile'])
 
+        # Must have subscription_id for ARM resources
         if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
             return None
-        else:
+
+        has_sp_secret = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('secret')
+        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') and env_credentials.get('x509_certificate_path')
+        has_oidc = env_credentials.get('client_id') and env_credentials.get('tenant') and os.environ.get('AZURE_FEDERATED_TOKEN_FILE')
+        has_userpass = env_credentials.get('ad_user') and env_credentials.get('password')
+
+        if has_sp_secret or has_sp_cert or has_oidc or has_userpass:
             return env_credentials
+
+        # Otherwise, let auto fall through to credential_file/cli
+        return None
 
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
