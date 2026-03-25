@@ -89,6 +89,7 @@ parameters:
       - "azure_rm_ml_datastore"
       - "azure_rm_ml_component"
       - "azure_rm_ml_environment"
+      - "azure_rm_ml_model"
       - "azure_rm_monitoractiongroups"
       - "azure_rm_monitoractivitylogalerts"
       - "azure_rm_monitordatacollectionrules"
