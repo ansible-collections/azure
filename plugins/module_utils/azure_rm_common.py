@@ -1686,10 +1686,12 @@ class AzureRMAuth(object):
                                                                                     disable_instance_discovery=self._disable_instance_discovery)
 
         else:
-            self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
-                      "Credentials must include client_id, secret and tenant or ad_user and password, or "
-                      "ad_user, password, client_id, tenant and adfs_authority_url(optional) for ADFS authentication, or "
-                      "be logged in using AzureCLI.")
+            self.fail("Failed to authenticate with provided credentials. Some attributes were missing. \n\n"
+                      "Supported authentication methods: \n"
+                      "- Workload identity (OIDC): client_id, tenant, and AZURE_FEDERATED_TOKEN_FILE\n"
+                      "- Service principal with client secret: client_id, tenant, secret\n"
+                      "- Service principal with certificate: client_id, tenant, thumbprint, x509_certificate_path\n"
+                      "- Username/password authentication: ad_user, password\n")
 
     def fail(self, msg, exception=None, **kwargs):
         self._fail_impl(msg)
