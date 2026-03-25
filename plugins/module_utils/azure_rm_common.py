@@ -1799,7 +1799,8 @@ class AzureRMAuth(object):
             return None
 
         has_sp_secret = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('secret')
-        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') and env_credentials.get('x509_certificate_path')
+        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') \
+            and env_credentials.get('x509_certificate_path')
         has_oidc = env_credentials.get('client_id') and env_credentials.get('tenant') and os.environ.get('AZURE_FEDERATED_TOKEN_FILE')
         has_userpass = env_credentials.get('ad_user') and env_credentials.get('password')
 
