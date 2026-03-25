@@ -272,7 +272,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential
+    from azure.identity import AzureCliCredential, ClientAssertionCredential
     from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
     from msgraph_core import GraphClientFactory, NationalClouds
     from msgraph import GraphRequestAdapter, GraphServiceClient
@@ -1629,6 +1629,21 @@ class AzureRMAuth(object):
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
+        elif self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None and \
+                os.environ.get('AZURE_FEDERATED_TOKEN_FILE') is not None:
+            token_file = os.environ["AZURE_FEDERATED_TOKEN_FILE"]
+            
+            def _load_assertion():
+                with open(token_file, "r") as f:
+                    return f.read()
+            
+            self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
+                                                                     client_id=self.credentials['client_id'],
+                                                                     client_assertion=_load_assertion,
+                                                                     authority=self._adfs_authority_url,
+                                                                     disable_instance_discovery=self._disable_instance_discovery)
+
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
