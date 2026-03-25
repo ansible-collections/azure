@@ -1640,7 +1640,7 @@ class AzureRMAuth(object):
 
             self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
                                                                      client_id=self.credentials['client_id'],
-                                                                     client_assertion=_load_assertion,
+                                                                     func=_load_assertion,
                                                                      authority=self._adfs_authority_url,
                                                                      disable_instance_discovery=self._disable_instance_discovery)
 
