@@ -50,6 +50,8 @@ AZURE_COMMON_ARGS = dict(
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
     disable_instance_discovery=dict(type='bool', default=False),
+    oidc_token=dict(type='str', no_log=True),  # direct JWT assertion
+    oidc_token_file_path=dict(type='path', no_log=True)  # path to JWT assertion file
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -65,7 +67,9 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
     thumbprint='AZURE_THUMBPRINT',
-    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY'
+    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY',
+    oidc_token='AZURE_FEDERATED_TOKEN',
+    oidc_token_file_path='AZURE_FEDERATED_TOKEN_FILE'
 )
 
 
@@ -1534,6 +1538,7 @@ class AzureRMModuleBase(object):
 class AzureRMAuthException(Exception):
     pass
 
+AZURE_SDK_HTTP_LOGGING = True  # oidcdebug
 
 class AzureRMAuth(object):
     _cloud_environment = None
@@ -1550,6 +1555,13 @@ class AzureRMAuth(object):
         else:
             self._fail_impl = self._default_fail_impl
         self.is_ad_resource = is_ad_resource
+
+        # oidcdebug
+        self._enable_http_logging = (
+            os.environ.get("AZURE_SDK_HTTP_LOGGING", "False").lower() == "true"
+        )
+        if self._enable_http_logging:
+            self._enable_azure_sdk_http_logging()
 
         # authenticate
         self.credentials = self._get_credentials(
@@ -1623,26 +1635,46 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
+        # OIDC PATH
+        self.oidc_token = self.credentials.get('oidc_token') or self._get_env('oidc_token')
+        self.oidc_token_file_path = self.credentials.get('oidc_token_file_path') or self._get_env('oidc_token_file_path')
+
+        # auth_source if-elif precedence: MSI, Azure CLI, OIDC direct token, OIDC token file, SP secret, SP cert, userpass
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
             self.azure_credential_track2 = self.credentials['credentials']
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
+        # OIDC direct token
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
-                os.environ.get('AZURE_FEDERATED_TOKEN_FILE') is not None:
-            token_file = os.environ["AZURE_FEDERATED_TOKEN_FILE"]
-
+                self.oidc_token:
+            token = self.oidc_token
             def _load_assertion():
-                with open(token_file, "r") as f:
-                    return f.read()
-
+                return token
             self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
                                                                      client_id=self.credentials['client_id'],
                                                                      func=_load_assertion,
                                                                      authority=self._adfs_authority_url,
-                                                                     disable_instance_discovery=self._disable_instance_discovery)
+                                                                     disable_instance_discovery=self._disable_instance_discovery,
+                                                                     logging_enable=self._enable_http_logging)  # oidcdebug
+        # OIDC token file
+        elif self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None and \
+                self.oidc_token_file_path:
+            token_file = self.oidc_token_file_path
+            if not os.path.exists(token_file):
+                self.fail(f"The specified OIDC token file does not exist: {token_file}")
+            def _load_assertion():
+                with open(token_file) as f:
+                    return f.read()
+            self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
+                                                                     client_id=self.credentials['client_id'],
+                                                                     func=_load_assertion,
+                                                                     authority=self._adfs_authority_url,
+                                                                     disable_instance_discovery=self._disable_instance_discovery,
+                                                                     logging_enable=self._enable_http_logging)  # oidcdebug
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
@@ -1688,10 +1720,12 @@ class AzureRMAuth(object):
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. \n\n"
                       "Supported authentication methods: \n"
-                      "- Workload identity (OIDC): client_id, tenant, and AZURE_FEDERATED_TOKEN_FILE\n"
+                      "- Workload identity (OIDC) token: client_id, tenant, and oidc_token\n"
+                      "- Workload identity (OIDC) token file: client_id, tenant, and oidc_token_file_path\n"
                       "- Service principal with client secret: client_id, tenant, secret\n"
                       "- Service principal with certificate: client_id, tenant, thumbprint, x509_certificate_path\n"
-                      "- Username/password authentication: ad_user, password\n")
+                      "- Username/password authentication: ad_user, password\n"
+                      "- Azure CLI authentication: run `az_login`.\n")
 
     def fail(self, msg, exception=None, **kwargs):
         self._fail_impl(msg)
@@ -1892,3 +1926,10 @@ class AzureRMAuth(object):
         #         log_file.write(json.dumps(msg, indent=4, sort_keys=True))
         #     else:
         #         log_file.write(msg + u'\n')
+
+    # oidcdebug
+    def _enable_azure_sdk_http_logging(self):
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
+        logging.getLogger('azure.identity').setLevel(logging.DEBUG)
+        logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.DEBUG)
