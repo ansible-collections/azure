@@ -52,7 +52,6 @@ options:
             - Useful in CI systems (for example GitHub Actions, Azure DevOps) where an OIDC token is provided directly by the platform.
             - Can also be set via the C(AZURE_FEDERATED_TOKEN) environment variable.
         type: str
-        no_log: true
         version_added: '3.17.0'
     oidc_token_file_path:
         description:
@@ -61,7 +60,6 @@ options:
             - This method is commonly used in platforms that materialize OIDC tokens as files
             - Can also be set via the C(AZURE_FEDERATED_TOKEN_FILE) environment variable.
         type: path
-        no_log: true
         version_added: '3.17.0'
     cloud_environment:
         description:

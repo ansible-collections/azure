@@ -1538,7 +1538,9 @@ class AzureRMModuleBase(object):
 class AzureRMAuthException(Exception):
     pass
 
+
 AZURE_SDK_HTTP_LOGGING = True  # oidcdebug
+
 
 class AzureRMAuth(object):
     _cloud_environment = None
@@ -1651,8 +1653,10 @@ class AzureRMAuth(object):
                 self.credentials.get('tenant') is not None and \
                 self.oidc_token:
             token = self.oidc_token
+
             def _load_assertion():
                 return token
+
             self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
                                                                      client_id=self.credentials['client_id'],
                                                                      func=_load_assertion,
@@ -1664,11 +1668,14 @@ class AzureRMAuth(object):
                 self.credentials.get('tenant') is not None and \
                 self.oidc_token_file_path:
             token_file = self.oidc_token_file_path
+
             if not os.path.exists(token_file):
                 self.fail(f"The specified OIDC token file does not exist: {token_file}")
+
             def _load_assertion():
                 with open(token_file) as f:
                     return f.read()
+
             self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
                                                                      client_id=self.credentials['client_id'],
                                                                      func=_load_assertion,
@@ -1930,6 +1937,25 @@ class AzureRMAuth(object):
     # oidcdebug
     def _enable_azure_sdk_http_logging(self):
         import logging
-        logging.basicConfig(level=logging.DEBUG)
-        logging.getLogger('azure.identity').setLevel(logging.DEBUG)
-        logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.DEBUG)
+        import sys
+
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+
+        # IMPORTANT: ensure logs go to stdout (ADO captures this)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter(
+            "%(asctime)s %(levelname)s %(name)s %(message)s"
+        )
+        handler.setFormatter(formatter)
+
+        # Avoid duplicate handlers
+        if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
+            root.addHandler(handler)
+
+        logging.getLogger("azure.identity").setLevel(logging.DEBUG)
+        logging.getLogger(
+            "azure.core.pipeline.policies.http_logging_policy"
+        ).setLevel(logging.DEBUG)
