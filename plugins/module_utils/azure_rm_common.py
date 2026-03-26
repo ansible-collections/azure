@@ -1688,9 +1688,12 @@ class AzureRMAuth(object):
                                                                                 authority=self._adfs_authority_url,
                                                                                 disable_instance_discovery=self._disable_instance_discovery)
 
+        # Removed thumbprint as a requirement for cert auth as Azure SDK for Python's CertificateCredential does not require thumbprint to authenticate
+        # Reference: https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.certificatecredential?view=azure-python
+        # Reference: https://docs.azure.cn/en-us/entra/identity-platform/certificate-credentials
+        # Create SP with certificate using az cli: `az ad app credential reset --id 00000000-0000-0000-0000-000000000000 --create-cert`
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
-                self.credentials.get('thumbprint') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
             self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
                                                                              client_id=self.credentials['client_id'],
@@ -1726,7 +1729,7 @@ class AzureRMAuth(object):
                       "- Workload identity (OIDC) token: client_id, tenant, and oidc_token\n"
                       "- Workload identity (OIDC) token file: client_id, tenant, and oidc_token_file_path\n"
                       "- Service principal with client secret: client_id, tenant, secret\n"
-                      "- Service principal with certificate: client_id, tenant, thumbprint, x509_certificate_path\n"
+                      "- Service principal with certificate: client_id, tenant, x509_certificate_path\n"
                       "- Username/password authentication: ad_user, password\n"
                       "- Azure CLI authentication: run `az_login`.\n")
 
@@ -1838,8 +1841,7 @@ class AzureRMAuth(object):
 
         # Detech env auth shapes
         has_sp_secret = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('secret')
-        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') \
-            and env_credentials.get('x509_certificate_path')
+        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('x509_certificate_path')
         has_oidc_direct = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('oidc_token')
         has_oidc_file = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('oidc_token_file_path')
         has_userpass = env_credentials.get('ad_user') and env_credentials.get('password')
