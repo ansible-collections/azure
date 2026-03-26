@@ -1645,8 +1645,8 @@ class AzureRMAuth(object):
         # OIDC direct token
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
-                self.oidc_token:
-            token = self.oidc_token
+                self.credentials.get('oidc_token') is not None:
+            token = self.credentials['oidc_token']
 
             def _load_assertion():
                 return token
@@ -1660,8 +1660,8 @@ class AzureRMAuth(object):
         # OIDC token file
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
-                self.oidc_token_file_path:
-            token_file = self.oidc_token_file_path
+                self.credentials.get('oidc_token_file_path') is not None:
+            token_file = self.credentials['oidc_token_file_path']
 
             if not os.path.exists(token_file):
                 self.fail(f"The specified OIDC token file does not exist: {token_file}")
