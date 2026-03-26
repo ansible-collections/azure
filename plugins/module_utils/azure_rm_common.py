@@ -1558,10 +1558,9 @@ class AzureRMAuth(object):
         self.is_ad_resource = is_ad_resource
 
         # oidcdebug
-        logger = logging.getLogger('azure.identity')
-        logger.setLevel(logging.DEBUG)
-        handler = logging.StreamHandler(stream=sys.stdout)
-        logger.addHandler(handler)
+        self._enable_http_logging = os.environ.get("AZURE_SDK_HTTP_LOGGING", "false").lower() == "true"
+        if self._enable_http_logging:
+            self._azsdk_log_file = self._enable_azsdk_file_logging()
 
         # authenticate
         self.credentials = self._get_credentials(
@@ -1660,7 +1659,7 @@ class AzureRMAuth(object):
                                                                      func=_load_assertion,
                                                                      authority=self._adfs_authority_url,
                                                                      disable_instance_discovery=self._disable_instance_discovery,
-                                                                     logging_enable=True)  # oidcdebug
+                                                                     logging_enable=self._enable_http_logging)  # oidcdebug
         # OIDC token file
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
@@ -1679,7 +1678,7 @@ class AzureRMAuth(object):
                                                                      func=_load_assertion,
                                                                      authority=self._adfs_authority_url,
                                                                      disable_instance_discovery=self._disable_instance_discovery,
-                                                                     logging_enable=True)  # oidcdebug
+                                                                     logging_enable=self._enable_http_logging)  # oidcdebug
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
@@ -1932,3 +1931,27 @@ class AzureRMAuth(object):
         #         log_file.write(json.dumps(msg, indent=4, sort_keys=True))
         #     else:
         #         log_file.write(msg + u'\n')
+
+    # oidcdebug
+    def _enable_azsdk_file_logging(self):
+        log_file = os.environ.get("AZURE_SDK_HTTP_LOG_FILE", "/tmp/azsdk.log")
+
+        handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+        handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+
+        # Attach handler to the relevant Azure SDK loggers
+        for name in (
+            "azure",
+            "azure.identity",
+            "azure.core.pipeline.policies.http_logging_policy",
+            "azure.core.pipeline.policies._universal",
+        ):
+            logger = logging.getLogger(name)
+            logger.setLevel(logging.DEBUG)
+            # avoid duplicates
+            if not any(isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == handler.baseFilename
+                    for h in logger.handlers):
+                logger.addHandler(handler)
+
+        return log_file
