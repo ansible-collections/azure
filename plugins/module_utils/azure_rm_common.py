@@ -293,7 +293,6 @@ from hmac import HMAC
 from time import time
 import subprocess
 import logging  # oidcdebug
-import sys  # oidcdebug
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -1940,7 +1939,6 @@ class AzureRMAuth(object):
         handler.setLevel(logging.DEBUG)
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
 
-        # Attach handler to the relevant Azure SDK loggers
         for name in (
             "azure",
             "azure.identity",
@@ -1949,9 +1947,7 @@ class AzureRMAuth(object):
         ):
             logger = logging.getLogger(name)
             logger.setLevel(logging.DEBUG)
-            # avoid duplicates
-            if not any(isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == handler.baseFilename
-                    for h in logger.handlers):
+            if not any(isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == handler.baseFilename for h in logger.handlers):
                 logger.addHandler(handler)
 
         return log_file
