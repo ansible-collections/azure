@@ -293,6 +293,7 @@ from hmac import HMAC
 from time import time
 import subprocess
 import logging  # oidcdebug
+import sys  # oidcdebug
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -1559,6 +1560,8 @@ class AzureRMAuth(object):
         # oidcdebug
         logger = logging.getLogger('azure.identity')
         logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler(stream=sys.stdout)
+        logger.addHandler(handler)
 
         # authenticate
         self.credentials = self._get_credentials(
