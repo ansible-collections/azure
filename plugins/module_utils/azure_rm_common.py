@@ -1940,23 +1940,29 @@ class AzureRMAuth(object):
         import logging
         import sys
 
-        root = logging.getLogger()
-        root.setLevel(logging.DEBUG)
-
-        # IMPORTANT: ensure logs go to stdout (ADO captures this)
         handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
 
-        formatter = logging.Formatter(
-            "%(asctime)s %(levelname)s %(name)s %(message)s"
-        )
-        handler.setFormatter(formatter)
+        handler._azcollection_oidc_http_logging = True
 
-        # Avoid duplicate handlers
-        if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
-            root.addHandler(handler)
+        azure_logger_names = [
+            "azure",
+            "azure.identity",
+            "azure.core",
+            "azure.core.pipeline",
+            "azure.core.pipeline.policies",
+            "azure.core.pipeline.policies.http_logging_policy",
+            "azure.core.pipeline.policies._universal",
+        ]
 
-        logging.getLogger("azure.identity").setLevel(logging.DEBUG)
-        logging.getLogger(
-            "azure.core.pipeline.policies.http_logging_policy"
-        ).setLevel(logging.DEBUG)
+        for name in azure_logger_names:
+            logger = logging.getLogger(name)
+            logger.setLevel(logging.DEBUG)
+
+            logger.propagate = True
+
+            if not any(getattr(h, "_azcollection_oidc_http_logging", False) for h in logger.handlers):
+                logger.addHandler(handler)
+
+        logging.getLogger("azure").setLevel(logging.DEBUG)
