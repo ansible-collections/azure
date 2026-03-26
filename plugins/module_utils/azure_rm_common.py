@@ -1896,8 +1896,7 @@ class AzureRMAuth(object):
             credentials = self._get_profile(arg_credentials['profile'])
             return credentials
 
-        if arg_credentials['client_id'] or arg_credentials['ad_user'] or \
-            arg_credentials['oidc_token'] or arg_credentials['oidc_token_file_path']:
+        if arg_credentials['client_id'] or arg_credentials['ad_user'] or arg_credentials['oidc_token'] or arg_credentials['oidc_token_file_path']:
             self.log('Received credentials from parameters.')
             return arg_credentials
 
@@ -1945,7 +1944,7 @@ class AzureRMAuth(object):
         root.setLevel(logging.DEBUG)
 
         # IMPORTANT: ensure logs go to stdout (ADO captures this)
-        handler = logging.StreamHandler(sys.stdout)
+        handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter(
