@@ -1547,7 +1547,7 @@ class AzureRMAuth(object):
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
-                 x509_certificate_path=None, thumbprint=None, track1_cred=False,
+                 x509_certificate_path=None, thumbprint=None, oidc_token=None, oidc_token_file_path=None, track1_cred=False,
                  disable_instance_discovery=False , **kwargs):
 
         if fail_impl:
@@ -1577,7 +1577,9 @@ class AzureRMAuth(object):
             adfs_authority_url=adfs_authority_url,
             x509_certificate_path=x509_certificate_path,
             thumbprint=thumbprint,
-            disable_instance_discovery=disable_instance_discovery)
+            disable_instance_discovery=disable_instance_discovery,
+            oidc_token=oidc_token,
+            oidc_token_file_path=oidc_token_file_path)
 
         if not self.credentials:
             self.fail("Failed to get credentials. Either pass as parameters, set environment variables, "
@@ -1632,10 +1634,6 @@ class AzureRMAuth(object):
             self._adfs_authority_url = self._cloud_environment.endpoints.active_directory
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
-
-        # OIDC PATH
-        self.oidc_token = self.credentials.get('oidc_token') or self._get_env('oidc_token')
-        self.oidc_token_file_path = self.credentials.get('oidc_token_file_path') or self._get_env('oidc_token_file_path')
 
         # auth_source if-elif precedence: MSI, Azure CLI, OIDC direct token, OIDC token file, SP secret, SP cert, userpass
         if self.credentials.get('auth_source') == 'msi':
