@@ -1840,21 +1840,22 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'])
             return credentials
 
+        # Detech env auth shapes
+        has_sp_secret = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('secret')
+        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') \
+            and env_credentials.get('x509_certificate_path')
+        has_oidc_direct = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('oidc_token')
+        has_oidc_file = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('oidc_token_file_path')
+        has_userpass = env_credentials.get('ad_user') and env_credentials.get('password')
+
+        if not (has_sp_secret or has_sp_cert or has_oidc_direct or has_oidc_file or has_userpass):
+            return None
+
         # Must have subscription_id for ARM resources
         if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
             return None
 
-        has_sp_secret = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('secret')
-        has_sp_cert = env_credentials.get('client_id') and env_credentials.get('tenant') and env_credentials.get('thumbprint') \
-            and env_credentials.get('x509_certificate_path')
-        has_oidc = env_credentials.get('client_id') and env_credentials.get('tenant') and os.environ.get('AZURE_FEDERATED_TOKEN_FILE')
-        has_userpass = env_credentials.get('ad_user') and env_credentials.get('password')
-
-        if has_sp_secret or has_sp_cert or has_oidc or has_userpass:
-            return env_credentials
-
-        # Otherwise, let auto fall through to credential_file/cli
-        return None
+        return env_credentials
 
     def _get_credentials(self, auth_source=None, **params):
         # Get authentication credentials.
@@ -1895,7 +1896,8 @@ class AzureRMAuth(object):
             credentials = self._get_profile(arg_credentials['profile'])
             return credentials
 
-        if arg_credentials['client_id'] or arg_credentials['ad_user']:
+        if arg_credentials['client_id'] or arg_credentials['ad_user'] or \
+            arg_credentials['oidc_token'] or arg_credentials['oidc_token_file_path']:
             self.log('Received credentials from parameters.')
             return arg_credentials
 
