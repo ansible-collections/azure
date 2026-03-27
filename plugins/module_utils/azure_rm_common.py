@@ -1834,7 +1834,9 @@ class AzureRMAuth(object):
         3. ENV variables (fill missing params)
         4. Credential profile (~/.azure/credentials)
         5. AZ CLI
-        6. Validation of subscription_id
+
+        Note: Validation of subscription_id is performed in AzureRMAuth.__init__,
+        not in this method.
         """
         self.log('Getting credentials')
 
