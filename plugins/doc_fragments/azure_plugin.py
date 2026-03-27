@@ -66,11 +66,8 @@ options:
         description:
             - Controls the source of the credentials to use for authentication.
             - Can also be set via the C(ANSIBLE_AZURE_AUTH_SOURCE) environment variable.
-            - By default (C(auth_source=auto)), credentials are resolved by first reading module parameters,
-              then filling missing values from environment variables, and finally falling back to C(~/.azure/credentials)
-              or the Azure CLI if no identity is found.
-            - When set to C(env), the credentials will be read from the environment variables.
-            - When set to C(credential_file), it will read the profile from C(~/.azure/credentials).
+            - When set to C(auto) (the default) the precedence is module parameters -> C(env) -> C(credential_file) -> C(cli).
+            - When set to C(env), the credentials will be read from the environment variables
             - When set to C(cli), the credentials will be sources from the Azure CLI profile. C(subscription_id) or the environment variable
               C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if more than one is present otherwise the default
               az cli subscription is used.
@@ -82,10 +79,9 @@ options:
         default: auto
         choices:
         - auto
-        - msi
-        - env
-        - credential_file
         - cli
+        - env
+        - msi
         env:
           - name: ANSIBLE_AZURE_AUTH_SOURCE
 requirements:
