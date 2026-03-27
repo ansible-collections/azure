@@ -292,7 +292,6 @@ from hashlib import sha256
 from hmac import HMAC
 from time import time
 import subprocess
-import logging  # oidcdebug
 
 try:
     from urllib import (urlencode, quote_plus)
@@ -1556,11 +1555,6 @@ class AzureRMAuth(object):
             self._fail_impl = self._default_fail_impl
         self.is_ad_resource = is_ad_resource
 
-        # oidcdebug
-        self._enable_http_logging = os.environ.get("AZURE_SDK_HTTP_LOGGING", "false").lower() == "true"
-        if self._enable_http_logging:
-            self._azsdk_log_file = self._enable_azsdk_file_logging()
-
         # authenticate
         self.credentials = self._get_credentials(
             auth_source=auth_source,
@@ -1654,8 +1648,7 @@ class AzureRMAuth(object):
                                                                      client_id=self.credentials['client_id'],
                                                                      func=_load_assertion,
                                                                      authority=self._adfs_authority_url,
-                                                                     disable_instance_discovery=self._disable_instance_discovery,
-                                                                     logging_enable=self._enable_http_logging)  # oidcdebug
+                                                                     disable_instance_discovery=self._disable_instance_discovery)
         # OIDC token file
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
@@ -1673,8 +1666,7 @@ class AzureRMAuth(object):
                                                                      client_id=self.credentials['client_id'],
                                                                      func=_load_assertion,
                                                                      authority=self._adfs_authority_url,
-                                                                     disable_instance_discovery=self._disable_instance_discovery,
-                                                                     logging_enable=self._enable_http_logging)  # oidcdebug
+                                                                     disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
@@ -1923,24 +1915,3 @@ class AzureRMAuth(object):
         #         log_file.write(json.dumps(msg, indent=4, sort_keys=True))
         #     else:
         #         log_file.write(msg + u'\n')
-
-    # oidcdebug
-    def _enable_azsdk_file_logging(self):
-        log_file = os.environ.get("AZURE_SDK_HTTP_LOG_FILE", "/tmp/azsdk.log")
-
-        handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
-        handler.setLevel(logging.DEBUG)
-        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
-
-        for name in (
-            "azure",
-            "azure.identity",
-            "azure.core.pipeline.policies.http_logging_policy",
-            "azure.core.pipeline.policies._universal",
-        ):
-            logger = logging.getLogger(name)
-            logger.setLevel(logging.DEBUG)
-            if not any(isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == handler.baseFilename for h in logger.handlers):
-                logger.addHandler(handler)
-
-        return log_file
