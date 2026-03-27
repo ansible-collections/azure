@@ -1635,7 +1635,6 @@ class AzureRMAuth(object):
         else:
             self._adfs_authority_url = self.credentials.get('adfs_authority_url')
 
-        # auth_source if-elif precedence: MSI, Azure CLI, OIDC direct token, OIDC token file, SP secret, SP cert, userpass
         if self.credentials.get('auth_source') == 'msi':
             # MSI Credentials
             self.azure_credential_track2 = self.credentials['credentials']
@@ -1871,9 +1870,6 @@ class AzureRMAuth(object):
 
             if credentials.get("profile"):
                 return self._get_profile(credentials["profile"])
-
-            if credentials.get("client_id") is None or credentials.get("ad_user") is None:
-                self.fail("auth_source=env was specified, but no credentials were found in environment variables")
 
             return credentials
 
