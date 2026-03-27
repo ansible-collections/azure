@@ -1899,7 +1899,7 @@ class AzureRMAuth(object):
         # 5. AZ CLI
         try:
             self.log('Retrieving credentials from AzureCLI profile')
-            return self._get_azure_cli_credentials(subscription_id=None)
+            return self._get_azure_cli_credentials(subscription_id=credentials.get('subscription_id'))
         except CLIError as ce:
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
             return None
