@@ -1816,28 +1816,29 @@ class AzureRMAuth(object):
         }
         return cli_credentials
 
-    def _get_env_credentials(self):
-        env_credentials = dict()
-        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
-            env_credentials[attribute] = os.environ.get(env_variable, None)
-
-        if env_credentials['profile']:
-            credentials = self._get_profile(env_credentials['profile'])
-            return credentials
-
-        if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
-            return None
-        else:
-            return env_credentials
+    def _read_env_params(self):
+        env = {}
+        for attr, env_var in AZURE_CREDENTIAL_ENV_MAPPING.items():
+            value = os.environ.get(env_var)
+            if value is not None:
+                env[attr] = value
+        return env
 
     def _get_credentials(self, auth_source=None, **params):
-        # Get authentication credentials.
+        """
+        Resolve authentication credentials as data.
+
+        Resolution order:
+        1. Explicit auth_source (msi / cli / env / credential_file)
+        2. Module params
+        3. ENV variables (fill missing params)
+        4. Credential profile (~/.azure/credentials)
+        5. AZ CLI
+        6. Validation of subscription_id
+        """
         self.log('Getting credentials')
 
-        arg_credentials = dict()
-        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
-            arg_credentials[attribute] = params.get(attribute, None)
-
+        # 1. Explicit auth_source
         if auth_source == 'msi':
             self.log('Retrieving credentials from MSI')
             return self._get_msi_credentials(subscription_id=params.get('subscription_id'), client_id=params.get('client_id'),
@@ -1853,8 +1854,16 @@ class AzureRMAuth(object):
 
         if auth_source == 'env':
             self.log('Retrieving credentials from environment')
-            env_credentials = self._get_env_credentials()
-            return env_credentials
+            credentials = {}
+            for attr in AZURE_CREDENTIAL_ENV_MAPPING:
+                credentials[attr] = None
+            env = self._read_env_params()
+            credentials.update(env)
+
+            if credentials.get("profile"):
+                return self._get_profile(credentials["profile"])
+
+            return credentials
 
         if auth_source == 'credential_file':
             self.log("Retrieving credentials from credential file")
@@ -1863,36 +1872,35 @@ class AzureRMAuth(object):
             return default_credentials
 
         # auto, precedence: module parameters -> environment variables -> default profile in ~/.azure/credentials -> azure cli
-        # try module params
-        if arg_credentials['profile'] is not None:
-            self.log('Retrieving credentials with profile parameter.')
-            credentials = self._get_profile(arg_credentials['profile'])
-            return credentials
+        # 2. Module Params
+        credentials = {}
+        for attr in AZURE_CREDENTIAL_ENV_MAPPING:
+            credentials[attr] = params.get(attr)
 
-        if arg_credentials['client_id'] or arg_credentials['ad_user']:
-            self.log('Received credentials from parameters.')
-            return arg_credentials
+        # 3. Fill missing from ENV
+        env = self._read_env_params()
+        for key, value in env.items():
+            if credentials.get(key) is None:
+                credentials[key] = value
 
-        # try environment
-        env_credentials = self._get_env_credentials()
-        if env_credentials:
-            self.log('Received credentials from env.')
-            return env_credentials
+        # Check if has identity
+        if credentials.get("client_id") or credentials.get("ad_user"):
+            return credentials  # return early to prevent overwrites
 
-        # try default profile from ~./azure/credentials
-        default_credentials = self._get_profile()
-        if default_credentials:
-            self.log('Retrieved default profile credentials from ~/.azure/credentials.')
-            return default_credentials
+        # 4. Credential profile
+        profile = credentials.get("profile") or "default"
+        profile_credentials = self._get_profile(profile)
+        if profile_credentials:
+            self.log(f"Retrieved credentials from credential file profile '{profile}'")
+            return profile_credentials
 
+        # 5. AZ CLI
         try:
             self.log('Retrieving credentials from AzureCLI profile')
-            cli_credentials = self._get_azure_cli_credentials(subscription_id=params.get('subscription_id'))
-            return cli_credentials
+            return self._get_azure_cli_credentials(subscription_id=None)
         except CLIError as ce:
             self.log('Error getting AzureCLI profile credentials - {0}'.format(ce))
-
-        return None
+            return None
 
     def _get_cloud_from_metadata_endpoint(self, metadata_endpoint):
         _knownClouds = azure_cloud.KNOWN_CLOUDS
