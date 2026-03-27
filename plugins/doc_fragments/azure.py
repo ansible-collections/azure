@@ -45,6 +45,22 @@ options:
         description:
             - Azure tenant ID. Use when authenticating with a Service Principal.
         type: str
+    oidc_token:
+        description:
+            - Direct OpenID Connect (OIDC) token (JWT) used for workload identity authentication.
+            - This token is exchanged with Azure AD using OIDC federated identity.
+            - Useful in CI systems (for example GitHub Actions, Azure DevOps) where an OIDC token is provided directly by the platform.
+            - Can also be set via the C(AZURE_FEDERATED_TOKEN) environment variable.
+        type: str
+        version_added: '3.17.0'
+    oidc_token_file_path:
+        description:
+            - Path to a file containing an OpenID Connect (OIDC) token (JWT) used for workload identity authentication.
+            - The file must contain only raw token.
+            - This method is commonly used in platforms that materialize OIDC tokens as files
+            - Can also be set via the C(AZURE_FEDERATED_TOKEN_FILE) environment variable.
+        type: path
+        version_added: '3.17.0'
     cloud_environment:
         description:
             - For cloud environments other than the US public cloud, the environment name (as defined by Azure Python SDK, eg, C(AzureChinaCloud),
@@ -84,7 +100,7 @@ options:
             - Controls the source of the credentials to use for authentication.
             - Can also be set via the C(ANSIBLE_AZURE_AUTH_SOURCE) environment variable.
             - When set to C(auto) (the default) the precedence is module parameters -> C(env) -> C(credential_file) -> C(cli).
-            - When set to C(env), the credentials will be read from the environment variables
+            - When set to C(env), the credentials will be read from the environment variables.
             - When set to C(credential_file), it will read the profile from C(~/.azure/credentials).
             - When set to C(cli), the credentials will be sources from the Azure CLI profile. C(subscription_id) or the environment variable
               C(AZURE_SUBSCRIPTION_ID) can be used to identify the subscription ID if more than one is present otherwise the default
@@ -141,6 +157,8 @@ notes:
     - For authentication with Azure you can pass parameters, set environment variables, use a profile stored
       in ~/.azure/credentials, or log in before you run your tasks or playbook with C(az login).
     - Authentication is also possible using a service principal or Active Directory user.
+    - To authenticate via OIDC, pass client_id, tenant and oidc_token or oidc_token_file_path, or set environment
+      variables AZURE_CLIENT_ID, AZURE_TENANT and AZURE_FEDERATED_TOKEN or AZURE_FEDERATED_TOKEN_FILE.
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
     - To authenticate via Active Directory user, pass ad_user and password, or set AZURE_AD_USER and

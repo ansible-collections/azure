@@ -50,6 +50,8 @@ AZURE_COMMON_ARGS = dict(
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
     disable_instance_discovery=dict(type='bool', default=False),
+    oidc_token=dict(type='str', no_log=True),  # direct JWT assertion
+    oidc_token_file_path=dict(type='path', no_log=True)  # path to JWT assertion file
 )
 
 AZURE_CREDENTIAL_ENV_MAPPING = dict(
@@ -65,7 +67,9 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     adfs_authority_url='AZURE_ADFS_AUTHORITY_URL',
     x509_certificate_path='AZURE_X509_CERTIFICATE_PATH',
     thumbprint='AZURE_THUMBPRINT',
-    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY'
+    disable_instance_discovery='AZURE_DISABLE_INSTANCE_DISCOVERY',
+    oidc_token='AZURE_FEDERATED_TOKEN',
+    oidc_token_file_path='AZURE_FEDERATED_TOKEN_FILE'
 )
 
 
@@ -272,7 +276,7 @@ try:
     from azure.mgmt.datafactory import DataFactoryManagementClient
     import azure.mgmt.datafactory.models as DataFactoryModel
     from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential
+    from azure.identity import AzureCliCredential, ClientAssertionCredential
     from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
     from msgraph_core import GraphClientFactory, NationalClouds
     from msgraph import GraphRequestAdapter, GraphServiceClient
@@ -1542,7 +1546,7 @@ class AzureRMAuth(object):
     def __init__(self, auth_source=None, profile=None, subscription_id=None, client_id=None, secret=None,
                  tenant=None, ad_user=None, password=None, cloud_environment='AzureCloud', cert_validation_mode='validate',
                  api_profile='latest', adfs_authority_url=None, fail_impl=None, is_ad_resource=False,
-                 x509_certificate_path=None, thumbprint=None, track1_cred=False,
+                 x509_certificate_path=None, thumbprint=None, oidc_token=None, oidc_token_file_path=None, track1_cred=False,
                  disable_instance_discovery=False , **kwargs):
 
         if fail_impl:
@@ -1567,7 +1571,9 @@ class AzureRMAuth(object):
             adfs_authority_url=adfs_authority_url,
             x509_certificate_path=x509_certificate_path,
             thumbprint=thumbprint,
-            disable_instance_discovery=disable_instance_discovery)
+            disable_instance_discovery=disable_instance_discovery,
+            oidc_token=oidc_token,
+            oidc_token_file_path=oidc_token_file_path)
 
         if not self.credentials:
             self.fail("Failed to get credentials. Either pass as parameters, set environment variables, "
@@ -1629,6 +1635,39 @@ class AzureRMAuth(object):
         elif self.credentials.get('credentials') is not None:
             # AzureCLI credentials
             self.azure_credential_track2 = self.credentials['credentials']
+        # OIDC direct token
+        elif self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None and \
+                self.credentials.get('oidc_token') is not None:
+            token = self.credentials['oidc_token']
+
+            def _load_assertion():
+                return token
+
+            self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
+                                                                     client_id=self.credentials['client_id'],
+                                                                     func=_load_assertion,
+                                                                     authority=self._adfs_authority_url,
+                                                                     disable_instance_discovery=self._disable_instance_discovery)
+        # OIDC token file
+        elif self.credentials.get('client_id') is not None and \
+                self.credentials.get('tenant') is not None and \
+                self.credentials.get('oidc_token_file_path') is not None:
+            token_file = self.credentials['oidc_token_file_path']
+
+            if not os.path.exists(token_file):
+                self.fail(f"The specified OIDC token file does not exist: {token_file}")
+
+            def _load_assertion():
+                with open(token_file) as f:
+                    return f.read()
+
+            self.azure_credential_track2 = ClientAssertionCredential(tenant_id=self.credentials['tenant'],
+                                                                     client_id=self.credentials['client_id'],
+                                                                     func=_load_assertion,
+                                                                     authority=self._adfs_authority_url,
+                                                                     disable_instance_discovery=self._disable_instance_discovery)
+
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
@@ -1671,10 +1710,14 @@ class AzureRMAuth(object):
                                                                                     disable_instance_discovery=self._disable_instance_discovery)
 
         else:
-            self.fail("Failed to authenticate with provided credentials. Some attributes were missing. "
-                      "Credentials must include client_id, secret and tenant or ad_user and password, or "
-                      "ad_user, password, client_id, tenant and adfs_authority_url(optional) for ADFS authentication, or "
-                      "be logged in using AzureCLI.")
+            self.fail("Failed to authenticate with provided credentials. Some attributes were missing. \n\n"
+                      "Supported authentication methods: \n"
+                      "- Workload identity (OIDC) token: client_id, tenant, and oidc_token\n"
+                      "- Workload identity (OIDC) token file: client_id, tenant, and oidc_token_file_path\n"
+                      "- Service principal with client secret: client_id, tenant, secret\n"
+                      "- Service principal with certificate: client_id, tenant, x509_certificate_path\n"
+                      "- Username/password authentication: ad_user, password\n"
+                      "- Azure CLI authentication: run `az_login`.\n")
 
     def fail(self, msg, exception=None, **kwargs):
         self._fail_impl(msg)

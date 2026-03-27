@@ -39,6 +39,18 @@ options:
         type: str
         env:
           - name: AZURE_TENANT
+    oidc_token:
+        description:
+            - Direct OpenID Connect (OIDC) token (JWT) used for workload identity authentication.
+        type: str
+        env:
+          - name: AZURE_FEDERATED_TOKEN
+    oidc_token_file_path:
+        description:
+            - Path to a file containing an OpenID Connect (OIDC) token (JWT) used for workload identity authentication.
+        type: path
+        env:
+          - name: AZURE_FEDERATED_TOKEN_FILE
     cloud_environment:
         description:
             - For cloud environments other than the US public cloud, the environment name (as defined by Azure Python SDK, eg, C(AzureChinaCloud),
@@ -82,6 +94,8 @@ notes:
     - For authentication with Azure you can pass parameters, set environment variables, use a profile stored
       in ~/.azure/credentials, or log in before you run your tasks or playbook with C(az login).
     - Authentication is also possible using a service principal.
+    - To authenticate via OIDC, pass client_id, tenant and oidc_token or oidc_token_file_path, or set environment
+      variables AZURE_CLIENT_ID, AZURE_TENANT and AZURE_FEDERATED_TOKEN or AZURE_FEDERATED_TOKEN_FILE.
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
     - "Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
