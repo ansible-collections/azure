@@ -36,7 +36,7 @@
       azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgw"
         name: "{{ vngname }}02"
-        sku: VpnGw2
+        sku: VpnGw2AZ
         vpn_gateway_generation: Generation2
         ip_configurations:
           - name: testipconfig
@@ -77,6 +77,9 @@
             name: "{{ pubipname }}{{ item }}"
             sku: Standard
             allocation_method: Static
+            zones:
+              - "1"
+              - "2"
           with_items:
             - '01'
             - '02'
@@ -95,10 +98,10 @@
             tags:
               common: "xyz"
           loop:
-            - sku: VpnGw1
+            - sku: VpnGw1AZ
               vpn_gateway_generation: Generation1
               number: '01'
-            - sku: VpnGw2
+            - sku: VpnGw2AZ
               vpn_gateway_generation: Generation2
               number: '02'
           register: network_gateway_output
@@ -136,7 +139,7 @@
                 private_ip_allocation_method: Dynamic
                 public_ip_address_name: "{{ pubipname }}01"
             virtual_network: "{{ vnetname }}01"
-            sku: VpnGw1
+            sku: VpnGw1AZ
             vpn_gateway_generation: Generation1
             tags:
               common: "xyz"
@@ -221,7 +224,6 @@
     - name: Delete public IP address
       azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgw"
-        allocation_method: Dynamic
         name: "{{ pubipname }}{{ item }}"
         state: absent
       with_items:
