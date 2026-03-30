@@ -642,7 +642,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 if ('location' in self.parameters) and (self.parameters['location'] != old_response['location']):
                     self.to_do = Actions.Update
                 elif (('tenant_id' in self.parameters['properties']) and
-                        (self.parameters['properties']['tenant_id'] != old_response['properties']['tenant_id'])):
+                        (self.parameters['properties']['tenant_id'] != old_response['properties'].get('tenant_id'))):
                     self.to_do = Actions.Update
                 elif (('soft_delete_retention_in_days' in self.parameters['properties']) and
                         (self.parameters['properties']['soft_delete_retention_in_days'] != old_response['properties'].get('soft_delete_retention_in_days'))):
