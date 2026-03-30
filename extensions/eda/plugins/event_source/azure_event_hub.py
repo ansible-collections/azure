@@ -9,8 +9,8 @@ import json
 import logging
 from typing import Any
 
-from azure.eventhub.aio import (EventHubConsumerClient, PartitionContext)
 from azure.eventhub import EventData
+from azure.eventhub.aio import EventHubConsumerClient, PartitionContext
 from azure.identity.aio import ClientSecretCredential
 
 DOCUMENTATION = r"""
@@ -56,6 +56,30 @@ options:
       - The name of the consumer group
     type: str
     default: "$Default"
+  feedback:
+    type: bool
+    default: false
+    description:
+      - Should the source plugin wait for feedback before
+        processing the next event from the Azure Event Hub
+        This flag allows ansible rulebook to pass in an asyncio
+        queue which is passed in the args['eda_feedback_queue']
+        The source plugin should wait for the response to come
+        back on this queue before it picks the next event from
+        Azure Event Hub.
+  feedback_timeout:
+    type: int
+    default: 120
+    description:
+      - Timeout in seconds to wait for feedback from the rule engine
+        before raising an exception. Only applies when feedback is enabled.
+  eda_feedback_queue:
+    description:
+      - Provided automatically by ansible-rulebook when the feedback parameter
+        is enabled, this parameter utilizes an asyncio.Queue. It allows the
+        system to wait for confirmation that an event has been safely persisted
+        in the database before removing it from the event bus. Users do not need
+        to provide a value for this manually.
 """
 
 EXAMPLES = r"""
@@ -79,6 +103,8 @@ REQUIRED_ARGS = [
     "azure_event_hub_name",
 ]
 
+DEFAULT_FEEDBACK_TIMEOUT = 120
+
 
 class AzureHubConsumer:
     """Azure Hub Consumer."""
@@ -95,6 +121,17 @@ class AzureHubConsumer:
 
         self.consumer_group = args.get("azure_consumer_group", "$Default")
         self.starting_position = int(args.get("azure_starting_position", "-1"))
+        self.feedback_timeout = int(args.get("feedback_timeout", DEFAULT_FEEDBACK_TIMEOUT))
+        self.feedback = args.get("feedback", False)
+        self.eda_feedback_queue = args.get("eda_feedback_queue")
+
+        if self.feedback and self.eda_feedback_queue is None:
+            msg = (
+                "feedback: true was set but no feedback queue was provided. "
+                "This requires a compatible version of ansible-rulebook that "
+                "supports the feedback mechanism."
+            )
+            raise ValueError(msg)
 
         self.credential = ClientSecretCredential(
             tenant_id=tenant_id,
@@ -102,11 +139,21 @@ class AzureHubConsumer:
             client_secret=client_secret,
         )
 
-    async def on_event(self, partition_context: PartitionContext, event: EventData) -> None:
+    async def on_event(
+        self, partition_context: PartitionContext, event: EventData,
+    ) -> None:
         """Receiving event data."""
         if event:
-            await partition_context.update_checkpoint(event)
             meta = {}
+            msg_id = (
+                event.message_id
+                or event.correlation_id
+                or f"{partition_context.partition_id}:{event.sequence_number}"
+            )
+
+            meta["event"] = {"uuid": msg_id}
+            if event.enqueued_time:
+                meta["event"]["produced_at"] = event.enqueued_time.isoformat()
             # Process message body
             try:
                 value = event.body_as_str()
@@ -128,6 +175,19 @@ class AzureHubConsumer:
             # Add data to the event and put it into the queue
             if data:
                 await self.queue.put({"body": data, "meta": meta})
+
+            if self.feedback and self.eda_feedback_queue:
+                try:
+                    await asyncio.wait_for(
+                        self.eda_feedback_queue.get(),
+                        timeout=self.feedback_timeout,
+                    )
+                    await partition_context.update_checkpoint(event)
+                except asyncio.TimeoutError:
+                    logger.exception("Timed out waiting for feedback")
+                    raise
+            else:
+                await partition_context.update_checkpoint(event)
 
         await asyncio.sleep(0)
 

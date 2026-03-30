@@ -1,0 +1,66 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/azure_event_hub.json",
+    "title": "Azure Event Hub plugin for EDA",
+    "description": "An ansible-rulebook event source plugin for receiving events from an Azure Event Hub",
+    "type": "object",
+    "properties": {
+        "azure_tenant_id": {
+            "description": "The azure tenant id",
+            "type": "string",
+            "title": "Azure Tenant ID"
+        },
+        "azure_client_id": {
+            "description": "The azure client id",
+            "type": "string",
+            "title": "Azure Client ID"
+        },
+        "azure_client_secret": {
+            "description": "The azure client secret",
+            "type": "string",
+            "title": "Azure Client Secret"
+        },
+        "azure_namespace": {
+            "description": "The azure event hub namespace which includes the host name",
+            "type": "string",
+            "title": "Azure Namespace",
+            "examples": ["test.servicebus.windows.net"]
+        },
+        "azure_event_hub_name": {
+            "description": "The azure event hub name",
+            "type": "string",
+            "title": "Azure Event Hub Name"
+        },
+        "azure_starting_position": {
+            "description": "The starting position",
+            "type": "string",
+            "title": "Azure Starting Position",
+            "default": "-1"
+        },
+        "azure_consumer_group": {
+            "description": "The name of the consumer group",
+            "type": "string",
+            "title": "Azure Consumer Group",
+            "default": "$Default"
+        },
+        "feedback": {
+            "description": "Should the source plugin wait for feedback before processing the next event from the Azure Event Hub.",
+            "type": "boolean",
+            "title": "Feedback",
+            "default": false
+        },
+        "feedback_timeout": {
+            "description": "Timeout in seconds to wait for feedback from the rule engine before raising an exception. Only applies when feedback is enabled.",
+            "type": "integer",
+            "title": "Feedback Timeout",
+            "default": 120
+        }
+    },
+    "required": [
+        "azure_tenant_id",
+        "azure_client_id",
+        "azure_client_secret",
+        "azure_namespace",
+        "azure_event_hub_name"
+    ]
+}
