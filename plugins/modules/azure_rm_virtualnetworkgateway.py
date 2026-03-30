@@ -104,7 +104,10 @@ options:
     sku:
         description:
             - The reference of the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
-        default: VpnGw1
+            - Default is now C(VpnGw1AZ) instead of C(VpnGw1). 
+            - VpnGw1-5 (Non-AZ SKUs) will be retired on Sep 30, 2026. Gateways will be automatically migrated to AZ SKUs.
+            - More information on the retirement https://azure.microsoft.com/updates/v2/vpngw1-5-non-az-skus-will-be-retired-on-30-september-2026.
+        default: VpnGw1AZ
         type: str
         choices:
             - VpnGw1
@@ -233,8 +236,8 @@ ip_configuration_spec = dict(
 
 
 sku_spec = dict(
-    name=dict(type='str', default='VpnGw1'),
-    tier=dict(type='str', default='VpnGw1')
+    name=dict(type='str', default='VpnGw1AZ'),
+    tier=dict(type='str', default='VpnGw1AZ')
 )
 
 
@@ -282,7 +285,7 @@ class AzureRMVirtualNetworkGateway(AzureRMModuleBase):
             vpn_type=dict(type='str', default='route_based', choices=['route_based', 'policy_based']),
             vpn_gateway_generation=dict(type='str', default='Generation1', choices=['None', 'Generation1', 'Generation2']),
             enable_bgp=dict(type='bool', default=False),
-            sku=dict(type='str', default='VpnGw1', choices=[
+            sku=dict(type='str', default='VpnGw1AZ', choices=[
                 'VpnGw1', 'VpnGw2', 'VpnGw3', 'Standard', 'Basic', 'HighPerformance',
                 'VpnGw1AZ', 'VpnGw2AZ', 'VpnGw3AZ', 'VpnGw4AZ', 'VpnGw5AZ',
                 'ErGw1AZ', 'ErGw2AZ', 'ErGw3AZ', 'ErGwScale'
