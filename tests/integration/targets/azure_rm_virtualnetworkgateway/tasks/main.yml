@@ -224,7 +224,6 @@
     - name: Delete public IP address
       azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vnetgw"
-        allocation_method: Dynamic
         name: "{{ pubipname }}{{ item }}"
         state: absent
       with_items:
