@@ -236,7 +236,6 @@ try:
     from enum import Enum
     from azure.mgmt.core.tools import parse_resource_id, resource_id, is_valid_resource_id
     from azure.mgmt.network import NetworkManagementClient
-    from azure.mgmt.network import models as NetworkModels
     from azure.mgmt.resource.resources import ResourceManagementClient
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
@@ -244,7 +243,6 @@ try:
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.dns import DnsManagementClient
     from azure.mgmt.privatedns import PrivateDnsManagementClient
-    import azure.mgmt.privatedns.models as PrivateDnsModels
     from azure.mgmt.monitor import MonitorManagementClient
     from azure.mgmt.web import WebSiteManagementClient
     from azure.mgmt.containerservice import ContainerServiceClient
@@ -262,26 +260,20 @@ try:
     from azure.mgmt.containerregistry import ContainerRegistryManagementClient
     from azure.mgmt.containerinstance import ContainerInstanceManagementClient
     from azure.mgmt.loganalytics import LogAnalyticsManagementClient
-    import azure.mgmt.loganalytics.models as LogAnalyticsModels
     from azure.mgmt.automation import AutomationClient
-    import azure.mgmt.automation.models as AutomationModel
     from azure.mgmt.iothub import IotHubClient
-    from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
-    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
     from azure.mgmt.datafactory import DataFactoryManagementClient
-    import azure.mgmt.datafactory.models as DataFactoryModel
-    from azure.identity._credentials import client_secret, user_password, certificate, managed_identity
-    from azure.identity import AzureCliCredential, ClientAssertionCredential
+    from azure.identity import (ClientSecretCredential, UsernamePasswordCredential,
+                                CertificateCredential, ManagedIdentityCredential, AzureCliCredential, ClientAssertionCredential)
     from kiota_authentication_azure.azure_identity_authentication_provider import AzureIdentityAuthenticationProvider
     from msgraph_core import GraphClientFactory, NationalClouds
     from msgraph import GraphRequestAdapter, GraphServiceClient
     from azure.mgmt.batch import BatchManagementClient
-    from azure.mgmt.batch import models as BatchManagementModel
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
     from azure.mgmt.cdn import CdnManagementClient
 except ImportError as exc:
@@ -676,9 +668,9 @@ class AzureRMModuleBase(object):
             elif (auth_mode == 'login' and self.azure_auth.credentials.get('tenant')
                   and self.azure_auth.credentials.get('client_id')
                   and self.azure_auth.credentials.get('secret')):
-                credential = client_secret.ClientSecretCredential(tenant_id=self.azure_auth.credentials.get('tenant'),
-                                                                  client_id=self.azure_auth.credentials.get('client_id'),
-                                                                  client_secret=self.azure_auth.credentials.get('secret'))
+                credential = ClientSecretCredential(tenant_id=self.azure_auth.credentials.get('tenant'),
+                                                    client_id=self.azure_auth.credentials.get('client_id'),
+                                                    client_secret=self.azure_auth.credentials.get('secret'))
             else:
                 account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
                 credential = account_keys.keys[0].value
@@ -924,20 +916,65 @@ class AzureRMModuleBase(object):
         client = client_type(**client_kwargs)
 
         # FUTURE: remove this once everything exposes models directly (eg, containerinstance)
-        try:
-            getattr(client, "models")
-        except AttributeError:
-            def _ansible_get_models(self, *arg, **kwarg):
+
+        # Ensure client.models() exists AND is callable with no args.
+        # Some SDKs either don't expose models, or expose a different signature.
+        def _ensure_models_shim(client_obj):
+            def _ansible_get_models(self, *args, **kwargs):
                 return self._ansible_models
 
+            module_name = client_type.__module__
+            pkg_name = module_name.rsplit(".", 1)[0]
+
+            models_mod = None
+
+            # 1) Old-style: models exposed as attribute on the same module
             try:
-                setattr(client, '_ansible_models', importlib.import_module(client_type.__module__).models)
-            except AttributeError:
-                if hasattr(importlib.import_module(client_type.__module__), '_modeles'):
-                    setattr(client, '_ansible_models', importlib.import_module(client_type.__module__)._models)
-                else:
-                    pass
-            client.models = types.MethodType(_ansible_get_models, client)
+                mod = importlib.import_module(module_name)
+                models_mod = getattr(mod, "models", None) or getattr(mod, "_models", None)
+            except Exception:
+                models_mod = None
+
+            # 2) New-style: models as sibling module (<package>.models / <package>._models)
+            if models_mod is None:
+                candidates = []
+
+                if api_version:
+                    ver = "v" + api_version.replace("-", "_")
+                    candidates.extend([
+                        f"{pkg_name}.{ver}.models",
+                        f"{pkg_name}.{ver}._models",
+                    ])
+
+                candidates.extend([
+                    f"{pkg_name}.models",
+                    f"{pkg_name}._models",
+                ])
+
+                for cand in candidates:
+                    try:
+                        models_mod = importlib.import_module(cand)
+                        break
+                    except ImportError:
+                        continue
+
+            # Attach only if we found a models module
+            if models_mod is not None:
+                setattr(client_obj, "_ansible_models", models_mod)
+                client_obj.models = types.MethodType(_ansible_get_models, client_obj)
+
+        # Patch if models is missing OR models() cannot be called with no args
+        needs_patch = False
+        if not hasattr(client, "models"):
+            needs_patch = True
+        else:
+            try:
+                client.models()  # our codebase standard: no-arg
+            except Exception:
+                needs_patch = True
+
+        if needs_patch:
+            _ensure_models_shim(client)
 
         client._config.user_agent_policy = self.add_user_agent(client._config.user_agent_policy)
 
@@ -1007,7 +1044,7 @@ class AzureRMModuleBase(object):
 
     @property
     def storage_models(self):
-        return StorageManagementClient.models("2023-05-01")
+        return self.storage_client.models()
 
     @property
     def authorization_client(self):
@@ -1020,7 +1057,7 @@ class AzureRMModuleBase(object):
 
     @property
     def authorization_models(self):
-        return AuthorizationManagementClient.models('2020-04-01-preview')
+        return self.authorization_client.models()
 
     @property
     def subscription_client(self):
@@ -1034,7 +1071,7 @@ class AzureRMModuleBase(object):
 
     @property
     def subscription_models(self):
-        return SubscriptionClient.models("2022-12-01")
+        return self.subscription_client.models()
 
     @property
     def management_groups_client(self):
@@ -1058,21 +1095,21 @@ class AzureRMModuleBase(object):
     @property
     def network_models(self):
         self.log("Getting network models...")
-        return NetworkModels
+        return self.network_client.models()
 
     @property
     def rm_client(self):
-        self.log('Getting resource manager client')
+        self.log("Getting resource manager client")
         if not self._resource_client:
             self._resource_client = self.get_mgmt_svc_client(ResourceManagementClient,
                                                              base_url=self._cloud_environment.endpoints.resource_manager,
-                                                             api_version='2022-09-01')
+                                                             api_version="2022-09-01")
         return self._resource_client
 
     @property
     def rm_models(self):
         self.log("Getting resource manager models")
-        return ResourceManagementClient.models("2022-09-01")
+        return self.rm_client.models()
 
     @property
     def image_client(self):
@@ -1086,7 +1123,7 @@ class AzureRMModuleBase(object):
     @property
     def image_models(self):
         self.log("Getting compute image models")
-        return ComputeManagementClient.models("2024-07-01")
+        return self.image_client.models()
 
     @property
     def compute_client(self):
@@ -1100,7 +1137,7 @@ class AzureRMModuleBase(object):
     @property
     def compute_models(self):
         self.log("Getting compute models")
-        return ComputeManagementClient.models("2024-07-01")
+        return self.compute_client.models()
 
     @property
     def disk_client(self):
@@ -1114,7 +1151,7 @@ class AzureRMModuleBase(object):
     @property
     def disk_models(self):
         self.log("Getting disk models")
-        return ComputeManagementClient.models("2023-04-02")
+        return self.disk_client.models()
 
     @property
     def image_version_client(self):
@@ -1128,7 +1165,7 @@ class AzureRMModuleBase(object):
     @property
     def image_version_models(self):
         self.log("Getting image version models")
-        return ComputeManagementClient.models("2023-07-03")
+        return self.image_version_client.models()
 
     @property
     def multi_disk_client(self):
@@ -1142,7 +1179,7 @@ class AzureRMModuleBase(object):
     @property
     def multi_disk_models(self):
         self.log("Getting disk models")
-        return ComputeManagementClient.models("2021-04-01")
+        return self.multi_disk_client.models()
 
     @property
     def diskencryptionset_client(self):
@@ -1157,7 +1194,7 @@ class AzureRMModuleBase(object):
     @property
     def diskencryptionset_models(self):
         self.log("Getting compute models")
-        return ComputeManagementClient.models("2024-03-02")
+        return self.diskencryptionset_client.models()
 
     @property
     def dns_client(self):
@@ -1171,21 +1208,20 @@ class AzureRMModuleBase(object):
     @property
     def dns_models(self):
         self.log("Getting dns models...")
-        return DnsManagementClient.models('2023-07-01-preview')
+        return self.dns_client.models()
 
     @property
     def private_dns_client(self):
         self.log('Getting private dns client')
         if not self._private_dns_client:
-            self._private_dns_client = self.get_mgmt_svc_client(
-                PrivateDnsManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager)
+            self._private_dns_client = self.get_mgmt_svc_client(PrivateDnsManagementClient,
+                                                                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._private_dns_client
 
     @property
     def private_dns_models(self):
         self.log('Getting private dns models')
-        return PrivateDnsModels
+        return self.private_dns_client.models()
 
     @property
     def web_client(self):
@@ -1208,7 +1244,7 @@ class AzureRMModuleBase(object):
     @property
     def managedcluster_models(self):
         self.log("Getting container service models")
-        return ContainerServiceClient.models('2024-08-01')
+        return self.managedcluster_client.models()
 
     @property
     def managedcluster_client(self):
@@ -1398,7 +1434,7 @@ class AzureRMModuleBase(object):
     @property
     def log_analytics_models(self):
         self.log('Getting log analytics models')
-        return LogAnalyticsModels
+        return self.log_analytics_client.models()
 
     @property
     def servicebus_client(self):
@@ -1411,7 +1447,7 @@ class AzureRMModuleBase(object):
 
     @property
     def servicebus_models(self):
-        return ServiceBusManagementClient.models("2022-10-01-preview")
+        return self.servicebus_client.models()
 
     @property
     def automation_client(self):
@@ -1423,7 +1459,7 @@ class AzureRMModuleBase(object):
 
     @property
     def automation_models(self):
-        return AutomationModel
+        return self.automation_client.models()
 
     @property
     def IoThub_client(self):
@@ -1436,7 +1472,7 @@ class AzureRMModuleBase(object):
 
     @property
     def IoThub_models(self):
-        return IoTHubModels
+        return self.IoThub_client.models()
 
     @property
     def lock_client(self):
@@ -1450,7 +1486,7 @@ class AzureRMModuleBase(object):
     @property
     def lock_models(self):
         self.log("Getting lock models")
-        return ManagementLockClient.models('2016-09-01')
+        return self.lock_client.models()
 
     @property
     def recovery_services_backup_client(self):
@@ -1462,7 +1498,7 @@ class AzureRMModuleBase(object):
 
     @property
     def recovery_services_backup_models(self):
-        return RecoveryServicesBackupModels
+        return self.recovery_services_backup_client.models()
 
     @property
     def search_client(self):
@@ -1477,20 +1513,18 @@ class AzureRMModuleBase(object):
     def notification_hub_client(self):
         self.log('Getting notification hub client')
         if not self._notification_hub_client:
-            self._notification_hub_client = self.get_mgmt_svc_client(
-                NotificationHubsManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-09-01')
+            self._notification_hub_client = self.get_mgmt_svc_client(NotificationHubsManagementClient,
+                                                                     base_url=self._cloud_environment.endpoints.resource_manager,
+                                                                     api_version='2023-09-01')
         return self._notification_hub_client
 
     @property
     def event_hub_client(self):
         self.log('Getting event hub client')
         if not self._event_hub_client:
-            self._event_hub_client = self.get_mgmt_svc_client(
-                EventHubManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2024-01-01')
+            self._event_hub_client = self.get_mgmt_svc_client(EventHubManagementClient,
+                                                              base_url=self._cloud_environment.endpoints.resource_manager,
+                                                              api_version='2024-01-01')
         return self._event_hub_client
 
     @property
@@ -1503,7 +1537,7 @@ class AzureRMModuleBase(object):
 
     @property
     def datafactory_model(self):
-        return DataFactoryModel
+        return self.datafactory_client.models()
 
     @property
     def batch_account_client(self):
@@ -1523,7 +1557,7 @@ class AzureRMModuleBase(object):
 
     @property
     def batch_account_model(self):
-        return BatchManagementModel
+        return self.batch_account_client.models()
 
     @property
     def cdn_client(self):
@@ -1671,43 +1705,43 @@ class AzureRMAuth(object):
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('secret') is not None and \
                 self.credentials.get('tenant') is not None:
-            self.azure_credential_track2 = client_secret.ClientSecretCredential(client_id=self.credentials['client_id'],
-                                                                                client_secret=self.credentials['secret'],
-                                                                                tenant_id=self.credentials['tenant'],
-                                                                                authority=self._adfs_authority_url,
-                                                                                disable_instance_discovery=self._disable_instance_discovery)
+            self.azure_credential_track2 = ClientSecretCredential(client_id=self.credentials['client_id'],
+                                                                  client_secret=self.credentials['secret'],
+                                                                  tenant_id=self.credentials['tenant'],
+                                                                  authority=self._adfs_authority_url,
+                                                                  disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None and \
                 self.credentials.get('thumbprint') is not None and \
                 self.credentials.get('x509_certificate_path') is not None:
-            self.azure_credential_track2 = certificate.CertificateCredential(tenant_id=self.credentials['tenant'],
-                                                                             client_id=self.credentials['client_id'],
-                                                                             certificate_path=self.credentials['x509_certificate_path'],
-                                                                             authority=self._adfs_authority_url,
-                                                                             disable_instance_discovery=self._disable_instance_discovery)
+            self.azure_credential_track2 = CertificateCredential(tenant_id=self.credentials['tenant'],
+                                                                 client_id=self.credentials['client_id'],
+                                                                 certificate_path=self.credentials['x509_certificate_path'],
+                                                                 authority=self._adfs_authority_url,
+                                                                 disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('ad_user') is not None and \
                 self.credentials.get('password') is not None and \
                 self.credentials.get('client_id') is not None and \
                 self.credentials.get('tenant') is not None:
-            self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
-                                                                                    password=self.credentials['password'],
-                                                                                    tenant_id=self.credentials.get('tenant'),
-                                                                                    client_id=self.credentials.get('client_id'),
-                                                                                    authority=self._adfs_authority_url,
-                                                                                    disable_instance_discovery=self._disable_instance_discovery)
+            self.azure_credential_track2 = UsernamePasswordCredential(username=self.credentials['ad_user'],
+                                                                      password=self.credentials['password'],
+                                                                      tenant_id=self.credentials.get('tenant'),
+                                                                      client_id=self.credentials.get('client_id'),
+                                                                      authority=self._adfs_authority_url,
+                                                                      disable_instance_discovery=self._disable_instance_discovery)
 
         elif self.credentials.get('ad_user') is not None and self.credentials.get('password') is not None:
             client_id = self.credentials.get('client_id')
             if client_id is None:
                 client_id = '04b07795-8ddb-461a-bbee-02f9e1bf7b46'
-            self.azure_credential_track2 = user_password.UsernamePasswordCredential(username=self.credentials['ad_user'],
-                                                                                    password=self.credentials['password'],
-                                                                                    tenant_id=self.credentials.get('tenant', 'organizations'),
-                                                                                    client_id=client_id,
-                                                                                    authority=self._adfs_authority_url,
-                                                                                    disable_instance_discovery=self._disable_instance_discovery)
+            self.azure_credential_track2 = UsernamePasswordCredential(username=self.credentials['ad_user'],
+                                                                      password=self.credentials['password'],
+                                                                      tenant_id=self.credentials.get('tenant', 'organizations'),
+                                                                      client_id=client_id,
+                                                                      authority=self._adfs_authority_url,
+                                                                      disable_instance_discovery=self._disable_instance_discovery)
 
         else:
             self.fail("Failed to authenticate with provided credentials. Some attributes were missing. \n\n"
@@ -1771,7 +1805,7 @@ class AzureRMAuth(object):
                     self.fail("cloud_environment {0} could not be resolved: {1}".format(_cloud_environment, str(exc)), exception=traceback.format_exc())
 
         client_id = client_id or self._get_env('client_id')
-        credential = managed_identity.ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
+        credential = ManagedIdentityCredential(client_id=client_id, cloud_environment=cloud_environment)
         subscription_id = subscription_id or self._get_env('subscription_id')
         if not subscription_id:
             try:
