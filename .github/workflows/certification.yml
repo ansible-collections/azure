@@ -15,8 +15,3 @@ concurrency:
 jobs:
   call:
     uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@a930fadb8b6799461bbbbce27b669f83e877fafa
-    with:
-      # If your minimal supported ansible-core is >= 2.18
-      ansible-core-version: '2.18.0'
-      # Choose versions you actually support/test in your repo
-      python-versions: '["3.10", "3.11", "3.12"]'
