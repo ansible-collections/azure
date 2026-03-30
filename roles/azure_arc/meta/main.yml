@@ -17,14 +17,12 @@ galaxy_info:
       versions:
         - bullseye
         - bookworm
-    # Actual supported major version: 7, 8, 9, 10 (see Arc docs)
     - name: EL
       versions:
-        # - "7"
-        # - "8"
-        # - "9"
-        # - "10"
-        - all
+        - "7"
+        - "8"
+        - "9"
+        - "10"
     # Actual supported: 12 SP5, 15 SP3-SP7 (see Azure Arc docs)
     # Update when https://github.com/ansible/ansible-lint/pull/4938 is in a release
     - name: SLES
