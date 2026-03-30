@@ -104,9 +104,6 @@ options:
     sku:
         description:
             - The reference of the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
-            - Default is now C(VpnGw1AZ) instead of C(VpnGw1).
-            - VpnGw1-5 (Non-AZ SKUs) will be retired on Sep 30, 2026. Gateways will be automatically migrated to AZ SKUs.
-            - More information on the retirement https://azure.microsoft.com/updates/v2/vpngw1-5-non-az-skus-will-be-retired-on-30-september-2026.
         default: VpnGw1AZ
         type: str
         choices:
