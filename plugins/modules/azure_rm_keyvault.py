@@ -337,8 +337,7 @@ try:
     from azure.mgmt.keyvault import KeyVaultManagementClient
     from azure.mgmt.keyvault.models import (ManagedServiceIdentity, UserAssignedIdentity, NetworkRuleSet,
                                             NetworkRuleBypassOptions, NetworkRuleAction, ManagedHsmProperties,
-                                            ManagedHsm, ManagedHsmSku, VaultCreateOrUpdateParameters, VaultProperties,
-                                            Sku, AccessPolicyEntry, Permissions)
+                                            ManagedHsm, ManagedHsmSku)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -530,70 +529,56 @@ class AzureRMVaults(AzureRMModuleBaseExt):
 
         # translate Ansible input to SDK-formatted dict in self.parameters
         for key in list(self.module_arg_spec.keys()) + ['tags']:
-            # skip Nones early
-            if kwargs.get(key) is None:
-                continue
-            # Always build request parameters for these keys, regardless of hasattr()
-            if key == "location":
-                self.parameters["location"] = kwargs[key]
-                continue
-            if key == "vault_tenant":
-                self.parameters.setdefault("properties", {})["tenant_id"] = kwargs[key]
-                continue
-            if key == "sku" and self.vault_name is not None:
-                self.parameters.setdefault("properties", {})["sku"] = kwargs[key]
-                continue
-            if key == "sku" and self.hsm_name is not None:
-                self.parameters["sku"] = kwargs[key]
-                continue
-            if key == "public_network_access":
-                self.parameters.setdefault("properties", {})["public_network_access"] = kwargs[key]
-                continue
-            if key == "network_acls":
-                self.parameters.setdefault("properties", {})["network_acls"] = kwargs[key]
-                continue
-            if key == "access_policies":
-                access_policies = kwargs[key]
-                for policy in access_policies:
-                    if 'keys' in policy:
-                        policy.setdefault("permissions", {})["keys"] = policy.pop("keys", None)
-                    if 'secrets' in policy:
-                        policy.setdefault("permissions", {})["secrets"] = policy.pop("secrets", None)
-                    if 'certificates' in policy:
-                        policy.setdefault("permissions", {})["certificates"] = policy.pop("certificates", None)
-                    if 'storage' in policy:
-                        policy.setdefault("permissions", {})["storage"] = policy.pop("storage", None)
-                    if policy.get('tenant_id') is None:
-                        policy['tenant_id'] = kwargs['vault_tenant']
-                self.parameters.setdefault("properties", {})["access_policies"] = access_policies
-                continue
-            if key == "enabled_for_deployment":
-                self.parameters.setdefault("properties", {})["enabled_for_deployment"] = kwargs[key]
-                continue
-            if key == "enabled_for_disk_encryption":
-                self.parameters.setdefault("properties", {})["enabled_for_disk_encryption"] = kwargs[key]
-                continue
-            if key == "enabled_for_template_deployment":
-                self.parameters.setdefault("properties", {})["enabled_for_template_deployment"] = kwargs[key]
-                continue
-            if key == "enable_soft_delete":
-                self.parameters.setdefault("properties", {})["enable_soft_delete"] = kwargs[key]
-                continue
-            if key == "enable_rbac_authorization":
-                self.parameters.setdefault("properties", {})["enable_rbac_authorization"] = kwargs[key]
-                continue
-            if key == "enable_purge_protection":
-                self.parameters.setdefault("properties", {})["enable_purge_protection"] = kwargs[key]
-                continue
-            if key == "soft_delete_retention_in_days":
-                self.parameters.setdefault("properties", {})["soft_delete_retention_in_days"] = kwargs[key]
-                continue
-            if key == "recover_mode":
-                self.parameters.setdefault("properties", {})["create_mode"] = 'recover' if kwargs[key] else 'default'
-                continue
-
-            # Otherwise treat it as a plain module attribute (resource_group, vault_name, hsm_name, etc.)
-            setattr(self, key, kwargs[key])
+            if hasattr(self, key):
+                setattr(self, key, kwargs[key])
+            elif kwargs[key] is not None:
+                if key == "location":
+                    self.parameters["location"] = kwargs[key]
+                elif key == "vault_tenant":
+                    self.parameters.setdefault("properties", {})["tenant_id"] = kwargs[key]
+                elif key == "sku" and self.vault_name is not None:
+                    self.parameters.setdefault("properties", {})["sku"] = kwargs[key]
+                elif key == "sku" and self.hsm_name is not None:
+                    self.parameters["sku"] = kwargs[key]
+                elif key == "public_network_access":
+                    self.parameters.setdefault("properties", {})["public_network_access"] = kwargs[key]
+                elif key == "network_acls":
+                    self.parameters.setdefault("properties", {})["network_acls"] = kwargs[key]
+                elif key == "access_policies":
+                    access_policies = kwargs[key]
+                    for policy in access_policies:
+                        if 'keys' in policy:
+                            policy.setdefault("permissions", {})["keys"] = policy["keys"]
+                            policy.pop("keys", None)
+                        if 'secrets' in policy:
+                            policy.setdefault("permissions", {})["secrets"] = policy["secrets"]
+                            policy.pop("secrets", None)
+                        if 'certificates' in policy:
+                            policy.setdefault("permissions", {})["certificates"] = policy["certificates"]
+                            policy.pop("certificates", None)
+                        if 'storage' in policy:
+                            policy.setdefault("permissions", {})["storage"] = policy["storage"]
+                            policy.pop("storage", None)
+                        if policy.get('tenant_id') is None:
+                            # default to key vault's tenant, since that's all that's currently supported anyway
+                            policy['tenant_id'] = kwargs['vault_tenant']
+                    self.parameters.setdefault("properties", {})["access_policies"] = access_policies
+                elif key == "enabled_for_deployment":
+                    self.parameters.setdefault("properties", {})["enabled_for_deployment"] = kwargs[key]
+                elif key == "enabled_for_disk_encryption":
+                    self.parameters.setdefault("properties", {})["enabled_for_disk_encryption"] = kwargs[key]
+                elif key == "enabled_for_template_deployment":
+                    self.parameters.setdefault("properties", {})["enabled_for_template_deployment"] = kwargs[key]
+                elif key == "enable_soft_delete":
+                    self.parameters.setdefault("properties", {})["enable_soft_delete"] = kwargs[key]
+                elif key == "enable_rbac_authorization":
+                    self.parameters.setdefault("properties", {})["enable_rbac_authorization"] = kwargs[key]
+                elif key == "enable_purge_protection":
+                    self.parameters.setdefault("properties", {})["enable_purge_protection"] = kwargs[key]
+                elif key == "soft_delete_retention_in_days":
+                    self.parameters.setdefault("properties", {})["soft_delete_retention_in_days"] = kwargs[key]
+                elif key == "recover_mode":
+                    self.parameters.setdefault("properties", {})["create_mode"] = 'recover' if kwargs[key] else 'default'
 
         old_response = None
         response = None
@@ -642,7 +627,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 if ('location' in self.parameters) and (self.parameters['location'] != old_response['location']):
                     self.to_do = Actions.Update
                 elif (('tenant_id' in self.parameters['properties']) and
-                        (self.parameters['properties']['tenant_id'] != old_response['properties'].get('tenant_id'))):
+                        (self.parameters['properties']['tenant_id'] != old_response['properties']['tenant_id'])):
                     self.to_do = Actions.Update
                 elif (('soft_delete_retention_in_days' in self.parameters['properties']) and
                         (self.parameters['properties']['soft_delete_retention_in_days'] != old_response['properties'].get('soft_delete_retention_in_days'))):
@@ -765,64 +750,18 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         :return: deserialized Key Vault instance state dictionary
         '''
         self.log("Creating / Updating the Key Vault instance {0}".format(self.vault_name))
-        props = self.parameters.get("properties", {})
-        tenant_id = props["tenant_id"]
-
-        sku_dict = props["sku"]
-        sku = Sku(
-            name=sku_dict["name"],
-            family=sku_dict["family"]
-        )
-
-        access_policies = []
-        for p in props.get("access_policies", []):
-            perms = Permissions(
-                keys_property=p.get("permissions", {}).get("keys"),
-                secrets=p.get("permissions", {}).get("secrets"),
-                certificates=p.get("permissions", {}).get("certificates"),
-                storage=p.get("permissions", {}).get("storage"),
-            )
-
-            access_policies.append(
-                AccessPolicyEntry(
-                    tenant_id=p["tenant_id"],
-                    object_id=p["object_id"],
-                    application_id=p.get("application_id"),
-                    permissions=perms,
-                )
-            )
-
-        vault_props = VaultProperties(
-            tenant_id=tenant_id,
-            sku=sku,
-            access_policies=access_policies,
-            enabled_for_deployment=props.get("enabled_for_deployment", False),
-            enabled_for_disk_encryption=props.get("enabled_for_disk_encryption", False),
-            enabled_for_template_deployment=props.get("enabled_for_template_deployment", False),
-            enable_soft_delete=props.get("enable_soft_delete", True),
-            enable_purge_protection=props.get("enable_purge_protection"),
-            enable_rbac_authorization=props.get("enable_rbac_authorization"),
-            soft_delete_retention_in_days=props.get("soft_delete_retention_in_days"),
-            create_mode=props.get("create_mode"),
-            network_acls=props.get("network_acls"),
-            public_network_access=props.get("public_network_access"),
-        )
-
-        parameters = VaultCreateOrUpdateParameters(
-            location=self.parameters["location"],
-            properties=vault_props,
-            tags=self.parameters.get("tags"),
-        )
 
         try:
-            poller = self.mgmt_client.vaults.begin_create_or_update(
-                resource_group_name=self.resource_group,
-                vault_name=self.vault_name,
-                parameters=parameters,
-            )
-            return self.get_poller_result(poller).as_dict()
+            response = self.mgmt_client.vaults.begin_create_or_update(resource_group_name=self.resource_group,
+                                                                      vault_name=self.vault_name,
+                                                                      parameters=self.parameters)
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
+
         except Exception as exc:
-            self.fail(f"Error creating the Key Vault instance: {exc}")
+            self.log('Error attempting to create the Key Vault instance.')
+            self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
+        return response and response.as_dict() or None
 
     def create_update_hsm(self):
         '''

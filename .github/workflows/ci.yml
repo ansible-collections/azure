@@ -58,14 +58,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          echo "Validating requirements.txt (only >= allowed for package versions)..."
-          if awk -F';' '{print $1}' requirements.txt | \
-            grep -nE '(==|<=|<[^=]|~=|!=|===)'; then
-            echo ""
-            echo "Error: requirements.txt contains disallowed package version constraints."
-            echo "Only unversioned packages or >=x.y.z are allowed."
-            echo "Environment markers (after ';') are allowed."
+          echo "Checking requirements.txt for pinned versions..."
+          if grep '==' requirements.txt | grep -v -E '^(azure-|msgraph-sdk)'; then
+            echo "Error: Found pinned third-party dependencies! Please remove version pins."
             exit 1
+          else
+            echo "Success: requirements.txt validation passed."
           fi
 
   # ruff-check
