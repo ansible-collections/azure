@@ -269,7 +269,7 @@ try:
     from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
-    import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
+    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
