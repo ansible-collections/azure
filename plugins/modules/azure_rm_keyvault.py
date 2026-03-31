@@ -335,7 +335,8 @@ try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.keyvault import KeyVaultManagementClient
-    from azure.mgmt.keyvault.models import (ManagedServiceIdentity, UserAssignedIdentity, NetworkRuleSet,
+    from azure.mgmt.keyvault.models import (VaultCreateOrUpdateParameters, VaultProperties, Sku, AccessPolicyEntry, 
+                                            Permissions, ManagedServiceIdentity, UserAssignedIdentity, NetworkRuleSet,
                                             NetworkRuleBypassOptions, NetworkRuleAction, ManagedHsmProperties,
                                             ManagedHsm, ManagedHsmSku)
 except ImportError:
@@ -750,18 +751,60 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         :return: deserialized Key Vault instance state dictionary
         '''
         self.log("Creating / Updating the Key Vault instance {0}".format(self.vault_name))
+        props = self.parameters.get("properties", {})
+        # --- SKU ---
+        sku_dict = props["sku"]
+        sku = Sku(
+            name=sku_dict["name"],
+            family=sku_dict["family"]
+        )
+        # --- Access policies ---
+        access_policies = []
+        for p in props.get("access_policies", []):
+            perms = Permissions(
+                keys=p.get("permissions", {}).get("keys"),
+                secrets=p.get("permissions", {}).get("secrets"),
+                certificates=p.get("permissions", {}).get("certificates"),
+                storage=p.get("permissions", {}).get("storage"),
+            )
+            access_policies.append(
+                AccessPolicyEntry(
+                    tenant_id=p["tenant_id"],
+                    object_id=p["object_id"],
+                    application_id=p.get("application_id"),
+                    permissions=perms,
+                )
+            )
+        vault_props = VaultProperties(
+            tenant_id=props["tenant_id"],
+            sku=sku,
+            access_policies=access_policies,
+            enabled_for_deployment=props.get("enabled_for_deployment"),
+            enabled_for_disk_encryption=props.get("enabled_for_disk_encryption"),
+            enabled_for_template_deployment=props.get("enabled_for_template_deployment"),
+            enable_soft_delete=props.get("enable_soft_delete"),
+            enable_purge_protection=props.get("enable_purge_protection"),
+            enable_rbac_authorization=props.get("enable_rbac_authorization"),
+            soft_delete_retention_in_days=props.get("soft_delete_retention_in_days"),
+            create_mode=props.get("create_mode"),
+            network_acls=props.get("network_acls"),
+            public_network_access=props.get("public_network_access"),
+        )
+        parameters = VaultCreateOrUpdateParameters(
+            location=self.parameters["location"],
+            properties=vault_props,
+            tags=self.parameters.get("tags"),
+        )
 
         try:
-            response = self.mgmt_client.vaults.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                      vault_name=self.vault_name,
-                                                                      parameters=self.parameters)
-            if isinstance(response, LROPoller):
-                response = self.get_poller_result(response)
-
+            poller = self.mgmt_client.vaults.begin_create_or_update(
+                resource_group_name=self.resource_group,
+                vault_name=self.vault_name,
+                parameters=parameters,
+            )
+            return self.get_poller_result(poller).as_dict()
         except Exception as exc:
-            self.log('Error attempting to create the Key Vault instance.')
-            self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
-        return response and response.as_dict() or None
+            self.fail(f"Error creating the Key Vault instance: {exc}")
 
     def create_update_hsm(self):
         '''
