@@ -118,7 +118,7 @@
           - search_info_module.search.partition_count == 1
           - search_info_module.search.replica_count == 1
           - search_info_module.search.sku == "basic"
-          - search_info_module.search.provisioning_state == "Succeeded"
+          - search_info.state.provisioning_state | lower == "succeeded"  # older SDK return "Succeeded"
           - search_info_module.search.public_network_access == "Enabled"
           - search_info_module.search.status == "running"
 
@@ -168,7 +168,7 @@
           - search_info.state.partition_count == 2
           - search_info.state.replica_count == 2
           - search_info.state.sku == "standard"
-          - search_info.state.provisioning_state == "Succeeded"
+          - search_info.state.provisioning_state | lower == "succeeded"  # older SDK return "Succeeded"
           - search_info.state.status == "running"
 
     - name: Update Azure Search not default parameters (Idempotence)
