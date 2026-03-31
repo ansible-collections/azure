@@ -1072,7 +1072,11 @@ class AzureRMModuleBase(object):
     @property
     def rm_models(self):
         self.log("Getting resource manager models")
-        return ResourceManagementClient.models("2022-09-01")
+        try:
+            return ResourceManagementClient.models("2022-09-01")
+        except AttributeError:
+            from azure.mgmt.resource.resources import models
+            return models
 
     @property
     def image_client(self):
