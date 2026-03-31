@@ -269,7 +269,7 @@ try:
     from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
-    import azure.mgmt.recoveryservicesbackup.models as RecoveryServicesBackupModels
+    import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
     from azure.mgmt.search import SearchManagementClient
     from azure.mgmt.notificationhubs import NotificationHubsManagementClient
     from azure.mgmt.eventhub import EventHubManagementClient
@@ -1072,11 +1072,7 @@ class AzureRMModuleBase(object):
     @property
     def rm_models(self):
         self.log("Getting resource manager models")
-        try:
-            return ResourceManagementClient.models("2022-09-01")
-        except AttributeError:
-            from azure.mgmt.resource.resources import models
-            return models
+        return ResourceManagementClient.models("2022-09-01")
 
     @property
     def image_client(self):
