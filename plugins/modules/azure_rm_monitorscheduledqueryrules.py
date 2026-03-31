@@ -284,7 +284,7 @@ scheduledqueryrule:
         "tags": {},
         "type": "Microsoft.Insights/scheduledQueryRules"
     }
-'''
+'''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 

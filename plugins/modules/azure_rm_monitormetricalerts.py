@@ -260,7 +260,7 @@ metricalert:
         "type": "Microsoft.Insights/metricAlerts",
         "window_size": "P1D"
     }
-'''
+'''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 

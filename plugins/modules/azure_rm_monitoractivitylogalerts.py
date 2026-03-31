@@ -284,7 +284,7 @@ activitylogalert:
         "tags": {},
         "type": "Microsoft.Insights/ActivityLogAlerts"
     }
-'''
+'''  # NOQA
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 

@@ -107,7 +107,7 @@ EXAMPLES = \
                        resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
     recovery_point_expiry_time: '2023-02-09T06:00:00Z'
     state: 'backup'
-'''
+'''  # NOQA
 
 RETURN = \
     '''

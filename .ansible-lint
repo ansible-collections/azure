@@ -1,2 +1,3 @@
 exclude_paths:
   - tests/integration/targets/inventory_azure/playbooks/vars.yml
+  - pr-pipelines.yml
