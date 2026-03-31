@@ -36,7 +36,7 @@
       azure.azcollection.azure_rm_virtualnetworkgateway:
         resource_group: "{{ resource_group }}-vnetgwnatrule"
         name: "{{ vngname }}"
-        sku: VpnGw2
+        sku: VpnGw2AZ
         vpn_gateway_generation: Generation2
         ip_configurations:
           - name: testipconfig

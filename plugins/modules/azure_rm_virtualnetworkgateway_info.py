@@ -142,7 +142,7 @@ virtual_network_gatways:
                 - The reference to the VirtualNetworkGatewaySku resource which represents the SKU selected for Virtual network gateway.
             type: dict
             returned: always
-            sample: {'name':'VpnGw1', 'tier':'VpnGw1'}
+            sample: {'name':'VpnGw1AZ', 'tier':'VpnGw1AZ'}
         tags:
             description:
                 - Resource tags.
