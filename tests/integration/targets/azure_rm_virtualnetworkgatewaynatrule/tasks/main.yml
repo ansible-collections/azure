@@ -31,7 +31,7 @@
         allocation_method: Static
         sku: standard
         name: "{{ pubipname }}"
-        zones: 
+        zones:
           - "1"
           - "2"
 

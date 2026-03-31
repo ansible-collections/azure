@@ -97,7 +97,7 @@
           - search_info.state.partition_count == 1
           - search_info.state.replica_count == 1
           - search_info.state.sku == "basic"
-          - search_info.state.provisioning_state == "Succeeded"
+          - search_info.state.provisioning_state | lower == "succeeded"  # older SDK return "Succeeded"
           - search_info.state.public_network_access == "Enabled"
           - search_info.state.status == "running"
 
