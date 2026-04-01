@@ -11,6 +11,7 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
     from azure.ai.ml import MLClient
     from azure.ai.ml._restclient.v2022_02_01_preview.models import ListViewType
+    from azure.ai.ml.entities._builders.base_node import BaseNode
     import json
 except ImportError:
     pass
@@ -34,6 +35,8 @@ class MLClientCommon(AzureRMModuleBaseExt):
         ENTITY._to_dict() returns and OrderedDict so we abuse json
         dumps and loads to return a Dict
         """
+        if isinstance(entity, BaseNode):
+            entity = entity._to_job()  # pylint: disable=protected-access
         if isinstance(entity, Dict):
             return entity
         try:

@@ -1,0 +1,16 @@
+channels:
+  - anaconda
+  - pytorch
+  - conda-forge
+dependencies:
+  - python==3.10.9
+  - openssl=3.0.*
+  - cryptography
+  - pytorch==1.12.1
+  - tqdm==4.65.0
+  - pip==23.2.1
+  - pip:
+      - azure-ai-ml==1.8.0
+      - azureml-mlflow==1.52.0
+      - mlflow
+      - torchvision

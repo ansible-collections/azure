@@ -38,13 +38,13 @@ options:
         type: str
     version:
         description:
-            - Version of the data asset. Must be provided, if label
+            - Version of the model. Must be provided, if label
               is not provided. Mutually exclusive with label.
         required: false
         type: str
     label:
         description:
-            - Label of the data asset. Must be provided, if version
+            - Label of the model. Must be provided, if version
               is not provided. Mutually exclusive with version.
         required: false
         type: str
@@ -55,7 +55,7 @@ options:
         type: str
     list_type:
         description:
-            - Specify if you want active, archived or all datasets.
+            - Specify if you want active, archived or all models.
         type: str
         choices:
             - active
