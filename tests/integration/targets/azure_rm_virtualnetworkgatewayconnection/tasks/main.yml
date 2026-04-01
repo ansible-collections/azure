@@ -61,6 +61,9 @@
         allocation_method: Static
         name: "{{ pubipname }}01"
         sku: standard
+        zones:
+          - "1"
+          - "2"
 
     - name: Create the secondary public IP address
       azure.azcollection.azure_rm_publicipaddress:
@@ -68,6 +71,9 @@
         allocation_method: Static
         name: "{{ pubipname }}02"
         sku: standard
+        zones:
+          - "1"
+          - "2"
 
     - name: Create the virtual network gateway without bgp settings
       azure.azcollection.azure_rm_virtualnetworkgateway:
