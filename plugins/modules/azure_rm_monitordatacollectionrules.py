@@ -568,8 +568,8 @@ EXAMPLES = '''
             - Processor(*)\\% Idle Time
     destinations:
       log_analytics:
-        - workspace_resource_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resougce_group_name_log_analytics_workspace/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name
+        - workspace_resource_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/\
+            resougce_group_name_log_analytics_workspace/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name"
           name: log_analytics_workspace_name
     data_flows:
       - destinations:
@@ -607,8 +607,8 @@ EXAMPLES = '''
             - Custom-Text-CustomLogs_CL
     destinations:
       log_analytics:
-        - workspace_resource_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resougce_group_name_log_analytics_workspace/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name
+        - workspace_resource_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/\
+            resougce_group_name_log_analytics_workspace/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name"
           name: log_analytics_workspace_name
     data_flows:
       - destinations:
@@ -617,8 +617,8 @@ EXAMPLES = '''
         streams:
           - Custom-Text-CustomLogs_CL
         transform_kql: source
-    data_collection_endpoint_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resougce_group_name_log_analytics_workspace/providers/Microsoft.Insights/dataCollectionEndpoints/dcr-endpoint
+    data_collection_endpoint_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/\
+        resougce_group_name_log_analytics_workspace/providers/Microsoft.Insights/dataCollectionEndpoints/dcr-endpoint"
     stream_declarations:
       Custom-Text-CustomLogs_CL:
         columns:
@@ -634,7 +634,7 @@ EXAMPLES = '''
 
 - name: Delete a data collection rule
   azure.azcollection.azure_rm_monitordatacollectionrules:
-    state: present
+    state: absent
     name: data_collection_rule_name
     resource_group: resource_group_name
 '''

@@ -183,8 +183,8 @@ EXAMPLES = '''
         action_group:
           - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name
         email_subject: ''
-      odata_type: \
-Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+      odata_type: "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.\
+        AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction"
       severity: 2
       trigger:
         metric_trigger:
@@ -203,8 +203,8 @@ Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights
       time_window_in_minutes: 5
     source:
       authorized_resources: []
-      data_source_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name
+      data_source_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/\
+        resource_group_name/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name"
       query: >
         Perf
         | where CounterName == "% Free Space"

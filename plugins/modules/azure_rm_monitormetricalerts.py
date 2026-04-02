@@ -145,8 +145,8 @@ EXAMPLES = '''
     location: Global
     name: metric_alert_name
     actions:
-      - action_group_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name
+      - action_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/\
+        resource_group_name/providers/microsoft.insights/actionGroups/action_group_name"
     auto_mitigate: true
     criteria:
       all_of:
