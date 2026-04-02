@@ -183,8 +183,8 @@ EXAMPLES = '''
         action_group:
           - /subscriptions/<sub-id>/resourceGroups/myrg/providers/microsoft.insights/actionGroups/action_group_name
         email_subject: ''
-      odata_type: \
-        "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction"
+      odata_type: "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.\
+        Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction"
       severity: 2
       trigger:
         metric_trigger:
