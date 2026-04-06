@@ -1,0 +1,231 @@
+- name: Create a new resource group for ml-job test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-job"
+    location: eastus
+
+- name: For ml-job topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-job"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-job"
+        workspace_name: "workspace-{{ rpfx }}"
+        job_name: "job{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Data Asset
+      azure.azcollection.azure_rm_ml_data:
+        name: data-fashion-mnist
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        version: 1
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+          description: Fashion MNIST Dataset.
+          path: ./targets/azure_rm_ml_job/files/data
+          type: uri_folder
+      register: results
+
+    - name: Assert the ML Data Asset created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: "Create ML Compute type:amlcompute"
+      azure.azcollection.azure_rm_ml_compute:
+        location: "{{ location }}"
+        name: "cluster-cpu"
+        ml_workspace: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        type: "amlcompute"
+        min_instances: 0
+        max_instances: 4
+        size: Standard_D2s_v3
+        tags:
+          created_by: "Ansible"
+      register: results
+
+    - name: Assert the ML Compute created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Job
+      azure.azcollection.azure_rm_ml_job:
+        name: "{{ job_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+          type: command
+          description: Trains a simple neural network on the Fashion-MNIST dataset.
+          experiment_name: "aml_command_cli"
+          compute: azureml:cluster-cpu
+          inputs:
+            fashion_mnist:
+              path: azureml:data-fashion-mnist@latest
+          outputs:
+            model:
+              type: mlflow_model
+          code: ./targets/azure_rm_ml_job/files/src
+          environment:
+            image: mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:latest
+            conda_file: ./targets/azure_rm_ml_job/files/conda.yml
+          command: python train.py --data_dir ${{ '{{' }}inputs.fashion_mnist{{ '}}' }} --model_dir ${{ '{{' }}outputs.model{{ '}}' }}
+      register: results
+
+    - name: Assert the ML Job created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Job (idempotent)
+      azure.azcollection.azure_rm_ml_job:
+        name: "{{ job_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+          type: command
+          description: Trains a simple neural network on the Fashion-MNIST dataset.
+          experiment_name: "aml_command_cli"
+          compute: azureml:cluster-cpu
+          inputs:
+            fashion_mnist:
+              path: azureml:data-fashion-mnist@latest
+          outputs:
+            model:
+              type: mlflow_model
+          code: ./targets/azure_rm_ml_job/files/src
+          environment:
+            image: mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:latest
+            conda_file: ./targets/azure_rm_ml_job/files/conda.yml
+          command: python train.py --data_dir ${{ '{{' }}inputs.fashion_mnist{{ '}}' }} --model_dir ${{ '{{' }}outputs.model{{ '}}' }}
+      register: results
+
+    - name: Assert the ML Job created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: Check job status..
+      azure.azcollection.azure_rm_ml_job_info:
+        name: "{{ job_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+      until:
+        - results.ml_jobs[0].status == 'Completed' or
+          results.ml_jobs[0].status == 'Failed'
+      retries: 60
+      delay: 60
+
+    - name: Create Model from Job Output
+      azure.azcollection.azure_rm_ml_model:
+        name: model-command-cli
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        version: 1
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+          path: azureml://jobs/{{ job_name }}/outputs/model
+          description: Model created from job output.
+      register: results
+
+    - name: Assert the ML Model created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: List ML Job (archived)
+      azure.azcollection.azure_rm_ml_job_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        list_type: archived
+      register: results
+
+    - name: Assert Archived jobs are zero
+      ansible.builtin.assert:
+        that:
+          - results.ml_jobs | length == 0
+
+    - name: Archive Job
+      azure.azcollection.azure_rm_ml_job:
+        name: "{{ job_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: archive
+      register: results
+
+    - name: Assert the ML Job is archived
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Archive Job (idempotent)
+      azure.azcollection.azure_rm_ml_job:
+        name: "{{ job_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: archive
+      register: results
+
+    - name: Assert the ML Job is archived (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Job (archived)
+      azure.azcollection.azure_rm_ml_job_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        list_type: archived
+      register: results
+
+    - name: Assert Archived jobs are one
+      ansible.builtin.assert:
+        that:
+          - results.ml_jobs | length == 1
+
+    # cleanup
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
