@@ -1,0 +1,4 @@
+exclude_paths:
+  - .github/
+  - tests/
+  - pr-pipelines.yml

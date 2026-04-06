@@ -185,8 +185,7 @@ EXAMPLES = '''
               field: properties.cause
     actions:
       action_groups:
-        - action_group_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name
+        - action_group_id: "/subscriptions/<sub-id>/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name"
 
 - name: Add tag to existing activity log alert
   azure.azcollection.azure_rm_monitoractivitylogalerts:

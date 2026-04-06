@@ -175,16 +175,16 @@ EXAMPLES = '''
 - name: Add a scheduled query rule
   azure.azcollection.azure_rm_monitorscheduledqueryrules:
     state: present
-    resource_group: resource_group_name
+    resource_group: myrg
     name: scheduled_query_rule_name
     location: eastus
     action:
       azns_action:
         action_group:
-          - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name
+          - /subscriptions/<sub-id>/resourceGroups/myrg/providers/microsoft.insights/actionGroups/action_group_name
         email_subject: ''
-      odata_type: \
-Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
+      odata_type: >-
+        Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction
       severity: 2
       trigger:
         metric_trigger:
@@ -203,8 +203,7 @@ Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights
       time_window_in_minutes: 5
     source:
       authorized_resources: []
-      data_source_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name
+      data_source_id: "/subscriptions/<sub-id>/resourceGroups/myrg/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name"
       query: >
         Perf
         | where CounterName == "% Free Space"
@@ -217,7 +216,7 @@ Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights
   azure.azcollection.azure_rm_monitorscheduledqueryrules:
     state: present
     name: scheduled_query_rule_name
-    resource_group: resource_group_name
+    resource_group: myrg
     append_tags: true
     tags:
       ThisIsAnAddedExampleTag: ExampleValue
@@ -226,7 +225,7 @@ Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights
   azure.azcollection.azure_rm_monitorscheduledqueryrules:
     state: absent
     name: scheduled_query_rule_name
-    resource_group: resource_group_name
+    resource_group: myrg
 '''
 
 RETURN = '''
@@ -241,7 +240,7 @@ scheduledqueryrule:
         "action": {
             "azns_action": {
                 "action_group": [
-                    "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name"
+                    "/subscriptions/<sub-id>/resourceGroups/myrg/providers/microsoft.insights/actionGroups/action_group_name"
                 ],
                 "email_subject": ""
             },
@@ -265,7 +264,7 @@ scheduledqueryrule:
         "display_name": "scheduled_query_alert_name",
         "enabled": "true",
         "id": \
-"/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/scheduledqueryrules/scheduled_query_alert_name",
+"/subscriptions/<sub-id>/resourceGroups/myrg/providers/microsoft.insights/scheduledqueryrules/scheduled_query_alert_name",
         "last_updated_time": "2025-10-30T16:07:30.773011Z",
         "location": "eastus",
         "name": "scheduled_query_alert_name",
@@ -277,7 +276,7 @@ scheduledqueryrule:
         "source": {
             "authorized_resources": [],
             "data_source_id": \
-"/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_names",
+"/subscriptions/<sub-id>/resourceGroups/myrg/providers/Microsoft.OperationalInsights/workspaces/log_analytics_workspace_name",
             "query": "actual query",
             "query_type": "ResultCount"
         },

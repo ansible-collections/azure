@@ -1,0 +1,40 @@
+name: Run Extra CI (requirements validation, ruff checks)
+on:
+  # Run CI against all pushes (direct commits, also merged PRs), Pull Requests
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  # requirements.txt validation
+  requirements-validation:
+    name: Requirements Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "Checking requirements.txt for pinned versions..."
+          if grep '==' requirements.txt | grep -v -E '^(azure-|msgraph-sdk)'; then
+            echo "Error: Found pinned third-party dependencies! Please remove version pins."
+            exit 1
+          else
+            echo "Success: requirements.txt validation passed."
+          fi
+
+  # ruff-check
+  ruff-checks:
+    name: Ruff Check for EDA plugins
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: |
+          echo "Running Ruff check for EDA plugins..."
+          ruff check --select ALL --ignore D100,D104,INP001,FA102,UP001,UP010,I001,FA100,PLR0913,E501 -q extensions/eda/plugins

@@ -78,33 +78,27 @@ EXAMPLES = \
   azure_rm_backupazurevm:
     resource_group: 'myResourceGroup'
     recovery_vault_name: 'testVault'
-    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-    resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-    backup_policy_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-    resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
+    resource_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/testVM'
+    backup_policy_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
     state: 'create'
 - name: Stop protection but retain existing data
   azure_rm_backupazurevm:
-    resource_group: 'myResourceGroup'
+    resource_group: 'my-rg'
     recovery_vault_name: 'testVault'
-    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-    resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+    resource_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/testVM'
     state: 'stop'
 - name: Stop protection and delete data
   azure_rm_backupazurevm:
-    resource_group: 'myResourceGroup'
+    resource_group: 'my-rg'
     recovery_vault_name: 'testVault'
-    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
+    resource_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/testVM'
     state: 'delete'
 - name: Trigger an on-demand backup for a protected Azure VM
   azure_rm_backupazurevm:
-    resource_group: 'myResourceGroup'
+    resource_group: 'my-rg'
     recovery_vault_name: 'testVault'
-    resource_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-                  resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/testVM'
-    backup_policy_id: '/subscriptions/00000000-0000-0000-0000-000000000000/ \
-                       resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
+    resource_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/testVM'
+    backup_policy_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
     recovery_point_expiry_time: '2023-02-09T06:00:00Z'
     state: 'backup'
 '''

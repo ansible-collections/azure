@@ -141,12 +141,11 @@ EXAMPLES = '''
 - name: Add a metric alert
   azure.azcollection.azure_rm_monitormetricalerts:
     state: present
-    resource_group: resource_group_name
+    resource_group: myrg
     location: Global
     name: metric_alert_name
     actions:
-      - action_group_id: \
-/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name
+      - action_group_id: subscriptions/<sub-id>/resourceGroups/myrg/providers/microsoft.insights/actionGroups/action_group_name
     auto_mitigate: true
     criteria:
       all_of:
@@ -172,7 +171,7 @@ EXAMPLES = '''
     enabled: true
     evaluation_frequency: PT1H
     scopes:
-      - /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/Microsoft.RecoveryServices/vaults/recovery_vault_name
+      - /subscriptions/<sub-id>/resourceGroups/myrg/providers/Microsoft.RecoveryServices/vaults/recovery_vault_name
     severity: 3
     tags:
       TestTag1: TestValue1
@@ -183,7 +182,7 @@ EXAMPLES = '''
   azure.azcollection.azure_rm_monitormetricalerts:
     state: present
     name: metric_alert_name
-    resource_group: resource_group_name
+    resource_group: myrg
     append_tags: true
     tags:
       ThisIsAnAddedExampleTag: ExampleValue
@@ -192,7 +191,7 @@ EXAMPLES = '''
   azure.azcollection.azure_rm_monitormetricalerts:
     state: absent
     name: metric_alert_name
-    resource_group: resource_group_name
+    resource_group: myrg
 '''
 
 RETURN = '''
@@ -206,8 +205,7 @@ metricalert:
     sample: {
         "actions": [
             {
-                "action_group_id": \
-"/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/microsoft.insights/actionGroups/action_group_name"
+                "action_group_id": "subscriptions/<sub-id>/resourceGroups/myrg/providers/microsoft.insights/actionGroups/action_group_name"
             }
         ],
         "auto_mitigate": true,
@@ -245,12 +243,11 @@ metricalert:
         "description": "Alert on Backup Health Events",
         "enabled": true,
         "evaluation_frequency": "PT1H",
-        "id": \
-"/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/Microsoft.Insights/metricAlerts/metric_alert_name",
+        "id": "subscriptions/<sub-id>/resourceGroups/myrg/providers/Microsoft.Insights/metricAlerts/metric_alert_name",
         "location": "Global",
         "name": "metric_alert_name",
         "scopes": [
-            "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/resource_group_name/providers/Microsoft.RecoveryServices/vaults/recovery_vault_name"
+            "/subscriptions/<sub-id>/resourceGroups/myrg/providers/Microsoft.RecoveryServices/vaults/recovery_vault_name"
         ],
         "severity": 3,
         "tags": {

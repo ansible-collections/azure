@@ -7,7 +7,8 @@ galaxy_info:
 
   min_ansible_version: 2.16.0
 
-  # Supported platforms: see https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
+  # Supported platforms:
+  # https://learn.microsoft.com/en-us/azure/azure-arc/servers/prerequisites#supported-operating-systems for Azure Arc supported Linux distributions.
   platforms:
     - name: Amazon Linux
       versions:
@@ -17,12 +18,10 @@ galaxy_info:
       versions:
         - bullseye
         - bookworm
+    # Actual supported: "7", "8", "9", "10" (see Azure Arc docs)
     - name: EL
       versions:
-        - "7"
-        - "8"
-        - "9"
-        - "10"
+        - all
     # Actual supported: 12 SP5, 15 SP3-SP7 (see Azure Arc docs)
     # Update when https://github.com/ansible/ansible-lint/pull/4938 is in a release
     - name: SLES
