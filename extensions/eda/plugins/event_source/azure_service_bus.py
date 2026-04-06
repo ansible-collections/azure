@@ -7,6 +7,7 @@ events into Ansible EDA rulebooks.
 import asyncio
 import contextlib
 import json
+import logging
 from typing import Any
 
 from azure.servicebus.aio import ServiceBusClient
@@ -34,6 +35,30 @@ options:
       - Whether to turn on logging.
     type: bool
     default: true
+  feedback:
+    type: bool
+    default: false
+    description:
+      - Should the source plugin wait for feedback before
+        processing the next event from the Azure Event Hub
+        This flag allows ansible rulebook to pass in an asyncio
+        queue which is passed in the args['eda_feedback_queue']
+        The source plugin should wait for the response to come
+        back on this queue before it picks the next event from
+        Azure Event Hub.
+  feedback_timeout:
+    type: int
+    default: 120
+    description:
+      - Timeout in seconds to wait for feedback from the rule engine
+        before raising an exception. Only applies when feedback is enabled.
+  eda_feedback_queue:
+    description:
+      - Provided automatically by ansible-rulebook when the feedback parameter
+        is enabled, this parameter utilizes an asyncio.Queue. It allows the
+        system to wait for confirmation that an event has been safely persisted
+        in the database before removing it from the event bus. Users do not need
+        to provide a value for this manually.
 """
 
 EXAMPLES = r"""
@@ -42,12 +67,27 @@ EXAMPLES = r"""
     queue_name: "{{queue_name}}"
 """
 
+DEFAULT_FEEDBACK_TIMEOUT = 120
+
+logger = logging.getLogger()
+
 
 async def receive_events(
     queue: asyncio.Queue[Any],
     args: dict[str, Any],  # pylint: disable=W0621
 ) -> None:
     """Receive events from service bus asynchronously."""
+    feedback_enabled = args.get("feedback", False)
+    eda_feedback_queue = args.get("eda_feedback_queue")
+    feedback_timeout = int(args.get("feedback_timeout", DEFAULT_FEEDBACK_TIMEOUT))
+
+    if feedback_enabled and eda_feedback_queue is None:
+        msg = (
+            "feedback: true was set but no feedback queue was provided. "
+            "This requires a compatible version of ansible-rulebook that "
+            "supports the feedback mechanism."
+        )
+        raise ValueError(msg)
     servicebus_client = ServiceBusClient.from_connection_string(
         conn_str=args["conn_str"],
         logging_enable=bool(args.get("logging_enable", True)),
@@ -57,13 +97,29 @@ async def receive_events(
         receiver = servicebus_client.get_queue_receiver(queue_name=args["queue_name"])
         async with receiver:
             async for msg in receiver:
-                meta = {"message_id": msg.message_id}
+                meta = {"message_id": msg.message_id, "event": {}}
+                meta["event"]["uuid"] = msg.message_id
+                if msg.enqueued_time_utc:
+                    meta["event"]["produced_at"] = msg.enqueued_time_utc.isoformat()
+
                 body = str(msg)
                 with contextlib.suppress(json.JSONDecodeError):
                     body = json.loads(body)
 
                 await queue.put({"body": body, "meta": meta})
-                await receiver.complete_message(msg)
+
+                if feedback_enabled and eda_feedback_queue:
+                    try:
+                        await asyncio.wait_for(
+                            eda_feedback_queue.get(),
+                            timeout=feedback_timeout,
+                        )
+                        await receiver.complete_message(msg)
+                    except asyncio.TimeoutError:
+                        logger.exception("Timed out waiting for feedback")
+                        raise
+                else:
+                    await receiver.complete_message(msg)
 
 
 async def main(
