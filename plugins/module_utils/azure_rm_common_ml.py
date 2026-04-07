@@ -43,7 +43,7 @@ class MLClientCommon(AzureRMModuleBaseExt):
             entity = json.loads(json.dumps(entity._to_dict()))
             return entity
         except Exception as err:  # pylint: disable=broad-exception-caught
-            self.module.warn("Failed to deserialize response: %s", str(err))
+            self.module.warn("Failed to deserialize response: %s" % str(err))
             self.module.warn(str(entity))
             self.module.debug(traceback.format_exc())
 
