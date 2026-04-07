@@ -59,7 +59,7 @@
     src: "~/.ansible/test/id_rsa.pub"
   register: ssh_public_key_content
 
-- name: Create Azure VM for Arc evaluation (Ubuntu 20.04 LTS)
+- name: Create Azure VM for Arc evaluation (Ubuntu 22.04 LTS)
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ arc_onboarding_rg }}"
     name: "{{ vm_name }}"
@@ -74,9 +74,9 @@
     managed_disk_type: StandardSSD_LRS
     os_disk_caching: ReadWrite
     image:
-      offer: 0001-com-ubuntu-server-focal
+      offer: 0001-com-ubuntu-server-jammy
       publisher: Canonical
-      sku: 20_04-lts-gen2
+      sku: 22_04-lts-gen2
       version: latest
 
 - name: Get VM public IP for connection
