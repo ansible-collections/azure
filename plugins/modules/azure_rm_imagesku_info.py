@@ -101,9 +101,17 @@ available_skus:
                     type: str
                     returned: always
                     sample: "location"
+                restriction_values:
+                    description:
+                        - A list of restricted locations, regions, or zones where the image SKU cannot be used.
+                    type: list
+                    returned: always
+                    sample: ["eastus", "westeurope"]
                 values:
                     description:
                         - A list of restricted locations, regions, or zones where the image SKU cannot be used.
+                        - This return value has been deprecated and will be removed in a release after
+                          2027-05-01. Use C(restriction_values) instead.
                     type: list
                     returned: always
                     sample: ["eastus", "westeurope"]
@@ -167,6 +175,11 @@ class AzureRMImageskuInfo(AzureRMModuleBase):
         available_skus = self.list_skus()
         self.results['available_skus'] = available_skus
         self.results['count'] = len(available_skus)
+        self.module.deprecate(
+            "The 'values' return key in 'restrictions' is deprecated. Use 'restriction_values' instead.",
+            date="2027-05-01",
+            collection_name="azure.azcollection",
+        )
         return self.results
 
     def list_skus(self):
@@ -180,7 +193,11 @@ class AzureRMImageskuInfo(AzureRMModuleBase):
             available_skus = []
 
             for sku_info in skus_result:
-                available_skus.append(sku_info.as_dict())
+                sku_dict = sku_info.as_dict()
+                for restriction in sku_dict.get('restrictions', []):
+                    if 'values' in restriction:
+                        restriction['restriction_values'] = restriction['values']
+                available_skus.append(sku_dict)
             return available_skus
 
         except HttpResponseError as e:
