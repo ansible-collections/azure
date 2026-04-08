@@ -1,0 +1,263 @@
+- name: Create a new resource group for Oracle Autonomous Database test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-oracleadb"
+    location: eastus
+
+- name: For Oracle Autonomous Database test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+      run_once: true
+
+    - name: Create Oracle Autonomous Database (Checkmode test)
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        location: eastus
+        display_name: oracleadb{{ rpfx }}
+        db_workload: OLTP
+        compute_model: ECPU
+        compute_count: 2
+        data_storage_size_in_tbs: 1
+        is_auto_scaling_enabled: true
+        is_auto_scaling_for_storage_enabled: true
+        is_mtls_connection_required: true
+        admin_password: "Test#Pass123456"
+        character_set: AL32UTF8
+        ncharacter_set: AL16UTF16
+        db_version: 19c
+        license_model: LicenseIncluded
+        tags:
+          key1: value1
+      check_mode: true
+      register: output
+
+    - name: Assert the resource is created in check mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create Oracle Autonomous Database
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        location: eastus
+        display_name: oracleadb{{ rpfx }}
+        db_workload: OLTP
+        compute_model: ECPU
+        compute_count: 2
+        data_storage_size_in_tbs: 1
+        is_auto_scaling_enabled: true
+        is_auto_scaling_for_storage_enabled: true
+        is_mtls_connection_required: true
+        admin_password: "Test#Pass123456"
+        character_set: AL32UTF8
+        ncharacter_set: AL16UTF16
+        db_version: 19c
+        license_model: LicenseIncluded
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert the resource is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.name == 'oracleadb' ~ rpfx
+          - output.state.location == 'eastus'
+          - output.state.properties.display_name == 'oracleadb' ~ rpfx
+          - output.state.properties.db_workload == 'OLTP'
+          - output.state.properties.compute_model == 'ECPU'
+          - output.state.properties.compute_count == 2.0
+          - output.state.properties.data_storage_size_in_tbs == 1
+          - output.state.properties.character_set == 'AL32UTF8'
+          - output.state.properties.ncharacter_set == 'AL16UTF16'
+          - output.state.properties.license_model == 'LicenseIncluded'
+          - output.state.properties.is_auto_scaling_enabled == true
+          - output.state.properties.is_auto_scaling_for_storage_enabled == true
+          - output.state.properties.is_mtls_connection_required == true
+          - output.state.tags.key1 == 'value1'
+
+    - name: Create Oracle Autonomous Database again (Idempotent test)
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        location: eastus
+        display_name: oracleadb{{ rpfx }}
+        db_workload: OLTP
+        compute_model: ECPU
+        compute_count: 2
+        data_storage_size_in_tbs: 1
+        is_auto_scaling_enabled: true
+        is_auto_scaling_for_storage_enabled: true
+        is_mtls_connection_required: true
+        admin_password: "Test#Pass123456"
+        character_set: AL32UTF8
+        ncharacter_set: AL16UTF16
+        db_version: 19c
+        license_model: LicenseIncluded
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert the resource is not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update Oracle Autonomous Database
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        compute_count: 4
+        data_storage_size_in_tbs: 2
+        display_name: oracleadb{{ rpfx }}-updated
+        is_auto_scaling_enabled: false
+        backup_retention_period_in_days: 30
+        tags:
+          key1: value1
+          key2: value2
+      register: output
+
+    - name: Assert the resource is updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update Oracle Autonomous Database again (Idempotent test)
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        compute_count: 4
+        data_storage_size_in_tbs: 2
+        display_name: oracleadb{{ rpfx }}-updated
+        is_auto_scaling_enabled: false
+        backup_retention_period_in_days: 30
+        tags:
+          key1: value1
+          key2: value2
+      register: output
+
+    - name: Assert the resource is not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Gather facts Oracle Autonomous Database -- by name
+      azure.azcollection.azure_rm_oracle_autonomous_database_info:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+      register: output
+
+    - name: Assert the resource facts
+      ansible.builtin.assert:
+        that:
+          - output.databases | length == 1
+          - output.databases[0].name == 'oracleadb' ~ rpfx
+          - output.databases[0].display_name == 'oracleadb' ~ rpfx ~ '-updated'
+          - output.databases[0].compute_count == 4.0
+          - output.databases[0].data_storage_size_in_tbs == 2
+          - output.databases[0].is_auto_scaling_enabled == false
+          - output.databases[0].backup_retention_period_in_days == 30
+          - output.databases[0].tags | length == 2
+
+    - name: Gather facts Oracle Autonomous Database -- by resource group
+      azure.azcollection.azure_rm_oracle_autonomous_database_info:
+        resource_group: "{{ resource_group }}-oracleadb"
+      register: output
+
+    - name: Assert the list facts
+      ansible.builtin.assert:
+        that:
+          - output.databases | length >= 1
+
+    - name: Gather facts Oracle Autonomous Database -- by resource group with tag filter
+      azure.azcollection.azure_rm_oracle_autonomous_database_info:
+        resource_group: "{{ resource_group }}-oracleadb"
+        tags:
+          - key2:value2
+      register: output
+
+    - name: Assert the tag filtered facts
+      ansible.builtin.assert:
+        that:
+          - output.databases | length >= 1
+          - output.databases[0].tags.key2 == 'value2'
+
+    - name: Gather facts Oracle Autonomous Database -- all in subscription
+      azure.azcollection.azure_rm_oracle_autonomous_database_info:
+      register: output
+
+    - name: Assert the subscription list facts
+      ansible.builtin.assert:
+        that:
+          - output.databases | length >= 1
+
+    - name: Update Oracle Autonomous Database tags only
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        tags:
+          key3: value3
+      register: output
+
+    - name: Assert tag update succeeded
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete Oracle Autonomous Database (Checkmode test)
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert the resource is deleted in check mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete Oracle Autonomous Database
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        state: absent
+      register: output
+
+    - name: Assert the resource is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete Oracle Autonomous Database again (Idempotent test)
+      azure.azcollection.azure_rm_oracle_autonomous_database:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+        state: absent
+      register: output
+
+    - name: Assert the resource is not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Gather facts of deleted Oracle Autonomous Database
+      azure.azcollection.azure_rm_oracle_autonomous_database_info:
+        resource_group: "{{ resource_group }}-oracleadb"
+        name: oracleadb{{ rpfx }}
+      register: output
+
+    - name: Assert no results after deletion
+      ansible.builtin.assert:
+        that:
+          - output.databases | length == 0
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-oracleadb"
+        force_delete_nonempty: true
+        state: absent
