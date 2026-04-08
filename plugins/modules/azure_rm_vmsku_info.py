@@ -181,7 +181,7 @@ available_skus:
                     description:
                         - The value of restrictions. If the restriction type is set to location.
                           This would be different locations where the SKU is restricted.
-                    type: str
+                    type: list
                     returned: always
                     sample: ["eastus"]
                 values:
@@ -190,7 +190,7 @@ available_skus:
                           This would be different locations where the SKU is restricted.
                         - This return value has been deprecated and will be removed in a release after
                           2027-05-01. Use C(restriction_values) instead.
-                    type: str
+                    type: list
                     returned: always
                     sample: ["eastus"]
                 restriction_info:

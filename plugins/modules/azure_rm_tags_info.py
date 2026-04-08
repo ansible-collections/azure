@@ -90,7 +90,7 @@ tag_details:
                         - The tag value count
                     returned: always
                     type: dict
-                    sample: {'type': 'totoal', 'value': 1}
+                    sample: {'type': 'Total', 'value': 1}
         values:
             description:
                 - The list of tag values.

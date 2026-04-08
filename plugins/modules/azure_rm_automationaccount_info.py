@@ -128,25 +128,25 @@ automation_accounts:
             description:
                 - Resource keys.
             type: complex
-            returned: always
+            returned: when I(list_keys=True)
             contains:
                 key_name:
                     description:
                         - Name of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: Primary
                 permissions:
                     description:
                         - Permission of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: Full
                 value:
                     description:
                         - Value of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: "MbepKTO6IyGwml0GaKBkKN"
         keys:
             description:
@@ -154,25 +154,25 @@ automation_accounts:
                 - This return value has been deprecated and will be removed in a release after
                   2027-05-01. Use C(account_keys) instead.
             type: complex
-            returned: always
+            returned: when I(list_keys=True)
             contains:
                 key_name:
                     description:
                         - Name of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: Primary
                 permissions:
                     description:
                         - Permission of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: Full
                 value:
                     description:
                         - Value of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: "MbepKTO6IyGwml0GaKBkKN"
         statistics:
             description:
