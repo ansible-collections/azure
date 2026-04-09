@@ -40,25 +40,13 @@
       azure.azcollection.azure_rm_deployment:
         resource_group: "{{ resource_group }}-deployment"
         location: "eastus"
-        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.compute/vm-simple-linux/azuredeploy.json'
+        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.storage/storage-account-create/azuredeploy.json'
         deployment_name: "{{ dns_label }}-link"
         parameters:
-          vmName:
-            value: "MyLinuxVM"
-          adminUsername:
-            value: chouseknecht
-          authenticationType:
-            value: password
-          adminPasswordOrKey:
-            value: "{{ password }}"
-          dnsLabelPrefix:
-            value: "{{ dns_label }}lk"
-          ubuntuOSVersion:
-            value: "Ubuntu-2204"
-          vmSize:
-            value: "Standard_D2s_v3"
-          securityType:
-            value: "Standard"
+          storageAccountType:
+            value: "Standard_LRS"
+          location:
+            value: "eastus"
       register: output_link
 
     - name: Assert template_link deployment succeeded
@@ -67,15 +55,6 @@
           - output_link is not failed
           - output_link.deployment is defined
           - output_link.deployment.name == dns_label + '-link'
-
-    - name: Add new instance to host group
-      ansible.builtin.add_host:
-        hostname: "{{ item.vm_name }}"
-        ansible_host: "{{ item['ips'][0].public_ip }}"
-        ansible_user: chouseknecht
-        ansible_ssh_pass: "{{ password }}"
-        groupname: azure_vms
-      with_items: "{{ output_link.deployment.instances }}"
 
     - name: Get Deployment Facts for Resource Group
       azure.azcollection.azure_rm_deployment_info:
