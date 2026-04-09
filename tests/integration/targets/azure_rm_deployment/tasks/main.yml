@@ -56,7 +56,7 @@
           ubuntuOSVersion:
             value: "Ubuntu-2204"
           vmSize:
-            value: "Standard_B1s"
+            value: "Standard_D2s_v3"
           securityType:
             value: "Standard"
       register: output_link
