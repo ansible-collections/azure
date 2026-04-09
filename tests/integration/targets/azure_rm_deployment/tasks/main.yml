@@ -36,22 +36,37 @@
           - "'Deployment failed' in output.msg"
           - "'is not JSON serializable' not in output.msg"
 
-    - name: Create Azure Deploy
+    - name: Create Azure Deploy with template_link
       azure.azcollection.azure_rm_deployment:
         resource_group: "{{ resource_group }}-deployment"
         location: "eastus"
-        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
-        deployment_name: "{{ dns_label }}"
+        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.compute/vm-simple-linux/azuredeploy.json'
+        deployment_name: "{{ dns_label }}-link"
         parameters:
+          vmName:
+            value: "MyLinuxVM"
           adminUsername:
             value: chouseknecht
-          adminPassword:
+          authenticationType:
+            value: password
+          adminPasswordOrKey:
             value: "{{ password }}"
           dnsLabelPrefix:
-            value: "{{ dns_label }}"
+            value: "{{ dns_label }}lk"
           ubuntuOSVersion:
-            value: "16.04.0-LTS"
-      register: output
+            value: "Ubuntu-2204"
+          vmSize:
+            value: "Standard_B1s"
+          securityType:
+            value: "Standard"
+      register: output_link
+
+    - name: Assert template_link deployment succeeded
+      ansible.builtin.assert:
+        that:
+          - output_link is not failed
+          - output_link.deployment is defined
+          - output_link.deployment.name == dns_label + '-link'
 
     - name: Add new instance to host group
       ansible.builtin.add_host:
@@ -60,7 +75,7 @@
         ansible_user: chouseknecht
         ansible_ssh_pass: "{{ password }}"
         groupname: azure_vms
-      with_items: "{{ output.deployment.instances }}"
+      with_items: "{{ output_link.deployment.instances }}"
 
     - name: Get Deployment Facts for Resource Group
       azure.azcollection.azure_rm_deployment_info:
@@ -73,7 +88,7 @@
     - name: Get Deployment Facts for named deployment
       azure.azcollection.azure_rm_deployment_info:
         resource_group: "{{ resource_group }}-deployment"
-        name: "{{ dns_label }}"
+        name: "{{ dns_label }}-link"
       register: output
     - name: Print the deployment facts
       ansible.builtin.debug:
