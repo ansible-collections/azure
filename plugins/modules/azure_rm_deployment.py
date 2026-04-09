@@ -700,6 +700,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                                      for ip_conf_instance in nic_obj.ip_configurations
                                      if ip_conf_instance.public_ip_address]]
 
+    @staticmethod
     def _serialize_status_message(status_message):
         """Convert a StatusMessage SDK model to a JSON-serializable dict."""
         if status_message is None:
@@ -728,8 +729,8 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
         Build a human-readable deployment error message from an Azure SDK exception.
 
         When the exception carries OData error details (exc.error.details),
-        extract the per-resource messages. 
-        
+        extract the per-resource messages.
+
         Some resource providers double-encode their error as JSON inside the message field, so we attempt to decode it.
         """
         error = getattr(exc, 'error', None)
