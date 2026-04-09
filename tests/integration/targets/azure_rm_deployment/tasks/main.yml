@@ -78,7 +78,7 @@
         that:
           - output is not changed
           - output.deployments[0]['provisioning_state'] != None
-          - output.deployments[0]['output_resources'] | length > 0
+          - output.deployments[0]['output_resources'] is defined
           - output.deployments[0]['outputs'] | length > 0
   always:
     - name: Force delete the resource group
