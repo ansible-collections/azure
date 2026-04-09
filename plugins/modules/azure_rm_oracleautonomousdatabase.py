@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_oracle_autonomous_database
+module: azure_rm_oracleautonomousdatabase
 version_added: "3.17.0"
 short_description: Manage Oracle Autonomous Database instance
 description:
