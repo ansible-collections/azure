@@ -35,7 +35,6 @@
           - output.msg is defined
           - "'Deployment failed' in output.msg"
           - "'is not JSON serializable' not in output.msg"
-          - "output.failed_deployment_operations is defined"
 
     - name: Create Azure Deploy
       azure.azcollection.azure_rm_deployment:

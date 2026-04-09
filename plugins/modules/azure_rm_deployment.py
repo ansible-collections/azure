@@ -700,7 +700,6 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                                      for ip_conf_instance in nic_obj.ip_configurations
                                      if ip_conf_instance.public_ip_address]]
 
-    @staticmethod
     def _serialize_status_message(status_message):
         """Convert a StatusMessage SDK model to a JSON-serializable dict."""
         if status_message is None:
@@ -725,35 +724,31 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             return str(status_message)
 
     def _error_msg_from_cloud_error(self, exc):
-        """Build a human-readable deployment error message from an Azure SDK exception."""
-        # Extract per-resource error details from OData error when available
+        """
+        Build a human-readable deployment error message from an Azure SDK exception.
+
+        When the exception carries OData error details (exc.error.details),
+        extract the per-resource messages. 
+        
+        Some resource providers double-encode their error as JSON inside the message field, so we attempt to decode it.
+        """
         error = getattr(exc, 'error', None)
-        if error is not None and hasattr(error, 'details') and error.details:
+        if error is not None and getattr(error, 'details', None):
             detail_messages = []
             for detail in error.details:
-                target = getattr(detail, 'target', None)
-                code = getattr(detail, 'code', '')
                 raw_msg = getattr(detail, 'message', '')
-                # Azure sometimes double-encodes the error as JSON within the message field
                 try:
                     inner = json.loads(raw_msg)
-                    msg = inner.get('message', raw_msg)
+                    raw_msg = inner.get('message', raw_msg)
                 except (json.JSONDecodeError, TypeError, AttributeError):
-                    msg = raw_msg
-                parts = [msg]
+                    pass
+                code = getattr(detail, 'code', None)
                 if code:
-                    parts.append('Code: {0}'.format(code))
-                if target:
-                    parts.append('Target: {0}'.format(target.rsplit('/', 1)[-1]))
-                detail_messages.append('{0} ({1})'.format(parts[0], ', '.join(parts[1:])) if len(parts) > 1 else parts[0])
+                    raw_msg = '{0} (Code: {1})'.format(raw_msg, code)
+                detail_messages.append(raw_msg)
             return 'Deployment failed: {0}'.format(' | '.join(detail_messages))
 
-        # Fallback for exceptions without OData error details
-        status_code = str(getattr(exc, 'status_code', 'N/A'))
-        exc_message = getattr(exc, 'message', str(exc))
-        if status_code.startswith('2') or status_code == 'N/A':
-            return 'Deployment failed: {0}'.format(exc_message)
-        return 'Deployment failed with status code: {0} and message: {1}'.format(status_code, exc_message)
+        return 'Deployment failed: {0}'.format(getattr(exc, 'message', str(exc)))
 
 
 def main():
