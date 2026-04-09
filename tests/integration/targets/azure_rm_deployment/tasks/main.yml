@@ -28,6 +28,15 @@
       register: output
       ignore_errors: true
 
+    - name: Assert error deploy failed with readable message
+      ansible.builtin.assert:
+        that:
+          - output is failed
+          - output.msg is defined
+          - "'Deployment failed' in output.msg"
+          - "'is not JSON serializable' not in output.msg"
+          - "output.failed_deployment_operations is defined"
+
     - name: Create Azure Deploy
       azure.azcollection.azure_rm_deployment:
         resource_group: "{{ resource_group }}-deployment"
