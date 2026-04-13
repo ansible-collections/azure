@@ -640,6 +640,9 @@
         virtual_network_name: tn{{ rpfx }}
         resource_group: "{{ resource_group }}-nic02"
         address_prefix_cidr: 10.10.1.0/24
+        delegations:
+          - name: appgw-delegation
+            serviceName: Microsoft.Network/applicationGateways
       register: appgw_subnet_output
 
     - name: Create public IP addresses
