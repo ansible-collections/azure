@@ -69,6 +69,22 @@ location:
     returned: always
     type: str
     sample: eatus
+identity:
+    description:
+        - The managed service identities assigned to the cluster.
+    returned: when configured
+    type: complex
+    contains:
+        type:
+            description:
+                - Type of managed service identity.
+            type: str
+            sample: UserAssigned
+        userAssignedIdentities:
+            description:
+                - The set of user assigned identities associated with the resource.
+            type: dict
+            sample: {"/subscriptions/xx/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id": {}}
 properties:
     description:
         - Properties of a OpenShift managed cluster.
@@ -116,13 +132,29 @@ properties:
             description:
                 - Service principal.
             type: complex
-            returned: always
+            returned: when configured
             contains:
                 clientId:
                     description: Client ID of the service principal.
                     returned: always
                     type: str
                     sample: xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx
+        platformWorkloadIdentityProfile:
+            description:
+                - The workload identity profile.
+            type: complex
+            returned: when configured
+            contains:
+                platformWorkloadIdentities:
+                    description:
+                        - Dictionary of operator names to workload identity configurations.
+                    type: dict
+                    returned: always
+                upgradeableTo:
+                    description:
+                        - The OpenShift version the cluster can be upgraded to.
+                    type: str
+                    returned: when available
         networkProfile:
             description:
                 - Configuration for OpenShift networking.
@@ -277,7 +309,7 @@ class AzureRMOpenShiftManagedClustersInfo(AzureRMModuleBaseExt):
         self.status_code = [200]
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2023-09-04'
+        self.query_parameters['api-version'] = '2025-07-25'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
