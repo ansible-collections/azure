@@ -105,7 +105,7 @@
             disk_size: 128
             count: 3
         master_profile:
-          vm_size: "Standard_D8s_v3"
+          vm_size: "Standard_D8s_v5"
           subnet_id: "{{ master_sub_output.state.id }}"
       register: output
 
@@ -240,7 +240,7 @@
             disk_size: 128
             count: 3
         master_profile:
-          vm_size: "Standard_D8s_v3"
+          vm_size: "Standard_D8s_v5"
           subnet_id: "{{ master_sub_output.state.id }}"
       check_mode: true
       register: mi_check_output
@@ -279,7 +279,7 @@
             disk_size: 128
             count: 3
         master_profile:
-          vm_size: "Standard_D8s_v3"
+          vm_size: "Standard_D8s_v5"
           subnet_id: "{{ master_sub_output.state.id }}"
       register: mutual_excl_output
       ignore_errors: true
