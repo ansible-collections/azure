@@ -338,6 +338,7 @@ class AzureRMContainerRegistry(AzureRMModuleBaseExt):
                             registry_name=self.name,
                             registry=Registry(
                                 location=self.location,
+                                type="Microsoft.ContainerRegistry/registries",
                                 sku=Sku(
                                     name=self.sku
                                 ),

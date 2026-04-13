@@ -238,6 +238,7 @@ class AzureRMReplications(AzureRMModuleBase):
             if self.to_do == Actions.Create:
                 replication = Replication(
                     location=self.location,
+                    type="Microsoft.ContainerRegistry/registries/replications",
                 )
                 response = self.containerregistry_client.replications.begin_create(resource_group_name=self.resource_group,
                                                                                    registry_name=self.registry_name,
