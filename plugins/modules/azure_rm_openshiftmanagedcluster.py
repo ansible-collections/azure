@@ -886,23 +886,27 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                 elif key == 'network_profile':
                     self.body['properties']['networkProfile'] = {}
                     for item in kwargs[key].keys():
+                        value = kwargs[key].get(item)
+                        if value is None:
+                            continue
                         if item == 'pod_cidr':
-                            self.body['properties']['networkProfile']['podCidr'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['podCidr'] = value
                         elif item == 'service_cidr':
-                            self.body['properties']['networkProfile']['serviceCidr'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['serviceCidr'] = value
                         elif item == 'outbound_type':
-                            self.body['properties']['networkProfile']['outboundType'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['outboundType'] = value
                         elif item == 'preconfigured_nsg':
-                            self.body['properties']['networkProfile']['preconfiguredNSG'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['preconfiguredNSG'] = value
                 elif key == 'master_profile':
                     self.body['properties']['masterProfile'] = {}
-                    if 'subnet_id' in kwargs[key].keys():
+                    if kwargs[key].get('subnet_id') is not None:
                         self.body['properties']['masterProfile']['subnetId'] = kwargs[key].get('subnet_id')
-                    if 'disk_encryption_set_id' in kwargs[key].keys():
+                    if kwargs[key].get('disk_encryption_set_id') is not None:
                         self.body['properties']['masterProfile']['diskEncryptionSetId'] = kwargs[key].get('disk_encryption_set_id')
-                    if 'encryption_at_host' in kwargs[key].keys():
+                    if kwargs[key].get('encryption_at_host') is not None:
                         self.body['properties']['masterProfile']['encryptionAtHost'] = kwargs[key].get('encryption_at_host')
-                    self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
+                    if kwargs[key].get('vm_size') is not None:
+                        self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
                 elif key == 'worker_profiles':
                     self.body['properties']['workerProfiles'] = []
                     for item in kwargs[key]:
@@ -911,11 +915,16 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                             worker_profile['name'] = item['name']
                         if item.get('subnet_id') is not None:
                             worker_profile['subnetId'] = item['subnet_id']
-                        worker_profile['count'] = item.get('count')
-                        worker_profile['vmSize'] = item.get('vm_size')
-                        worker_profile['diskSizeGB'] = item.get('disk_size')
-                        worker_profile['encryptionAtHost'] = item.get('encryption_at_host')
-                        worker_profile['diskEncryptionSetId'] = item.get('disk_encryption_set_id')
+                        if item.get('count') is not None:
+                            worker_profile['count'] = item['count']
+                        if item.get('vm_size') is not None:
+                            worker_profile['vmSize'] = item['vm_size']
+                        if item.get('disk_size') is not None:
+                            worker_profile['diskSizeGB'] = item['disk_size']
+                        if item.get('encryption_at_host') is not None:
+                            worker_profile['encryptionAtHost'] = item['encryption_at_host']
+                        if item.get('disk_encryption_set_id') is not None:
+                            worker_profile['diskEncryptionSetId'] = item['disk_encryption_set_id']
 
                         self.body['properties']['workerProfiles'].append(worker_profile)
                 elif key == 'api_server_profile':

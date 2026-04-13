@@ -10,7 +10,7 @@
   block:
     - name: Set variables
       ansible.builtin.set_fact:
-        cluster_name: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        cluster_name: "a{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
     - name: Get resource group info
       azure.azcollection.azure_rm_resourcegroup_info:
