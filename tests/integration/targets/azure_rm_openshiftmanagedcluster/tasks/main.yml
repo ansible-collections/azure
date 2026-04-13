@@ -75,7 +75,9 @@
 
     - name: Extract the latest available version
       ansible.builtin.set_fact:
-        ocp_version: "{{ ocp_cl_vers.versions | community.general.version_sort | last }}"
+        ocp_version: "{{ item }}"
+      loop: "{{ ocp_cl_vers.versions }}"
+      when: ocp_version is not defined or item is version(ocp_version, '>')
 
     - name: Assert that selected ocp version is not empty
       ansible.builtin.assert:
