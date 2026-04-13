@@ -63,6 +63,9 @@
         virtual_network_name: vnet{{ rpfx }}
         resource_group: "{{ resource_group }}-appgateway"
         address_prefix_cidr: 10.1.0.0/24
+        delegations:
+          - name: appgw-delegation
+            serviceName: Microsoft.Network/applicationGateways
       register: subnet_output
 
     - name: Configure public IP for v2 gateway
