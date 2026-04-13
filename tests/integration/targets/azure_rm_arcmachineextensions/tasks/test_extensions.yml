@@ -1,0 +1,243 @@
+---
+# Integration tests for azure_rm_arcmachineextensions and azure_rm_arcmachineextensions_info
+
+# List extensions on a fresh arc machine
+- name: List all arc machine extensions before any are added
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: extensions_before
+
+- name: Assert listing extensions succeeds
+  ansible.builtin.assert:
+    that:
+      - extensions_before.arcmachineextensions is defined
+
+# Get a non-existent extension (should return empty list)
+- name: Get a non-existent extension by name
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    name: "NonExistentExtension"
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: nonexistent_ext
+
+- name: Assert non-existent extension returns empty list
+  ansible.builtin.assert:
+    that:
+      - nonexistent_ext.arcmachineextensions | length == 0
+
+# Create an arc machine extension (AzureMonitorLinuxAgent)
+- name: Create arc machine extension - AzureMonitorLinuxAgent
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: present
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: AzureMonitorLinuxAgent
+    location: "{{ location }}"
+    properties:
+      publisher: Microsoft.Azure.Monitor
+      type: AzureMonitorLinuxAgent
+      auto_upgrade_minor_version: false
+      enable_automatic_upgrade: true
+    tags:
+      environment: test
+      purpose: integration-test
+  register: create_ext
+
+- name: Assert extension was created
+  ansible.builtin.assert:
+    that:
+      - create_ext.changed
+      - create_ext.arcmachineextension is not none
+      - create_ext.arcmachineextension.name == 'AzureMonitorLinuxAgent'
+
+# Create same extension again (idempotency - no change expected)
+- name: Create arc machine extension again (idempotency check)
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: present
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: AzureMonitorLinuxAgent
+    location: "{{ location }}"
+    properties:
+      publisher: Microsoft.Azure.Monitor
+      type: AzureMonitorLinuxAgent
+      auto_upgrade_minor_version: false
+      enable_automatic_upgrade: true
+    tags:
+      environment: test
+      purpose: integration-test
+  register: create_ext_idempotent
+
+- name: Assert extension creation is idempotent
+  ansible.builtin.assert:
+    that:
+      - not create_ext_idempotent.changed
+
+
+# Get the created extension by name (info module)
+- name: Get arc machine extension by name
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    name: AzureMonitorLinuxAgent
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: get_ext
+
+- name: Assert extension info is returned correctly
+  ansible.builtin.assert:
+    that:
+      - get_ext.arcmachineextensions | length == 1
+      - get_ext.arcmachineextensions[0].name == 'AzureMonitorLinuxAgent'
+      - "'Microsoft.Azure.Monitor' in get_ext.arcmachineextensions[0].properties.publisher"
+
+# List all extensions (should include the one we created)
+- name: List all arc machine extensions
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: list_ext
+
+- name: Assert our extension appears in the list
+  ansible.builtin.assert:
+    that:
+      - list_ext.arcmachineextensions | length >= 1
+      - list_ext.arcmachineextensions | selectattr('name', 'equalto', 'AzureMonitorLinuxAgent') | list | length == 1
+
+# Update extension tags
+- name: Update arc machine extension tags
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: present
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: AzureMonitorLinuxAgent
+    location: "{{ location }}"
+    properties:
+      publisher: Microsoft.Azure.Monitor
+      type: AzureMonitorLinuxAgent
+      auto_upgrade_minor_version: false
+      enable_automatic_upgrade: true
+    tags:
+      environment: test
+      purpose: integration-test
+      updated: "true"
+  register: update_ext_tags
+
+- name: Assert extension was updated with new tags
+  ansible.builtin.assert:
+    that:
+      - update_ext_tags.changed
+
+- name: Verify updated tags via info module
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    name: AzureMonitorLinuxAgent
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: verify_tags
+
+- name: Assert tags were updated
+  ansible.builtin.assert:
+    that:
+      - verify_tags.arcmachineextensions[0].tags.updated == "true"
+
+# Check mode - create a new extension (should report changed but not create)
+- name: Create extension in check mode
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: present
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: CustomScript
+    location: "{{ location }}"
+    properties:
+      publisher: Microsoft.Azure.Extensions
+      type: CustomScript
+      auto_upgrade_minor_version: true
+      enable_automatic_upgrade: false
+      settings:
+        commandToExecute: "echo hello"
+  check_mode: true
+  register: check_create_ext
+
+- name: Assert check mode reports changed
+  ansible.builtin.assert:
+    that:
+      - check_create_ext.changed
+
+- name: Verify extension was not actually created
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    name: CustomScript
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: check_create_verify
+
+- name: Assert extension does not exist after check mode
+  ansible.builtin.assert:
+    that:
+      - check_create_verify.arcmachineextensions | length == 0
+
+# Check mode - delete existing extension (should report changed but not delete)
+- name: Delete extension in check mode
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: absent
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: AzureMonitorLinuxAgent
+  check_mode: true
+  register: check_delete_ext
+
+- name: Assert check mode delete reports changed
+  ansible.builtin.assert:
+    that:
+      - check_delete_ext.changed
+
+- name: Verify extension still exists after check mode delete
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    name: AzureMonitorLinuxAgent
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: check_delete_verify
+
+- name: Assert extension still exists
+  ansible.builtin.assert:
+    that:
+      - check_delete_verify.arcmachineextensions | length == 1
+
+# Delete the arc machine extension
+- name: Delete arc machine extension - AzureMonitorLinuxAgent
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: absent
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: AzureMonitorLinuxAgent
+  register: delete_ext
+
+- name: Assert extension was deleted
+  ansible.builtin.assert:
+    that:
+      - delete_ext.changed
+
+# Confirm extension is gone via info module
+- name: Verify extension no longer exists
+  azure.azcollection.azure_rm_arcmachineextensions_info:
+    name: AzureMonitorLinuxAgent
+    machine_name: "{{ arc_machine_name }}"
+    resource_group: "{{ arc_extensions_rg }}"
+  register: deleted_ext_info
+
+- name: Assert extension is gone
+  ansible.builtin.assert:
+    that:
+      - deleted_ext_info.arcmachineextensions | length == 0
+
+# Delete same extension again (idempotency - no change expected)
+- name: Delete arc machine extension again (idempotency check)
+  azure.azcollection.azure_rm_arcmachineextensions:
+    state: absent
+    resource_group: "{{ arc_extensions_rg }}"
+    machine_name: "{{ arc_machine_name }}"
+    name: AzureMonitorLinuxAgent
+  register: delete_ext_idempotent
+
+- name: Assert deletion is idempotent
+  ansible.builtin.assert:
+    that:
+      - not delete_ext_idempotent.changed

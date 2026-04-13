@@ -139,8 +139,8 @@ AZURE_API_PROFILES = {
         'CdnManagementClient': '2017-04-02',
         'BatchManagementClient': 'latest',
         'EventGridManagementClient': '2025-02-15',
-        'AppConfigurationManagementClient': '2024-05-01'
-        'HybridComputeManagementClient': 'latest',
+        'AppConfigurationManagementClient': '2024-05-01',
+        'HybridComputeManagementClient': 'latest'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
