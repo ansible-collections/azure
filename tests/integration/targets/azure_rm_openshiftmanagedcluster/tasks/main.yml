@@ -146,7 +146,7 @@
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
       register: cluster_wait
-      until: cluster_wait.clusters.provisioning_state == 'Succeeded'
+      until: cluster_wait['clusters']['properties']['provisioningState'] == 'Succeeded'
       retries: 120
       delay: 60
 
