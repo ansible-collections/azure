@@ -28,31 +28,33 @@
       register: output
       ignore_errors: true
 
-    - name: Create Azure Deploy
+    - name: Assert error deploy failed with readable message
+      ansible.builtin.assert:
+        that:
+          - output is failed
+          - output.msg is defined
+          - "'Deployment failed' in output.msg"
+          - "'is not JSON serializable' not in output.msg"
+
+    - name: Create Azure Deploy with template_link
       azure.azcollection.azure_rm_deployment:
         resource_group: "{{ resource_group }}-deployment"
         location: "eastus"
-        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/d01a5c06f4f1bc03a049ca17bbbd6e06d62657b3/101-vm-simple-linux/azuredeploy.json'
-        deployment_name: "{{ dns_label }}"
+        template_link: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.storage/storage-account-create/azuredeploy.json'
+        deployment_name: "{{ dns_label }}-link"
         parameters:
-          adminUsername:
-            value: chouseknecht
-          adminPassword:
-            value: "{{ password }}"
-          dnsLabelPrefix:
-            value: "{{ dns_label }}"
-          ubuntuOSVersion:
-            value: "16.04.0-LTS"
-      register: output
+          storageAccountType:
+            value: "Standard_LRS"
+          location:
+            value: "eastus"
+      register: output_link
 
-    - name: Add new instance to host group
-      ansible.builtin.add_host:
-        hostname: "{{ item.vm_name }}"
-        ansible_host: "{{ item['ips'][0].public_ip }}"
-        ansible_user: chouseknecht
-        ansible_ssh_pass: "{{ password }}"
-        groupname: azure_vms
-      with_items: "{{ output.deployment.instances }}"
+    - name: Assert template_link deployment succeeded
+      ansible.builtin.assert:
+        that:
+          - output_link is not failed
+          - output_link.deployment is defined
+          - output_link.deployment.name == dns_label + '-link'
 
     - name: Get Deployment Facts for Resource Group
       azure.azcollection.azure_rm_deployment_info:
@@ -65,7 +67,7 @@
     - name: Get Deployment Facts for named deployment
       azure.azcollection.azure_rm_deployment_info:
         resource_group: "{{ resource_group }}-deployment"
-        name: "{{ dns_label }}"
+        name: "{{ dns_label }}-link"
       register: output
     - name: Print the deployment facts
       ansible.builtin.debug:
@@ -76,7 +78,7 @@
         that:
           - output is not changed
           - output.deployments[0]['provisioning_state'] != None
-          - output.deployments[0]['output_resources'] | length > 0
+          - output.deployments[0]['output_resources'] is defined
           - output.deployments[0]['outputs'] | length > 0
   always:
     - name: Force delete the resource group

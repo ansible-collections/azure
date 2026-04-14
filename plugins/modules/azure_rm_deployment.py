@@ -407,10 +407,10 @@ deployment:
           sample: { "hostname": { "type": "String", "value": "myvirtualmachine.eastus2.cloudapp.azure.com" } }
 '''
 
-import time
 
 try:
     import time
+    import json
 except ImportError as exc:
     IMPORT_ERROR = "Error importing module prerequisites: %s" % exc
 
@@ -545,7 +545,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             self.rm_client.resource_groups.create_or_update(self.resource_group, params)
         except Exception as exc:
             self.fail("Resource group create_or_update failed with status code: %s and message: %s" %
-                      (exc.status_code, exc.message))
+                      (getattr(exc, 'status_code', 'N/A'), getattr(exc, 'message', str(exc))))
         try:
             result = self.rm_client.deployments.begin_create_or_update(self.resource_group,
                                                                        self.name,
@@ -560,7 +560,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                     deployment_result = self.rm_client.deployments.get(self.resource_group, self.name)
         except Exception as exc:
             failed_deployment_operations = self._get_failed_deployment_operations(self.name)
-            self.log("Deployment failed %s: %s" % (exc.status_code, exc.message))
+            self.log("Deployment failed %s: %s" % (getattr(exc, 'status_code', 'N/A'), getattr(exc, 'message', str(exc))))
             error_msg = self._error_msg_from_cloud_error(exc)
             self.fail(error_msg, failed_deployment_operations=failed_deployment_operations)
 
@@ -580,11 +580,11 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             result = self.rm_client.deployments.begin_delete(self.resource_group, self.name)
             result.wait()  # Blocking wait till the delete is finished
         except Exception as e:
-            if e.status_code == 404 or e.status_code == 204:
+            if getattr(e, 'status_code', None) in (404, 204):
                 return
             else:
                 self.fail("Delete resource group and deploy failed with status code: %s and message: %s" %
-                          (e.status_code, e.message))
+                          (getattr(e, 'status_code', 'N/A'), getattr(e, 'message', str(e))))
 
     def _get_failed_nested_operations(self, current_operations):
         new_operations = []
@@ -599,7 +599,7 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                                                                                       nested_deployment)
                     except Exception as exc:
                         self.fail("List nested deployment operations failed with status code: %s and message: %s" %
-                                  (exc.status_code, exc.message))
+                                  (getattr(exc, 'status_code', 'N/A'), getattr(exc, 'message', str(exc))))
                     new_nested_operations = self._get_failed_nested_operations(nested_operations)
                     new_operations += new_nested_operations
         return new_operations
@@ -613,14 +613,14 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
             operations = self.rm_client.deployment_operations.list(self.resource_group, name)
         except Exception as exc:
             self.fail("Get deployment failed with status code: %s and message: %s" %
-                      (exc.status_code, exc.message))
+                      (getattr(exc, 'status_code', 'N/A'), getattr(exc, 'message', str(exc))))
         try:
             results = [
                 dict(
                     id=op.id,
                     operation_id=op.operation_id,
                     status_code=op.properties.status_code,
-                    status_message=op.properties.status_message,
+                    status_message=self._serialize_status_message(op.properties.status_message),
                     target_resource=dict(
                         id=op.properties.target_resource.id,
                         resource_name=op.properties.target_resource.resource_name,
@@ -700,14 +700,56 @@ class AzureRMDeploymentManager(AzureRMModuleBase):
                                      for ip_conf_instance in nic_obj.ip_configurations
                                      if ip_conf_instance.public_ip_address]]
 
+    @staticmethod
+    def _serialize_status_message(status_message):
+        """Convert a StatusMessage SDK model to a JSON-serializable dict."""
+        if status_message is None:
+            return None
+        try:
+            result = {'status': getattr(status_message, 'status', None)}
+            error = getattr(status_message, 'error', None)
+            if error is not None:
+                error_dict = {
+                    'code': getattr(error, 'code', None),
+                    'message': getattr(error, 'message', None),
+                    'target': getattr(error, 'target', None),
+                }
+                if hasattr(error, 'details') and error.details:
+                    error_dict['details'] = [
+                        {'code': getattr(d, 'code', None), 'message': getattr(d, 'message', None)}
+                        for d in error.details
+                    ]
+                result['error'] = error_dict
+            return result
+        except Exception:
+            return str(status_message)
+
     def _error_msg_from_cloud_error(self, exc):
-        msg = ''
-        status_code = str(exc.status_code)
-        if status_code.startswith('2'):
-            msg = 'Deployment failed: {0}'.format(exc.message)
-        else:
-            msg = 'Deployment failed with status code: {0} and message: {1}'.format(status_code, exc.message)
-        return msg
+        """
+        Build a human-readable deployment error message from an Azure SDK exception.
+
+        When the exception carries OData error details (exc.error.details),
+        extract the per-resource messages.
+
+        Some resource providers double-encode their error as JSON inside the message field, so we attempt to decode it.
+        """
+        error = getattr(exc, 'error', None)
+        if error is not None and getattr(error, 'details', None):
+            detail_messages = []
+            for detail in error.details:
+                raw_msg = getattr(detail, 'message', '')
+                try:
+                    inner = json.loads(raw_msg)
+                    raw_msg = inner.get('message', raw_msg)
+                except (json.JSONDecodeError, TypeError, AttributeError):
+                    pass
+                code = getattr(detail, 'code', None)
+                if code:
+                    raw_msg = '{0} (Code: {1})'.format(raw_msg, code)
+                detail_messages.append(raw_msg)
+            return 'Deployment failed: {0}'.format(' | '.join(detail_messages))
+
+        return 'Deployment failed: {0}'.format(getattr(exc, 'message', str(exc)))
 
 
 def main():
