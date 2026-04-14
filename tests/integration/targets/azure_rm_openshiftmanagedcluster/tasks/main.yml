@@ -141,14 +141,19 @@
       ansible.builtin.assert:
         that: output['clusters'] | length >= 1
 
-    - name: Wait for cluster provisioning to succeed
+    - name: Wait for cluster provisioning to complete
       azure.azcollection.azure_rm_openshiftmanagedcluster_info:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
       register: cluster_wait
-      until: cluster_wait['clusters']['properties']['provisioningState'] == 'Succeeded'
+      until: cluster_wait['clusters']['properties']['provisioningState'] in ['Succeeded', 'Failed']
       retries: 120
       delay: 60
+
+    - name: Fail if cluster provisioning failed
+      ansible.builtin.fail:
+        msg: "Cluster provisioning failed: {{ cluster_wait['clusters']['properties'] }}"
+      when: cluster_wait['clusters']['properties']['provisioningState'] == 'Failed'
 
     - name: Fetch kubeconfig file to register
       azure.azcollection.azure_rm_openshiftmanagedclusterkubeconfig_info:
