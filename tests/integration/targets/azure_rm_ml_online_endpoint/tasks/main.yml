@@ -1,0 +1,168 @@
+- name: Create a new resource group for ml-online_endpoint test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-online_endpoint"
+    location: eastus
+
+- name: For ml-online_endpoint topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-online_endpoint"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-online_endpoint"
+        workspace_name: "workspace-{{ rpfx }}"
+        online_endpoint_name: "endpoint-command-{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: "{{ online_endpoint_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+          auth_mode: key
+      register: results
+
+    - name: Assert the ML Online Endpoint created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Online Endpoint (idempotent)
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: "{{ online_endpoint_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+          auth_mode: key
+      register: results
+
+    - name: Assert the ML Online Endpoint created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Assert Archived online_endpoints are one
+      ansible.builtin.assert:
+        that:
+          - results.ml_online_endpoints | length == 1
+
+    - name: Get Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint_info:
+        name: "{{ online_endpoint_name }}"
+        include_auth_keys: true
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Record Current keys
+      ansible.builtin.set_fact:
+        keys_before: "{{ results.ml_online_endpoints[0].auth_keys }}"
+
+    - name: Regenerate Keys for Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: "{{ online_endpoint_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: regenerate_keys
+        key_type: primary
+      register: results
+
+    - name: Assert the ML Online Endpoint created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Get Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint_info:
+        name: "{{ online_endpoint_name }}"
+        include_auth_keys: true
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Record New keys
+      ansible.builtin.set_fact:
+        keys_after: "{{ results.ml_online_endpoints[0].auth_keys }}"
+
+    - name: Assert the ML Online Endpoint Primary keys changed
+      ansible.builtin.assert:
+        that:
+          - keys_before.primary_key != keys_after.primary_key
+          - keys_before.secondary_key == keys_after.secondary_key
+
+    # cleanup
+    - name: Delete Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: "{{ online_endpoint_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Online Endpoint deleted
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Delete Online Endpoint (idempotent)
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: "{{ online_endpoint_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Online Endpoint deleted (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
