@@ -89,7 +89,7 @@
         name: "{{ cluster_name }}"
         location: "australiaeast"
         cluster_profile:
-          cluster_resource_group_id: "{{ rg_output.resourcegroups[0].id }}"
+          cluster_resource_group_id: "/subscriptions/{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}/resourceGroups/{{ resource_group }}-openshiftmanagedcluster-aro"
           domain: "{{ cluster_name }}"
           version: "{{ ocp_version }}"
         service_principal_profile:
@@ -237,7 +237,7 @@
             id:
               - "{{ managed_identity_ids[0] }}"
         cluster_profile:
-          cluster_resource_group_id: "{{ rg_output.resourcegroups[0].id }}"
+          cluster_resource_group_id: "/subscriptions/{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}/resourceGroups/{{ resource_group }}-openshiftmanagedcluster-aromi"
           domain: "{{ cluster_name }}mi"
           version: "{{ ocp_version }}"
         platform_workload_identity_profile:
@@ -277,7 +277,7 @@
           client_id: "{{ azure_client_id }}"
           client_secret: "{{ azure_secret }}"
         cluster_profile:
-          cluster_resource_group_id: "{{ rg_output.resourcegroups[0].id }}"
+          cluster_resource_group_id: "/subscriptions/{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}/resourceGroups/{{ resource_group }}-openshiftmanagedcluster-aromi"
           domain: "{{ cluster_name }}mi"
         platform_workload_identity_profile:
           platform_workload_identities:
@@ -321,3 +321,5 @@
       loop:
         - openshiftmanagedcluster01
         - openshiftmanagedcluster02
+        - openshiftmanagedcluster-aro
+        - openshiftmanagedcluster-aromi
