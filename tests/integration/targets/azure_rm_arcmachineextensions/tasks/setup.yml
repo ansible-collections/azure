@@ -1,11 +1,4 @@
 ---
-- name: Set some variables
-  ansible.builtin.set_fact:
-    vm_name: "arc-ext-vm-{{ 999999999 | random }}"
-    location: eastus
-    vm_size: Standard_D2s_v3
-    admin_username: arcadmin
-
 - name: Create virtual network
   azure.azcollection.azure_rm_virtualnetwork:
     resource_group: "{{ arc_extensions_rg }}"

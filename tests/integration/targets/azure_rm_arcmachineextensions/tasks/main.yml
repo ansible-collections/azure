@@ -3,10 +3,17 @@
   ansible.builtin.set_fact:
     arc_extensions_rg: "{{ resource_group }}-arc-extensions"
 
+- name: Set variables for test
+  ansible.builtin.set_fact:
+    vm_name: "arc-ext-vm-{{ 999999999 | random }}"
+    location: eastus
+    vm_size: Standard_D2s_v3
+    admin_username: arcadmin
+
 - name: Create resource group for Azure Arc extensions test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ arc_extensions_rg }}"
-    location: eastus2
+    location: "{{ location }}"
 
 - name: Run Azure Arc Machine Extensions tests
   block:
