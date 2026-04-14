@@ -1,7 +1,7 @@
 - name: Create a new resource group for openshift cluster test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
-    location: eastus
+    location: australiaeast
   loop:
     - openshiftmanagedcluster01
     - openshiftmanagedcluster02
@@ -70,7 +70,7 @@
 
     - name: Get available openshift cluster versions
       azure.azcollection.azure_rm_openshiftmanagedclusterversion_info:
-        location: "eastus"
+        location: "australiaeast"
       register: ocp_cl_vers
 
     - name: Extract the latest available version
@@ -87,7 +87,7 @@
       azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
-        location: "eastus"
+        location: "australiaeast"
         cluster_profile:
           cluster_resource_group_id: "{{ rg_output.resourcegroups[0].id }}"
           domain: "{{ cluster_name }}"
@@ -105,7 +105,7 @@
             disk_size: 128
             count: 3
         master_profile:
-          vm_size: "Standard_D8s_v5"
+          vm_size: "Standard_D8s_v3"
           subnet_id: "{{ master_sub_output.state.id }}"
       register: output
 
@@ -189,7 +189,7 @@
       azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
-        location: "eastus"
+        location: "australiaeast"
         state: absent
       register: output
 
@@ -207,7 +207,7 @@
         managed_identity_test_unique: 'arocluster'
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'create'
-        managed_identity_location: "eastus"
+        managed_identity_location: "australiaeast"
         new_resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
       with_items:
         - '1'
@@ -216,7 +216,7 @@
       azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}mi"
-        location: "eastus"
+        location: "australiaeast"
         identity:
           type: UserAssigned
           user_assigned_identities:
@@ -240,7 +240,7 @@
             disk_size: 128
             count: 3
         master_profile:
-          vm_size: "Standard_D8s_v5"
+          vm_size: "Standard_D8s_v3"
           subnet_id: "{{ master_sub_output.state.id }}"
       check_mode: true
       register: mi_check_output
@@ -253,7 +253,7 @@
       azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}mi"
-        location: "eastus"
+        location: "australiaeast"
         identity:
           type: UserAssigned
           user_assigned_identities:
@@ -279,7 +279,7 @@
             disk_size: 128
             count: 3
         master_profile:
-          vm_size: "Standard_D8s_v5"
+          vm_size: "Standard_D8s_v3"
           subnet_id: "{{ master_sub_output.state.id }}"
       register: mutual_excl_output
       ignore_errors: true
@@ -294,7 +294,7 @@
         managed_identity_test_unique: 'arocluster'
         managed_identity_unique: "{{ item }}"
         managed_identity_action: 'delete'
-        managed_identity_location: "eastus"
+        managed_identity_location: "australiaeast"
         new_resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
       with_items:
         - '1'
