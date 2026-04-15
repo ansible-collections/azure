@@ -1,0 +1,243 @@
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
+
+# Phase 1: Create a source VM with Premium_LRS data disks
+- name: Create source VM with Premium_LRS data disks
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 4
+        managed_disk_type: Premium_LRS
+      - lun: 1
+        disk_size_gb: 4
+        managed_disk_type: Premium_LRS
+  register: source_vm
+
+- name: Assert source VM created
+  ansible.builtin.assert:
+    that:
+      - source_vm.changed
+
+# Phase 2: Deallocate, generalize, capture image
+- name: Deallocate source VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    started: false
+    allocated: false
+
+- name: Generalize source VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    generalized: true
+
+- name: Capture custom image from source VM
+  azure.azcollection.azure_rm_image:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-image"
+    source: "{{ vm_name }}-src"
+    os_type: Linux
+  register: image_result
+
+- name: Set custom image id
+  ansible.builtin.set_fact:
+    custom_image_id: "{{ image_result.id }}"
+
+# Test 1: create_option=FromImage with managed_disk_type override
+- name: Create VM from custom image with create_option FromImage and disk type override
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-fi"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      id: "{{ custom_image_id }}"
+    data_disks:
+      - lun: 0
+        create_option: FromImage
+        managed_disk_type: StandardSSD_LRS
+      - lun: 1
+        create_option: FromImage
+        managed_disk_type: StandardSSD_LRS
+  register: vm_fromimage
+
+- name: Assert FromImage VM was created
+  ansible.builtin.assert:
+    that:
+      - vm_fromimage.changed
+
+- name: Get FromImage VM info
+  azure.azcollection.azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-fi"
+  register: vm_fromimage_info
+
+- name: Assert data disks are StandardSSD_LRS not Premium_LRS
+  ansible.builtin.assert:
+    that:
+      - vm_fromimage_info.vms[0].data_disks | length == 2
+      - vm_fromimage_info.vms[0].data_disks[0].managed_disk_type == 'StandardSSD_LRS'
+      - vm_fromimage_info.vms[0].data_disks[1].managed_disk_type == 'StandardSSD_LRS'
+
+# Test 2: create_option=FromImage without managed_disk_type (inherit from image)
+- name: Create VM from custom image with create_option FromImage without disk type override
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-fi2"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      id: "{{ custom_image_id }}"
+    data_disks:
+      - lun: 0
+        create_option: FromImage
+      - lun: 1
+        create_option: FromImage
+  register: vm_fromimage_inherit
+
+- name: Assert FromImage inherit VM was created
+  ansible.builtin.assert:
+    that:
+      - vm_fromimage_inherit.changed
+
+- name: Get FromImage inherit VM info
+  azure.azcollection.azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-fi2"
+  register: vm_fromimage_inherit_info
+
+- name: Assert data disks inherited Premium_LRS from image
+  ansible.builtin.assert:
+    that:
+      - vm_fromimage_inherit_info.vms[0].data_disks | length == 2
+      - vm_fromimage_inherit_info.vms[0].data_disks[0].managed_disk_type == 'Premium_LRS'
+      - vm_fromimage_inherit_info.vms[0].data_disks[1].managed_disk_type == 'Premium_LRS'
+
+# Test 3: Default create_option (Empty)
+- name: Create VM with default empty data disk
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-em"
+    admin_username: "testuser"
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 4
+        managed_disk_type: Standard_LRS
+  register: vm_empty
+
+- name: Assert empty disk VM was created
+  ansible.builtin.assert:
+    that:
+      - vm_empty.changed
+
+- name: Get empty disk VM info
+  azure.azcollection.azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-em"
+  register: vm_empty_info
+
+- name: Assert empty data disk is Standard_LRS
+  ansible.builtin.assert:
+    that:
+      - vm_empty_info.vms[0].data_disks | length == 1
+      - vm_empty_info.vms[0].data_disks[0].managed_disk_type == 'Standard_LRS'
+
+# Cleanup
+- name: Delete FromImage VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-fi"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Delete FromImage inherit VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-fi2"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Delete empty disk VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-em"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Delete source VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    remove_on_absent: all_autocreated
+    state: absent
+
+- name: Delete custom image
+  azure.azcollection.azure_rm_image:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-image"
+    state: absent
+
+- name: Destroy subnet
+  azure.azcollection.azure_rm_subnet:
+    resource_group: "{{ resource_group }}-vm01"
+    virtual_network: "{{ network_name }}"
+    name: "{{ subnet_name }}"
+    state: absent
+
+- name: Destroy virtual network
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ network_name }}"
+    state: absent
+
+- name: Destroy availability set
+  azure.azcollection.azure_rm_availabilityset:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ availability_set }}"
+    state: absent
+
+- name: Destroy storage account
+  azure.azcollection.azure_rm_storageaccount:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ storage_account }}"
+    state: absent
