@@ -2669,8 +2669,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.deallocate_vm()
                 elif powerstate_change == 'generalized':
                     current_powerstate = self.results['ansible_facts']['azure_vm']['powerstate']
-                    if current_powerstate not in ('deallocated', 'deallocating', 'stopped'):
-                        self.power_off_vm()
+                    if current_powerstate != 'deallocated':
+                        self.deallocate_vm()
                     self.generalize_vm()
 
                 self.results['ansible_facts']['azure_vm'] = self.serialize_vm(self.get_vm())
