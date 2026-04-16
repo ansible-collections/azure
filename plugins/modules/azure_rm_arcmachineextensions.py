@@ -99,7 +99,7 @@ author:
 
 EXAMPLES = '''
 - name: Add a arc machine extension
-  azure.azcollection.azure_rm_arcmachineextensionsextensions:
+  azure.azcollection.azure_rm_arcmachineextensions:
     state: present
     resource_group: resource_group_name
     machine_name: vm_name
@@ -113,7 +113,7 @@ EXAMPLES = '''
       type_handler_version: 1.37.0
 
 - name: Delete a arc machine extension
-  azure.azcollection.azure_rm_arcmachineextensionsextensions:
+  azure.azcollection.azure_rm_arcmachineextensions:
     state: absent
     name: arc_machine_extension_name
     machine_name: vm_name
