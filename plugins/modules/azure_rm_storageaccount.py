@@ -1376,7 +1376,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         try:
             account_obj = self.storage_client.storage_accounts.get_properties(self.resource_group, self.name, expand='georeplicationstats')
         except Exception as exc:
-            self.fail("Error occured while acquiring geo-replication status. {0}".format(str(exc)))
+            self.fail("Error occurred while acquiring geo-replication status. {0}".format(str(exc)))
 
         if account_obj.failover_in_progress:
             self.fail("Storage account is already in process of failing over to secondary region.")
@@ -1388,7 +1388,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             poller = self.storage_client.storage_accounts.begin_failover(self.resource_group, self.name)
             result = self.get_poller_result(poller)
         except Exception as exc:
-            self.fail("Error occured while attempting a failover operation. {0}".format(str(exc)))
+            self.fail("Error occurred while attempting a failover operation. {0}".format(str(exc)))
 
         self.results['changed'] = True
         return result
