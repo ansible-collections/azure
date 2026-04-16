@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2025 Klaas Demter (@Klaas-)
+# Copyright (c) 2026 Klaas Weyermann (@Klaas-)
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_arcmachineextensions_info
-version_added: "3.9.0"
+version_added: "3.17.0"
 short_description: Get arc machine extensions
 description:
     - Get arc machine extensions
@@ -34,7 +34,7 @@ extends_documentation_fragment:
     - azure.azcollection.azure
 
 author:
-    - Klaas Demter (@Klaas-)
+    - Klaas Weyermann (@Klaas-)
 '''
 
 EXAMPLES = '''
