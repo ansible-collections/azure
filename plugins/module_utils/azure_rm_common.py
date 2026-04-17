@@ -994,7 +994,8 @@ class AzureRMModuleBase(object):
 
     @property
     def subscription_id(self):
-        return self.azure_auth.subscription_id
+        # Prefer user-provided subscription_id module param over auth subscription
+        return self.module.params.get('subscription_id') or self.azure_auth.subscription_id
 
     @property
     def storage_client(self):
