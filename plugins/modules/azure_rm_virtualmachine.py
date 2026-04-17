@@ -350,6 +350,18 @@ options:
                     - None
                     - ReadOnly
                     - ReadWrite
+            create_option:
+                description:
+                    - Specifies how the data disk should be created.
+                    - Use C(Empty) to create a new blank data disk.
+                    - Use C(FromImage) to create the data disk from a custom image that includes data disks at the matching LUN.
+                    - When set to C(FromImage), you can combine with I(managed_disk_type) to override the disk type defined in the image.
+                    - Not used when I(managed_disk_id) is specified (attach mode is chosen automatically).
+                type: str
+                default: Empty
+                choices:
+                    - Empty
+                    - FromImage
             delete_option:
                 description:
                     - Specifies the delete behavior for the data disk when deleting the VM.
@@ -814,6 +826,24 @@ EXAMPLES = '''
     admin_password: "{{ password }}"
     image:
       id: '{{image_id}}'
+
+- name: Create a VM from a custom image and override data disk types
+  azure_rm_virtualmachine:
+    resource_group: myResourceGroup
+    name: testvm001
+    vm_size: Standard_DS1_v2
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      id: '{{ image_id }}'
+    data_disks:
+      - lun: 0
+        create_option: FromImage
+        managed_disk_type: StandardSSD_LRS
+      - lun: 1
+        create_option: FromImage
+        managed_disk_type: StandardSSD_LRS
 
 - name: Create a VM with spcified OS disk size
   azure_rm_virtualmachine:
@@ -1299,6 +1329,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     storage_container_name=dict(type='str', default='vhds'),
                     storage_blob_name=dict(type='str'),
                     caching=dict(type='str', choices=['None', 'ReadOnly', 'ReadWrite']),
+                    create_option=dict(type='str', choices=['Empty', 'FromImage'], default='Empty'),
                     delete_option=dict(type='str', choices=['Delete', 'Detach'])
                 )
             ),
@@ -2207,6 +2238,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             if data_disk.get('managed_disk_id'):
                                 create_option = self.compute_models.DiskCreateOptionTypes.attach
                                 data_disk_managed_disk = self.compute_models.ManagedDiskParameters(id=data_disk.get('managed_disk_id'))
+                            elif data_disk.get('create_option') == 'FromImage':
+                                create_option = self.compute_models.DiskCreateOptionTypes.from_image
+                                if data_disk.get('managed_disk_type'):
+                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
+                                    if data_disk.get('disk_encryption_set'):
+                                        data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                            id=data_disk['disk_encryption_set']
+                                        )
+                                else:
+                                    data_disk_managed_disk = None
+                                disk_name = self.name + "-datadisk-" + str(count)
+                                count += 1
                             else:
                                 create_option = self.compute_models.DiskCreateOptionTypes.empty
 
@@ -2625,7 +2668,9 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 elif powerstate_change == 'deallocated':
                     self.deallocate_vm()
                 elif powerstate_change == 'generalized':
-                    self.power_off_vm()
+                    current_powerstate = self.results['ansible_facts']['azure_vm']['powerstate']
+                    if current_powerstate != 'deallocated':
+                        self.deallocate_vm()
                     self.generalize_vm()
 
                 self.results['ansible_facts']['azure_vm'] = self.serialize_vm(self.get_vm())
