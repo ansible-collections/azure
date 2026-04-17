@@ -29,6 +29,7 @@ azure-mgmt-hdinsight==9.1.0b1
 azure-mgmt-iothub==3.0.0
 azure-mgmt-keyvault==12.1.1
 azure-mgmt-loganalytics==13.0.0b7
+azure-mgmt-hybridcompute==9.0.0
 azure-mgmt-managedservices==7.0.0b2
 azure-mgmt-managementgroups==1.1.0b2
 azure-mgmt-marketplaceordering==1.2.0b2

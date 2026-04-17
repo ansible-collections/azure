@@ -34,6 +34,8 @@ action_groups:
     - azure.azcollection.azure_rm_applicationsecuritygroup_info
     - azure.azcollection.azure_rm_appserviceplan
     - azure.azcollection.azure_rm_appserviceplan_info
+    - azure.azcollection.azure_rm_arcmachineextensions
+    - azure.azcollection.azure_rm_arcmachineextensions_info
     - azure.azcollection.azure_rm_automationaccount
     - azure.azcollection.azure_rm_automationaccount_info
     - azure.azcollection.azure_rm_automationrunbook

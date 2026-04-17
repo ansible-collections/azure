@@ -1,0 +1,26 @@
+---
+# Onboard the VM to Azure Arc using the azure_arc role
+- name: Onboard VM to Azure Arc
+  ansible.builtin.import_role:
+    name: azure_arc
+  vars:
+    azure_arc_resource_group: "{{ arc_extensions_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
+    azure_arc_tags:
+      environment: "test"
+      purpose: "arc-extensions-test"
+      managed_by: "ansible-tests"
+  delegate_to: arc_test_vm
+
+- name: Assert that Arc role set the resource ID
+  ansible.builtin.assert:
+    that:
+      - azure_arc_resource_id is defined
+      - azure_arc_resource_id | length > 0
+    success_msg: "Azure Arc role set resource ID: {{ azure_arc_resource_id }}"
+    fail_msg: "Azure Arc role did not set azure_arc_resource_id"
+
+- name: Extract arc machine name from resource ID
+  ansible.builtin.set_fact:
+    arc_machine_name: "{{ azure_arc_resource_id.split('/')[-1] }}"
