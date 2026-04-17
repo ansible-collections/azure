@@ -23,13 +23,21 @@
   ansible.builtin.set_fact:
     azure_arc_azcmagent_install_script_path: "{{ azure_arc_tmpdir.path }}/azcmagent-linux.sh"
 
+- name: Set fact for http/https proxy if defined in proxy variable
+  when: azure_arc_proxy_url is defined
+  ansible.builtin.set_fact:
+    azure_arc_proxy_environment:
+      http_proxy: "{{ azure_arc_proxy_url }}"
+      https_proxy: "{{ azure_arc_proxy_url }}"
+
 - name: Download azcmagent install script
   when: not azure_arc_azcmagent_installed
   become: true
   ansible.builtin.get_url:
-    url: https://aka.ms/azcmagent
+    url: "{{ azure_arc_azcmagent_install_script_url }}"
     dest: "{{ azure_arc_azcmagent_install_script_path }}"
     mode: '0700'
+  environment: "{{ azure_arc_proxy_environment | default({}) }}"
 
 - name: Initialize azcmagent install script argv
   when: not azure_arc_azcmagent_installed

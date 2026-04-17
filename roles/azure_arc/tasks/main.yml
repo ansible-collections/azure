@@ -78,6 +78,10 @@
       # This command produces output that includes an access token
       no_log: true
       azure.azcollection.azure_rm_accesstoken_info:
+        client_id: "{{ azure_arc_application_id | default(omit) }}"
+        secret: "{{ azure_arc_client_secret | default(omit) }}"
+        tenant: "{{ azure_arc_tenant_id | default(omit) }}"
+        subscription_id: "{{ azure_arc_subscription_id | default(omit) }}"
         scopes:
           - https://management.azure.com/.default
         auth_source: "{{ auth_source | default(omit) }}"
