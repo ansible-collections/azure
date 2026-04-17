@@ -242,7 +242,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
                                                                                                                      association_name=self.association_name,
                                                                                                                      body=body)
         except Exception as ex:
-            self.fail("Creates or update the association occured exception, Exception as {0}".format(ex))
+            self.fail("Creates or update the association occurred exception, Exception as {0}".format(ex))
         return response.as_dict()
 
     def delete_association(self):
@@ -253,7 +253,7 @@ class AzureRMDataCollectionRuleAssociation(AzureRMModuleBase):
             self.monitor_management_client_data_collection_rules.data_collection_rule_associations.delete(resource_uri=self.resource_uri,
                                                                                                           association_name=self.association_name)
         except Exception as ex:
-            self.fail("Deletes the association occured exception, Exception as {0}".format(ex))
+            self.fail("Deletes the association occurred exception, Exception as {0}".format(ex))
 
 
 def main():

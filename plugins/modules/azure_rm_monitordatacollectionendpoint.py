@@ -331,7 +331,7 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBaseExt):
                                                                                                              data_collection_endpoint_name=self.name,
                                                                                                              body=body)
         except Exception as ex:
-            self.fail("Create the data collection endponts occured exception, Exception as {0}".format(ex))
+            self.fail("Create the data collection endponts occurred exception, Exception as {0}".format(ex))
 
         if response:
             return response.as_dict()
@@ -344,7 +344,7 @@ class AzureRMDataCollectionRuleEndpoint(AzureRMModuleBaseExt):
             self.monitor_management_client_data_collection_rules.data_collection_endpoints.delete(resource_group_name=self.resource_group,
                                                                                                   data_collection_endpoint_name=self.name)
         except Exception as ex:
-            self.fail("Delete the data collection endponts occured exception, Exception as {0}".format(ex))
+            self.fail("Delete the data collection endponts occurred exception, Exception as {0}".format(ex))
 
 
 def main():
