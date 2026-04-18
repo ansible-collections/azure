@@ -92,6 +92,7 @@ parameters:
       - "azure_rm_ml_model"
       - "azure_rm_ml_job"
       - "azure_rm_ml_online_endpoint"
+      - "azure_rm_ml_online_deployment"
       - "azure_rm_monitoractiongroups"
       - "azure_rm_monitoractivitylogalerts"
       - "azure_rm_monitordatacollectionrules"
