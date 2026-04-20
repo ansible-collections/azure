@@ -1620,7 +1620,7 @@ class AzureRMAuth(object):
         if self.credentials.get('subscription_id', None) is None and not self.is_ad_resource:
             self.fail("Credentials did not include a subscription_id value.")
         self.log("setting default_subscription_id")
-        # The default subscription resolved during auth setup. 
+        # The default subscription resolved during auth setup.
         # This is NOT used for authentication itself (Azure auth doesn't require a subscription ID).
         # It serves as the fallback when the user doesn't explicitly provide a subscription_id module parameter. Sources vary by auth method:
         #   - CLI: active subscription from `az account show`
