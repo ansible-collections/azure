@@ -1,0 +1,149 @@
+- name: Create a new resource group for ml-online_deployment test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-online_deployment"
+    location: eastus
+
+- name: For ml-online_deployment topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-online_deployment"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-online_deployment"
+        workspace_name: "workspace-{{ rpfx }}"
+        online_deployment_name: "deployment-command-{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+          auth_mode: key
+      register: results
+
+    - name: Assert the ML Online Endpoint created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Online Deployment
+      azure.azcollection.azure_rm_ml_online_deployment:
+        endpoint_name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+          name: {{ online_deployment_name }}
+          model:
+            path: ./targets/azure_rm_ml_online_deployment/files/model/
+          code_configuration:
+            code: ./targets/azure_rm_ml_online_deployment/files/onlinescoring/
+            scoring_script: score.py
+          environment:
+            conda_file: ./targets/azure_rm_ml_online_deployment/files/environment/conda.yaml
+            image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+          instance_type: Standard_D2as_v4
+          instance_count: 1
+      register: results
+
+    - name: Assert the ML Online Deployment created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Online Deployment (idempotent)
+      azure.azcollection.azure_rm_ml_online_deployment:
+        endpoint_name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+          name: {{ online_deployment_name }}
+          model:
+            path: ./targets/azure_rm_ml_online_deployment/files/model/
+          code_configuration:
+            code: ./targets/azure_rm_ml_online_deployment/files/onlinescoring/
+            scoring_script: score.py
+          environment:
+            conda_file: ./targets/azure_rm_ml_online_deployment/files/environment/conda.yaml
+            image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+          instance_type: Standard_D2as_v4
+          instance_count: 1
+      register: results
+
+    - name: Assert the ML Online Deployment created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Online Deployment
+      azure.azcollection.azure_rm_ml_online_deployment_info:
+        endpoint_name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Assert online_deployments are one
+      ansible.builtin.assert:
+        that:
+          - results.ml_online_deployments | length == 1
+
+    # cleanup
+    - name: Delete Online Deployment
+      azure.azcollection.azure_rm_ml_online_deployment:
+        name: "{{ online_deployment_name }}"
+        endpoint_name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Online Deployment deleted
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Delete Online Deployment (idempotent)
+      azure.azcollection.azure_rm_ml_online_deployment:
+        name: "{{ online_deployment_name }}"
+        endpoint_name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Online Deployment deleted (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
