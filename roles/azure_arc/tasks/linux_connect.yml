@@ -5,7 +5,7 @@
   no_log: true
   ansible.builtin.command:
     argv:
-      - /usr/bin/azcmagent
+      - azcmagent
       - connect
       - --resource-group
       - "{{ azure_arc_resource_group }}"

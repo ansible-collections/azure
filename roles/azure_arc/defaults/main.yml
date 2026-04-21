@@ -4,6 +4,9 @@ azure_arc_tags:
   ArcSQLServerExtensionDeployment: "Disabled"
 azure_arc_cloud: AzureCloud
 
+# Default url for arc install script download
+azure_arc_azcmagent_install_script_url: https://aka.ms/azcmagent
+
 # Mandatory variables for role:
 # azure_arc_resource_group: NoDefault
 # azure_arc_subscription_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -13,3 +16,11 @@ azure_arc_cloud: AzureCloud
 # proxy:
 #   hostname: proxy.company.tld
 #   port: 8080
+
+# azure_arc_application_id and azure_arc_client_secret are optional variables
+# They are needed if you are using a service principal
+# if you operate with a single subscription you can also set them via environment variables AZURE_CLIENT_ID and AZURE_CLIENT_SECRET
+# or via another auth source
+# example:
+# azure_arc_application_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+# azure_arc_client_secret: xxxxxxxxxxxxxxxxxxxx
