@@ -450,7 +450,13 @@ class AzureRMModuleBase(object):
         # self.debug = self.module.params.get('debug')
 
         # delegate auth to AzureRMAuth class (shared with all plugin types)
-        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
+        # Resolve env var fallbacks before passing params, so AzureRMAuth
+        # receives the user's full intent (module param > env var > None).
+        auth_params = dict(self.module.params)
+        for attr, env_var in AZURE_CREDENTIAL_ENV_MAPPING.items():
+            if auth_params.get(attr) is None:
+                auth_params[attr] = os.environ.get(env_var, None)
+        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **auth_params)
 
         # common parameter validation
         if self.module.params.get('tags'):
@@ -890,9 +896,7 @@ class AzureRMModuleBase(object):
         if not base_url.endswith("/"):
             base_url += "/"
 
-        mgmt_subscription_id = self.azure_auth.subscription_id
-        if self.module.params.get('subscription_id'):
-            mgmt_subscription_id = self.module.params.get('subscription_id')
+        mgmt_subscription_id = self.subscription_id
 
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
@@ -1729,7 +1733,7 @@ class AzureRMAuth(object):
         "Read envvar matching module parameter"
         return os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING[module_key], default)
 
-    def _get_profile(self, profile="default"):
+    def _get_profile(self, profile="default", subscription_id=None):
         path = expanduser("~/.azure/credentials")
         try:
             config = configparser.ConfigParser()
@@ -1743,6 +1747,9 @@ class AzureRMAuth(object):
                 credentials[key] = config.get(profile, key, raw=True)
             except Exception:
                 pass
+
+        if subscription_id is not None:
+            credentials['subscription_id'] = subscription_id
 
         if credentials.get('subscription_id') is None and not self.is_ad_resource:
             return None
@@ -1816,14 +1823,17 @@ class AzureRMAuth(object):
         }
         return cli_credentials
 
-    def _get_env_credentials(self):
+    def _get_env_credentials(self, subscription_id=None):
         env_credentials = dict()
         for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
             env_credentials[attribute] = os.environ.get(env_variable, None)
 
         if env_credentials['profile']:
-            credentials = self._get_profile(env_credentials['profile'])
+            credentials = self._get_profile(env_credentials['profile'], subscription_id=subscription_id)
             return credentials
+
+        if subscription_id is not None:
+            env_credentials['subscription_id'] = subscription_id
 
         if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
             return None
@@ -1853,20 +1863,20 @@ class AzureRMAuth(object):
 
         if auth_source == 'env':
             self.log('Retrieving credentials from environment')
-            env_credentials = self._get_env_credentials()
+            env_credentials = self._get_env_credentials(subscription_id=params.get('subscription_id'))
             return env_credentials
 
         if auth_source == 'credential_file':
             self.log("Retrieving credentials from credential file")
             profile = params.get('profile') or 'default'
-            default_credentials = self._get_profile(profile)
+            default_credentials = self._get_profile(profile, subscription_id=params.get('subscription_id'))
             return default_credentials
 
         # auto, precedence: module parameters -> environment variables -> default profile in ~/.azure/credentials -> azure cli
         # try module params
         if arg_credentials['profile'] is not None:
             self.log('Retrieving credentials with profile parameter.')
-            credentials = self._get_profile(arg_credentials['profile'])
+            credentials = self._get_profile(arg_credentials['profile'], subscription_id=params.get('subscription_id'))
             return credentials
 
         if arg_credentials['client_id'] or arg_credentials['ad_user']:
@@ -1874,13 +1884,13 @@ class AzureRMAuth(object):
             return arg_credentials
 
         # try environment
-        env_credentials = self._get_env_credentials()
+        env_credentials = self._get_env_credentials(subscription_id=params.get('subscription_id'))
         if env_credentials:
             self.log('Received credentials from env.')
             return env_credentials
 
         # try default profile from ~./azure/credentials
-        default_credentials = self._get_profile()
+        default_credentials = self._get_profile(subscription_id=params.get('subscription_id'))
         if default_credentials:
             self.log('Retrieved default profile credentials from ~/.azure/credentials.')
             return default_credentials
