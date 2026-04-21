@@ -344,7 +344,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         self.azure_auth = AzureRMAuth(**auth_options)
 
-        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.default_subscription_id,
+        self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id,
                                                       self.azure_auth._cloud_environment.endpoints.resource_manager)
 
         self.new_client = PipelineClient(self.azure_auth._cloud_environment.endpoints.resource_manager, config=self._clientconfig)

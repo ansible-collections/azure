@@ -890,8 +890,9 @@ class AzureRMModuleBase(object):
         if not base_url.endswith("/"):
             base_url += "/"
 
-        # Use the subscription_id property which prefers the user-provided module param over the default subscription resolved during auth setup.
-        mgmt_subscription_id = self.subscription_id
+        mgmt_subscription_id = self.azure_auth.subscription_id
+        if self.module.params.get('subscription_id'):
+            mgmt_subscription_id = self.module.params.get('subscription_id')
 
         # Some management clients do not take a subscription ID as parameters.
         if suppress_subscription_id:
@@ -993,9 +994,7 @@ class AzureRMModuleBase(object):
 
     @property
     def subscription_id(self):
-        # Prefer the user-provided subscription_id module param over the default subscription resolved during auth setup.
-        # This ensures resource ID construction and SDK clients consistently target the subscription the user explicitly specified.
-        return self.module.params.get('subscription_id') or self.azure_auth.default_subscription_id
+        return self.azure_auth.subscription_id
 
     @property
     def storage_client(self):
@@ -1619,15 +1618,8 @@ class AzureRMAuth(object):
 
         if self.credentials.get('subscription_id', None) is None and not self.is_ad_resource:
             self.fail("Credentials did not include a subscription_id value.")
-        self.log("setting default_subscription_id")
-        # The default subscription resolved during auth setup.
-        # This is NOT used for authentication itself (Azure auth doesn't require a subscription ID).
-        # It serves as the fallback when the user doesn't explicitly provide a subscription_id module parameter. Sources vary by auth method:
-        #   - CLI: active subscription from `az account show`
-        #   - MSI: first subscription the managed identity can access
-        #   - Env: AZURE_SUBSCRIPTION_ID environment variable
-        #   - Credential file: subscription_id from ~/.azure/credentials profile
-        self.default_subscription_id = self.credentials.get('subscription_id')
+        self.log("setting subscription_id")
+        self.subscription_id = self.credentials.get('subscription_id')
 
         # get authentication authority
         # for adfs, user could pass in authority or not.

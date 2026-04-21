@@ -102,7 +102,7 @@ class ActionModule(ActionBase):
 
         azure_auth = AzureRMAuth(**auth_options)
         rest_client = GenericRestClient(azure_auth.azure_credential_track2,
-                                        azure_auth.default_subscription_id,
+                                        azure_auth.subscription_id,
                                         azure_auth._cloud_environment.endpoints.resource_manager,
                                         credential_scopes=[azure_auth._cloud_environment.endpoints.resource_manager + ".default"])
         # Define error_map with common http error codes
@@ -128,7 +128,7 @@ class ActionModule(ActionBase):
             config_session.proxy_path = connectivity_utils.install_client_side_proxy(config_session.ssh_proxy_folder)
             (config_session.relay_info,
              config_session.new_service_config) = connectivity_utils.get_relay_information(rest_client,
-                                                                                           azure_auth.default_subscription_id,
+                                                                                           azure_auth.subscription_id,
                                                                                            config_session.resource_group_name,
                                                                                            config_session.hostname,
                                                                                            config_session.resource_type,
