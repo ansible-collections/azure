@@ -318,7 +318,7 @@
     - name: Create a new kubernet service with security parameters
       azure.azcollection.azure_rm_aks:
         name: "min{{ rpfx }}-sec"
-        location: westus2
+        location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
@@ -360,7 +360,7 @@
     - name: Create a new kubernet service with security parameters (Idempotent test)
       azure.azcollection.azure_rm_aks:
         name: "min{{ rpfx }}-sec"
-        location: westus2
+        location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
@@ -402,7 +402,7 @@
     - name: Update the kubernet service security parameters parameters
       azure.azcollection.azure_rm_aks:
         name: "min{{ rpfx }}-sec"
-        location: westus2
+        location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
