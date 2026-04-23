@@ -450,13 +450,7 @@ class AzureRMModuleBase(object):
         # self.debug = self.module.params.get('debug')
 
         # delegate auth to AzureRMAuth class (shared with all plugin types)
-        # Resolve env var fallbacks before passing params, so AzureRMAuth
-        # receives the user's full intent (module param > env var > None).
-        auth_params = dict(self.module.params)
-        for attr, env_var in AZURE_CREDENTIAL_ENV_MAPPING.items():
-            if auth_params.get(attr) is None:
-                auth_params[attr] = os.environ.get(env_var, None)
-        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **auth_params)
+        self.azure_auth = AzureRMAuth(fail_impl=self.fail, is_ad_resource=is_ad_resource, **self.module.params)
 
         # common parameter validation
         if self.module.params.get('tags'):
