@@ -1,4 +1,48 @@
 # Change Log
+## v3.17.0 (2026-04-24)
+
+### NEW MODULES
+  - azure_rm_ml_model:([#2201](https://github.com/ansible-collections/azure/pull/2201))
+  - azure_rm_ml_model_info:([#2201](https://github.com/ansible-collections/azure/pull/2201))
+  - azure_rm_ml_job:([#2209](https://github.com/ansible-collections/azure/pull/2209))
+  - azure_rm_ml_job_info:([#2209](https://github.com/ansible-collections/azure/pull/2209))
+  - azure_rm_ml_online_endpoint:([#2220](https://github.com/ansible-collections/azure/pull/2220))
+  - azure_rm_ml_online_endpoint_info:([#2220](https://github.com/ansible-collections/azure/pull/2220))
+  - azure_rm_arcmachineextensions:([#2065](https://github.com/ansible-collections/azure/pull/2065))
+  - azure_rm_arcmachineextensions_info.py:([#2065](https://github.com/ansible-collections/azure/pull/2065))
+  - azure_rm_ml_online_deployment:([#2225](https://github.com/ansible-collections/azure/pull/2225))
+  - azure_rm_ml_online_deployment_info:([#2225](https://github.com/ansible-collections/azure/pull/2225))
+
+### FEATURE ENHANCEMENT
+  - plugins/module_utils/azure_rm_common.py:
+    - Added support for workload identity federation ([#2200](https://github.com/ansible-collections/azure/pull/2200))
+    - Added azure_rm_arcmachineextensions modules ([#2065](https://github.com/ansible-collections/azure/pull/2065))
+  - plugins/module_utils/azure_rm_common_ml.py:
+    - Added azure_rm_ml_job modules ([#2209](https://github.com/ansible-collections/azure/pull/2209))
+    - Added azure_rm_ml_online_endpoint modules ([#2220](https://github.com/ansible-collections/azure/pull/2220))
+  - plugins/modules/azure_rm_virtualnetworkgateway.py: VPN Gateway SKU consolidation and migration (Note that there is a breaking change on the default value of sku. Default is now `VpnGw1AZ` instead of `VpnGw1`. `VpnGw1-5`, Non-AZ SKUs will be retired on Sep 30, 2026. Gateways will be automatically migrated to AZ SKUs.)([#2205](https://github.com/ansible-collections/azure/pull/2205))
+  - plugins/modules/azure_rm_virtualnetworkgateway_info.py: VPN Gateway SKU consolidation and migration ([#2205](https://github.com/ansible-collections/azure/pull/2205))
+  - sanity-requirements.txt:
+    - Bump cryptography from 46.0.5 to 46.0.6 ([#2203](https://github.com/ansible-collections/azure/pull/2203))
+    - Bump cryptography from 46.0.6 to 46.0.7 ([#2214](https://github.com/ansible-collections/azure/pull/2214))
+  - extensions/eda/plugins/event_source/azure_event_hub.py: Added support for feedback queue ([#2206](https://github.com/ansible-collections/azure/pull/2206))
+  - extensions/eda/plugins/event_source/azure_service_bus.py: Added support for feedback queue ([#2206](https://github.com/ansible-collections/azure/pull/2206))
+  - requirements.txt: Added `azure-mgmt-hybridcompute` dependency ([#2065](https://github.com/ansible-collections/azure/pull/2065))
+  - roles/azure_arc/defaults/main.yml: Fix azure arc role proxy handling during download of install script ([#2224](https://github.com/ansible-collections/azure/pull/2224))
+  - roles/azure_arc/tasks/linux_connect.yml: Fix azure arc role proxy handling during download of install script ([#2224](https://github.com/ansible-collections/azure/pull/2224))
+  - roles/azure_arc/tasks/linux_install.yml: Fix azure arc role proxy handling during download of install script ([#2224](https://github.com/ansible-collections/azure/pull/2224))
+  - roles/azure_arc/tasks/main.yml: Fix azure arc role proxy handling during download of install script ([#2224](https://github.com/ansible-collections/azure/pull/2224))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_subnet.py: Added Application Gateway v2 subnet delegation (Note that Azure now requires subnet delegation to `Microsoft.Network/applicationGateways` for all Application Gateway v2 deployments) ([#2217](https://github.com/ansible-collections/azure/pull/2217))
+  - plugins/modules/azure_rm_deployment.py: Fix error serialization and improve deployment failure messages ([#2216](https://github.com/ansible-collections/azure/pull/2216))
+  - plugins/modules/azure_rm_monitordatacollectionendpoint.py: Fix typo ([#2222](https://github.com/ansible-collections/azure/pull/2222))
+  - plugins/modules/azure_rm_monitordatacollectionruleassociation.py: Fix typo ([#2222](https://github.com/ansible-collections/azure/pull/2222))
+  - plugins/modules/azure_rm_storageaccount.py: Fix typo ([#2222](https://github.com/ansible-collections/azure/pull/2222))
+  - plugins/modules/azure_rm_virtualmachine.py: Fix `managed_disk_type` for data disks was ignored when creating a virtual machine from a custom image ([#2221](https://github.com/ansible-collections/azure/pull/2221))
+  - plugins/module_utils/azure_rm_common.py: Fix `subscription_id` module parameter ignored in resource ID construction ([#2223](https://github.com/ansible-collections/azure/pull/2223))
+
+
 ## v3.16.0 (2026-03-25)
 
 ### NEW MODULES
