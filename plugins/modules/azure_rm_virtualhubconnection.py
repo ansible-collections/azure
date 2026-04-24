@@ -271,14 +271,14 @@ state:
         allow_hub_to_remote_vnet_transit:
             description:
                 - (Deprecated) Enable hub to remote VNet transit.
-                - This field has been deprecated and will be removed in later version release.
+                - This field has been deprecated and will be removed in next major version release.
             returned: always
             type: bool
             sample: true
         allow_remote_vnet_to_use_hub_vnet_gateways:
             description:
                 - (Deprecated) Allow remote VNet to use hub's VNet gateways.
-                - This field has been deprecated and will be removed in later version release.
+                - This field has been deprecated and will be removed in next major version release.
             returned: always
             type: bool
             sample: true
@@ -330,12 +330,12 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
             ),
             allow_remote_vnet_to_use_hub_vnet_gateways=dict(
                 type='bool',
-                removed_in_version='3.17.0',
+                removed_in_version='4.0.0',
                 removed_from_collection='azure.azcollection'
             ),
             allow_hub_to_remote_vnet_transit=dict(
                 type='bool',
-                removed_in_version='3.17.0',
+                removed_in_version='4.0.0',
                 removed_from_collection='azure.azcollection'
             ),
             remote_virtual_network=dict(
