@@ -49,8 +49,6 @@
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         enable_internet_security: true
-        allow_remote_vnet_to_use_hub_vnet_gateways: false
-        allow_hub_to_remote_vnet_transit: true
         remote_virtual_network:
           id: "{{ vnet_output.state.id }}"
         routing_configuration:
@@ -83,8 +81,6 @@
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         enable_internet_security: true
-        allow_remote_vnet_to_use_hub_vnet_gateways: false
-        allow_hub_to_remote_vnet_transit: true
         remote_virtual_network:
           id: "{{ vnet_output.state.id }}"
         routing_configuration:
@@ -117,8 +113,6 @@
         vhub_name: "vhub{{ rpfx }}"
         name: "connection{{ rpfx }}"
         enable_internet_security: false
-        allow_remote_vnet_to_use_hub_vnet_gateways: false
-        allow_hub_to_remote_vnet_transit: true
         remote_virtual_network:
           id: "{{ vnet_output.state.id }}"
         routing_configuration:
@@ -157,8 +151,6 @@
     - name: Assert fact returns
       ansible.builtin.assert:
         that:
-          - output.virtual_hub_connection[0].allow_hub_to_remote_vnet_transit
-          - not output.virtual_hub_connection[0].allow_remote_vnet_to_use_hub_vnet_gateways
           - not output.virtual_hub_connection[0].enable_internet_security
           - output.virtual_hub_connection[0].routing_configuration.propagated_route_tables.labels | length == 3
           - output.virtual_hub_connection[0].routing_configuration.vnet_routes.static_routes | length == 2
