@@ -2015,13 +2015,6 @@
         that:
           - output is not changed
 
-    # ---------------------------------------------------------------------------
-    # Issue #2226: ssl_certificates must support key_vault_secret_id
-    # Verifies an Application Gateway SSL certificate sourced from a Key Vault
-    # secret URI (mirrors the existing trusted_root_certificates support).
-    # Reuses the already-provisioned appgateway-v2 + UMI; the UMI's principalId
-    # is auto-populated into access_policies_object_ids by managed_identity.yml.
-    # ---------------------------------------------------------------------------
     - name: Lookup service principal object_id for Key Vault access policy
       ansible.builtin.set_fact:
         appgw_kv_sp_object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
@@ -2262,18 +2255,12 @@
         name: "appgateway-v2-{{ rpfx }}"
       register: appgw_kv_info
 
-    - name: Extract the kv-ssl-cert entry from the returned ssl_certificates
-      ansible.builtin.set_fact:
-        appgw_kv_cert: "{{ appgw_kv_info.gateways[0].ssl_certificates
-                           | selectattr('name', 'equalto', 'kv-ssl-cert')
-                           | list }}"
-
     - name: Assert kv-ssl-cert exists and references the Key Vault secret
       ansible.builtin.assert:
         that:
-          - appgw_kv_cert | length == 1
-          - appgw_kv_cert[0].key_vault_secret_id is search('appgw-ssl-cert')
-        fail_msg: "kv-ssl-cert is missing or key_vault_secret_id is not populated by ARM."
+          - (appgw_kv_info.gateways[0].ssl_certificates | selectattr('name', 'equalto', 'kv-ssl-cert') | list | length) == 1
+          - (appgw_kv_info.gateways[0].ssl_certificates | selectattr('name', 'equalto', 'kv-ssl-cert') | map(attribute='key_vault_secret_id') | first) is search('appgw-ssl-cert')
+        fail_msg: "kv-ssl-cert is missing or its key_vault_secret_id is not populated by the ARM API."
 
     - name: Re-run the same module call to verify idempotency for ssl_certificates.key_vault_secret_id
       azure.azcollection.azure_rm_appgateway:
