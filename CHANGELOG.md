@@ -1,5 +1,5 @@
 # Change Log
-## v3.17.0 (2026-04-27)
+## v3.17.0 (2026-04-28)
 
 ### NEW MODULES
   - azure_rm_ml_model:([#2201](https://github.com/ansible-collections/azure/pull/2201))
