@@ -2426,6 +2426,13 @@
         that:
           - output_idem is not changed
 
+    - name: Delete the Key Vault used for the SSL certificate test
+      azure.azcollection.azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-appgateway"
+        vault_name: "appgwkv{{ rpfx }}"
+        state: absent
+      ignore_errors: true
+
     - name: Delete v2 instance of Application Gateway
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
