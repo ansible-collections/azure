@@ -37,7 +37,7 @@
 
     - name: Create Batch Endpoint
       azure.azcollection.azure_rm_ml_batch_endpoint:
-        name: endpoint-command-ansible
+        name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
         resource_definition: |
@@ -95,7 +95,7 @@
 
     - name: Create Batch Deployment
       azure.azcollection.azure_rm_ml_batch_deployment:
-        endpoint_name: endpoint-command-ansible
+        endpoint_name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
         resource_definition: |
@@ -115,7 +115,7 @@
 
     - name: Create Batch Deployment (idempotent)
       azure.azcollection.azure_rm_ml_batch_deployment:
-        endpoint_name: endpoint-command-ansible
+        endpoint_name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
         resource_definition: |
@@ -135,7 +135,7 @@
 
     - name: List ML Batch Deployment
       azure.azcollection.azure_rm_ml_batch_deployment_info:
-        endpoint_name: endpoint-command-ansible
+        endpoint_name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
       register: results
@@ -149,7 +149,7 @@
     - name: Delete Batch Deployment
       azure.azcollection.azure_rm_ml_batch_deployment:
         name: "{{ batch_deployment_name }}"
-        endpoint_name: endpoint-command-ansible
+        endpoint_name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
         state: absent
@@ -163,7 +163,7 @@
     - name: Delete Batch Deployment (idempotent)
       azure.azcollection.azure_rm_ml_batch_deployment:
         name: "{{ batch_deployment_name }}"
-        endpoint_name: endpoint-command-ansible
+        endpoint_name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
         state: absent
