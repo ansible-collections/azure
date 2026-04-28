@@ -40,13 +40,13 @@ options:
         description:
             - (Deprecated) Allow RemoteVnet to use Virtual Hub's gateways.
             - This parameter has been deprecated and is ignored by the service.
-            - It will be removed in later version release.
+            - It will be removed in next major version release.
         type: bool
     allow_hub_to_remote_vnet_transit:
         description:
             - (Deprecated) VirtualHub to RemoteVnet transit to enabled or not.
             - This parameter has been deprecated and is ignored by the service.
-            - It will be removed in later version release.
+            - It will be removed in next major version release.
         type: bool
     remote_virtual_network:
         description:
