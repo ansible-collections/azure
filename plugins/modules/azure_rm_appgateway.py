@@ -369,6 +369,13 @@ options:
                 description:
                     - Name of the resource that is unique within a resource group. This name can be used to access the resource.
                 type: str
+            key_vault_secret_id:
+                description:
+                    - Secret Id of (base-64 encoded unencrypted pfx) 'Secret' or 'Certificate' object stored in KeyVault.
+                    - When using this option, the application gateway must have a user-assigned managed identity with access to the Key Vault.
+                    - Mutually exclusive with I(data) and I(password).
+                default: ''
+                type: str
     trusted_root_certificates:
         version_added: "1.15.0"
         description:
@@ -1001,6 +1008,9 @@ EXAMPLES = '''
     trusted_root_certificates:
       - name: "root_cert"
         key_vault_secret_id: "https://kv/secret"
+    ssl_certificates:
+      - name: "ssl_cert"
+        key_vault_secret_id: "https://kv/secrets/ssl-cert"
     backend_address_pools:
       - backend_addresses:
           - ip_address: 10.0.0.4
@@ -1784,6 +1794,14 @@ trusted_root_certificates_spec = dict(
 )
 
 
+ssl_certificates_spec = dict(
+    name=dict(type='str'),
+    data=dict(type='str'),
+    password=dict(type='str', no_log=True),
+    key_vault_secret_id=dict(type='str', default='')
+)
+
+
 class AzureRMApplicationGateways(AzureRMModuleBaseExt):
     """Configuration class for an Azure RM Application Gateway resource"""
 
@@ -1834,11 +1852,7 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
             ssl_certificates=dict(
                 type='list',
                 elements='dict',
-                options=dict(
-                    data=dict(type='str'),
-                    password=dict(type='str', no_log=True),
-                    name=dict(type='str')
-                )
+                options=ssl_certificates_spec
             ),
             trusted_root_certificates=dict(
                 type='list',
