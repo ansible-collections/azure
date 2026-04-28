@@ -38,11 +38,15 @@ options:
         type: bool
     allow_remote_vnet_to_use_hub_vnet_gateways:
         description:
-            - Allow RemoteVnet to use Virtual Hub's gateways.
+            - (Deprecated) Allow RemoteVnet to use Virtual Hub's gateways.
+            - This parameter has been deprecated and is ignored by the service.
+            - It will be removed in next major version release.
         type: bool
     allow_hub_to_remote_vnet_transit:
         description:
-            - VirtualHub to RemoteVnet transit to enabled or not.
+            - (Deprecated) VirtualHub to RemoteVnet transit to enabled or not.
+            - This parameter has been deprecated and is ignored by the service.
+            - It will be removed in next major version release.
         type: bool
     remote_virtual_network:
         description:
@@ -126,8 +130,6 @@ EXAMPLES = '''
     vhub_name: testhub
     name: Myconnection
     enable_internet_security: false
-    allow_remote_vnet_to_use_hub_vnet_gateways: true
-    allow_hub_to_remote_vnet_transit: true
     remote_virtual_network:
       id: /subscriptions/xxx-xxx/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/testvnet
     routing_configuration:
@@ -268,13 +270,15 @@ state:
             sample: Succeeded
         allow_hub_to_remote_vnet_transit:
             description:
-                - Enable hub to remote VNet transit.
+                - (Deprecated) Enable hub to remote VNet transit.
+                - This field has been deprecated and will be removed in next major version release.
             returned: always
             type: bool
             sample: true
         allow_remote_vnet_to_use_hub_vnet_gateways:
             description:
-                - Allow remote VNet to use hub's VNet gateways.
+                - (Deprecated) Allow remote VNet to use hub's VNet gateways.
+                - This field has been deprecated and will be removed in next major version release.
             returned: always
             type: bool
             sample: true
@@ -325,10 +329,14 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
                 type='bool'
             ),
             allow_remote_vnet_to_use_hub_vnet_gateways=dict(
-                type='bool'
+                type='bool',
+                removed_in_version='4.0.0',
+                removed_from_collection='azure.azcollection'
             ),
             allow_hub_to_remote_vnet_transit=dict(
-                type='bool'
+                type='bool',
+                removed_in_version='4.0.0',
+                removed_from_collection='azure.azcollection'
             ),
             remote_virtual_network=dict(
                 type='dict',

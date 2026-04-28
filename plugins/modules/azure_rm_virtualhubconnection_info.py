@@ -163,13 +163,15 @@ virtual_hub_connection:
             sample: Succeeded
         allow_hub_to_remote_vnet_transit:
             description:
-                - Enable hub to remote VNet transit.
+                - (Deprecated) Enable hub to remote VNet transit.
+                - This field has been deprecated and will be removed in next major version release.
             returned: always
             type: bool
             sample: true
         allow_remote_vnet_to_use_hub_vnet_gateways:
             description:
-                - Allow remote VNet to use hub's VNet gateways.
+                - (Deprecated) Allow remote VNet to use hub's VNet gateways.
+                - This field has been deprecated and will be removed in next major version release.
             returned: always
             type: bool
             sample: true
