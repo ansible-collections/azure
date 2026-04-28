@@ -96,9 +96,49 @@ id:
     type: str
     sample: "/subscriptions/xxx...xxx/resourceGroups/myResourceGroup/providers/Microsoft.ServiceBus/
             namespaces/nsb57dc95979/topics/topicb57dc95979/authorizationRules/testpolicy"
+sas_keys:
+    description:
+        - Key dict of the SAS policy.
+    returned: Successed
+    type: complex
+    contains:
+        key_name:
+            description:
+                - Name of the SAS policy.
+            returned: Successed
+            type: str
+            sample: testpolicy
+        primary_connection_string:
+            description:
+                - Primary connection string.
+            returned: Successed
+            type: str
+            sample: "Endpoint=sb://nsb57dc95979.servicebus.windows.net/;SharedAccessKeyName=testpolicy;
+                    SharedAccessKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        primary_key:
+            description:
+                - Primary key.
+            returned: Successed
+            type: str
+            sample: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        secondary_key:
+            description:
+                - Secondary key.
+            returned: Successed
+            type: str
+            sample: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        secondary_connection_string:
+            description:
+                - Secondary connection string.
+            returned: Successed
+            type: str
+            sample: "Endpoint=sb://nsb57dc95979.servicebus.windows.net/;SharedAccessKeyName=testpolicy;
+                    SharedAccessKey=xxxxxxxxxxxxxxxxxxxxxxxxx"
 keys:
     description:
         - Key dict of the SAS policy.
+        - This return value has been deprecated and will be removed in a release after
+          2027-05-01. Use C(sas_keys) instead.
     returned: Successed
     type: complex
     contains:
@@ -224,7 +264,13 @@ class AzureRMServiceBusSASPolicy(AzureRMModuleBase):
                 if self.regenerate_secondary_key and not self.check_mode:
                     self.regenerate_sas_key('secondary')
             self.results = self.policy_to_dict(policy)
-            self.results['keys'] = self.get_sas_key()
+            self.results['sas_keys'] = self.get_sas_key()
+            self.results['keys'] = self.results['sas_keys']
+            self.module.deprecate(
+                "The 'keys' return key is deprecated. Use 'sas_keys' instead.",
+                date="2027-05-01",
+                collection_name="azure.azcollection",
+            )
         elif policy:
             changed = True
             if not self.check_mode:

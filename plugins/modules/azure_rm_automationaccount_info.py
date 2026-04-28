@@ -124,29 +124,55 @@ automation_accounts:
             type: str
             returned: always
             sample: ok
-        keys:
+        account_keys:
             description:
                 - Resource keys.
             type: complex
-            returned: always
+            returned: when I(list_keys=True)
             contains:
                 key_name:
                     description:
                         - Name of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: Primary
                 permissions:
                     description:
                         - Permission of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
                     sample: Full
                 value:
                     description:
                         - Value of the key.
                     type: str
-                    returned: always
+                    returned: when I(list_keys=True)
+                    sample: "MbepKTO6IyGwml0GaKBkKN"
+        keys:
+            description:
+                - Resource keys.
+                - This return value has been deprecated and will be removed in a release after
+                  2027-05-01. Use C(account_keys) instead.
+            type: complex
+            returned: when I(list_keys=True)
+            contains:
+                key_name:
+                    description:
+                        - Name of the key.
+                    type: str
+                    returned: when I(list_keys=True)
+                    sample: Primary
+                permissions:
+                    description:
+                        - Permission of the key.
+                    type: str
+                    returned: when I(list_keys=True)
+                    sample: Full
+                value:
+                    description:
+                        - Value of the key.
+                    type: str
+                    returned: when I(list_keys=True)
                     sample: "MbepKTO6IyGwml0GaKBkKN"
         statistics:
             description:
@@ -285,6 +311,13 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec):
             setattr(self, key, kwargs[key])
 
+        if self.list_keys:
+            self.module.deprecate(
+                "The 'keys' return key is deprecated. Use 'account_keys' instead.",
+                date="2027-05-01",
+                collection_name="azure.azcollection",
+            )
+
         if self.resource_group and self.name:
             accounts = [self.get()]
         elif self.resource_group:
@@ -305,7 +338,8 @@ class AzureRMAutomationAccountInfo(AzureRMModuleBase):
         if self.list_usages:
             result['usages'] = self.get_usages(id_dict['resource_group'], account.name)
         if self.list_keys:
-            result['keys'] = self.list_account_keys(id_dict['resource_group'], account.name)
+            result['account_keys'] = self.list_account_keys(id_dict['resource_group'], account.name)
+            result['keys'] = result['account_keys']
         return result
 
     def get(self):

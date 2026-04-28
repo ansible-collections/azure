@@ -67,9 +67,35 @@ tag_details:
             returned: always
             type: dict
             sample: { 'type': 'Total', 'value': 1}
+        tag_values:
+            description:
+                - The list of tag values.
+            returned: always
+            type: complex
+            contains:
+                id:
+                    description:
+                        - The tag value ID.
+                    returned: always
+                    type: str
+                    sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/tagNames/key2/tagValues/v1"
+                tag_value:
+                    description:
+                        - The tag value.
+                    returned: always
+                    type: str
+                    sample: V1
+                count:
+                    description:
+                        - The tag value count
+                    returned: always
+                    type: dict
+                    sample: {'type': 'Total', 'value': 1}
         values:
             description:
                 - The list of tag values.
+                - This return value has been deprecated and will be removed in a release after 2027-05-01.
+                  Use C(tag_values) instead.
             returned: always
             type: complex
             contains:
@@ -158,6 +184,11 @@ class AzureRMTagsInfo(AzureRMModuleBase):
             self.results['tag_info'] = self.get_at_scope(self.scope)
         else:
             self.results['tag_details'] = self.list_all()
+            self.module.deprecate(
+                "The 'values' return key in 'tag_details' is deprecated. Use 'tag_values' instead.",
+                date="2027-05-01",
+                collection_name="azure.azcollection",
+            )
 
         return self.results
 
@@ -180,7 +211,10 @@ class AzureRMTagsInfo(AzureRMModuleBase):
         try:
             response = self.rm_client.tags.list()
             while True:
-                results.append(response.next().as_dict())
+                tag_dict = response.next().as_dict()
+                if 'values' in tag_dict:
+                    tag_dict['tag_values'] = tag_dict['values']
+                results.append(tag_dict)
         except StopIteration:
             pass
         except Exception as exc:

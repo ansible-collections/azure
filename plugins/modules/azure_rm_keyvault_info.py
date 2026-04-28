@@ -209,9 +209,19 @@ keyvaults:
                     type: complex
                     returned: always
                     contains:
-                        keys:
+                        key_permissions:
                             description:
                                 Permissions to keys.
+                            type: list
+                            returned: always
+                            sample:
+                                - get
+                                - create
+                        keys:
+                            description:
+                                - Permissions to keys.
+                                - This return value has been deprecated and will be removed in a
+                                  release after 2027-05-01. Use C(key_permissions) instead.
                             type: list
                             returned: always
                             sample:
@@ -266,6 +276,7 @@ def keyvault_to_dict(vault):
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,
             permissions=dict(
+                key_permissions=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
                 keys=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
                 secrets=[sp.lower() for sp in policy.permissions.secrets] if policy.permissions.secrets else None,
                 certificates=[cp.lower() for cp in policy.permissions.certificates] if policy.permissions.certificates else None,
@@ -340,6 +351,12 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
+
+        self.module.deprecate(
+            "The 'keys' return key in 'permissions' is deprecated. Use 'key_permissions' instead.",
+            date="2027-05-01",
+            collection_name="azure.azcollection",
+        )
 
         self._client = self.get_mgmt_svc_client(KeyVaultManagementClient,
                                                 base_url=self._cloud_environment.endpoints.resource_manager,

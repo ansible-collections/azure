@@ -90,9 +90,31 @@ search:
             sample:
                 principal_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 type: SystemAssigned
+        search_keys:
+            description:
+                - Admin and query keys for Azure Cognitive Search Service.
+            type: dict
+            contains:
+                admin_primary:
+                    description:
+                        - Primary admin key for Azure Cognitive Search Service.
+                    type: str
+                    sample: 12345ABCDE67890FGHIJ123ABC456DEF
+                admin_secondary:
+                    description:
+                        - Secondary admin key for Azure Cognitive Search Service.
+                    type: str
+                    sample: 12345ABCDE67890FGHIJ123ABC456DEF
+                query:
+                    description:
+                        - List of query keys for Azure Cognitive Search Service.
+                    type: list
+                    sample: [{'key': '12345ABCDE67890FGHIJ123ABC456DEF', 'name': 'Query key'}]
         keys:
             description:
                 - Admin and query keys for Azure Cognitive Search Service.
+                - This return value has been deprecated and will be removed in a release after
+                  2027-05-01. Use C(search_keys) instead.
             type: dict
             contains:
                 admin_primary:
@@ -207,6 +229,13 @@ class AzureRMSearchInfo(AzureRMModuleBase):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
+        if self.show_keys:
+            self.module.deprecate(
+                "The 'keys' return key is deprecated. Use 'search_keys' instead.",
+                date="2027-05-01",
+                collection_name="azure.azcollection",
+            )
+
         if self.name and not self.resource_group:
             self.fail("Parameter error: resource group required when filtering by name.")
 
@@ -294,16 +323,18 @@ class AzureRMSearchInfo(AzureRMModuleBase):
             account_dict['network_rule_set'].append(rule.value)
 
         if self.show_keys:
-            account_dict['keys'] = dict()
+            account_dict['search_keys'] = dict()
 
             admin_keys = self.search_client.admin_keys.get(self.resource_group, self.name)
-            account_dict['keys']['admin_primary'] = admin_keys.primary_key
-            account_dict['keys']['admin_secondary'] = admin_keys.secondary_key
+            account_dict['search_keys']['admin_primary'] = admin_keys.primary_key
+            account_dict['search_keys']['admin_secondary'] = admin_keys.secondary_key
 
             query_keys = self.search_client.query_keys.list_by_search_service(self.resource_group, self.name)
-            account_dict['keys']['query'] = list()
+            account_dict['search_keys']['query'] = list()
             for key in query_keys:
-                account_dict['keys']['query'].append(dict(name=key.name, key=key.key))
+                account_dict['search_keys']['query'].append(dict(name=key.name, key=key.key))
+
+            account_dict['keys'] = account_dict['search_keys']
 
         return account_dict
 

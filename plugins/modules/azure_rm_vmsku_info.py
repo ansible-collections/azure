@@ -177,10 +177,20 @@ available_skus:
                     type: str
                     returned: always
                     sample: "location"
+                restriction_values:
+                    description:
+                        - The value of restrictions. If the restriction type is set to location.
+                          This would be different locations where the SKU is restricted.
+                    type: list
+                    returned: always
+                    sample: ["eastus"]
                 values:
                     description:
-                        - The value of restrictions. If the restriction type is set to location. This would be different locations where the SKU is restricted.
-                    type: str
+                        - The value of restrictions. If the restriction type is set to location.
+                          This would be different locations where the SKU is restricted.
+                        - This return value has been deprecated and will be removed in a release after
+                          2027-05-01. Use C(restriction_values) instead.
+                    type: list
                     returned: always
                     sample: ["eastus"]
                 restriction_info:
@@ -257,7 +267,11 @@ class AzureRMVmskuInfo(AzureRMModuleBase):
                     continue
                 if self.zone and not (sku_info.location_info and sku_info.location_info[0].zones):
                     continue
-                available_skus.append(sku_info.as_dict())
+                sku_dict = sku_info.as_dict()
+                for restriction in sku_dict.get('restrictions', []):
+                    if 'values' in restriction:
+                        restriction['restriction_values'] = restriction['values']
+                available_skus.append(sku_dict)
             return available_skus
         except HttpResponseError as e:
             # Handle exceptions
@@ -270,6 +284,11 @@ class AzureRMVmskuInfo(AzureRMModuleBase):
         available_skus = self.list_skus()
         self.results['available_skus'] = available_skus
         self.results['count'] = len(available_skus)
+        self.module.deprecate(
+            "The 'values' return key in 'restrictions' is deprecated. Use 'restriction_values' instead.",
+            date="2027-05-01",
+            collection_name="azure.azcollection",
+        )
         return self.results
 
 
