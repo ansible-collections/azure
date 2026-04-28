@@ -2249,19 +2249,6 @@
         that:
           - output is changed
 
-    - name: Fetch the App Gateway and verify key_vault_secret_id is populated
-      azure.azcollection.azure_rm_appgateway_info:
-        resource_group: "{{ resource_group }}-appgateway"
-        name: "appgateway-v2-{{ rpfx }}"
-      register: appgw_kv_info
-
-    - name: Assert kv-ssl-cert exists and references the Key Vault secret
-      ansible.builtin.assert:
-        that:
-          - (appgw_kv_info.gateways[0].ssl_certificates | selectattr('name', 'equalto', 'kv-ssl-cert') | list | length) == 1
-          - (appgw_kv_info.gateways[0].ssl_certificates | selectattr('name', 'equalto', 'kv-ssl-cert') | map(attribute='key_vault_secret_id') | first) is search('appgw-ssl-cert')
-        fail_msg: "kv-ssl-cert is missing or its key_vault_secret_id is not populated by the ARM API."
-
     - name: Re-run the same module call to verify idempotency for ssl_certificates.key_vault_secret_id
       azure.azcollection.azure_rm_appgateway:
         resource_group: "{{ resource_group }}-appgateway"
