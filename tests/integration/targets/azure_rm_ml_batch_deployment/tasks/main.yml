@@ -1,0 +1,182 @@
+- name: Create a new resource group for ml-batch_deployment test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-batch_deployment"
+    location: eastus
+
+- name: For ml-batch_deployment topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-batch_deployment"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-batch_deployment"
+        workspace_name: "workspace-{{ rpfx }}"
+        batch_deployment_name: "deployment-command-{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Batch Endpoint
+      azure.azcollection.azure_rm_ml_batch_endpoint:
+        name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/batchEndpoint.schema.json
+          name: hello-batch
+          description: A hello world endpoint for component deployments.
+          auth_mode: aad_token
+      register: results
+
+    - name: Assert the ML Batch Endpoint created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create ML Component
+      azure.azcollection.azure_rm_ml_component:
+        name: hello_batch
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+          name: hello_batch
+          display_name: Hello Batch component
+          version: 1
+          type: pipeline
+          jobs:
+            main_job:
+              type: command
+              component:
+                code: ./targets/azure_rm_ml_batch_deployment/files/src
+                environment: azureml://registries/azureml/environments/sklearn-1.5/labels/latest
+                command: >-
+                  python hello.py
+      register: results
+
+    - name: Assert the ML Component created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create ML Compute
+      azure.azcollection.azure_rm_ml_compute:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        name: batch-cluster
+        type: amlcompute
+        min_instances: 0
+        max_instances: 5
+      register: results
+
+    - name: Assert the ML Compute created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Batch Deployment
+      azure.azcollection.azure_rm_ml_batch_deployment:
+        endpoint_name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponentBatchDeployment.schema.json
+          name: {{ batch_deployment_name }}
+          endpoint_name: hello-pipeline-batch
+          type: pipeline
+          component: azureml:hello_batch@latest
+          settings:
+              default_compute: batch-cluster
+      register: results
+
+    - name: Assert the ML Batch Deployment created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Batch Deployment (idempotent)
+      azure.azcollection.azure_rm_ml_batch_deployment:
+        endpoint_name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponentBatchDeployment.schema.json
+          name: {{ batch_deployment_name }}
+          endpoint_name: hello-pipeline-batch
+          type: pipeline
+          component: azureml:hello_batch@latest
+          settings:
+              default_compute: batch-cluster
+      register: results
+
+    - name: Assert the ML Batch Deployment created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Batch Deployment
+      azure.azcollection.azure_rm_ml_batch_deployment_info:
+        endpoint_name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Assert batch_deployments are one
+      ansible.builtin.assert:
+        that:
+          - results.ml_batch_deployments | length == 1
+
+    # cleanup
+    - name: Delete Batch Deployment
+      azure.azcollection.azure_rm_ml_batch_deployment:
+        name: "{{ batch_deployment_name }}"
+        endpoint_name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Batch Deployment deleted
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Delete Batch Deployment (idempotent)
+      azure.azcollection.azure_rm_ml_batch_deployment:
+        name: "{{ batch_deployment_name }}"
+        endpoint_name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Batch Deployment deleted (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
