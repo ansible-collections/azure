@@ -1,0 +1,172 @@
+- name: Set unique suffix for resources
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+    bastion_rg: "{{ resource_group }}-bastionconn"
+    target_vm_name: "bvm{{ resource_group | hash('md5') | truncate(6, True, '') }}"
+    bastion_name: "bh{{ resource_group | hash('md5') | truncate(6, True, '') }}"
+    ssh_key_path: "/tmp/azure_bastion_conn_test_id_rsa"
+
+- name: Run azure_bastion_ssh connection plugin test
+  block:
+    - name: Generate ephemeral SSH keypair on the controller
+      ansible.builtin.command:
+        cmd: "ssh-keygen -t rsa -b 2048 -N '' -f {{ ssh_key_path }}"
+        creates: "{{ ssh_key_path }}"
+      delegate_to: localhost
+
+    - name: Read public key
+      ansible.builtin.slurp:
+        src: "{{ ssh_key_path }}.pub"
+      register: ssh_pub_key
+      delegate_to: localhost
+
+    - name: Create resource group for bastion+target VM
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ bastion_rg }}"
+        location: eastus
+
+    - name: Create virtual network
+      azure.azcollection.azure_rm_virtualnetwork:
+        resource_group: "{{ bastion_rg }}"
+        name: "vnet{{ rpfx }}"
+        address_prefixes_cidr:
+          - 10.10.0.0/16
+
+    - name: Create AzureBastionSubnet (mandatory name for Bastion)
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ bastion_rg }}"
+        name: AzureBastionSubnet
+        virtual_network_name: "vnet{{ rpfx }}"
+        address_prefix_cidr: "10.10.0.0/26"
+      register: bastion_subnet
+
+    - name: Create workload subnet for the target VM
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ bastion_rg }}"
+        name: "workload{{ rpfx }}"
+        virtual_network_name: "vnet{{ rpfx }}"
+        address_prefix_cidr: "10.10.1.0/24"
+      register: workload_subnet
+
+    - name: Create public IP for Bastion
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ bastion_rg }}"
+        name: "pip{{ rpfx }}"
+        allocation_method: Static
+        sku: Standard
+
+    - name: Get Bastion public IP ID
+      azure.azcollection.azure_rm_publicipaddress_info:
+        resource_group: "{{ bastion_rg }}"
+        name: "pip{{ rpfx }}"
+      register: publicip_output
+
+    - name: Create Bastion host (Standard SKU with native tunneling enabled)
+      azure.azcollection.azure_rm_bastionhost:
+        resource_group: "{{ bastion_rg }}"
+        name: "{{ bastion_name }}"
+        ip_configurations:
+          - name: tunnelipconfig
+            subnet:
+              id: "{{ bastion_subnet.state.id }}"
+            public_ip_address:
+              id: "{{ publicip_output.publicipaddresses[0].id }}"
+            private_ip_allocation_method: Dynamic
+        sku:
+          name: Standard
+        enable_tunneling: true
+        scale_units: 2
+
+    - name: Create NIC for the target VM (no public IP)
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ bastion_rg }}"
+        name: "nic{{ rpfx }}"
+        virtual_network: "vnet{{ rpfx }}"
+        subnet: "workload{{ rpfx }}"
+        create_with_security_group: true
+        security_group: "nsg{{ rpfx }}"
+        ip_configurations:
+          - name: ipconfig1
+            primary: true
+
+    - name: Create target VM in private subnet
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ bastion_rg }}"
+        name: "{{ target_vm_name }}"
+        vm_size: Standard_B1s
+        admin_username: azureuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/azureuser/.ssh/authorized_keys
+            key_data: "{{ ssh_pub_key.content | b64decode }}"
+        network_interfaces:
+          - "nic{{ rpfx }}"
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+      register: target_vm
+
+    - name: Add target VM to in-memory inventory using the new connection plugin
+      ansible.builtin.add_host:
+        name: "{{ target_vm_name }}"
+        groups: bastion_test_targets
+        ansible_connection: azure.azcollection.azure_bastion_ssh
+        ansible_user: azureuser
+        ansible_ssh_private_key_file: "{{ ssh_key_path }}"
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        ansible_azure_bastion_name: "{{ bastion_name }}"
+        ansible_azure_bastion_resource_group: "{{ bastion_rg }}"
+        ansible_azure_bastion_target_resource_id: "{{ target_vm.ansible_facts.azure_vm.id }}"
+
+    - name: Run a remote command via the Bastion tunnel (retry while sshd warms up)
+      ansible.builtin.command:
+        cmd: hostname
+      register: remote_cmd
+      delegate_to: "{{ target_vm_name }}"
+      retries: 10
+      delay: 15
+      until: remote_cmd is succeeded
+
+    - name: Assert command ran on the target VM
+      ansible.builtin.assert:
+        that:
+          - remote_cmd.rc == 0
+          - remote_cmd.stdout | length > 0
+
+    - name: Verify SFTP path works (put_file)
+      ansible.builtin.copy:
+        content: "azure_bastion_ssh integration test\n"
+        dest: "/tmp/azure_bastion_ssh_canary"
+        mode: "0644"
+      delegate_to: "{{ target_vm_name }}"
+
+    - name: Read back the canary file
+      ansible.builtin.slurp:
+        src: "/tmp/azure_bastion_ssh_canary"
+      register: canary
+      delegate_to: "{{ target_vm_name }}"
+
+    - name: Assert canary content
+      ansible.builtin.assert:
+        that:
+          - "'azure_bastion_ssh integration test' in (canary.content | b64decode)"
+
+  always:
+    - name: Tear down resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ bastion_rg }}"
+        force_delete_nonempty: true
+        state: absent
+      ignore_errors: true
+
+    - name: Remove ephemeral SSH key
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ssh_key_path }}"
+        - "{{ ssh_key_path }}.pub"
+      delegate_to: localhost
+      ignore_errors: true
