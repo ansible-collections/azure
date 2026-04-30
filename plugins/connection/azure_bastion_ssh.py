@@ -89,9 +89,9 @@ DOCUMENTATION = '''
         # Ansible's task executor only forwards variables to a connection plugin's ``set_options(var_options=...)`` if those variables are
         # declared in the plugin's own option spec (see ``ansible.executor.task_executor._set_plugin_options``). So we
         # have to re-declare the standard ssh-plugin vars here to make ``ansible_user``, ``ansible_ssh_private_key_file``, etc. flow
-        # through. 
-        # 
-        # The values land in ``self._options`` under the canonical keys (``remote_user``, ``private_key_file``, ...) where the parent ssh 
+        # through.
+        #
+        # The values land in ``self._options`` under the canonical keys (``remote_user``, ``private_key_file``, ...) where the parent ssh
         # plugin's ``get_option`` reads them.
         # ---------------------------------------------------------------
         remote_user:
