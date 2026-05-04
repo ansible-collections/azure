@@ -133,6 +133,27 @@
         that:
           - results is not changed
 
+    - name: Update Batch Deployment
+      azure.azcollection.azure_rm_ml_batch_deployment:
+        endpoint_name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        set_default: true
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponentBatchDeployment.schema.json
+          name: {{ batch_deployment_name }}
+          endpoint_name: hello-pipeline-batch
+          type: pipeline
+          component: azureml:hello_batch@latest
+          settings:
+              default_compute: batch-cluster
+      register: results
+
+    - name: Assert the ML Batch Deployment updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
     - name: List ML Batch Deployment
       azure.azcollection.azure_rm_ml_batch_deployment_info:
         endpoint_name: endpoint-{{ rpfx }}-ansible
@@ -145,34 +166,31 @@
         that:
           - results.ml_batch_deployments | length == 1
 
+    - name: Invoke ML Batch Endpoint
+      azure.azcollection.azure_rm_ml_batch_endpoint_invoke:
+        name: endpoint-{{ rpfx }}-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Assert batch_endpoint_invoke changed
+      ansible.builtin.assert:
+        that:
+          - results.changed is true
+
     # cleanup
-    - name: Delete Batch Deployment
-      azure.azcollection.azure_rm_ml_batch_deployment:
-        name: "{{ batch_deployment_name }}"
-        endpoint_name: endpoint-{{ rpfx }}-ansible
+    - name: Delete Batch Endpoint
+      azure.azcollection.azure_rm_ml_batch_endpoint:
+        name: endpoint-{{ rpfx }}-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
         state: absent
       register: results
 
-    - name: Assert the ML Batch Deployment deleted
+    - name: Assert the ML Batch Endpoint deleted
       ansible.builtin.assert:
         that:
           - results is changed
-
-    - name: Delete Batch Deployment (idempotent)
-      azure.azcollection.azure_rm_ml_batch_deployment:
-        name: "{{ batch_deployment_name }}"
-        endpoint_name: endpoint-{{ rpfx }}-ansible
-        resource_group: "{{ new_resource_group }}"
-        ml_workspace: "{{ workspace_name }}"
-        state: absent
-      register: results
-
-    - name: Assert the ML Batch Deployment deleted (idempotent)
-      ansible.builtin.assert:
-        that:
-          - results is not changed
 
   always:
     - name: Force delete the resource group

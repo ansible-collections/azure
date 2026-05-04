@@ -57,6 +57,88 @@ ml_batch_endpoints:
     type: dict
     sample: [
       {
+          "auth_mode": "aad_token",
+          "defaults": {
+              "deployment_name": "deployment-xxxxxxxxxx-ansible"
+          },
+          "description": "A hello world endpoint for component deployments.",
+          "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/batchEndpoints/endpoint-xxxxxxxxxx-ansible",
+          "jobs": [
+              {
+                  "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/batchEndpoints/endpoint-xxxxxxxxxx-ansible/deployments/deployment-xxxxxxxxxx-ansible/jobs/pipelinejob-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                  "name": "pipelinejob-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                  "properties": {
+                      "compute": {
+                          "is_local": false
+                      },
+                      "interaction_endpoints": {
+                          "Studio": {
+                              "endpoint": "https://ml.azure.com/runs/pipelinejob-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx?wsid=/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/xxxxx-ml-batch_endpoint_invoke/workspaces/workspace-xxxxxxxxxx",
+                              "job_endpoint_type": "Studio"
+                          },
+                          "Tracking": {
+                              "endpoint": "azureml://eastus.api.azureml.ms/mlflow/v1.0/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx?",
+                              "job_endpoint_type": "Tracking"
+                          }
+                      },
+                      "name": "honest_grape_xxxxxxxx",
+                      "output": {
+                          "datastore_id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/datastores/workspaceartifactstore",
+                          "path": "ExperimentRun/dcid.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                      },
+                      "output_data": {
+                          "score": {
+                              "job_output_type": "UriFile",
+                              "mode": "ReadWriteMount",
+                              "uri": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/datastores/workspaceblobstore/paths/azureml/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/score/predictions.csv"
+                          }
+                      },
+                      "properties": {
+                          "azureml.DatasetAccessMode": "Asset",
+                          "azureml.DevPlatv2": "true",
+                          "azureml.SourceComponentId": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/components/hello_batch/versions/1",
+                          "azureml.continue_on_failed_optional_input": "True",
+                          "azureml.continue_on_step_failure": "True",
+                          "azureml.defaultComputeName": "batch-cluster",
+                          "azureml.defaultDataStoreName": "workspaceblobstore",
+                          "azureml.deploymentname": "deployment-xxxxxxxxxx-ansible",
+                          "azureml.endpointname": "endpoint-xxxxxxxxxx-ansible",
+                          "azureml.enforceRerun": "False",
+                          "azureml.parameters": "{}",
+                          "azureml.pipelineComponent": "pipelinerun",
+                          "azureml.pipelines.stages": "{\\"Initialization\\":null,\\"Execution\\":{\\"StartTime\\":\\"2026-05-04T13:51:04.3564364+00:00\\",\\"EndTime\\":\\"2026-05-04T13:55:32.6682006+00:00\\",\\"Status\\":\\"Finished\\"}}",
+                          "azureml.runLineageType": "batchDeployment",
+                          "azureml.runsource": "azureml.PipelineRun",
+                          "azureml.sourcepipelinerunid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                          "runSource": "BatchDeployment",
+                          "runType": "HTTP"
+                      },
+                      "provisioning_state": "Succeeded",
+                      "status": "Completed",
+                      "tags": {
+                          "azureml.batchrun": "true",
+                          "azureml.deploymentname": "deployment-xxxxxxxxxx-ansible",
+                          "azureml.jobtype": "azureml.pipelinejob"
+                      }
+                  },
+                  "system_data": {
+                      "created_at": "2026-05-04T13:51:03.171352Z",
+                      "created_by": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                      "last_modified_at": "2026-05-04T13:55:32.837426Z",
+                      "last_modified_by": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  },
+                  "type": "Microsoft.MachineLearningServices/workspaces/batchEndpoints/deployments/jobs"
+              }
+          ],
+          "location": "eastus",
+          "name": "endpoint-xxxxxxxxxx-ansible",
+          "properties": {
+              "BatchEndpointCreationApiVersion": "2023-10-01",
+              "azureml.onlineendpointid": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/batchEndpoints/endpoint-xxxxxxxxxx-ansible"
+          },
+          "provisioning_state": "Succeeded",
+          "scoring_uri": "https://endpoint-xxxxxxxxxx-ansible.eastus.inference.ml.azure.com/jobs",
+          "tags": {}
       }
     ]
 '''  # NOQA
@@ -119,7 +201,7 @@ class AzureRMMLBatchEndpointInfo(MLClientCommon):
         try:
             result = self.client.batch_endpoints.get(name=name)
             ml_batch_endpoint = self.entity_to_dict(result)
-            jobs = self.client.batch_endpoints.list_jobs(endpoint_name=name)
+            jobs = [self.entity_to_dict(x) for x in self.client.batch_endpoints.list_jobs(endpoint_name=name)]
             ml_batch_endpoint['jobs'] = jobs
         except ResourceNotFoundError:
             ml_batch_endpoint = None
