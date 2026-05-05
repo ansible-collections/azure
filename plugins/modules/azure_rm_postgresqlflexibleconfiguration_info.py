@@ -57,7 +57,7 @@ EXAMPLES = '''
 RETURN = '''
 settings:
     description:
-        - A list of dictionaries containing MySQL Server settings.
+        - A list of dictionaries containing PostgreSQL Flexible Server settings.
     returned: always
     type: complex
     contains:

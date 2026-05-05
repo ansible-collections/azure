@@ -217,6 +217,7 @@ action_groups:
     - azure.azcollection.azure_rm_postgresqldatabase_info
     - azure.azcollection.azure_rm_postgresqlfirewallrule
     - azure.azcollection.azure_rm_postgresqlfirewallrule_info
+    - azure.azcollection.azure_rm_postgresqlflexibleconfiguration
     - azure.azcollection.azure_rm_postgresqlflexibleconfiguration_info
     - azure.azcollection.azure_rm_postgresqlflexibledatabase
     - azure.azcollection.azure_rm_postgresqlflexibledatabase_info
