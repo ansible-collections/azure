@@ -93,7 +93,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ bastion_rg }}"
         name: "{{ target_vm_name }}"
-        vm_size: Standard_B1s
+        vm_size: Standard_D2s_v3
         admin_username: azureuser
         ssh_password_enabled: false
         ssh_public_keys:
