@@ -411,6 +411,72 @@
         that:
           - output.settings | length > 0
 
+    - name: Update the postgresql flexible server configuration (check mode)
+      azure.azcollection.azure_rm_postgresqlflexibleconfiguration:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        name: deadlock_timeout
+        value: 2000
+      check_mode: true
+      register: output
+
+    - name: Assert the postgresql flexible server configuration changed in check mode
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update the postgresql flexible server configuration
+      azure.azcollection.azure_rm_postgresqlflexibleconfiguration:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        name: deadlock_timeout
+        value: 2000
+      register: output
+
+    - name: Assert the postgresql flexible server configuration updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update the postgresql flexible server configuration (Idempotent test)
+      azure.azcollection.azure_rm_postgresqlflexibleconfiguration:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        name: deadlock_timeout
+        value: 2000
+      register: output
+
+    - name: Assert the postgresql flexible server configuration not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Reset the postgresql flexible server configuration to default
+      azure.azcollection.azure_rm_postgresqlflexibleconfiguration:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        name: deadlock_timeout
+        state: absent
+      register: output
+
+    - name: Assert the postgresql flexible server configuration reset
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Reset the postgresql flexible server configuration to default (Idempotent test)
+      azure.azcollection.azure_rm_postgresqlflexibleconfiguration:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        name: deadlock_timeout
+        state: absent
+      register: output
+
+    - name: Assert the postgresql flexible server configuration reset not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
     - name: Create a new backup for the postgresql flexible server
       azure.azcollection.azure_rm_postgresqlflexiblebackup:
         resource_group: "{{ new_resource_group }}"
