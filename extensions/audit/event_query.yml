@@ -37,23 +37,49 @@ azure.azcollection.*:
        "storage": "Storage",
        "web": "App Integration & Messaging"
       } as $mapping |
-      (.aks_agent_pools //
+      (.accounts //
+       .aks_agent_pools //
        .ansible_facts.azure_vm //
        .ansible_facts.azure_vmss //
        .bastion_host //
+       .clusters //
        .connection //
+       .containerinstances //
        .database //
+       .databases //
        .deployment //
+       .deployments //
        .elastic_pool //
        .firewall_policy //
        .firewall_rule //
+       .firewallpolicies //
+       .firewalls //
+       .gateways //
        .instances //
        .ip_security_restrictions //
+       .keyvaults //
        .link_service //
+       .loadbalancers //
        .long_term_retention_policy //
+       .networkinterfaces //
+       .publicipaddresses //
+       .rediscaches //
+       .registries //
+       .resourcegroups //
        .response //
-       .state //
+       .rules //
+       .securitygroups //
+       .servers //
+       .servicebuses //
        .short_term_retention_policy //
+       .state //
+       .storageaccounts //
+       .subnets //
+       .virtual_hubs //
+       .virtualnetworks //
+       .vms //
+       .vpn_sites //
+       .webapps //
        .) |
       (if type=="array" then .[]
         else if type=="object" then .
