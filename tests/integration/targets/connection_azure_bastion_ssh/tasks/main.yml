@@ -8,6 +8,13 @@
 
 - name: Run azure_bastion_ssh connection plugin test
   block:
+    - name: Ensure the 'bastion' az CLI extension is installed on the controller
+      ansible.builtin.command:
+        cmd: az extension add --name bastion --upgrade --yes
+      register: bastion_ext_install
+      changed_when: bastion_ext_install.rc == 0
+      delegate_to: localhost
+
     - name: Generate ephemeral SSH keypair on the controller
       ansible.builtin.command:
         cmd: "ssh-keygen -t rsa -b 2048 -N '' -f {{ ssh_key_path }}"
