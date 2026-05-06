@@ -175,7 +175,7 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
             if self.check_mode:
                 return self.results
 
-            self.delete_configuration()
+            self.delete_configuration(old_response.get('default_value'))
         else:
             self.log("Configuration instance unchanged")
             self.results['changed'] = False
@@ -209,7 +209,7 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
             self.fail("Error creating the Configuration instance: {0}".format(str(exc)))
         return response.as_dict()
 
-    def delete_configuration(self):
+    def delete_configuration(self, default_value):
         '''
         Reset the PostgreSQL Flexible Server configuration setting to its
         system default by issuing an update with ``source='system-default'``.
@@ -219,7 +219,10 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
             response = self.postgresql_flexible_client.configurations.begin_update(resource_group_name=self.resource_group,
                                                                                    server_name=self.server_name,
                                                                                    configuration_name=self.name,
-                                                                                   parameters=Configuration(source='system-default'))
+                                                                                   parameters=Configuration(
+                                                                                       value=default_value,
+                                                                                       source='system-default'
+                                                                                   ))
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
         except Exception as e:
