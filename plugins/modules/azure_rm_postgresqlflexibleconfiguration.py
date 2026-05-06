@@ -150,8 +150,9 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
                 self.to_do = Actions.Create
         else:
             self.log("Configuration instance already exists")
-            if self.state == 'absent' and old_response['source'] == 'user-override':
-                self.to_do = Actions.Delete
+            if self.state == 'absent':
+                if str(old_response.get('value')) != str(old_response.get('default_value')):
+                    self.to_do = Actions.Delete
             elif self.state == 'present':
                 self.log("Need to check if Configuration instance has to be updated")
                 if self.value is not None and str(self.value) != str(old_response.get('value')):
@@ -211,17 +212,16 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
 
     def delete_configuration(self, default_value):
         '''
-        Reset the PostgreSQL Flexible Server configuration setting to its
-        system default by issuing an update with ``source='system-default'``.
+        Reset the PostgreSQL Flexible Server configuration setting back to its
+        ``default_value`` by issuing an update with that value.
         '''
-        self.log("Resetting the Configuration instance {0} to system default".format(self.name))
+        self.log("Resetting the Configuration instance {0} to default value {1}".format(self.name, default_value))
         try:
             response = self.postgresql_flexible_client.configurations.begin_update(resource_group_name=self.resource_group,
                                                                                    server_name=self.server_name,
                                                                                    configuration_name=self.name,
                                                                                    parameters=Configuration(
-                                                                                       value=default_value,
-                                                                                       source='system-default'
+                                                                                       value=default_value
                                                                                    ))
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
