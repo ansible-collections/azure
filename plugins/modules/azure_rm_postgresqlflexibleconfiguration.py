@@ -213,7 +213,7 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
     def delete_configuration(self, default_value):
         '''
         Reset the PostgreSQL Flexible Server configuration setting back to its
-        ``default_value`` by issuing an update with that value.
+        ``default_value``.
         '''
         self.log("Resetting the Configuration instance {0} to default value {1}".format(self.name, default_value))
         try:
@@ -221,7 +221,8 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
                                                                                    server_name=self.server_name,
                                                                                    configuration_name=self.name,
                                                                                    parameters=Configuration(
-                                                                                       value=default_value
+                                                                                       value=default_value,
+                                                                                       source='user-override'
                                                                                    ))
             if isinstance(response, LROPoller):
                 self.get_poller_result(response)
