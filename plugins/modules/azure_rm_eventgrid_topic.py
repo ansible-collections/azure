@@ -582,9 +582,22 @@ class AzureRMEventgridTopic(AzureRMModuleBaseExt):
                                                    '',
                                                    self.results)
                 if changed and not self.check_mode:
-                    response = self.begin_update_eventgrid_topic(self.resource_group,
-                                                                 self.name,
-                                                                 topic_update_parameters)
+                    topic_info = self.models.Topic(
+                        location=response.get('location', self.location),
+                        tags=self.tags,
+                        input_schema=response.get('input_schema', self.input_schema),
+                        input_schema_mapping=input_schema_mapping,
+                        public_network_access=self.public_network_access,
+                        inbound_ip_rules=inbound_ip_rules,
+                        identity=identity_info,
+                        disable_local_auth=response.get('disable_local_auth', False),
+                        data_residency_boundary=response.get('data_residency_boundary'),
+                        minimum_tls_version_allowed=response.get('minimum_tls_version_allowed'),
+                        kind=self.kind,
+                        extended_location=extended_location)
+                    response = self.begin_create_or_update_eventgrid_topic(self.resource_group,
+                                                                           self.name,
+                                                                           topic_info)
                 if self.regenerate_keys and not self.check_mode:
                     changed = True
                     for key_name in self.regenerate_keys:
