@@ -1,4 +1,29 @@
 # Change Log
+## v3.18.0 (2026-05-07)
+
+### NEW MODULES
+  - azure_rm_ml_batch_deployment:([#2231](https://github.com/ansible-collections/azure/pull/2231))
+  - azure_rm_ml_batch_deployment_info:([#2231](https://github.com/ansible-collections/azure/pull/2231))
+  - azure_rm_ml_batch_deployment_endpoint:([#2231](https://github.com/ansible-collections/azure/pull/2231))
+  - azure_rm_ml_batch_deployment_endpoint_info:([#2231](https://github.com/ansible-collections/azure/pull/2231))
+  - azure_rm_postgresqlflexibleconfiguration:([#2236](https://github.com/ansible-collections/azure/pull/2236))
+
+### FEATURE ENHANCEMENT
+  - plugins/module_utils/azure_rm_appgateway.py: Added support to `key_vault_secret_id` on `ssl_certificates` in `azure_rm_appgateway` ([#2230](https://github.com/ansible-collections/azure/pull/2230))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_automationaccount_info.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210))
+  - plugins/modules/azure_rm_cognitivesearch_info.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210))
+  - plugins/modules/azure_rm_imagesku_info.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210))
+  - plugins/modules/azure_rm_keyvault_info.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210))
+  - plugins/modules/azure_rm_servicebussaspolicy.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210))
+  - plugins/modules/azure_rm_tags_info.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210)
+  - plugins/modules/azure_rm_vmsku_info.py: Fix reserved parameters and return keys ([#2210](https://github.com/ansible-collections/azure/pull/2210)))
+  - plugins/modules/azure_rm_virtualhubconnection.py: Deprecate `allow_remote_vnet_to_use_hub_vnet_gateways` and `allow_hub_to_remote_vnet_transit` ([#2229](https://github.com/ansible-collections/azure/pull/2229))
+  - plugins/modules/azure_rm_virtualhubconnection_info.py: Deprecate `allow_remote_vnet_to_use_hub_vnet_gateways` and `allow_hub_to_remote_vnet_transit` ([#2229](https://github.com/ansible-collections/azure/pull/2229))
+  - plugins/module_utils/azure_rm_common.py: Fix `auth_source=auto` regression with module `subscription_id` ([#2234](https://github.com/ansible-collections/azure/pull/2234))
+
+
 ## v3.17.0 (2026-04-28)
 
 ### NEW MODULES
