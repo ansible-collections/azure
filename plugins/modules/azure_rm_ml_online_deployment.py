@@ -333,8 +333,8 @@ class AzureRMMLOnlineDeployment(MLClientCommon):
                     )
                     ml_online_deployment = self.get_poller_result(response)
                     ml_online_deployment_info = self.entity_to_dict(ml_online_deployment)
-                    if self.all_traffic:
-                        self._all_traffic(ml_online_deployment, local=self.local)
+            if not self.check_mode and self.all_traffic:
+                self._all_traffic(ml_online_deployment, local=self.local)
 
         elif self.state == 'absent':
             if ml_online_deployment_info:

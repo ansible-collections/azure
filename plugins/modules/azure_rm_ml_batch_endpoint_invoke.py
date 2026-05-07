@@ -266,7 +266,7 @@ class AzureRMMLBatchEndpointInvoke(MLClientCommon):
 
         super(AzureRMMLBatchEndpointInvoke, self).__init__(self.module_arg_spec,
                                                            supports_tags=False,
-                                                           supports_check_mode=True,
+                                                           supports_check_mode=False,
                                                            facts_module=True,
                                                            required_if=required_if,
                                                            )
