@@ -333,7 +333,7 @@ class AzureRMMLOnlineDeployment(MLClientCommon):
                     )
                     ml_online_deployment = self.get_poller_result(response)
                     ml_online_deployment_info = self.entity_to_dict(ml_online_deployment)
-            if self.all_traffic:
+            if not self.check_mode and self.all_traffic:
                 self._all_traffic(ml_online_deployment, local=self.local)
 
         elif self.state == 'absent':
@@ -384,10 +384,10 @@ class AzureRMMLOnlineDeployment(MLClientCommon):
 
     def _all_traffic(self, ml_deployment, local=False):
         endpoint = self.client.online_endpoints.get(
-            ml_deployment.get('endpoint_name'),
+            ml_deployment.endpoint_name,
             local=local
         )
-        endpoint.traffic = {ml_deployment.get('name'): 100}
+        endpoint.traffic = {ml_deployment.name: 100}
         response = self.client.begin_create_or_update(endpoint, local=local)
         return self.get_poller_result(response)
 

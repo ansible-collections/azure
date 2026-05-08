@@ -55,6 +55,7 @@
         endpoint_name: endpoint-command-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
+        all_traffic: true
         resource_definition: |
           $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
           name: {{ online_deployment_name }}
@@ -80,6 +81,7 @@
         endpoint_name: endpoint-command-ansible
         resource_group: "{{ new_resource_group }}"
         ml_workspace: "{{ workspace_name }}"
+        all_traffic: true
         resource_definition: |
           $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
           name: {{ online_deployment_name }}
@@ -111,6 +113,63 @@
       ansible.builtin.assert:
         that:
           - results.ml_online_deployments | length == 1
+
+    - name: Invoke ML Online Deployment
+      azure.azcollection.azure_rm_ml_online_endpoint_invoke:
+        name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        request_file: ./targets/azure_rm_ml_online_deployment/files/sample-request.json
+      register: results
+
+    - name: Assert the ML Online Endpoint Invoked
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: List ML Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint_info:
+        name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Assert deployment in endpoint
+      ansible.builtin.assert:
+        that:
+          - results.ml_online_endpoints | length == 1
+          - online_deployment_name in results.ml_online_endpoints[0].traffic
+          - results.ml_online_endpoints[0].traffic[online_deployment_name] == 100
+
+    - name: Update Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint:
+        name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        traffic:
+          "{{ online_deployment_name }}": 0
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+          auth_mode: key
+      register: results
+
+    - name: Assert the ML Online Endpoint Updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: List ML Online Endpoint
+      azure.azcollection.azure_rm_ml_online_endpoint_info:
+        name: endpoint-command-ansible
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+      register: results
+
+    - name: Assert deployment in endpoint is 0
+      ansible.builtin.assert:
+        that:
+          - results.ml_online_endpoints | length == 1
+          - results.ml_online_endpoints[0].traffic[online_deployment_name] == 0
 
     # cleanup
     - name: Delete Online Deployment
