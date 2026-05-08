@@ -58,10 +58,14 @@ author:
 EXAMPLES = '''
 - name: Create ML Batch Endpoint
   azure.azcollection.azure_rm_ml_batch_endpoint:
-    name: batchendpointxxxxxxxxxx
+    name: endpoint-xxxxxxxxxx-ansible
     resource_group: xxxxx-ml-batch_endpoint
     ml_workspace: workspace-xxxxxxxxxx
     resource_definition: |
+      $schema: https://azuremlschemas.azureedge.net/latest/batchEndpoint.schema.json
+      name: hello-batch
+      description: A hello world endpoint for component deployments.
+      auth_mode: aad_token
 '''
 
 RETURN = '''
@@ -77,6 +81,18 @@ ml_batch_endpoint:
     returned: always
     type: dict
     sample: {
+        "auth_mode": "aad_token",
+        "description": "A hello world endpoint for component deployments.",
+        "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/batchEndpoints/endpoint-xxxxxxxxxx-ansible",
+        "location": "eastus",
+        "name": "endpoint-xxxxxxxxxx-ansible",
+        "properties": {
+            "BatchEndpointCreationApiVersion": "2023-10-01",
+            "azureml.onlineendpointid": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/xxxxx-ml-batch_endpoint_invoke/providers/Microsoft.MachineLearningServices/workspaces/workspace-xxxxxxxxxx/batchEndpoints/endpoint-xxxxxxxxxx-ansible"
+        },
+        "provisioning_state": "Succeeded",
+        "scoring_uri": "https://endpoint-xxxxxxxxxx-ansible.eastus.inference.ml.azure.com/jobs",
+        "tags": {}
     }
 '''  # NOQA
 

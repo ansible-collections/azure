@@ -12,6 +12,7 @@ try:
     from azure.ai.ml import MLClient
     from azure.ai.ml._restclient.v2022_02_01_preview.models import ListViewType
     from azure.ai.ml.entities._builders.base_node import BaseNode
+    from azure.ai.ml._restclient.v2020_09_01_dataplanepreview.models import BatchJobResource
     import json
 except ImportError:
     pass
@@ -35,6 +36,8 @@ class MLClientCommon(AzureRMModuleBaseExt):
         ENTITY._to_dict() returns and OrderedDict so we abuse json
         dumps and loads to return a Dict
         """
+        if isinstance(entity, BatchJobResource):
+            entity = entity.as_dict()
         if isinstance(entity, BaseNode):
             entity = entity._to_job()  # pylint: disable=protected-access
         if isinstance(entity, Dict):

@@ -43,6 +43,12 @@ options:
         description:
             - Description of the batch_deployment.
         type: str
+    set_default:
+        description:
+            - Sets endpoint defaults.deployment_name to this deployment
+              after successful creation.
+        type: bool
+        default: false
     state:
         description:
             - State of the Batch Deployment. Use C(present) to create
@@ -179,6 +185,10 @@ class AzureRMMLBatchDeployment(MLClientCommon):
                 type='str',
                 required=False,
             ),
+            set_default=dict(
+                type='bool',
+                default=False,
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -242,6 +252,18 @@ class AzureRMMLBatchDeployment(MLClientCommon):
                 orig_deployment_info = self.entity_to_dict(ml_batch_deployment_info)
                 orig_deployment_info.pop('creation_context')
                 if not self.check_mode:
+                    # If requested make this deployment the default for the endpoint
+                    endpoint_changed = False
+                    if self.set_default:
+                        endpoint = self.client.batch_endpoints.get(
+                            ml_batch_deployment.endpoint_name
+                        )
+                        if endpoint.defaults.deployment_name != ml_batch_deployment.name:
+
+                            endpoint.defaults = {"deployment_name": ml_batch_deployment.name}
+                            endpoint = self.client.begin_create_or_update(entity=endpoint)
+                            endpoint = self.get_poller_result(endpoint)
+                            endpoint_changed = True
                     response = self.client.begin_create_or_update(
                         entity=ml_batch_deployment
                     )
@@ -258,6 +280,8 @@ class AzureRMMLBatchDeployment(MLClientCommon):
                         '',
                         self.results
                     )
+                    # We flag as changed on either endpoint default or deployment
+                    changed = changed or endpoint_changed
             else:
                 # Create
                 params_override = self.update_params(kwargs,
@@ -274,6 +298,14 @@ class AzureRMMLBatchDeployment(MLClientCommon):
                     )
                     ml_batch_deployment = self.get_poller_result(response)
                     ml_batch_deployment_info = self.entity_to_dict(ml_batch_deployment)
+                    # If requested make this deployment the default for the endpoint
+                    if self.set_default:
+                        endpoint = self.client.batch_endpoints.get(
+                            ml_batch_deployment.endpoint_name
+                        )
+                        endpoint.defaults = {"deployment_name": ml_batch_deployment.name}
+                        endpoint = self.client.begin_create_or_update(entity=endpoint)
+                        endpoint = self.get_poller_result(endpoint)
         elif self.state == 'absent':
             if ml_batch_deployment_info:
                 # Delete
