@@ -1,0 +1,88 @@
+- name: Create a new resource group for ml-registry test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-registry"
+    location: westus3
+
+- name: For ml-registry topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}-{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-registry"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-registry"
+        registry_name: "registry-{{ rpfx }}"
+
+    - name: Create ML Registry
+      azure.azcollection.azure_rm_ml_registry:
+        name: "{{ registry_name }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          name: {{ registry_name }}
+          tags:
+            foo: bar
+          location: eastus
+          replication_locations:
+            - location: eastus
+      register: results
+
+    - name: Assert the ML Registry created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create ML Registry (Idempotent)
+      azure.azcollection.azure_rm_ml_registry:
+        name: "{{ registry_name }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          name: {{ registry_name }}
+          tags:
+            foo: bar
+          location: eastus
+          replication_locations:
+            - location: eastus
+      register: results
+
+    - name: Assert the ML Registry created (Idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: Lookup ML Registry
+      azure.azcollection.azure_rm_ml_registry_info:
+        name: "{{ registry_name }}"
+        resource_group: "{{ new_resource_group }}"
+      register: results
+
+    - name: Assert ML Registry is one
+      ansible.builtin.assert:
+        that:
+          - results.ml_registries | length == 1
+
+    # cleanup
+    - name: Delete ML Registry
+      azure.azcollection.azure_rm_ml_registry:
+        name: "{{ registry_name }}"
+        resource_group: "{{ new_resource_group }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Registry deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
