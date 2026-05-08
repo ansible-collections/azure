@@ -1,4 +1,5 @@
 cloud/azure
 shippable/azure/group3
 destructive
+disabled
 needs/file/tests/integration_common_tasks/managed_identity.yml
