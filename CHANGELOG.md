@@ -1,5 +1,5 @@
 # Change Log
-## v3.18.0 (2026-05-08)
+## v3.18.0 (2026-05-11)
 
 ### NEW MODULES
   - azure_rm_ml_batch_deployment:([#2231](https://github.com/ansible-collections/azure/pull/2231))
