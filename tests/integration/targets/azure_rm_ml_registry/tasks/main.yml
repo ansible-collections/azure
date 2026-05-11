@@ -68,6 +68,46 @@
         that:
           - results.ml_registries | length == 1
 
+    - name: Update ML Registry
+      azure.azcollection.azure_rm_ml_registry:
+        name: "{{ registry_name }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          name: {{ registry_name }}
+          tags:
+            foo: bar
+          location: eastus
+          replication_locations:
+            - location: eastus
+        public_network_access: Enabled
+        state: present
+      register: results
+
+    - name: Assert the ML Registry Updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Update ML Registry (Idempotent)
+      azure.azcollection.azure_rm_ml_registry:
+        name: "{{ registry_name }}"
+        resource_group: "{{ new_resource_group }}"
+        resource_definition: |
+          name: {{ registry_name }}
+          tags:
+            foo: bar
+          location: eastus
+          replication_locations:
+            - location: eastus
+        public_network_access: Enabled
+        state: present
+      register: results
+
+    - name: Assert the ML Registry Updated (Idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
     # cleanup
     - name: Delete ML Registry
       azure.azcollection.azure_rm_ml_registry:
