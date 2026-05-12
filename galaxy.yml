@@ -72,3 +72,4 @@ build_ignore:
   - 'tests'
   - "*cloud-config-azure.ini"
   - "*cloud-config-azure.yml"
+  - '.ansible-lint'

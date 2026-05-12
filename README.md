@@ -129,7 +129,7 @@ See the [Changelog](https://github.com/ansible-collections/azure/blob/dev/CHANGE
 ## Related Information
 
 * [Ansible Official Documentation](https://docs.ansible.com/): A comprehensive Ansible user guide.
-* [azure.azcolleciton Documentation](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html): Detailed information about the collection.
+* [azure.azcollection Documentation](https://docs.ansible.com/ansible/latest/collections/azure/azcollection/index.html): Detailed information about the collection.
 * [Azure Documentation](https://learn.microsoft.com/en-us/azure)
 
 ## License Information
