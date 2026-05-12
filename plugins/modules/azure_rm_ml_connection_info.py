@@ -59,7 +59,7 @@ EXAMPLES = '''
 RETURN = '''
 ml_connections:
     description:
-        - Connection that was just created or updated.
+        - List of ML Connections.
     returned: always
     type: dict
     sample: [

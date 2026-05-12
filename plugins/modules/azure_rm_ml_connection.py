@@ -9,9 +9,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_ml_connection
 version_added: "3.19.0"
-short_description: Create, Update, Archive, Restore an Azure Machine Learning Connection
+short_description: Create or Delete an Azure Machine Learning Connection
 description:
-    - Create, Update, Delete an Azure Machine Learning Connection.
+    - Create or Delete an Azure Machine Learning Connection.
 options:
     name:
         description:
@@ -42,8 +42,8 @@ options:
         default: false
     state:
         description:
-            - State of the Connection. Use C(present) to create
-              or update. C(absent) to delete.
+            - State of the Connection. Use C(present) to create.
+              C(absent) to delete.
         default: present
         type: str
         choices:
@@ -101,7 +101,7 @@ changed:
     sample: false
 ml_connection:
     description:
-        - Connection that was just created or updated.
+        - Connection that was just created.
     returned: always
     type: dict
     sample: {
