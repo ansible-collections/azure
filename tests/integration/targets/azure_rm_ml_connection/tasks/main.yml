@@ -1,0 +1,131 @@
+- name: Create a new resource group for ml-connection test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-connection"
+    location: eastus
+
+- name: For ml-connection topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-connection"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-connection"
+        workspace_name: "workspace{{ rpfx }}"
+        connection_name: "connection{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Connection
+      azure.azcollection.azure_rm_ml_connection:
+        name: "{{ connection_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          name: test_ws_conn_git_pat
+          type: git
+          target: https://test-git-feed.com
+          credentials:
+            type: username_password
+            username: dummy
+            password: dummy
+        tags:
+          createdByToolkit: Ansible
+
+      register: results
+
+    - name: Assert the ML Connection created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Connection (idempotent)
+      azure.azcollection.azure_rm_ml_connection:
+        name: "{{ connection_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          name: test_ws_conn_git_pat
+          type: git
+          target: https://test-git-feed.com
+          credentials:
+            type: username_password
+            username: dummy
+            password: dummy
+        tags:
+          createdByToolkit: Ansible
+      register: results
+
+    - name: Assert the ML Connection created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Connections
+      azure.azcollection.azure_rm_ml_connection_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        name: "{{ connection_name }}"
+        populate_secrets: true
+      register: results
+
+    - name:
+      ansible.builtin.debug:
+        var: results
+
+    - name: Assert connection is found
+      ansible.builtin.assert:
+        that:
+          - results.ml_connections | length == 1
+
+    # cleanup
+    - name: Delete ML Connection
+      azure.azcollection.azure_rm_ml_connection:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        name: "{{ connection_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the ML Connection deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
