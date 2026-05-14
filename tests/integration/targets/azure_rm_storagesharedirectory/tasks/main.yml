@@ -292,8 +292,27 @@
         that:
           - delete_force_again is not changed
 
+    - name: Delete share
+      azure.azcollection.azure_rm_storageshare:
+        name: "{{ share_name }}"
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        state: absent
+      register: delete_output
+
+    - name: Pause for 3 minutes to waiting delete
+      ansible.builtin.pause:
+        minutes: 3
+      changed_when: true
+
+    - name: Delete storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        name: "{{ storage_account }}"
+        state: absent
+
   always:
-    - name: Delete resource group
+    - name: Force delete resource group
       azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-storagesharedir"
         force_delete_nonempty: true
