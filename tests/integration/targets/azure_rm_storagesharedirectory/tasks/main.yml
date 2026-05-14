@@ -1,0 +1,299 @@
+---
+- name: Create a new resource group for storage share directory test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-storagesharedir"
+    location: australiaeast
+
+- name: For storage share directory test
+  block:
+    - name: Set storage account name
+      ansible.builtin.set_fact:
+        storage_account: "sd{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        share_name: testsharedir
+
+    - name: Create storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        name: "{{ storage_account }}"
+        account_type: Standard_LRS
+        kind: StorageV2
+
+    - name: Create the parent file share
+      azure.azcollection.azure_rm_storageshare:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        name: "{{ share_name }}"
+        quota: 32
+
+    - name: Create a top-level directory (check_mode)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+      check_mode: true
+      register: create_top_check
+
+    - name: Assert check_mode reports change but does not create
+      ansible.builtin.assert:
+        that:
+          - create_top_check is changed
+
+    - name: Confirm check_mode did not actually create the directory
+      azure.azcollection.azure_rm_storagesharedirectory_info:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+      register: check_mode_verify
+
+    - name: Assert directory is still absent after check_mode create
+      ansible.builtin.assert:
+        that:
+          - check_mode_verify.storagesharedirectories | length == 0
+
+    - name: Create a top-level directory
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        metadata:
+          owner: ansible
+      register: create_top
+
+    - name: Assert top-level directory created
+      ansible.builtin.assert:
+        that:
+          - create_top is changed
+          - create_top.state.name == 'parent'
+          - create_top.state.path == 'parent'
+          - create_top.state.metadata.owner == 'ansible'
+
+    - name: Re-run top-level directory create (idempotence)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        metadata:
+          owner: ansible
+      register: create_top_again
+
+    - name: Assert top-level create is idempotent
+      ansible.builtin.assert:
+        that:
+          - create_top_again is not changed
+
+    - name: Update metadata on the top-level directory (check_mode)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        metadata:
+          owner: ansible
+          env: prod
+      check_mode: true
+      register: update_metadata_check
+
+    - name: Assert metadata update is reported in check_mode
+      ansible.builtin.assert:
+        that:
+          - update_metadata_check is changed
+
+    - name: Update metadata on the top-level directory
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        metadata:
+          owner: ansible
+          env: prod
+      register: update_metadata
+
+    - name: Assert metadata update changed the directory
+      ansible.builtin.assert:
+        that:
+          - update_metadata is changed
+          - update_metadata.state.metadata.env == 'prod'
+
+    - name: Re-run metadata update (idempotence)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        metadata:
+          owner: ansible
+          env: prod
+      register: update_metadata_again
+
+    - name: Assert metadata update is idempotent
+      ansible.builtin.assert:
+        that:
+          - update_metadata_again is not changed
+
+    - name: Attempt nested create without parents=true (expect failure)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/missing/leaf
+      register: nested_no_parents
+      failed_when: false
+
+    - name: Assert strict create fails when parent path is missing
+      ansible.builtin.assert:
+        that:
+          - nested_no_parents.failed
+
+    - name: Create a nested directory tree with parents=true (using path alias)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        path: parent/child/grandchild
+        parents: true
+      register: create_nested
+
+    - name: Assert nested create succeeded
+      ansible.builtin.assert:
+        that:
+          - create_nested is changed
+          - create_nested.state.path == 'parent/child/grandchild'
+
+    - name: Re-run nested create (idempotence)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/child/grandchild
+        parents: true
+      register: create_nested_again
+
+    - name: Assert nested create is idempotent
+      ansible.builtin.assert:
+        that:
+          - create_nested_again is not changed
+
+    - name: Get info for a single directory
+      azure.azcollection.azure_rm_storagesharedirectory_info:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/child
+      register: info_one
+
+    - name: Assert single-directory info
+      ansible.builtin.assert:
+        that:
+          - info_one.storagesharedirectories | length == 1
+          - info_one.storagesharedirectories[0].path == 'parent/child'
+
+    - name: List directories recursively
+      azure.azcollection.azure_rm_storagesharedirectory_info:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        recursive: true
+      register: info_all
+
+    - name: Assert recursive listing contains the nested tree
+      ansible.builtin.assert:
+        that:
+          - info_all.storagesharedirectories | map(attribute='path') | list is superset(['parent', 'parent/child', 'parent/child/grandchild'])
+
+    - name: Delete the leaf directory (check_mode)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/child/grandchild
+        state: absent
+      check_mode: true
+      register: delete_leaf_check
+
+    - name: Assert delete is reported in check_mode
+      ansible.builtin.assert:
+        that:
+          - delete_leaf_check is changed
+
+    - name: Confirm check_mode did not actually delete the directory
+      azure.azcollection.azure_rm_storagesharedirectory_info:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/child/grandchild
+      register: leaf_after_check_delete
+
+    - name: Assert directory still present after check_mode delete
+      ansible.builtin.assert:
+        that:
+          - leaf_after_check_delete.storagesharedirectories | length == 1
+
+    - name: Delete the leaf directory
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/child/grandchild
+        state: absent
+      register: delete_leaf
+
+    - name: Assert leaf delete reported a change
+      ansible.builtin.assert:
+        that:
+          - delete_leaf is changed
+
+    - name: Re-run leaf delete (idempotence)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent/child/grandchild
+        state: absent
+      register: delete_leaf_again
+
+    - name: Assert leaf delete is idempotent
+      ansible.builtin.assert:
+        that:
+          - delete_leaf_again is not changed
+
+    - name: Force-delete the remaining tree
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        state: absent
+        force: true
+      register: delete_force
+
+    - name: Assert force delete removed the directory tree
+      ansible.builtin.assert:
+        that:
+          - delete_force is changed
+
+    - name: Re-run force delete (idempotence)
+      azure.azcollection.azure_rm_storagesharedirectory:
+        resource_group: "{{ resource_group }}-storagesharedir"
+        account_name: "{{ storage_account }}"
+        share_name: "{{ share_name }}"
+        name: parent
+        state: absent
+        force: true
+      register: delete_force_again
+
+    - name: Assert force delete is idempotent
+      ansible.builtin.assert:
+        that:
+          - delete_force_again is not changed
+
+  always:
+    - name: Delete resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-storagesharedir"
+        force_delete_nonempty: true
+        state: absent
