@@ -142,12 +142,13 @@
         share_name: "{{ share_name }}"
         name: parent/missing/leaf
       register: nested_no_parents
-      failed_when: false
+      ignore_errors: true
 
     - name: Assert strict create fails when parent path is missing
       ansible.builtin.assert:
         that:
-          - nested_no_parents.failed
+          - nested_no_parents is failed
+          - "'ParentNotFound' in (nested_no_parents.msg | default(''))"
 
     - name: Create a nested directory tree with parents=true (using path alias)
       azure.azcollection.azure_rm_storagesharedirectory:
