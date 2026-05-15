@@ -688,9 +688,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 )
             ),
             password=dict(type='str', no_log=True),
-            password_display_name=dict(type='str'),
-            key_display_name=dict(type='str'),
-            request_password=dict(type='bool', default=False),
+            password_display_name=dict(type='str', no_log=False),
+            key_display_name=dict(type='str', no_log=False),
+            request_password=dict(type='bool', default=False, no_log=False),
             public_client_reply_urls=dict(type='list', elements='str'),
             web_reply_urls=dict(type='list', elements='str', aliases=['reply_urls']),
             spa_reply_urls=dict(type='list', elements='str'),
@@ -792,7 +792,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                     request_password=bool(self.request_password),
                     password_display_name=self.password_display_name,
                     key_display_name=self.key_display_name,
-                    for_create=True,
                 )
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
@@ -835,23 +834,26 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
     def update_resource(self, old_response):
         try:
-            key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
-            if self.native_app:
-                if self.identifier_uris:
-                    self.fail("'identifier_uris' is not required for creating a native application")
-            else:
-                password_creds, key_creds = self.build_application_creds(
-                    key_value=self.key_value,
-                    key_type=self.key_type,
-                    key_usage=self.key_usage,
-                    start_date=self.start_date,
-                    end_date=self.end_date,
-                    key_description=self.credential_description,
-                    request_password=bool(self.request_password),
-                    password_display_name=self.password_display_name,
-                    key_display_name=self.key_display_name,
-                    for_create=False,
-                )
+            key_creds, required_accesses, app_roles, optional_claims = None, None, None, None
+            if not self.native_app:
+                if self.key_value:
+                    key_bytes = self._normalize_cert_key_value(self.key_value)
+                    custom_key_id = (self.encode_custom_key_description(self.credential_description)
+                                     if self.credential_description else None)
+                    key_creds = [KeyCredential(
+                        display_name=self.key_display_name,
+                        key=key_bytes,
+                        usage=(self.key_usage or 'Verify'),
+                        type=(self.key_type or 'AsymmetricX509Cert'),
+                        custom_key_identifier=custom_key_id,
+                    )]
+                if self.request_password or self.password:
+                    self.module.warn(
+                        "Ignoring 'request_password'/'password' on update: Microsoft Graph does not "
+                        "allow adding password credentials via PATCH /applications. Use "
+                        "azure.azcollection.azure_rm_adpassword to add or rotate client secrets on an "
+                        "existing application."
+                    )
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -876,7 +878,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
                 notes=self.notes,
-                password_credentials=password_creds,
                 required_resource_access=required_accesses,
                 # allow_guests_sign_in=self.allow_guests_sign_in,
                 app_roles=app_roles,
@@ -1011,7 +1012,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def build_application_creds(self, key_value=None, key_type=None, key_usage=None,
                                 start_date=None, end_date=None, key_description=None,
                                 request_password=False, password_display_name=None,
-                                key_display_name=None, for_create=False):
+                                key_display_name=None):
+        # Build credential payloads for POST /applications. Microsoft Graph generates
+        # keyId / secretText / hint server-side, so we never send them on create.
         if request_password and key_value:
             self.fail('specify either a password credential (request_password / password) or key_value, but not both.')
 
@@ -1031,48 +1034,24 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         password_creds = None
         key_creds = None
 
-        if for_create:
-            # Microsoft Graph generates keyId/secretText; client must not supply them.
-            if request_password:
-                password_creds = [PasswordCredential(
-                    display_name=password_display_name,
-                    start_date_time=start_date,
-                    end_date_time=end_date,
-                )]
-            elif key_value:
-                key_bytes = self._normalize_cert_key_value(key_value)
-                custom_key_id = self.encode_custom_key_description(key_description) if key_description else None
-                key_creds = [KeyCredential(
-                    display_name=key_display_name,
-                    start_date_time=start_date,
-                    end_date_time=end_date,
-                    key=key_bytes,
-                    usage=key_usage,
-                    type=key_type,
-                    custom_key_identifier=custom_key_id,
-                )]
-        else:
-            # Update (PATCH) path: legacy behavior preserved for backward compatibility.
-            if request_password:
-                password_creds = [PasswordCredential(
-                    display_name=password_display_name,
-                    start_date_time=start_date,
-                    end_date_time=end_date,
-                    key_id=self.gen_guid(),
-                )]
-            elif key_value:
-                key_bytes = self._normalize_cert_key_value(key_value)
-                custom_key_id = self.encode_custom_key_description(key_description) if key_description else None
-                key_creds = [KeyCredential(
-                    display_name=key_display_name,
-                    start_date_time=start_date,
-                    end_date_time=end_date,
-                    key_id=self.gen_guid(),
-                    key=key_bytes,
-                    usage=key_usage,
-                    type=key_type,
-                    custom_key_identifier=custom_key_id,
-                )]
+        if request_password:
+            password_creds = [PasswordCredential(
+                display_name=password_display_name,
+                start_date_time=start_date,
+                end_date_time=end_date,
+            )]
+        elif key_value:
+            key_bytes = self._normalize_cert_key_value(key_value)
+            custom_key_id = self.encode_custom_key_description(key_description) if key_description else None
+            key_creds = [KeyCredential(
+                display_name=key_display_name,
+                start_date_time=start_date,
+                end_date_time=end_date,
+                key=key_bytes,
+                usage=key_usage,
+                type=key_type,
+                custom_key_identifier=custom_key_id,
+            )]
 
         return password_creds, key_creds
 
