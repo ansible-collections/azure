@@ -265,8 +265,8 @@ options:
               only retrievable from that response; there is no way to fetch it later.
             - Mutually exclusive with C(key_value).
             - Has no effect when C(state=absent) or C(native_app=true).
-            - On an update that triggers a PATCH, this will replace existing client secrets; for ongoing
-              secret rotation, prefer I(azure.azcollection.azure_rm_adpassword).
+            - On an update, this parameter is ignored with a warning. Microsoft Graph does not allow adding password
+              credentials via PATCH /applications. For ongoing secret rotation, use I(azure.azcollection.azure_rm_adpassword).
         type: bool
         default: false
 
