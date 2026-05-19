@@ -242,8 +242,33 @@ options:
                         elements: str
     password:
         description:
-            - App password, aka 'client secret'.
+            - (Deprecated). Microsoft Graph generates client secrets server-side and rejects client-supplied values.
+            - When set, the supplied value is ignored and a server-generated secret is created instead.
+            - Prefer C(request_password=true) with C(password_display_name). The generated secret appears in
+              the registered result under C(generated_password_credentials[0].secret_text).
+            - For ongoing rotation/management of secrets, use I(azure.azcollection.azure_rm_adpassword).
         type: str
+    password_display_name:
+        description:
+            - Name for the client secret created on the new application.
+            - Used together with C(request_password=true) (or legacy C(password)).
+        type: str
+    key_display_name:
+        description:
+            - Name for the certificate credential created on the new application.
+            - Used together with C(key_value).
+        type: str
+    request_password:
+        description:
+            - When C(true), ask Microsoft Graph to generate a client secret for the new application.
+            - The generated secret is returned in C(generated_password_credentials[0].secret_text) and is
+              only retrievable from that response; there is no way to fetch it later.
+            - Mutually exclusive with C(key_value).
+            - Has no effect when C(state=absent) or C(native_app=true).
+            - On an update, this parameter is ignored with a warning. Microsoft Graph does not allow adding password
+              credentials via PATCH /applications. For ongoing secret rotation, use I(azure.azcollection.azure_rm_adpassword).
+        type: bool
+        default: false
 
     web_reply_urls:
         description:
@@ -366,6 +391,19 @@ EXAMPLES = '''
   key_value: "{{ cert_file.content }}" # slurp gives base64 of the file; module normalizes to DER bytes
   tenant: "{{ tenant_id }}"
   subscription_id: "{{ subscription_id }}"
+
+- name: Create ad application and request a server-generated client secret
+  azure_rm_adapplication:
+    display_name: "{{ display_name }}"
+    request_password: true
+    password_display_name: "ansible-managed-secret"
+  register: app
+  no_log: true
+
+- name: Show the generated secret (only available on this create response)
+  ansible.builtin.debug:
+    msg: "{{ app.generated_password_credentials[0].secret_text }}"
+  no_log: true
 '''
 
 RETURN = '''
@@ -456,6 +494,82 @@ optional_claims:
             type: list
             returned: always
             sample: ['name': 'acct', 'source': null, 'essential': false, 'additional_properties': []]
+password_credentials:
+    description:
+        - Client secret credentials on the application (without secret values).
+        - For newly-generated secrets on create, see C(generated_password_credentials).
+    type: list
+    elements: dict
+    returned: always
+    contains:
+        key_id:
+            description: Unique identifier (GUID) of the secret.
+            type: str
+        display_name:
+            description: Name of the secret.
+            type: str
+        hint:
+            description: First three characters of the secret value.
+            type: str
+        start_date_time:
+            description: When the secret becomes valid.
+            type: str
+        end_date_time:
+            description: When the secret expires.
+            type: str
+key_credentials:
+    description:
+        - Certificate credentials on the application (without raw key bytes).
+    type: list
+    elements: dict
+    returned: always
+    contains:
+        key_id:
+            description: Unique identifier (GUID) of the credential.
+            type: str
+        display_name:
+            description: Name of the credential.
+            type: str
+        type:
+            description: Credential type (e.g. C(AsymmetricX509Cert)).
+            type: str
+        usage:
+            description: Credential usage (e.g. C(Verify)).
+            type: str
+        start_date_time:
+            description: When the credential becomes valid.
+            type: str
+        end_date_time:
+            description: When the credential expires.
+            type: str
+generated_password_credentials:
+    description:
+        - Newly-generated client secrets returned on create. Each entry includes C(secret_text), the only
+          opportunity to retrieve the generated password value.
+        - Treat C(secret_text) as sensitive and register the task with C(no_log) when consuming it.
+        - Empty/absent when the module did not request a new secret or when called on update.
+    type: list
+    elements: dict
+    returned: on create when a password credential was requested
+    contains:
+        key_id:
+            description: Unique identifier (GUID) of the new secret.
+            type: str
+        display_name:
+            description: Name of the new secret.
+            type: str
+        hint:
+            description: First three characters of the secret value.
+            type: str
+        secret_text:
+            description: The generated secret value. Only present on initial create.
+            type: str
+        start_date_time:
+            description: When the secret becomes valid.
+            type: str
+        end_date_time:
+            description: When the secret expires.
+            type: str
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
@@ -574,6 +688,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 )
             ),
             password=dict(type='str', no_log=True),
+            password_display_name=dict(type='str', no_log=False),
+            key_display_name=dict(type='str', no_log=False),
+            request_password=dict(type='bool', default=False, no_log=False),
             public_client_reply_urls=dict(type='list', elements='str'),
             web_reply_urls=dict(type='list', elements='str', aliases=['reply_urls']),
             spa_reply_urls=dict(type='list', elements='str'),
@@ -598,6 +715,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self.oauth2_allow_implicit_flow = None
         self.optional_claims = None
         self.password = None
+        self.password_display_name = None
+        self.key_display_name = None
+        self.request_password = None
         self.public_client_reply_urls = None
         self.spa_reply_urls = None
         self.web_reply_urls = None
@@ -615,8 +735,30 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
 
     def exec_module(self, **kwargs):
         self._client = self.get_msgraph_client()
+
+        # Guard against the AZURE_COMMON_ARGS 'password' (user-password auth) leaking in via module_defaults.
+        if kwargs.get('password') and kwargs.get('ad_user'):
+            self.module.warn(
+                "Ignoring 'password' on azure_rm_adapplication because 'ad_user' is also set; the value "
+                "appears to come from Azure user-password authentication rather than an explicit app secret. "
+            )
+            kwargs['password'] = None
+
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
+
+        # Microsoft Graph generates secrets server-side; the legacy 'password' value is never honored.
+        if self.password and self.state == 'present' and not self.native_app:
+            self.module.deprecate(
+                "Setting 'password' as a client secret value on azure_rm_adapplication is incompatible "
+                "with Microsoft Graph (the value is ignored server-side). Use 'request_password=true' "
+                "with 'password_display_name' and read the generated secret from "
+                "'generated_password_credentials[0].secret_text', or manage secrets with "
+                "azure_rm_adpassword. This parameter will be removed in a future major release.",
+                version='4.0.0',
+                collection_name='azure.azcollection',
+            )
+            self.request_password = True
 
         response = self.get_resource()
         if response:
@@ -640,10 +782,17 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 if self.identifier_uris:
                     self.fail("'identifier_uris' is not required for creating a native application")
             else:
-                password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type,
-                                                                         self.key_usage,
-                                                                         self.start_date, self.end_date,
-                                                                         self.credential_description)
+                password_creds, key_creds = self.build_application_creds(
+                    key_value=self.key_value,
+                    key_type=self.key_type,
+                    key_usage=self.key_usage,
+                    start_date=self.start_date,
+                    end_date=self.end_date,
+                    key_description=self.credential_description,
+                    request_password=bool(self.request_password),
+                    password_display_name=self.password_display_name,
+                    key_display_name=self.key_display_name,
+                )
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -677,21 +826,34 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             response = asyncio.get_event_loop().run_until_complete(self.create_application(create_app))
             self.results['changed'] = True
             self.results.update(self.to_dict(response))
+            # Capture the server-generated secret values; only available on the create response.
+            self.results['generated_password_credentials'] = self._extract_generated_passwords(response)
             return response
         except Exception as ge:
             self.fail("Error creating application, display_name: {0} - {1}".format(self.display_name, str(ge)))
 
     def update_resource(self, old_response):
         try:
-            key_creds, password_creds, required_accesses, app_roles, optional_claims = None, None, None, None, None
-            if self.native_app:
-                if self.identifier_uris:
-                    self.fail("'identifier_uris' is not required for creating a native application")
-            else:
-                password_creds, key_creds = self.build_application_creds(self.password, self.key_value, self.key_type,
-                                                                         self.key_usage,
-                                                                         self.start_date, self.end_date,
-                                                                         self.credential_description)
+            key_creds, required_accesses, app_roles, optional_claims = None, None, None, None
+            if not self.native_app:
+                if self.key_value:
+                    key_bytes = self._normalize_cert_key_value(self.key_value)
+                    custom_key_id = (self.encode_custom_key_description(self.credential_description)
+                                     if self.credential_description else None)
+                    key_creds = [KeyCredential(
+                        display_name=self.key_display_name,
+                        key=key_bytes,
+                        usage=(self.key_usage or 'Verify'),
+                        type=(self.key_type or 'AsymmetricX509Cert'),
+                        custom_key_identifier=custom_key_id,
+                    )]
+                if self.request_password or self.password:
+                    self.module.warn(
+                        "Ignoring 'request_password'/'password' on update: Microsoft Graph does not "
+                        "allow adding password credentials via PATCH /applications. Use "
+                        "azure.azcollection.azure_rm_adpassword to add or rotate client secrets on an "
+                        "existing application."
+                    )
             if self.required_resource_accesses:
                 required_accesses = self.build_application_accesses(self.required_resource_accesses)
 
@@ -716,7 +878,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                 identifier_uris=self.identifier_uris,
                 key_credentials=key_creds,
                 notes=self.notes,
-                password_credentials=password_creds,
                 required_resource_access=required_accesses,
                 # allow_guests_sign_in=self.allow_guests_sign_in,
                 app_roles=app_roles,
@@ -800,13 +961,62 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
             # allow_guests_sign_in=object.allow_guests_sign_in,
             web_reply_urls=object.web.redirect_uris,
             spa_reply_urls=object.spa.redirect_uris,
-            public_client_reply_urls=object.public_client.redirect_uris
+            public_client_reply_urls=object.public_client.redirect_uris,
+            password_credentials=self._summarize_password_credentials(object.password_credentials),
+            key_credentials=self._summarize_key_credentials(object.key_credentials),
         )
 
-    def build_application_creds(self, password=None, key_value=None, key_type=None, key_usage=None,
-                                start_date=None, end_date=None, key_description=None):
-        if password and key_value:
-            self.fail('specify either password or key_value, but not both.')
+    @staticmethod
+    def _summarize_password_credentials(creds):
+        if not creds:
+            return []
+        return [{
+            'key_id': str(c.key_id) if c.key_id is not None else None,
+            'display_name': c.display_name,
+            'hint': c.hint,
+            'start_date_time': str(c.start_date_time) if c.start_date_time is not None else None,
+            'end_date_time': str(c.end_date_time) if c.end_date_time is not None else None,
+        } for c in creds]
+
+    @staticmethod
+    def _summarize_key_credentials(creds):
+        if not creds:
+            return []
+        return [{
+            'key_id': str(c.key_id) if c.key_id is not None else None,
+            'display_name': c.display_name,
+            'type': c.type,
+            'usage': c.usage,
+            'start_date_time': str(c.start_date_time) if c.start_date_time is not None else None,
+            'end_date_time': str(c.end_date_time) if c.end_date_time is not None else None,
+        } for c in creds]
+
+    @staticmethod
+    def _extract_generated_passwords(application):
+        # Pull server-generated secret_text from the create response; only returned once by Graph.
+        creds = getattr(application, 'password_credentials', None) or []
+        out = []
+        for c in creds:
+            if not getattr(c, 'secret_text', None):
+                continue
+            out.append({
+                'key_id': str(c.key_id) if c.key_id is not None else None,
+                'display_name': c.display_name,
+                'hint': c.hint,
+                'secret_text': c.secret_text,
+                'start_date_time': str(c.start_date_time) if c.start_date_time is not None else None,
+                'end_date_time': str(c.end_date_time) if c.end_date_time is not None else None,
+            })
+        return out
+
+    def build_application_creds(self, key_value=None, key_type=None, key_usage=None,
+                                start_date=None, end_date=None, key_description=None,
+                                request_password=False, password_display_name=None,
+                                key_display_name=None):
+        # Build credential payloads for POST /applications. Microsoft Graph generates
+        # keyId / secretText / hint server-side, so we never send them on create.
+        if request_password and key_value:
+            self.fail('specify either a password credential (request_password / password) or key_value, but not both.')
 
         if not start_date:
             start_date = datetime.datetime.utcnow()
@@ -818,24 +1028,30 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         elif isinstance(end_date, str):
             end_date = dateutil.parser.parse(end_date)
 
-        custom_key_id = None
-        if key_description and password:
-            custom_key_id = self.encode_custom_key_description(key_description)
-
         key_type = key_type or 'AsymmetricX509Cert'
         key_usage = key_usage or 'Verify'
 
         password_creds = None
         key_creds = None
-        if password:
-            password_creds = [PasswordCredential(start_date_time=start_date, end_date_time=end_date,
-                                                 key_id=self.gen_guid(), secret_text=password,
-                                                 custom_key_identifier=custom_key_id)]  # value ? secret_text
+
+        if request_password:
+            password_creds = [PasswordCredential(
+                display_name=password_display_name,
+                start_date_time=start_date,
+                end_date_time=end_date,
+            )]
         elif key_value:
             key_bytes = self._normalize_cert_key_value(key_value)
-            key_creds = [KeyCredential(start_date_time=start_date, end_date_time=end_date,
-                                       key_id=self.gen_guid(), key=key_bytes, usage=key_usage,
-                                       type=key_type, custom_key_identifier=custom_key_id)]
+            custom_key_id = self.encode_custom_key_description(key_description) if key_description else None
+            key_creds = [KeyCredential(
+                display_name=key_display_name,
+                start_date_time=start_date,
+                end_date_time=end_date,
+                key=key_bytes,
+                usage=key_usage,
+                type=key_type,
+                custom_key_identifier=custom_key_id,
+            )]
 
         return password_creds, key_creds
 

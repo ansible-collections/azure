@@ -125,6 +125,7 @@
     key_type: AsymmetricX509Cert
     key_usage: Verify
     key_value: "{{ cert_file.content }}"
+    key_display_name: "ansible-integration-test-cert"
   register: cert_app_output
 
 - name: Assert certificate app created successfully
@@ -132,6 +133,94 @@
     that:
       - cert_app_output is changed
       - cert_app_output.object_id is defined
+      - cert_app_output.key_credentials | length == 1
+      - cert_app_output.key_credentials[0].display_name == "ansible-integration-test-cert"
+      - cert_app_output.key_credentials[0].type == "AsymmetricX509Cert"
+      - cert_app_output.key_credentials[0].usage == "Verify"
+      - cert_app_output.generated_password_credentials | default([]) | length == 0
+
+- name: Create application requesting a generated client secret
+  azure.azcollection.azure_rm_adapplication:
+    display_name: "{{ display_name }}_secret"
+    request_password: true
+    password_display_name: "ansible-integration-test"
+  register: secret_app_output
+  no_log: true
+
+- name: Assert generated secret is returned
+  ansible.builtin.assert:
+    that:
+      - secret_app_output is changed
+      - secret_app_output.object_id is defined
+      - secret_app_output.password_credentials | length == 1
+      - secret_app_output.password_credentials[0].display_name == "ansible-integration-test"
+      - secret_app_output.password_credentials[0].key_id is defined
+      - secret_app_output.generated_password_credentials | length == 1
+      - secret_app_output.generated_password_credentials[0].secret_text | length >= 16
+      - secret_app_output.generated_password_credentials[0].key_id == secret_app_output.password_credentials[0].key_id
+
+- name: Re-run secret application creation (idempotency)
+  azure.azcollection.azure_rm_adapplication:
+    app_id: "{{ secret_app_output.app_id }}"
+    display_name: "{{ display_name }}_secret"
+    request_password: true
+    password_display_name: "ansible-integration-test"
+  register: secret_app_rerun
+  no_log: true
+
+- name: Assert idempotent re-run did not create a new secret
+  ansible.builtin.assert:
+    that:
+      - secret_app_rerun is not changed
+      - secret_app_rerun.generated_password_credentials | default([]) | length == 0
+
+- name: Legacy password=<value> still works but emits deprecation warning
+  azure.azcollection.azure_rm_adapplication:
+    display_name: "{{ display_name }}_legacy"
+    password: "{{ password }}"
+    password_display_name: "ansible-integration-test-legacy"
+  register: legacy_app_output
+  no_log: true
+
+- name: Assert legacy path produced a server-generated secret and a deprecation warning
+  ansible.builtin.assert:
+    that:
+      - legacy_app_output is changed
+      - legacy_app_output.generated_password_credentials | length == 1
+      - legacy_app_output.generated_password_credentials[0].secret_text | length >= 16
+      - legacy_app_output.deprecations | default([]) | selectattr('msg', 'search', "azure_rm_adapplication") | list | length >= 1
+
+- name: Mutually exclusive request_password + key_value must fail
+  azure.azcollection.azure_rm_adapplication:
+    display_name: "{{ display_name }}_conflict"
+    request_password: true
+    key_value: "{{ cert_file.content }}"
+  register: conflict_output
+  ignore_errors: true
+
+- name: Assert mutual-exclusion error was raised
+  ansible.builtin.assert:
+    that:
+      - conflict_output is failed
+      - "'specify either a password credential' in conflict_output.msg"
+
+- name: Delete legacy-password application
+  azure.azcollection.azure_rm_adapplication:
+    app_id: "{{ legacy_app_output.app_id }}"
+    display_name: "{{ display_name }}_legacy"
+    state: absent
+
+- name: Delete generated-secret application
+  azure.azcollection.azure_rm_adapplication:
+    app_id: "{{ secret_app_output.app_id }}"
+    display_name: "{{ display_name }}_secret"
+    state: absent
+
+- name: Delete certificate application
+  azure.azcollection.azure_rm_adapplication:
+    app_id: "{{ cert_app_output.app_id }}"
+    display_name: "{{ display_name }}_cert"
+    state: absent
 
 - name: Delete ad app by app_id
   azure.azcollection.azure_rm_adapplication:
