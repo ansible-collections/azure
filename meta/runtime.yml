@@ -114,6 +114,8 @@ action_groups:
     - azure.azcollection.azure_rm_expressroute_info
     - azure.azcollection.azure_rm_firewallpolicy
     - azure.azcollection.azure_rm_firewallpolicy_info
+    - azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup
+    - azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup_info
     - azure.azcollection.azure_rm_functionapp
     - azure.azcollection.azure_rm_functionapp_info
     - azure.azcollection.azure_rm_gallery
