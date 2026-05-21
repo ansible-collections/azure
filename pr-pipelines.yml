@@ -66,6 +66,7 @@ parameters:
       - "azure_rm_eventgrid_subscription"
       - "azure_rm_eventgrid_topic"
       - "azure_rm_firewallpolicy"
+      - "azure_rm_firewallpolicyrulecollectiongroup"
       - "azure_rm_functionapp"
       - "azure_rm_gallery"
       - "azure_rm_hdinsightcluster"
