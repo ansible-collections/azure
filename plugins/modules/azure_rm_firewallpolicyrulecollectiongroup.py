@@ -483,7 +483,8 @@ class AzureRMFirewallPolicyRuleCollectionGroup(AzureRMModuleBase):
             if ctype == 'nat' and action not in (None, 'dnat'):
                 self.fail("rule_collection '{0}': action must be 'dnat' for a nat collection".format(
                     collection.get('name')))
-            for rule in collection.get('rules') or []:
+            rules = collection.get('rules') or []
+            for rule in rules:
                 rtype = rule.get('rule_type')
                 if ctype == 'filter' and rtype == 'nat':
                     self.fail("rule '{0}': nat rules cannot belong to a filter collection".format(
@@ -491,6 +492,12 @@ class AzureRMFirewallPolicyRuleCollectionGroup(AzureRMModuleBase):
                 if ctype == 'nat' and rtype != 'nat':
                     self.fail("rule '{0}': only nat rules can belong to a nat collection".format(
                         rule.get('name')))
+            # Azure requires all rules within a single collection to be of the same type
+            rule_types = {r.get('rule_type') for r in rules}
+            if len(rule_types) > 1:
+                self.fail(
+                    "rule_collection '{0}': all rules in a single collection must be of the same type; got {1}".format(
+                        collection.get('name'), sorted(rule_types)))
 
     def get_rule_collection_group(self):
         try:

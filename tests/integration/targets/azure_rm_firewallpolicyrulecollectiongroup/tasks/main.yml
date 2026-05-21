@@ -36,7 +36,7 @@
         name: "{{ rcg_name }}"
         priority: 200
         rule_collections:
-          - name: filterCollection
+          - name: filterAppCollection
             priority: 300
             rule_collection_type: filter
             action: allow
@@ -52,6 +52,11 @@
                     port: 80
                 target_fqdns:
                   - "*.microsoft.com"
+          - name: filterNetCollection
+            priority: 350
+            rule_collection_type: filter
+            action: allow
+            rules:
               - name: allowNet
                 rule_type: network
                 ip_protocols:
@@ -96,7 +101,7 @@
         name: "{{ rcg_name }}"
         priority: 200
         rule_collections:
-          - name: filterCollection
+          - name: filterAppCollection
             priority: 300
             rule_collection_type: filter
             action: allow
@@ -112,6 +117,11 @@
                     port: 80
                 target_fqdns:
                   - "*.microsoft.com"
+          - name: filterNetCollection
+            priority: 350
+            rule_collection_type: filter
+            action: allow
+            rules:
               - name: allowNet
                 rule_type: network
                 ip_protocols:
@@ -154,7 +164,7 @@
         name: "{{ rcg_name }}"
         priority: 250
         rule_collections:
-          - name: filterCollection
+          - name: filterAppCollection
             priority: 300
             rule_collection_type: filter
             action: allow
