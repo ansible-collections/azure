@@ -344,7 +344,7 @@ state:
             sample: Microsoft.Network/FirewallPolicies/RuleCollectionGroups
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
@@ -404,7 +404,7 @@ rule_collection_spec = dict(
 )
 
 
-class AzureRMFirewallPolicyRuleCollectionGroup(AzureRMModuleBase):
+class AzureRMFirewallPolicyRuleCollectionGroup(AzureRMModuleBaseExt):
 
     def __init__(self):
 
@@ -629,33 +629,14 @@ class AzureRMFirewallPolicyRuleCollectionGroup(AzureRMModuleBase):
         )
 
     def _needs_update(self, existing, desired):
-        existing_dict = self._normalize(existing.as_dict(), top_level=True)
-        desired_dict = self._normalize(desired.as_dict(), top_level=True)
-        return existing_dict != desired_dict
-
-    @staticmethod
-    def _normalize(value, top_level=False):
         '''
-        Strip server-side / read-only fields from the top-level dict so the
-        desired (user-built) model and the existing (server-returned) model can
-        be compared safely for idempotency.
+        Compare the server-returned model against the user-built desired model.
         '''
-        top_level_ignored = {'id', 'etag', 'type', 'provisioning_state', 'size'}
-        if isinstance(value, dict):
-            cleaned = {}
-            for k, v in value.items():
-                if top_level and k in top_level_ignored:
-                    continue
-                nv = AzureRMFirewallPolicyRuleCollectionGroup._normalize(v, top_level=False)
-                if nv in (None, '', [], {}):
-                    continue
-                cleaned[k] = nv
-            return cleaned
-        if isinstance(value, list):
-            return [AzureRMFirewallPolicyRuleCollectionGroup._normalize(v, top_level=False) for v in value]
-        if isinstance(value, str) and value.startswith('/subscriptions/'):
-            return value.lower()
-        return value
+        existing_dict = existing.as_dict()
+        for key in ('id', 'etag', 'type', 'provisioning_state', 'size'):
+            existing_dict.pop(key, None)
+        desired_dict = desired.as_dict()
+        return not self.default_compare({}, desired_dict, existing_dict, '', dict(compare=[]))
 
 
 def main():
