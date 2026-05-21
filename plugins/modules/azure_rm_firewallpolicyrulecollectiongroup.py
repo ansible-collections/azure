@@ -646,10 +646,15 @@ class AzureRMFirewallPolicyRuleCollectionGroup(AzureRMModuleBase):
             for k, v in value.items():
                 if top_level and k in top_level_ignored:
                     continue
-                cleaned[k] = AzureRMFirewallPolicyRuleCollectionGroup._normalize(v, top_level=False)
+                nv = AzureRMFirewallPolicyRuleCollectionGroup._normalize(v, top_level=False)
+                if nv in (None, '', [], {}):
+                    continue
+                cleaned[k] = nv
             return cleaned
         if isinstance(value, list):
             return [AzureRMFirewallPolicyRuleCollectionGroup._normalize(v, top_level=False) for v in value]
+        if isinstance(value, str) and value.startswith('/subscriptions/'):
+            return value.lower()
         return value
 
 
