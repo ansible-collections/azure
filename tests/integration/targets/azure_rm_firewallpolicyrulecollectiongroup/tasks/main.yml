@@ -1,0 +1,249 @@
+- name: Create a new resource group for the firewall policy rule collection group test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-fprcg"
+    location: australiaeast
+
+- name: Firewall policy rule collection group test block
+  block:
+    - name: Set fact names
+      ansible.builtin.set_fact:
+        policy_name: "fp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        rcg_name: "rcg{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+        ipgroup_name: "ipg{{ resource_group | hash('md5') | truncate(21, True, '') }}"
+
+    - name: Create parent firewall policy
+      azure.azcollection.azure_rm_firewallpolicy:
+        resource_group: "{{ resource_group }}-fprcg"
+        name: "{{ policy_name }}"
+        threat_intel_mode: alert
+        state: present
+
+    - name: Create source IP group
+      azure.azcollection.azure_rm_ipgroup:
+        resource_group: "{{ resource_group }}-fprcg"
+        name: "{{ ipgroup_name }}"
+        location: australiaeast
+        ip_addresses:
+          - 10.0.0.0/24
+          - 10.0.1.0/24
+        state: present
+      register: ipg_results
+
+    - name: Create rule collection group
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+        name: "{{ rcg_name }}"
+        priority: 200
+        rule_collections:
+          - name: filterAppCollection
+            priority: 300
+            rule_collection_type: filter
+            action: allow
+            rules:
+              - name: allowApp
+                rule_type: application
+                source_addresses:
+                  - 10.0.0.0/24
+                protocols:
+                  - type: Https
+                    port: 443
+                  - type: Http
+                    port: 80
+                target_fqdns:
+                  - "*.microsoft.com"
+          - name: filterNetCollection
+            priority: 350
+            rule_collection_type: filter
+            action: allow
+            rules:
+              - name: allowNet
+                rule_type: network
+                ip_protocols:
+                  - TCP
+                source_ip_groups:
+                  - "{{ ipg_results.state.id }}"
+                destination_addresses:
+                  - 192.168.1.0/24
+                destination_ports:
+                  - "443"
+          - name: natCollection
+            priority: 400
+            rule_collection_type: nat
+            action: dnat
+            rules:
+              - name: dnatRule
+                rule_type: nat
+                ip_protocols:
+                  - TCP
+                source_addresses:
+                  - "*"
+                destination_addresses:
+                  - 13.0.0.1
+                destination_ports:
+                  - "443"
+                translated_address: 10.0.0.10
+                translated_port: "8443"
+        state: present
+      register: results
+
+    - name: Assert rule collection group was created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.id is defined
+          - results.state.priority == 200
+
+    - name: Create rule collection group again (idempotent)
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+        name: "{{ rcg_name }}"
+        priority: 200
+        rule_collections:
+          - name: filterAppCollection
+            priority: 300
+            rule_collection_type: filter
+            action: allow
+            rules:
+              - name: allowApp
+                rule_type: application
+                source_addresses:
+                  - 10.0.0.0/24
+                protocols:
+                  - type: Https
+                    port: 443
+                  - type: Http
+                    port: 80
+                target_fqdns:
+                  - "*.microsoft.com"
+          - name: filterNetCollection
+            priority: 350
+            rule_collection_type: filter
+            action: allow
+            rules:
+              - name: allowNet
+                rule_type: network
+                ip_protocols:
+                  - TCP
+                source_ip_groups:
+                  - "{{ ipg_results.state.id }}"
+                destination_addresses:
+                  - 192.168.1.0/24
+                destination_ports:
+                  - "443"
+          - name: natCollection
+            priority: 400
+            rule_collection_type: nat
+            action: dnat
+            rules:
+              - name: dnatRule
+                rule_type: nat
+                ip_protocols:
+                  - TCP
+                source_addresses:
+                  - "*"
+                destination_addresses:
+                  - 13.0.0.1
+                destination_ports:
+                  - "443"
+                translated_address: 10.0.0.10
+                translated_port: "8443"
+        state: present
+      register: results
+
+    - name: Assert rule collection group is not changed
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: Update rule collection group (bump priority and add a target fqdn)
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+        name: "{{ rcg_name }}"
+        priority: 250
+        rule_collections:
+          - name: filterAppCollection
+            priority: 300
+            rule_collection_type: filter
+            action: allow
+            rules:
+              - name: allowApp
+                rule_type: application
+                source_addresses:
+                  - 10.0.0.0/24
+                protocols:
+                  - type: Https
+                    port: 443
+                  - type: Http
+                    port: 80
+                target_fqdns:
+                  - "*.microsoft.com"
+                  - "*.azure.com"
+        state: present
+      register: results
+
+    - name: Assert rule collection group was updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Get facts for the rule collection group
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup_info:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+        name: "{{ rcg_name }}"
+      register: results
+
+    - name: Assert facts of single rule collection group
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+          - results.rule_collection_groups | length == 1
+          - results.rule_collection_groups[0].name == rcg_name
+          - results.rule_collection_groups[0].priority == 250
+
+    - name: List all rule collection groups in the policy
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup_info:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+      register: results
+
+    - name: Assert at least one group is listed
+      ansible.builtin.assert:
+        that:
+          - results.rule_collection_groups | length >= 1
+
+    - name: Delete the rule collection group
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+        name: "{{ rcg_name }}"
+        state: absent
+      register: results
+
+    - name: Assert rule collection group is deleted
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Delete the rule collection group again (idempotent)
+      azure.azcollection.azure_rm_firewallpolicyrulecollectiongroup:
+        resource_group: "{{ resource_group }}-fprcg"
+        firewall_policy_name: "{{ policy_name }}"
+        name: "{{ rcg_name }}"
+        state: absent
+      register: results
+
+    - name: Assert rule collection group delete is idempotent
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-fprcg"
+        force_delete_nonempty: true
+        state: absent
