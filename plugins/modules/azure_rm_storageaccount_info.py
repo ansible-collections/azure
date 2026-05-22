@@ -315,6 +315,7 @@ storageaccounts:
         access_tier:
             description:
                 - The access tier for this storage account.
+                - One of C(Hot), C(Cool), C(Cold), C(Premium), or C(Smart).
             returned: always
             type: str
             sample: Hot

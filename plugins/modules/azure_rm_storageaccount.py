@@ -105,10 +105,18 @@ options:
     access_tier:
         description:
             - The access tier for this storage account. Required when I(kind=BlobStorage).
+            - C(Smart) is a managed tier that automatically moves blobs between
+              C(Hot), C(Cool), and C(Cold) based on access patterns. C(Smart) requires
+              a Standard general-purpose v2 (GPv2) account on zone-redundant storage
+              (ZRS, GZRS, or RA-GZRS); see the Azure docs on smart tier for region
+              availability and prerequisites.
         type: str
         choices:
             - Hot
             - Cool
+            - Cold
+            - Premium
+            - Smart
     force_delete_nonempty:
         description:
             - Attempt deletion if resource already exists and cannot be updated.
@@ -1000,7 +1008,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             force_delete_nonempty=dict(type='bool', default=False, aliases=['force']),
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
-            access_tier=dict(type='str', choices=['Hot', 'Cool']),
+            access_tier=dict(type='str', choices=['Hot', 'Cool', 'Cold', 'Premium', 'Smart']),
             https_only=dict(type='bool'),
             minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
             public_network_access=dict(type='str', choices=['Enabled', 'Disabled']),

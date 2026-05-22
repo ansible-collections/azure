@@ -485,6 +485,34 @@
           - resource_acl_info.storageaccounts[0].network_acls.resource_access_rules | length == 2
           - resource_acl_info.storageaccounts[0].network_acls.default_action == "Deny"
 
+    - name: Create storage account with Smart access_tier
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}11"
+        account_type: Standard_ZRS
+        kind: StorageV2
+        access_tier: Smart
+      register: smart_tier_output
+    - name: Assert Smart access_tier applied
+      ansible.builtin.assert:
+        that:
+          - smart_tier_output is changed
+          - smart_tier_output.state.access_tier == 'Smart'
+
+    - name: Create storage account with Smart access_tier (idempotence)
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}11"
+        account_type: Standard_ZRS
+        kind: StorageV2
+        access_tier: Smart
+      register: smart_tier_idem
+    - name: Assert Smart access_tier idempotent
+      ansible.builtin.assert:
+        that:
+          - smart_tier_idem is not changed
+          - smart_tier_idem.state.access_tier == 'Smart'
+
     - name: Update existing storage account (idempotence)
       azure.azcollection.azure_rm_storageaccount:
         access_tier: Hot
