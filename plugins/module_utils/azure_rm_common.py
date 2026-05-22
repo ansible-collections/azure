@@ -242,6 +242,7 @@ try:
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
     from azure.mgmt.storage import StorageManagementClient
+    import azure.mgmt.storage.models as StorageModels
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.dns import DnsManagementClient
     from azure.mgmt.privatedns import PrivateDnsManagementClient
@@ -587,14 +588,25 @@ class AzureRMModuleBase(object):
 
     def serialize_obj(self, obj, class_name, enum_modules=None):
         '''
-        Return a JSON representation of an Azure object.
+        Return a JSON representation of an Azure object with snake_case keys.
+
+        Prefers ``azure.core.serialization.as_attribute_dict`` so that
+        newer hybrid-model SDKs keep emitting snake_case keys for back-compat (``obj.as_dict()`` on
+        hybrid models returns camelCase). Falls back to ``obj.as_dict()`` when the shim is unavailable
+        or the input is not an Azure model.
 
         :param obj: Azure object
         :param class_name: Name of the object's class
         :param enum_modules: List of module names to build enum dependencies from.
         :return: serialized result
         '''
-        return obj.as_dict()
+        if obj is None:
+            return None
+        try:
+            from azure.core.serialization import as_attribute_dict
+            return as_attribute_dict(obj)
+        except (ImportError, TypeError, AttributeError):
+            return obj.as_dict() if hasattr(obj, 'as_dict') else obj
 
     def get_poller_result(self, poller, wait=5):
         '''
@@ -686,7 +698,7 @@ class AzureRMModuleBase(object):
                                                                   client_secret=self.azure_auth.credentials.get('secret'))
             else:
                 account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
-                credential = account_keys.keys[0].value
+                credential = account_keys.keys_property[0].value
         except Exception as exc:
             self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
 
@@ -711,7 +723,7 @@ class AzureRMModuleBase(object):
                                                                           account_name=storage_account_name)
         except Exception as exc:
             self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
-        return account.primary_endpoints.file, account_keys.keys[0].value
+        return account.primary_endpoints.file, account_keys.keys_property[0].value
 
     def get_share_directory_client(self, resource_group_name, storage_account_name, share_name, directory_path):
         '''
@@ -1063,12 +1075,12 @@ class AzureRMModuleBase(object):
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2023-05-01')
+                                                            api_version='2025-08-01')
         return self._storage_client
 
     @property
     def storage_models(self):
-        return StorageManagementClient.models("2023-05-01")
+        return StorageModels
 
     @property
     def authorization_client(self):

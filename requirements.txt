@@ -50,7 +50,7 @@ azure-mgmt-resourcehealth==1.0.0b6
 azure-mgmt-search==9.2.0b2
 azure-mgmt-servicebus==8.2.1
 azure-mgmt-sql==4.0.0b19
-azure-mgmt-storage==21.2.1
+azure-mgmt-storage==25.0.0
 azure-mgmt-trafficmanager==1.1.0
 azure-mgmt-web==7.3.1
 azure-mgmt-eventgrid==10.4.0

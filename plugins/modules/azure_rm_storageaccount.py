@@ -1186,7 +1186,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             self.update_identity, identity_result = self.update_single_managed_identity(curr_identity=curr_identity,
                                                                                         new_identity=self.identity,
                                                                                         patch_support=True)
-            self.identity = identity_result.as_dict()
+            self.identity = self.serialize_obj(identity_result, 'Identity')
 
         if self.state == 'present' and self.account_dict and \
            self.account_dict['provisioning_state'] != AZURE_SUCCESS_STATE:
@@ -1273,7 +1273,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=account_obj.immutable_storage_with_versioning.as_dict() if account_obj.immutable_storage_with_versioning else None
+            immutable_storage_with_versioning=self.serialize_obj(account_obj.immutable_storage_with_versioning, 'ImmutableStorageAccount')
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
@@ -1369,7 +1369,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
         account_dict['identity'] = dict()
         if account_obj.identity:
-            account_dict['identity'] = account_obj.identity.as_dict()
+            account_dict['identity'] = self.serialize_obj(account_obj.identity, 'Identity')
 
         return account_dict
 

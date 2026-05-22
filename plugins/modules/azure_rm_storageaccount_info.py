@@ -791,7 +791,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=account_obj.immutable_storage_with_versioning.as_dict() if account_obj.immutable_storage_with_versioning else None
+            immutable_storage_with_versioning=self.serialize_obj(account_obj.immutable_storage_with_versioning, 'ImmutableStorageAccount')
         )
 
         account_dict['geo_replication_stats'] = None
@@ -911,7 +911,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
 
         account_dict['identity'] = dict()
         if account_obj.identity:
-            account_dict['identity'] = account_obj.identity.as_dict()
+            account_dict['identity'] = self.serialize_obj(account_obj.identity, 'Identity')
 
         return account_dict
 
@@ -953,7 +953,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             cred = self.storage_client.storage_accounts.list_keys(resource_group, name)
             # get the following try catch from CLI
             try:
-                keys = [cred.keys[0].value, cred.keys[1].value]
+                keys = [cred.keys_property[0].value, cred.keys_property[1].value]
             except AttributeError:
                 keys = [cred.key1, cred.key2]
         except Exception:
