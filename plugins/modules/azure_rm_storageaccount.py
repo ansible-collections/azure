@@ -919,6 +919,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible.module_utils._text import to_native
 from ansible.module_utils.basic import env_fallback
+from ansible.module_utils.common.dict_transformations import snake_dict_to_camel_dict
 
 try:
     from azure.mgmt.storage.models import (Identity, UserAssignedIdentity)
@@ -1186,7 +1187,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             self.update_identity, identity_result = self.update_single_managed_identity(curr_identity=curr_identity,
                                                                                         new_identity=self.identity,
                                                                                         patch_support=True)
-            self.identity = self.serialize_obj(identity_result, 'Identity')
+            self.identity = identity_result
 
         if self.state == 'present' and self.account_dict and \
            self.account_dict['provisioning_state'] != AZURE_SUCCESS_STATE:
@@ -1672,7 +1673,8 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         if not self.default_compare({}, self.immutable_storage_with_versioning, self.account_dict['immutable_storage_with_versioning'], '', dict(compare=[])):
             self.results['changed'] = True
             if not self.check_mode:
-                parameters = self.storage_models.StorageAccountUpdateParameters(immutable_storage_with_versioning=self.immutable_storage_with_versioning)
+                parameters = self.storage_models.StorageAccountUpdateParameters(
+                    immutable_storage_with_versioning=snake_dict_to_camel_dict(self.immutable_storage_with_versioning))
                 try:
                     self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
                 except Exception as exc:
@@ -1750,7 +1752,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                 allow_cross_tenant_replication=self.allow_cross_tenant_replication,
                 allow_shared_key_access=self.allow_shared_key_access,
-                identity=self.identity,
+                identity=self.serialize_obj(self.identity, 'Identity'),
                 immutable_storage_with_versioning=self.immutable_storage_with_versioning,
                 tags=dict()
             )
@@ -1776,14 +1778,15 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                                                                         minimum_tls_version=self.minimum_tls_version,
                                                                         public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
-                                                                        encryption=self.encryption,
+                                                                        encryption=snake_dict_to_camel_dict(self.encryption),
                                                                         is_hns_enabled=self.is_hns_enabled,
                                                                         enable_nfs_v3=self.enable_nfs_v3,
                                                                         access_tier=self.access_tier,
                                                                         allow_shared_key_access=self.allow_shared_key_access,
                                                                         default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                                                                         allow_cross_tenant_replication=self.allow_cross_tenant_replication,
-                                                                        immutable_storage_with_versioning=self.immutable_storage_with_versioning,
+                                                                        immutable_storage_with_versioning=snake_dict_to_camel_dict(
+                                                                            self.immutable_storage_with_versioning),
                                                                         large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
         try:
