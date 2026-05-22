@@ -1280,7 +1280,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         if account_obj.custom_domain:
             account_dict['custom_domain'] = dict(
                 name=account_obj.custom_domain.name,
-                use_sub_domain=account_obj.custom_domain.use_sub_domain
+                use_sub_domain=account_obj.custom_domain.use_sub_domain_name
             )
 
         account_dict['primary_endpoints'] = None
@@ -1618,7 +1618,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
             if self.results['changed'] and not self.check_mode:
                 new_domain = self.storage_models.CustomDomain(name=self.custom_domain['name'],
-                                                              use_sub_domain=self.custom_domain['use_sub_domain'])
+                                                              use_sub_domain_name=self.custom_domain['use_sub_domain'])
                 parameters = self.storage_models.StorageAccountUpdateParameters(custom_domain=new_domain)
                 try:
                     self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)

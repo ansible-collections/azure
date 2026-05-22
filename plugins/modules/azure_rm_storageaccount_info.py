@@ -809,7 +809,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         if account_obj.custom_domain:
             account_dict['custom_domain'] = dict(
                 name=account_obj.custom_domain.name,
-                use_sub_domain=account_obj.custom_domain.use_sub_domain
+                use_sub_domain=account_obj.custom_domain.use_sub_domain_name
             )
 
         account_dict['network_acls'] = None
