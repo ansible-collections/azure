@@ -919,7 +919,6 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible.module_utils._text import to_native
 from ansible.module_utils.basic import env_fallback
-from ansible.module_utils.common.dict_transformations import snake_dict_to_camel_dict
 
 try:
     from azure.mgmt.storage.models import (Identity, UserAssignedIdentity)
@@ -1674,7 +1673,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             self.results['changed'] = True
             if not self.check_mode:
                 parameters = self.storage_models.StorageAccountUpdateParameters(
-                    immutable_storage_with_versioning=snake_dict_to_camel_dict(self.immutable_storage_with_versioning))
+                    immutable_storage_with_versioning=self.build_immutable_storage_model())
                 try:
                     self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
                 except Exception as exc:
@@ -1719,6 +1718,36 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 self.fail("The encryption can't update encryption, encryption info as {0}".format(self.account_dict['encryption']))
         time.sleep(1)
         return self.get_account()
+
+    def build_encryption_model(self):
+        """Construct an Encryption SDK model from the user-supplied dict"""
+        if self.encryption is None:
+            return None
+        services = self.encryption.get('services') or {}
+        kvp = self.encryption.get('key_vault_properties')
+        ei = self.encryption.get('encryption_identity')
+        return self.storage_models.Encryption(
+            key_source=self.encryption.get('key_source'),
+            require_infrastructure_encryption=self.encryption.get('require_infrastructure_encryption'),
+            services=self.storage_models.EncryptionServices(
+                blob=self.storage_models.EncryptionService(**services['blob']) if services.get('blob') else None,
+                file=self.storage_models.EncryptionService(**services['file']) if services.get('file') else None,
+                queue=self.storage_models.EncryptionService(**services['queue']) if services.get('queue') else None,
+                table=self.storage_models.EncryptionService(**services['table']) if services.get('table') else None,
+            ) if services else None,
+            key_vault_properties=self.storage_models.KeyVaultProperties(**kvp) if kvp else None,
+            encryption_identity=self.storage_models.EncryptionIdentity(**ei) if ei else None,
+        )
+
+    def build_immutable_storage_model(self):
+        """Construct an ImmutableStorageAccount SDK model"""
+        if self.immutable_storage_with_versioning is None:
+            return None
+        policy = self.immutable_storage_with_versioning.get('immutability_policy')
+        return self.storage_models.ImmutableStorageAccount(
+            enabled=self.immutable_storage_with_versioning.get('enabled'),
+            immutability_policy=self.storage_models.AccountImmutabilityPolicyProperties(**policy) if policy else None,
+        )
 
     def create_account(self):
         self.log("Creating account {0}".format(self.name))
@@ -1778,15 +1807,14 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                                                                         minimum_tls_version=self.minimum_tls_version,
                                                                         public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
-                                                                        encryption=snake_dict_to_camel_dict(self.encryption),
+                                                                        encryption=self.build_encryption_model(),
                                                                         is_hns_enabled=self.is_hns_enabled,
                                                                         enable_nfs_v3=self.enable_nfs_v3,
                                                                         access_tier=self.access_tier,
                                                                         allow_shared_key_access=self.allow_shared_key_access,
                                                                         default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                                                                         allow_cross_tenant_replication=self.allow_cross_tenant_replication,
-                                                                        immutable_storage_with_versioning=snake_dict_to_camel_dict(
-                                                                            self.immutable_storage_with_versioning),
+                                                                        immutable_storage_with_versioning=self.build_immutable_storage_model(),
                                                                         large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
         try:
