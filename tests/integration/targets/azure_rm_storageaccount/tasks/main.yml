@@ -61,11 +61,15 @@
         - "{{ storage_account_name_default }}02"
         - "{{ storage_account_name_default }}03"
         - "{{ storage_account_name_default }}04"
+        - "{{ storage_account_name_default }}05"
         - "{{ storage_account_name_default }}06"
         - "{{ storage_account_name_default }}07"
         - "{{ storage_account_name_default }}08"
         - "{{ storage_account_name_default }}09"
         - "{{ storage_account_name_default }}10"
+        - "{{ storage_account_name_default }}11"
+        - "{{ storage_account_name_default }}12"
+        - "{{ storage_account_name_default }}13"
 
     - name: Create new storage account with defaults (omitted parameters)
       azure.azcollection.azure_rm_storageaccount:
@@ -513,6 +517,62 @@
           - smart_tier_idem is not changed
           - smart_tier_idem.state.access_tier == 'Smart'
 
+    - name: Create storage account with Cold access_tier
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}12"
+        account_type: Standard_LRS
+        kind: StorageV2
+        access_tier: Cold
+      register: cold_tier_output
+    - name: Assert Cold access_tier applied
+      ansible.builtin.assert:
+        that:
+          - cold_tier_output is changed
+          - cold_tier_output.state.access_tier == 'Cold'
+
+    - name: Create storage account with Cold access_tier (idempotence)
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}12"
+        account_type: Standard_LRS
+        kind: StorageV2
+        access_tier: Cold
+      register: cold_tier_idem
+    - name: Assert Cold access_tier idempotent
+      ansible.builtin.assert:
+        that:
+          - cold_tier_idem is not changed
+          - cold_tier_idem.state.access_tier == 'Cold'
+
+    - name: Create storage account with Premium access_tier
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+        account_type: Premium_LRS
+        kind: BlockBlobStorage
+        access_tier: Premium
+      register: premium_tier_output
+    - name: Assert Premium access_tier applied
+      ansible.builtin.assert:
+        that:
+          - premium_tier_output is changed
+          - premium_tier_output.state.access_tier == 'Premium'
+
+    - name: Create storage account with Premium access_tier (idempotence)
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+        account_type: Premium_LRS
+        kind: BlockBlobStorage
+        access_tier: Premium
+      register: premium_tier_idem
+    - name: Assert Premium access_tier idempotent
+      ansible.builtin.assert:
+        that:
+          - premium_tier_idem is not changed
+          - premium_tier_idem.state.access_tier == 'Premium'
+
     - name: Update existing storage account (idempotence)
       azure.azcollection.azure_rm_storageaccount:
         access_tier: Hot
@@ -876,6 +936,34 @@
           - output.storageaccounts[0].encryption.key_vault_properties.key_name == 'testkey'
           - output.storageaccounts[0].encryption.encryption_identity |length == 1
 
+    - name: Re-apply CMK storage account (idempotence)
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}05"
+        account_type: Standard_RAGRS
+        kind: StorageV2
+        identity:
+          type: UserAssigned
+          user_assigned_identity: "{{ managed_identity_ids[0] }}"
+        encryption:
+          services:
+            blob:
+              enabled: true
+            file:
+              enabled: true
+          require_infrastructure_encryption: false
+          key_source: Microsoft.Keyvault
+          key_vault_properties:
+            key_vault_uri: https://vault{{ rpfx }}.vault.azure.net
+            key_name: testkey
+          encryption_identity:
+            encryption_user_assigned_identity: "{{ managed_identity_ids[0] }}"
+      register: encryption_idem
+    - name: Assert CMK storage account idempotent
+      ansible.builtin.assert:
+        that:
+          - encryption_idem is not changed
+
     - name: Create a storage account with allow_shared_key_access
       azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-storageaccount"
@@ -963,6 +1051,11 @@
         - "{{ storage_account_name_default }}06"
         - "{{ storage_account_name_default }}07"
         - "{{ storage_account_name_default }}08"
+        - "{{ storage_account_name_default }}09"
+        - "{{ storage_account_name_default }}10"
+        - "{{ storage_account_name_default }}11"
+        - "{{ storage_account_name_default }}12"
+        - "{{ storage_account_name_default }}13"
 
     - name: Delete user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

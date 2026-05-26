@@ -752,9 +752,6 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def filter_tag(self, raw):
         return [item for item in raw if self.has_tags(item.tags, self.tags)]
 
-    def serialize(self, raw):
-        return [self.serialize_obj(item, AZURE_OBJECT_CLASS) for item in raw]
-
     def format_to_dict(self, raw):
         return [self.account_obj_to_dict(item) for item in raw]
 
@@ -791,7 +788,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=self.serialize_obj(account_obj.immutable_storage_with_versioning, 'ImmutableStorageAccount')
+            immutable_storage_with_versioning=self.to_snake_dict(account_obj.immutable_storage_with_versioning)
         )
 
         account_dict['geo_replication_stats'] = None
@@ -881,37 +878,9 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 error_document404_path=static_website.error_document404_path,
             )
 
-        account_dict['encryption'] = dict()
-        if account_obj.encryption:
-            account_dict['encryption']['require_infrastructure_encryption'] = account_obj.encryption.require_infrastructure_encryption
-            account_dict['encryption']['key_source'] = account_obj.encryption.key_source
+        account_dict['encryption'] = self.to_snake_dict(account_obj.encryption) or dict()
 
-            if account_obj.encryption.services:
-                account_dict['encryption']['services'] = dict()
-
-                if account_obj.encryption.services.file:
-                    account_dict['encryption']['services']['file'] = dict(enabled=True)
-                if account_obj.encryption.services.table:
-                    account_dict['encryption']['services']['table'] = dict(enabled=True)
-                if account_obj.encryption.services.queue:
-                    account_dict['encryption']['services']['queue'] = dict(enabled=True)
-                if account_obj.encryption.services.blob:
-                    account_dict['encryption']['services']['blob'] = dict(enabled=True)
-            if account_obj.encryption.encryption_identity:
-                account_dict['encryption']['encryption_identity'] = dict(
-                    encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
-            else:
-                account_dict['encryption']['encryption_identity'] = None
-            if account_obj.encryption.key_vault_properties:
-                account_dict['encryption']['key_vault_properties'] = dict(key_vault_uri=account_obj.encryption.key_vault_properties.key_vault_uri,
-                                                                          key_name=account_obj.encryption.key_vault_properties.key_name,
-                                                                          key_version=account_obj.encryption.key_vault_properties.key_version)
-            else:
-                account_dict['encryption']['key_vault_properties'] = None
-
-        account_dict['identity'] = dict()
-        if account_obj.identity:
-            account_dict['identity'] = self.serialize_obj(account_obj.identity, 'Identity')
+        account_dict['identity'] = self.to_snake_dict(account_obj.identity) or dict()
 
         return account_dict
 

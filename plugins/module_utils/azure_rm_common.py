@@ -588,25 +588,25 @@ class AzureRMModuleBase(object):
 
     def serialize_obj(self, obj, class_name, enum_modules=None):
         '''
-        Return a JSON representation of an Azure object with snake_case keys.
-
-        Prefers ``azure.core.serialization.as_attribute_dict`` so that
-        newer hybrid-model SDKs keep emitting snake_case keys for back-compat (``obj.as_dict()`` on
-        hybrid models returns camelCase). Falls back to ``obj.as_dict()`` when the shim is unavailable
-        or the input is not an Azure model.
+        Return a JSON representation of an Azure object.
 
         :param obj: Azure object
         :param class_name: Name of the object's class
         :param enum_modules: List of module names to build enum dependencies from.
         :return: serialized result
         '''
+        return obj.as_dict()
+
+    def to_snake_dict(self, obj):
+        '''
+        Return a snake_case dict from a hybrid-model SDK instance via
+        ``azure.core.serialization.as_attribute_dict`` (requires
+        ``azure-core >= 1.35.0``). For non-hybrid SDKs, use ``serialize_obj``.
+        '''
         if obj is None:
             return None
-        try:
-            from azure.core.serialization import as_attribute_dict
-            return as_attribute_dict(obj)
-        except (ImportError, TypeError, AttributeError):
-            return obj.as_dict() if hasattr(obj, 'as_dict') else obj
+        from azure.core.serialization import as_attribute_dict
+        return as_attribute_dict(obj)
 
     def get_poller_result(self, poller, wait=5):
         '''
