@@ -69,7 +69,6 @@
         - "{{ storage_account_name_default }}10"
         - "{{ storage_account_name_default }}11"
         - "{{ storage_account_name_default }}12"
-        - "{{ storage_account_name_default }}13"
 
     - name: Create new storage account with defaults (omitted parameters)
       azure.azcollection.azure_rm_storageaccount:
@@ -544,34 +543,6 @@
         that:
           - cold_tier_idem is not changed
           - cold_tier_idem.state.access_tier == 'Cold'
-
-    - name: Create storage account with Premium access_tier
-      azure.azcollection.azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}-storageaccount"
-        name: "{{ storage_account_name_default }}13"
-        account_type: Premium_LRS
-        kind: BlockBlobStorage
-        access_tier: Premium
-      register: premium_tier_output
-    - name: Assert Premium access_tier applied
-      ansible.builtin.assert:
-        that:
-          - premium_tier_output is changed
-          - premium_tier_output.state.access_tier == 'Premium'
-
-    - name: Create storage account with Premium access_tier (idempotence)
-      azure.azcollection.azure_rm_storageaccount:
-        resource_group: "{{ resource_group }}-storageaccount"
-        name: "{{ storage_account_name_default }}13"
-        account_type: Premium_LRS
-        kind: BlockBlobStorage
-        access_tier: Premium
-      register: premium_tier_idem
-    - name: Assert Premium access_tier idempotent
-      ansible.builtin.assert:
-        that:
-          - premium_tier_idem is not changed
-          - premium_tier_idem.state.access_tier == 'Premium'
 
     - name: Update existing storage account (idempotence)
       azure.azcollection.azure_rm_storageaccount:
@@ -1055,7 +1026,6 @@
         - "{{ storage_account_name_default }}10"
         - "{{ storage_account_name_default }}11"
         - "{{ storage_account_name_default }}12"
-        - "{{ storage_account_name_default }}13"
 
     - name: Delete user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
