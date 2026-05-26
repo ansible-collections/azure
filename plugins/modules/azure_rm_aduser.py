@@ -400,7 +400,7 @@ class AzureRMADUser(AzureRMModuleBase):
 
                         self.results['changed'] = True
 
-                        ad_user = self.get_exisiting_user() or ad_user
+                        ad_user = self.get_exisiting_user()
 
                     else:
                         self.results['changed'] = False
