@@ -71,6 +71,10 @@
       - "create_user_should_pass['ad_user']['account_enabled'] == True"
       - "get_user_by_upn_should_pass['ad_users'][0]['account_enabled'] == True"
       - "get_user_by_mail_should_pass['ad_users'][0]['account_enabled'] == True"
+      - "create_user_should_pass['ad_user']['object_id'] is defined"
+      - "create_user_should_pass['ad_user']['object_id'] is string"
+      - "create_user_should_pass['ad_user']['object_id'] | length > 0"
+      - "create_user_should_pass['ad_user']['object_id'] is match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')"
 
 - name: Update test user
   azure.azcollection.azure_rm_aduser:

@@ -407,10 +407,9 @@ class AzureRMADUser(AzureRMModuleBase):
                     else:
                         self.results['changed'] = False
 
-                else:  # Create, changed
-                    asyncio.get_event_loop().run_until_complete(self.create_user(extension_attributes))
+                else:
+                    ad_user = asyncio.get_event_loop().run_until_complete(self.create_user(extension_attributes))
                     self.results['changed'] = True
-                    ad_user = self.get_exisiting_user()
 
                 self.results['ad_user'] = self.to_dict(ad_user)
 
