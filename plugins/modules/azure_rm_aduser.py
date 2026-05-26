@@ -400,6 +400,8 @@ class AzureRMADUser(AzureRMModuleBase):
 
                         self.results['changed'] = True
 
+                        # Get the updated versions of the users to return
+                        # the update method, has no return value so it needs to be explicitely returned in a call
                         ad_user = self.get_exisiting_user()
 
                     else:
