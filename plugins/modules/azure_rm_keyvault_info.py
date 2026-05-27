@@ -251,9 +251,68 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.mgmt.keyvault import KeyVaultManagementClient
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
+KEYVAULT_RESOURCE_FILTER = "resourceType eq 'Microsoft.KeyVault/vaults'"
+MANAGED_HSM_RESOURCE_FILTER = "resourceType eq 'Microsoft.KeyVault/managedHSMs'"
+
+
+def _permission_value_lower(value):
+    return value.lower() if isinstance(value, str) else str(value).lower()
+
+
+def _get_permission_attr(permissions, *names):
+    '''
+    Read a permission list from SDK model or dict.
+
+    Do not use getattr(permissions, 'keys') on a dict: that returns dict.keys (method).
+    azure-mgmt-keyvault >= 13 exposes key permissions as keys_property on models.
+    '''
+    if not permissions:
+        return None
+    if isinstance(permissions, dict):
+        for name in names:
+            value = permissions.get(name)
+            if value:
+                return value
+        return None
+    for name in names:
+        value = getattr(permissions, name, None)
+        if value is None:
+            continue
+        if callable(value) and not isinstance(value, (list, tuple)):
+            continue
+        return value
+    return None
+
+
+def _get_keys_permissions(permissions):
+    key_perms = _get_permission_attr(permissions, 'keys_property', 'key_permissions', 'keys')
+    if not key_perms:
+        return None
+    return [_permission_value_lower(kp) for kp in key_perms]
+
+
+def _permission_list_to_lower(perm_list):
+    if perm_list is None:
+        return None
+    return [_permission_value_lower(p) for p in perm_list]
+
+
+def _permissions_to_dict(permissions):
+    if not permissions:
+        return None
+    key_perms = _get_keys_permissions(permissions)
+    return dict(
+        key_permissions=key_perms,
+        keys=key_perms,
+        secrets=_permission_list_to_lower(_get_permission_attr(permissions, 'secrets')),
+        certificates=_permission_list_to_lower(_get_permission_attr(permissions, 'certificates')),
+        storage=_permission_list_to_lower(_get_permission_attr(permissions, 'storage')),
+    )
 
 
 def keyvault_to_dict(vault):
@@ -275,18 +334,12 @@ def keyvault_to_dict(vault):
         access_policies=[dict(
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,
-            permissions=dict(
-                key_permissions=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
-                keys=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
-                secrets=[sp.lower() for sp in policy.permissions.secrets] if policy.permissions.secrets else None,
-                certificates=[cp.lower() for cp in policy.permissions.certificates] if policy.permissions.certificates else None,
-                storage=[stp.lower() for stp in policy.permissions.storage] if policy.permissions.storage else None
-            ) if policy.permissions else None,
+            permissions=_permissions_to_dict(policy.permissions),
         ) for policy in vault.properties.access_policies] if vault.properties.access_policies else None,
         sku=dict(
             family=vault.properties.sku.family,
             name=vault.properties.sku.name
-        ),
+        ) if vault.properties.sku else None,
         public_network_access=vault.properties.public_network_access,
         network_acls=dict(
             bypass=vault.properties.network_acls.bypass,
@@ -415,73 +468,168 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
             self.log("Did not find the key vault {0}: {1}".format(self.name, str(e)))
         return results
 
-    def list_hsm_by_resource_group(self):
-        '''
-        Lists the properties of hsms in specific resource group.
+    def _get_vault(self, resource_group_name, vault_name):
+        return keyvault_to_dict(self._client.vaults.get(resource_group_name, vault_name))
 
-        :return: deserialized hsm state dictionary
-        '''
-        self.log("Get the hsms in resource group {0}".format(self.resource_group))
+    def _get_vault_from_resource_id(self, resource_id):
+        parsed = parse_resource_id(resource_id)
+        resource_group = parsed.get('resource_group')
+        vault_name = parsed.get('name')
+        if not resource_group or not vault_name:
+            raise ValueError("Could not parse resource group or vault name from id: {0}".format(resource_id))
+        return self._get_vault(resource_group, vault_name)
 
-        results = []
+    def _iter_keyvault_resources(self, resource_group_name=None):
+        '''
+        Discover Key Vaults via ARM (supplemental inventory source).
+        '''
+        if resource_group_name:
+            return self.rm_client.resources.list_by_resource_group(
+                resource_group_name, filter=KEYVAULT_RESOURCE_FILTER)
+        return self.rm_client.resources.list(filter=KEYVAULT_RESOURCE_FILTER)
+
+    def _collect_vault_from_keyvault_api(self, resource_group_name, vaults_by_id):
+        '''
+        Same API path as "az keyvault list --resource-group".
+        '''
+        self.log("Listing key vaults via Key Vault API in {0}".format(resource_group_name))
         try:
-            response = list(self._client.managed_hsms.list_by_resource_group(resource_group_name=self.resource_group))
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(hsm_to_dict(item))
+            response = self._client.vaults.list_by_resource_group(resource_group_name=resource_group_name)
         except Exception as e:
-            self.log("Did not find hsms in resource group {0} : {1}.".format(self.resource_group, str(e)))
-        return results
+            self.log("Key Vault API list failed for {0}: {1}".format(resource_group_name, str(e)))
+            return
 
-    def list_vault_by_resource_group(self):
+        try:
+            for item in response:
+                if not self.has_tags(getattr(item, 'tags', None), self.tags):
+                    continue
+                if item.id in vaults_by_id:
+                    continue
+                try:
+                    vaults_by_id[item.id] = keyvault_to_dict(item)
+                except Exception as e:
+                    self.log("Failed to serialize key vault {0}: {1}".format(item.name, str(e)))
+                    try:
+                        vaults_by_id[item.id] = self._get_vault(resource_group_name, item.name)
+                    except Exception as e2:
+                        self.module.warn(
+                            "Unable to read key vault '{0}' in resource group '{1}': {2}".format(
+                                item.name, resource_group_name, str(e2)))
+        except Exception as e:
+            self.module.warn(
+                "Key Vault API list iteration stopped early in '{0}' after {1} vault(s): {2}".format(
+                    resource_group_name, len(vaults_by_id), str(e)))
+
+    def _collect_vault_from_arm(self, resource_group_name, vaults_by_id):
+        self.log("Listing key vault resources via ARM in {0}".format(
+            resource_group_name or 'subscription'))
+        try:
+            resources = self._iter_keyvault_resources(resource_group_name)
+        except Exception as e:
+            self.log("Failed to list key vault resources via ARM: {0}".format(str(e)))
+            return
+
+        try:
+            for resource in resources:
+                if not self.has_tags(getattr(resource, 'tags', None), self.tags):
+                    continue
+                if resource.id in vaults_by_id:
+                    continue
+                try:
+                    vaults_by_id[resource.id] = self._get_vault_from_resource_id(resource.id)
+                except Exception as e:
+                    parsed = parse_resource_id(resource.id)
+                    self.module.warn(
+                        "Unable to read key vault '{0}' in resource group '{1}': {2}".format(
+                            parsed.get('name'), parsed.get('resource_group'), str(e)))
+        except Exception as e:
+            self.module.warn(
+                "ARM key vault list iteration stopped early in '{0}' after {1} vault(s): {2}".format(
+                    resource_group_name or 'subscription', len(vaults_by_id), str(e)))
+
+    def _collect_keyvaults(self, resource_group_name=None):
+        vaults_by_id = {}
+        if resource_group_name:
+            self._collect_vault_from_keyvault_api(resource_group_name, vaults_by_id)
+            self._collect_vault_from_arm(resource_group_name, vaults_by_id)
+        else:
+            try:
+                resource_groups = self.rm_client.resource_groups.list()
+            except Exception as e:
+                self.fail("Failed to list resource groups in subscription: {0}".format(str(e)))
+            for resource_group in resource_groups:
+                self._collect_vault_from_keyvault_api(resource_group.name, vaults_by_id)
+            self._collect_vault_from_arm(None, vaults_by_id)
+        return list(vaults_by_id.values())
+
+    def list_vault_by_resource_group_name(self, resource_group_name):
         '''
-        Lists the properties of key vaults in specific resource group.
+        Lists the properties of key vaults in a resource group.
 
         :return: deserialized key vaults state dictionary
         '''
-        self.log("Get the key vaults in resource group {0}".format(self.resource_group))
+        self.log("Get the key vaults in resource group {0}".format(resource_group_name))
+        return self._collect_keyvaults(resource_group_name=resource_group_name)
 
-        results = []
-        try:
-            response = list(self._client.vaults.list_by_resource_group(resource_group_name=self.resource_group))
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        results.append(keyvault_to_dict(item))
-        except Exception as e:
-            self.log("Did not find key vaults in resource group {0} : {1}.".format(self.resource_group, str(e)))
-        return results
+    def list_vault_by_resource_group(self):
+        return self.list_vault_by_resource_group_name(self.resource_group)
 
     def list_vault(self):
         '''
-        Lists the properties of key vaults in specific subscription.
+        Lists the properties of key vaults in the subscription.
+
+        Uses Key Vault list_by_resource_group (same as az keyvault list) plus ARM
+        resource discovery to include any vaults missed by API pagination issues.
 
         :return: deserialized key vaults state dictionary
         '''
         self.log("Get the key vaults in current subscription")
+        return self._collect_keyvaults()
+
+    def _get_hsm_from_resource_id(self, resource_id):
+        parsed = parse_resource_id(resource_id)
+        resource_group = parsed.get('resource_group')
+        hsm_name = parsed.get('name')
+        if not resource_group or not hsm_name:
+            raise ValueError("Could not parse resource group or HSM name from id: {0}".format(resource_id))
+        return hsm_to_dict(self._client.managed_hsms.get(resource_group, hsm_name))
+
+    def _iter_hsm_resources(self, resource_group_name=None):
+        if resource_group_name:
+            return self.rm_client.resources.list_by_resource_group(
+                resource_group_name, filter=MANAGED_HSM_RESOURCE_FILTER)
+        return self.rm_client.resources.list(filter=MANAGED_HSM_RESOURCE_FILTER)
+
+    def list_hsm_by_resource_group_name(self, resource_group_name):
+        '''
+        Lists the properties of hsms in a resource group.
+
+        :return: deserialized hsm state dictionary
+        '''
+        self.log("Get the hsms in resource group {0}".format(resource_group_name))
 
         results = []
         try:
-            response = list(self._client.vaults.list())
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        source_id = item.id.split('/')
-                        results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
+            resources = self._iter_hsm_resources(resource_group_name)
         except Exception as e:
-            self.log("Did not find key vault in current subscription {0}.".format(str(e)))
+            self.log("Did not find HSM resources in resource group {0}: {1}.".format(resource_group_name, str(e)))
+            return results
+
+        for resource in resources:
+            if self.has_tags(getattr(resource, 'tags', None), self.tags):
+                try:
+                    results.append(self._get_hsm_from_resource_id(resource.id))
+                except Exception as e:
+                    self.log("Failed to get HSM {0} in {1}: {2}.".format(
+                        getattr(resource, 'name', resource.id), resource_group_name, str(e)))
         return results
+
+    def list_hsm_by_resource_group(self):
+        return self.list_hsm_by_resource_group_name(self.resource_group)
 
     def list_hsm(self):
         '''
-        Lists the properties of hsms in specific subscription.
+        Lists the properties of hsms in the subscription.
 
         :return: deserialized hsms state dictionary
         '''
@@ -489,16 +637,17 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
 
         results = []
         try:
-            response = list(self._client.managed_hsms.list_by_subscription())
-            self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    if self.has_tags(item.tags, self.tags):
-                        source_id = item.id.split('/')
-                        results.append(hsm_to_dict(self._client.managed_hsms.get(source_id[4], source_id[8])))
+            resources = self._iter_hsm_resources()
         except Exception as e:
-            self.log("Did not find hsm in current subscription {0}.".format(str(e)))
+            self.fail("Failed to list HSM resources in subscription: {0}".format(str(e)))
+
+        for resource in resources:
+            if self.has_tags(getattr(resource, 'tags', None), self.tags):
+                try:
+                    results.append(self._get_hsm_from_resource_id(resource.id))
+                except Exception as e:
+                    self.log("Failed to get HSM {0}: {1}.".format(
+                        getattr(resource, 'name', resource.id), str(e)))
         return results
 
 
