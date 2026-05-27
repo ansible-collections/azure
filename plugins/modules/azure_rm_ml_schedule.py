@@ -38,8 +38,8 @@ options:
     state:
         description:
             - State of the Schedule. Use C(present) to create
-              or update. C(archive) to archive, C(restore) to
-              restore.
+              or update. C(disabled) to disable, C(enabled) to
+              enable.
         default: present
         type: str
         choices:
@@ -208,7 +208,7 @@ class AzureRMMLSchedule(MLClientCommon):
         ]
 
         super(AzureRMMLSchedule, self).__init__(self.module_arg_spec,
-                                                supports_check_mode=True,
+                                                supports_check_mode=False,
                                                 required_if=required_if,
                                                 )
 
@@ -236,24 +236,17 @@ class AzureRMMLSchedule(MLClientCommon):
             ml_schedule = load_schedule(source=resource_definition,
                                         params_override=params_override)
 
-            if ml_schedule_info and not self.check_mode:
+            if ml_schedule_info:
                 # Update
                 orig_schedule_info = self.entity_to_dict(ml_schedule_info)
-                orig_schedule_info.pop('creation_context')
+
                 response = self.client.begin_create_or_update(ml_schedule)
                 ml_schedule_object = self.get_poller_result(response)
                 ml_schedule_info = self.entity_to_dict(ml_schedule_object)
-                new_schedule_info = self.entity_to_dict(
-                    self.get(schedule_name)
-                )
 
-                new_schedule_info = self.entity_to_dict(
-                    self.get(schedule_name)
-                )
-                new_schedule_info.pop('creation_context')
                 changed = not self.default_compare(
                     {},
-                    new_schedule_info,
+                    ml_schedule_info,
                     orig_schedule_info,
                     '',
                     self.results
@@ -261,29 +254,26 @@ class AzureRMMLSchedule(MLClientCommon):
             else:
                 # Create
                 changed = True
-                if not self.check_mode:
-                    response = self.client.begin_create_or_update(ml_schedule)
-                    ml_schedule_object = self.get_poller_result(response)
-                    ml_schedule_info = self.entity_to_dict(ml_schedule_object)
+                response = self.client.begin_create_or_update(ml_schedule)
+                ml_schedule_object = self.get_poller_result(response)
+                ml_schedule_info = self.entity_to_dict(ml_schedule_object)
         elif self.state == 'absent':
             # Delete
             if ml_schedule_info:
                 changed = True
-                if not self.check_mode:
-                    response = self.client.schedules.begin_delete(name=self.name)
-                    result = self.get_poller_result(response)
-                ml_schedule_info = self.get(self.name, as_dict=True)
+                response = self.client.schedules.begin_delete(name=schedule_name)
+                result = self.get_poller_result(response)
+                ml_schedule_info = self.get(schedule_name, as_dict=True)
         elif self.state == 'enabled':
             # Enable
             list_view_type = self.get_schedule_list_view_type('disabled')
             results = self.client.schedules.list(list_view_type=list_view_type)
             ml_schedules = [x.name for x in results]
 
-            if self.name in ml_schedules:
+            if schedule_name in ml_schedules:
                 changed = True
-                if not self.check_mode:
-                    self.enable(name=self.name)
-            ml_schedule_info = self.get(name=self.name,
+                self.enable(name=schedule_name)
+            ml_schedule_info = self.get(name=schedule_name,
                                         as_dict=True)
         elif self.state == 'disabled':
             # Disable
@@ -291,11 +281,10 @@ class AzureRMMLSchedule(MLClientCommon):
             results = self.client.schedules.list(list_view_type=list_view_type)
             ml_schedules = [x.name for x in results]
 
-            if self.name in ml_schedules:
+            if schedule_name in ml_schedules:
                 changed = True
-                if not self.check_mode:
-                    self.disable(name=self.name)
-            ml_schedule_info = self.get(name=self.name,
+                self.disable(name=schedule_name)
+            ml_schedule_info = self.get(name=schedule_name,
                                         as_dict=True)
 
         self.results['ml_schedule'] = ml_schedule_info
@@ -333,14 +322,14 @@ class AzureRMMLSchedule(MLClientCommon):
             response = self.client.schedules.begin_enable(name=name)
             ml_schedule_object = self.get_poller_result(response)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            self.fail("Error enabled the schedule instance: {0}".format(str(e)))
+            self.fail("Error enabling the schedule instance: {0}".format(str(e)))
 
     def disable(self, name=None):
         try:
             response = self.client.schedules.begin_disable(name=name)
             ml_schedule_object = self.get_poller_result(response)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            self.fail("Error disabled the schedule instance: {0}".format(str(e)))
+            self.fail("Error disabling the schedule instance: {0}".format(str(e)))
 
 
 def main():
