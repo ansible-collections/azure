@@ -597,17 +597,6 @@ class AzureRMModuleBase(object):
         '''
         return obj.as_dict()
 
-    def to_snake_dict(self, obj):
-        '''
-        Return a snake_case dict from a hybrid-model SDK instance via
-        ``azure.core.serialization.as_attribute_dict`` (requires
-        ``azure-core >= 1.35.0``). For non-hybrid SDKs, use ``serialize_obj``.
-        '''
-        if obj is None:
-            return None
-        from azure.core.serialization import as_attribute_dict
-        return as_attribute_dict(obj)
-
     def get_poller_result(self, poller, wait=5):
         '''
         Consistent method of waiting on and retrieving results from Azure's long poller

@@ -645,9 +645,14 @@ storageaccounts:
 '''
 
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils._text import to_native
-from ansible.module_utils.basic import env_fallback
+try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    from ansible.module_utils._text import to_native
+    from ansible.module_utils.basic import env_fallback
+    from azure.core.serialization import as_attribute_dict
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 
 
 AZURE_OBJECT_CLASS = 'StorageAccount'
@@ -788,7 +793,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=self.to_snake_dict(account_obj.immutable_storage_with_versioning)
+            immutable_storage_with_versioning=as_attribute_dict(account_obj.immutable_storage_with_versioning) if account_obj.immutable_storage_with_versioning else None
         )
 
         account_dict['geo_replication_stats'] = None
@@ -878,9 +883,9 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 error_document404_path=static_website.error_document404_path,
             )
 
-        account_dict['encryption'] = self.to_snake_dict(account_obj.encryption) or dict()
+        account_dict['encryption'] = as_attribute_dict(account_obj.encryption) if account_obj.encryption else dict()
 
-        account_dict['identity'] = self.to_snake_dict(account_obj.identity) or dict()
+        account_dict['identity'] = as_attribute_dict(account_obj.identity) if account_obj.identity else dict()
 
         return account_dict
 

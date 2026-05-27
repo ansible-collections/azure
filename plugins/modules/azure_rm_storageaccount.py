@@ -922,6 +922,7 @@ from ansible.module_utils.basic import env_fallback
 
 try:
     from azure.mgmt.storage.models import (Identity, UserAssignedIdentity)
+    from azure.core.serialization import as_attribute_dict
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1273,7 +1274,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=self.to_snake_dict(account_obj.immutable_storage_with_versioning)
+            immutable_storage_with_versioning=as_attribute_dict(account_obj.immutable_storage_with_versioning) if account_obj.immutable_storage_with_versioning else None
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
@@ -1340,9 +1341,9 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                         tenant_id=rule.tenant_id
                     ))
 
-        account_dict['encryption'] = self.to_snake_dict(account_obj.encryption) or dict()
+        account_dict['encryption'] = as_attribute_dict(account_obj.encryption) if account_obj.encryption else dict()
 
-        account_dict['identity'] = self.to_snake_dict(account_obj.identity) or dict()
+        account_dict['identity'] = as_attribute_dict(account_obj.identity) if account_obj.identity else dict()
 
         return account_dict
 
@@ -1758,7 +1759,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                 allow_cross_tenant_replication=self.allow_cross_tenant_replication,
                 allow_shared_key_access=self.allow_shared_key_access,
-                identity=self.to_snake_dict(self.identity),
+                identity=as_attribute_dict(self.identity) if self.identity else None,
                 immutable_storage_with_versioning=self.immutable_storage_with_versioning,
                 tags=dict()
             )
