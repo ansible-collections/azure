@@ -109,6 +109,9 @@ options:
         choices:
             - Hot
             - Cool
+            - Cold
+            - Premium
+            - Smart
     force_delete_nonempty:
         description:
             - Attempt deletion if resource already exists and cannot be updated.
@@ -919,6 +922,7 @@ from ansible.module_utils.basic import env_fallback
 
 try:
     from azure.mgmt.storage.models import (Identity, UserAssignedIdentity)
+    from azure.core.serialization import as_attribute_dict
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1000,7 +1004,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             force_delete_nonempty=dict(type='bool', default=False, aliases=['force']),
             tags=dict(type='dict'),
             kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
-            access_tier=dict(type='str', choices=['Hot', 'Cool']),
+            access_tier=dict(type='str', choices=['Hot', 'Cool', 'Cold', 'Premium', 'Smart']),
             https_only=dict(type='bool'),
             minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
             public_network_access=dict(type='str', choices=['Enabled', 'Disabled']),
@@ -1183,7 +1187,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             self.update_identity, identity_result = self.update_single_managed_identity(curr_identity=curr_identity,
                                                                                         new_identity=self.identity,
                                                                                         patch_support=True)
-            self.identity = identity_result.as_dict()
+            self.identity = identity_result
 
         if self.state == 'present' and self.account_dict and \
            self.account_dict['provisioning_state'] != AZURE_SUCCESS_STATE:
@@ -1270,13 +1274,13 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=account_obj.immutable_storage_with_versioning.as_dict() if account_obj.immutable_storage_with_versioning else None
+            immutable_storage_with_versioning=as_attribute_dict(account_obj.immutable_storage_with_versioning) if account_obj.immutable_storage_with_versioning else None
         )
         account_dict['custom_domain'] = None
         if account_obj.custom_domain:
             account_dict['custom_domain'] = dict(
                 name=account_obj.custom_domain.name,
-                use_sub_domain=account_obj.custom_domain.use_sub_domain
+                use_sub_domain=account_obj.custom_domain.use_sub_domain_name
             )
 
         account_dict['primary_endpoints'] = None
@@ -1337,36 +1341,9 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                         tenant_id=rule.tenant_id
                     ))
 
-        account_dict['encryption'] = dict()
-        if account_obj.encryption:
-            account_dict['encryption']['require_infrastructure_encryption'] = account_obj.encryption.require_infrastructure_encryption
-            account_dict['encryption']['key_source'] = account_obj.encryption.key_source
-            if account_obj.encryption.services:
-                account_dict['encryption']['services'] = dict()
-                if account_obj.encryption.services.file:
-                    account_dict['encryption']['services']['file'] = dict(enabled=True)
-                if account_obj.encryption.services.table:
-                    account_dict['encryption']['services']['table'] = dict(enabled=True)
-                if account_obj.encryption.services.queue:
-                    account_dict['encryption']['services']['queue'] = dict(enabled=True)
-                if account_obj.encryption.services.blob:
-                    account_dict['encryption']['services']['blob'] = dict(enabled=True)
+        account_dict['encryption'] = as_attribute_dict(account_obj.encryption) if account_obj.encryption else dict()
 
-            if account_obj.encryption.encryption_identity:
-                account_dict['encryption']['encryption_identity'] = dict(
-                    encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
-            else:
-                account_dict['encryption']['encryption_identity'] = None
-            if account_obj.encryption.key_vault_properties:
-                account_dict['encryption']['key_vault_properties'] = dict(key_vault_uri=account_obj.encryption.key_vault_properties.key_vault_uri,
-                                                                          key_name=account_obj.encryption.key_vault_properties.key_name,
-                                                                          key_version=account_obj.encryption.key_vault_properties.key_version)
-            else:
-                account_dict['encryption']['key_vault_properties'] = None
-
-        account_dict['identity'] = dict()
-        if account_obj.identity:
-            account_dict['identity'] = account_obj.identity.as_dict()
+        account_dict['identity'] = as_attribute_dict(account_obj.identity) if account_obj.identity else dict()
 
         return account_dict
 
@@ -1614,7 +1591,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
             if self.results['changed'] and not self.check_mode:
                 new_domain = self.storage_models.CustomDomain(name=self.custom_domain['name'],
-                                                              use_sub_domain=self.custom_domain['use_sub_domain'])
+                                                              use_sub_domain_name=self.custom_domain['use_sub_domain'])
                 parameters = self.storage_models.StorageAccountUpdateParameters(custom_domain=new_domain)
                 try:
                     self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
@@ -1669,7 +1646,8 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         if not self.default_compare({}, self.immutable_storage_with_versioning, self.account_dict['immutable_storage_with_versioning'], '', dict(compare=[])):
             self.results['changed'] = True
             if not self.check_mode:
-                parameters = self.storage_models.StorageAccountUpdateParameters(immutable_storage_with_versioning=self.immutable_storage_with_versioning)
+                parameters = self.storage_models.StorageAccountUpdateParameters(
+                    immutable_storage_with_versioning=self._build_immutable_storage_payload())
                 try:
                     self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
                 except Exception as exc:
@@ -1715,6 +1693,40 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         time.sleep(1)
         return self.get_account()
 
+    def _build_encryption_payload(self):
+        '''
+        Build an Encryption SDK model with all nested fields explicitly typed.
+        '''
+        if self.encryption is None:
+            return None
+        services = self.encryption.get('services') or {}
+        kvp = self.encryption.get('key_vault_properties')
+        ei = self.encryption.get('encryption_identity')
+        return self.storage_models.Encryption(
+            key_source=self.encryption.get('key_source'),
+            require_infrastructure_encryption=self.encryption.get('require_infrastructure_encryption'),
+            services=self.storage_models.EncryptionServices(
+                blob=self.storage_models.EncryptionService(**services['blob']) if services.get('blob') else None,
+                file=self.storage_models.EncryptionService(**services['file']) if services.get('file') else None,
+                queue=self.storage_models.EncryptionService(**services['queue']) if services.get('queue') else None,
+                table=self.storage_models.EncryptionService(**services['table']) if services.get('table') else None,
+            ) if services else None,
+            key_vault_properties=self.storage_models.KeyVaultProperties(**kvp) if kvp else None,
+            encryption_identity=self.storage_models.EncryptionIdentity(**ei) if ei else None,
+        )
+
+    def _build_immutable_storage_payload(self):
+        '''
+        Build an ImmutableStorageAccount SDK model with the nested policy typed.
+        '''
+        if self.immutable_storage_with_versioning is None:
+            return None
+        policy = self.immutable_storage_with_versioning.get('immutability_policy')
+        return self.storage_models.ImmutableStorageAccount(
+            enabled=self.immutable_storage_with_versioning.get('enabled'),
+            immutability_policy=self.storage_models.AccountImmutabilityPolicyProperties(**policy) if policy else None,
+        )
+
     def create_account(self):
         self.log("Creating account {0}".format(self.name))
 
@@ -1747,7 +1759,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                 default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                 allow_cross_tenant_replication=self.allow_cross_tenant_replication,
                 allow_shared_key_access=self.allow_shared_key_access,
-                identity=self.identity,
+                identity=as_attribute_dict(self.identity) if self.identity else None,
                 immutable_storage_with_versioning=self.immutable_storage_with_versioning,
                 tags=dict()
             )
@@ -1773,14 +1785,14 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
                                                                         minimum_tls_version=self.minimum_tls_version,
                                                                         public_network_access=self.public_network_access,
                                                                         allow_blob_public_access=self.allow_blob_public_access,
-                                                                        encryption=self.encryption,
+                                                                        encryption=self._build_encryption_payload(),
                                                                         is_hns_enabled=self.is_hns_enabled,
                                                                         enable_nfs_v3=self.enable_nfs_v3,
                                                                         access_tier=self.access_tier,
                                                                         allow_shared_key_access=self.allow_shared_key_access,
                                                                         default_to_o_auth_authentication=self.default_to_o_auth_authentication,
                                                                         allow_cross_tenant_replication=self.allow_cross_tenant_replication,
-                                                                        immutable_storage_with_versioning=self.immutable_storage_with_versioning,
+                                                                        immutable_storage_with_versioning=self._build_immutable_storage_payload(),
                                                                         large_file_shares_state=self.large_file_shares_state)
         self.log(str(parameters))
         try:

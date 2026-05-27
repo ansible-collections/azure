@@ -315,6 +315,7 @@ storageaccounts:
         access_tier:
             description:
                 - The access tier for this storage account.
+                - One of C(Hot), C(Cool), C(Cold), C(Premium), or C(Smart).
             returned: always
             type: str
             sample: Hot
@@ -644,9 +645,14 @@ storageaccounts:
 '''
 
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils._text import to_native
-from ansible.module_utils.basic import env_fallback
+try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    from ansible.module_utils._text import to_native
+    from ansible.module_utils.basic import env_fallback
+    from azure.core.serialization import as_attribute_dict
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 
 
 AZURE_OBJECT_CLASS = 'StorageAccount'
@@ -751,9 +757,6 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
     def filter_tag(self, raw):
         return [item for item in raw if self.has_tags(item.tags, self.tags)]
 
-    def serialize(self, raw):
-        return [self.serialize_obj(item, AZURE_OBJECT_CLASS) for item in raw]
-
     def format_to_dict(self, raw):
         return [self.account_obj_to_dict(item) for item in raw]
 
@@ -790,7 +793,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=account_obj.immutable_storage_with_versioning.as_dict() if account_obj.immutable_storage_with_versioning else None
+            immutable_storage_with_versioning=as_attribute_dict(account_obj.immutable_storage_with_versioning) if account_obj.immutable_storage_with_versioning else None
         )
 
         account_dict['geo_replication_stats'] = None
@@ -808,7 +811,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         if account_obj.custom_domain:
             account_dict['custom_domain'] = dict(
                 name=account_obj.custom_domain.name,
-                use_sub_domain=account_obj.custom_domain.use_sub_domain
+                use_sub_domain=account_obj.custom_domain.use_sub_domain_name
             )
 
         account_dict['network_acls'] = None
@@ -880,37 +883,9 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 error_document404_path=static_website.error_document404_path,
             )
 
-        account_dict['encryption'] = dict()
-        if account_obj.encryption:
-            account_dict['encryption']['require_infrastructure_encryption'] = account_obj.encryption.require_infrastructure_encryption
-            account_dict['encryption']['key_source'] = account_obj.encryption.key_source
+        account_dict['encryption'] = as_attribute_dict(account_obj.encryption) if account_obj.encryption else dict()
 
-            if account_obj.encryption.services:
-                account_dict['encryption']['services'] = dict()
-
-                if account_obj.encryption.services.file:
-                    account_dict['encryption']['services']['file'] = dict(enabled=True)
-                if account_obj.encryption.services.table:
-                    account_dict['encryption']['services']['table'] = dict(enabled=True)
-                if account_obj.encryption.services.queue:
-                    account_dict['encryption']['services']['queue'] = dict(enabled=True)
-                if account_obj.encryption.services.blob:
-                    account_dict['encryption']['services']['blob'] = dict(enabled=True)
-            if account_obj.encryption.encryption_identity:
-                account_dict['encryption']['encryption_identity'] = dict(
-                    encryption_user_assigned_identity=account_obj.encryption.encryption_identity.encryption_user_assigned_identity)
-            else:
-                account_dict['encryption']['encryption_identity'] = None
-            if account_obj.encryption.key_vault_properties:
-                account_dict['encryption']['key_vault_properties'] = dict(key_vault_uri=account_obj.encryption.key_vault_properties.key_vault_uri,
-                                                                          key_name=account_obj.encryption.key_vault_properties.key_name,
-                                                                          key_version=account_obj.encryption.key_vault_properties.key_version)
-            else:
-                account_dict['encryption']['key_vault_properties'] = None
-
-        account_dict['identity'] = dict()
-        if account_obj.identity:
-            account_dict['identity'] = account_obj.identity.as_dict()
+        account_dict['identity'] = as_attribute_dict(account_obj.identity) if account_obj.identity else dict()
 
         return account_dict
 
@@ -952,7 +927,7 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
             cred = self.storage_client.storage_accounts.list_keys(resource_group, name)
             # get the following try catch from CLI
             try:
-                keys = [cred.keys[0].value, cred.keys[1].value]
+                keys = [cred.keys_property[0].value, cred.keys_property[1].value]
             except AttributeError:
                 keys = [cred.key1, cred.key2]
         except Exception:

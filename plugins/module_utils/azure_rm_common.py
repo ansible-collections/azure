@@ -242,6 +242,7 @@ try:
     from azure.mgmt.managementgroups import ManagementGroupsAPI as ManagementGroupsClient
     from azure.mgmt.resource.subscriptions import SubscriptionClient
     from azure.mgmt.storage import StorageManagementClient
+    import azure.mgmt.storage.models as StorageModels
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.dns import DnsManagementClient
     from azure.mgmt.privatedns import PrivateDnsManagementClient
@@ -686,7 +687,7 @@ class AzureRMModuleBase(object):
                                                                   client_secret=self.azure_auth.credentials.get('secret'))
             else:
                 account_keys = self.storage_client.storage_accounts.list_keys(resource_group_name=resource_group_name, account_name=storage_account_name)
-                credential = account_keys.keys[0].value
+                credential = account_keys.keys_property[0].value
         except Exception as exc:
             self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
 
@@ -711,7 +712,7 @@ class AzureRMModuleBase(object):
                                                                           account_name=storage_account_name)
         except Exception as exc:
             self.fail("Error getting storage account detail for {0}: {1}".format(storage_account_name, str(exc)))
-        return account.primary_endpoints.file, account_keys.keys[0].value
+        return account.primary_endpoints.file, account_keys.keys_property[0].value
 
     def get_share_directory_client(self, resource_group_name, storage_account_name, share_name, directory_path):
         '''
@@ -1063,12 +1064,12 @@ class AzureRMModuleBase(object):
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
                                                             base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2023-05-01')
+                                                            api_version='2025-08-01')
         return self._storage_client
 
     @property
     def storage_models(self):
-        return StorageManagementClient.models("2023-05-01")
+        return StorageModels
 
     @property
     def authorization_client(self):
