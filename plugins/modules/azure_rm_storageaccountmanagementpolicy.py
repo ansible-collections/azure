@@ -426,8 +426,10 @@ state:
 
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from ansible.module_utils.common.dict_transformations import snake_dict_to_camel_dict
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.serialization import as_attribute_dict
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -634,10 +636,11 @@ class AzureRMStorageAccountManagementPolicy(AzureRMModuleBaseExt):
         self.log("Creating or updating storage account mangement policy")
 
         try:
-            self.storage_client.management_policies.create_or_update(resource_group_name=self.resource_group,
-                                                                     account_name=self.storage_account_name,
-                                                                     management_policy_name='default',
-                                                                     properties=dict(policy=dict(rules=rules)))
+            self.storage_client.management_policies.create_or_update(
+                resource_group_name=self.resource_group,
+                account_name=self.storage_account_name,
+                management_policy_name='default',
+                properties={'properties': {'policy': {'rules': [snake_dict_to_camel_dict(rule) for rule in rules]}}})
         except Exception as e:
             self.log('Error creating or updating storage account management policy.')
             self.fail("Failed to create or updating storage account management policy: {0}".format(str(e)))
@@ -659,7 +662,7 @@ class AzureRMStorageAccountManagementPolicy(AzureRMModuleBaseExt):
         result['last_modified_time'] = obj.last_modified_time
         result['policy'] = dict(rules=[])
         if obj.policy is not None:
-            result['policy'] = obj.policy.as_dict()
+            result['policy'] = as_attribute_dict(obj.policy)
 
         return result
 
