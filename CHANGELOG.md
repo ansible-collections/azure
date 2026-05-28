@@ -1,4 +1,41 @@
 # Change Log
+## v3.19.0 (2026-05-28)
+
+### NEW MODULES
+  - azure_rm_ml_registry:([#2243](https://github.com/ansible-collections/azure/pull/2243))
+  - azure_rm_ml_registry_info:([#2243](https://github.com/ansible-collections/azure/pull/2243))
+  - azure_rm_ml_connection:([#2244](https://github.com/ansible-collections/azure/pull/2244))
+  - azure_rm_ml_connection_info:([#2244](https://github.com/ansible-collections/azure/pull/2244))
+  - azure_rm_storagesharedirectory:([#2247](https://github.com/ansible-collections/azure/pull/2247))
+  - azure_rm_storagesharedirectory_info:([#2247](https://github.com/ansible-collections/azure/pull/2247))
+  - azure_rm_firewallpolicyrulecollectiongroup:([#2254](https://github.com/ansible-collections/azure/pull/2254))
+  - azure_rm_firewallpolicyrulecollectiongroup_info:([#2254](https://github.com/ansible-collections/azure/pull/2254))
+  - azure_rm_ml_schedule:([#2249](https://github.com/ansible-collections/azure/pull/2249))
+  - azure_rm_ml_schedule_info:([#2249](https://github.com/ansible-collections/azure/pull/2249))
+
+### FEATURE ENHANCEMENT
+  - extensions/audit/event_query.yml: Add missing plural return keys ([#2238](https://github.com/ansible-collections/azure/pull/2238))
+  - plugins/inventory/azure_rm.py: Add log filter expression when `azure_rm` host is excluded ([#2237](https://github.com/ansible-collections/azure/pull/2237))
+  - plugins/module_utils/azure_rm_common.py:
+    - Add `azure_rm_storagesharedirectory` modules ([#2247](https://github.com/ansible-collections/azure/pull/2247))
+    - Add Smart, Cold and Premium access_tier support to `azure_rm_storageaccount` ([#2256](https://github.com/ansible-collections/azure/pull/2256))
+  - requirements.txt:
+    - Add `azure-storage-file-share==12.24.0` ([#2247](https://github.com/ansible-collections/azure/pull/2247))
+    - Bump `azure-mgmt-storage` to `25.0.0` ([#2256](https://github.com/ansible-collections/azure/pull/2256))
+  - plugins/modules/azure_rm_storageaccount.py: Add Smart, Cold and Premium access_tier support ([#2256](https://github.com/ansible-collections/azure/pull/2256))
+  - plugins/modules/azure_rm_storageaccount_info.py: Add Smart, Cold and Premium access_tier support ([#2256](https://github.com/ansible-collections/azure/pull/2256))
+  - plugins/modules/azure_rm_functionapp.py: Follow up changes due to `azure-mgmt-storage` bump ([#2260](https://github.com/ansible-collections/azure/pull/2260))
+  - plugins/modules/azure_rm_storageaccountmanagementpolicy.py: Follow up changes due to `azure-mgmt-storage` bump ([#2260](https://github.com/ansible-collections/azure/pull/2260))
+  - plugins/modules/azure_rm_storageaccountmanagementpolicy_info.py: Follow up changes due to `azure-mgmt-storage` bump ([#2260](https://github.com/ansible-collections/azure/pull/2260))
+  - plugins/modules/azure_rm_storageshare.py: Follow up changes due to `azure-mgmt-storage` bump ([#2260](https://github.com/ansible-collections/azure/pull/2260))
+  - plugins/module_utils/azure_rm_common_ml.py: Add Azure ML Schedule modules ([#2249](https://github.com/ansible-collections/azure/pull/2249))
+
+### BUG FIXING
+  - plugins/inventory/azure_rm.py: Fix plugin failure while looping on a VM that is currently being created ([#2246](https://github.com/ansible-collections/azure/pull/2246))
+  - plugins/modules/azure_rm_adapplication.py: Align module with Microsoft Graph create contract (Note that `password` parameter will be deprecated in the future major release.) ([#2250](https://github.com/ansible-collections/azure/pull/2250))
+  - plugins/modules/azure_rm_aduser.py: Fix eventual-consistency crash on create ([#2258](https://github.com/ansible-collections/azure/pull/2258))
+
+
 ## v3.18.0 (2026-05-11)
 
 ### NEW MODULES

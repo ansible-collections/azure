@@ -9,7 +9,7 @@ namespace: azure
 name: azcollection
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 3.18.0
+version: 3.19.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -18,7 +18,6 @@ readme: README.md
 # @nicks:irc/im.site#channel'
 authors:
   - Microsoft <ansible@microsoft.com>
-
 
 ### OPTIONAL but strongly recommended
 
@@ -64,12 +63,12 @@ homepage: https://azure.microsoft.com
 issues: https://github.com/ansible-collections/azure/issues
 
 build_ignore:
-  - '*.tar.gz'
-  - '*venv*'
-  - '.vscode'
-  - 'ansible_collections'
-  - 'ansible.cfg'
-  - 'tests'
+  - "*.tar.gz"
+  - "*venv*"
+  - ".vscode"
+  - "ansible_collections"
+  - "ansible.cfg"
+  - "tests"
   - "*cloud-config-azure.ini"
   - "*cloud-config-azure.yml"
-  - '.ansible-lint'
+  - ".ansible-lint"
