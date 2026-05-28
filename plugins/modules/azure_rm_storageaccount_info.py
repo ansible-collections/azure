@@ -793,7 +793,10 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
                 index_document=None,
                 error_document404_path=None,
             ),
-            immutable_storage_with_versioning=as_attribute_dict(account_obj.immutable_storage_with_versioning) if account_obj.immutable_storage_with_versioning else None
+            immutable_storage_with_versioning=(
+                as_attribute_dict(account_obj.immutable_storage_with_versioning)
+                if account_obj.immutable_storage_with_versioning else None
+            ),
         )
 
         account_dict['geo_replication_stats'] = None

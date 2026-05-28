@@ -173,6 +173,7 @@ state:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.serialization import as_attribute_dict
 except Exception:
     # This is handled in azure_rm_common
     pass
@@ -232,7 +233,7 @@ class AzureRMStorageAccountManagementPolicyInfo(AzureRMModuleBase):
         result['last_modified_time'] = obj.last_modified_time
         result['policy'] = dict(rules=[])
         if obj.policy is not None:
-            result['policy'] = obj.policy.as_dict()
+            result['policy'] = as_attribute_dict(obj.policy)
 
         return result
 

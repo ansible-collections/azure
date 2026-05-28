@@ -336,14 +336,17 @@ class AzureRMStorageShare(AzureRMModuleBase):
         '''
         self.log("Creating fileshare {0}".format(self.name))
         try:
+            file_share = self.storage_models.FileShare(
+                access_tier=self.access_tier,
+                share_quota=self.quota,
+                metadata=self.metadata,
+                root_squash=self.root_squash,
+                enabled_protocols=self.enabled_protocols,
+            )
             self.storage_client.file_shares.create(resource_group_name=self.resource_group,
                                                    account_name=self.account_name,
                                                    share_name=self.name,
-                                                   file_share=dict(access_tier=self.access_tier,
-                                                                   share_quota=self.quota,
-                                                                   metadata=self.metadata,
-                                                                   root_squash=self.root_squash,
-                                                                   enabled_protocols=self.enabled_protocols))
+                                                   file_share=file_share)
         except Exception as e:
             self.fail("Error creating file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()
@@ -355,18 +358,18 @@ class AzureRMStorageShare(AzureRMModuleBase):
         :return: dict with description of the new storage file share
         '''
         self.log("Creating file share {0}".format(self.name))
-        file_share_details = dict(
+        file_share = self.storage_models.FileShare(
             access_tier=self.access_tier if self.access_tier else old_responce.get('access_tier'),
             share_quota=self.quota if self.quota else old_responce.get('share_quota'),
             metadata=self.metadata if self.metadata else old_responce.get('metadata'),
             enabled_protocols=self.enabled_protocols if self.enabled_protocols else old_responce.get('enabled_protocols'),
-            root_squash=self.root_squash if self.root_squash else old_responce.get('self.root_squash')
+            root_squash=self.root_squash if self.root_squash else old_responce.get('root_squash'),
         )
         try:
             self.storage_client.file_shares.update(resource_group_name=self.resource_group,
                                                    account_name=self.account_name,
                                                    share_name=self.name,
-                                                   file_share=file_share_details)
+                                                   file_share=file_share)
         except Exception as e:
             self.fail("Error updating file share {0} : {1}".format(self.name, str(e)))
         return self.get_share()

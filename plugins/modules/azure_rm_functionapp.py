@@ -435,7 +435,7 @@ class AzureRMFunctionApp(AzureRMModuleBaseExt):
         return self.storage_client.storage_accounts.list_keys(
             resource_group_name=self.resource_group,
             account_name=self.storage_account
-        ).keys[0].value
+        ).keys_property[0].value
 
 
 def main():
