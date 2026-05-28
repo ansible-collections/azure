@@ -98,6 +98,7 @@ parameters:
       - "azure_rm_ml_batch_deployment"
       - "azure_rm_ml_connection"
       - "azure_rm_ml_registry"
+      - "azure_rm_ml_schedule"
       - "azure_rm_monitoractiongroups"
       - "azure_rm_monitoractivitylogalerts"
       - "azure_rm_monitordatacollectionrules"

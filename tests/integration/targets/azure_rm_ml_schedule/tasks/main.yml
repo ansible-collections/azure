@@ -1,0 +1,192 @@
+- name: Create a new resource group for ml-schedule test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-ml-schedule"
+    location: eastus
+
+- name: For ml-schedule topic test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-ml-schedule"
+      register: __rg_info
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-ml-schedule"
+        workspace_name: "workspace-{{ rpfx }}"
+        schedule_name: "schedule{{ rpfx }}"
+
+    - name: Create ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        location: "{{ location }}"
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        public_network_access: Enabled
+      register: results
+
+    - name: Assert the ML Workspace created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Schedule
+      azure.azcollection.azure_rm_ml_schedule:
+        name: "{{ schedule_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/schedule.schema.json
+          name: simple_cron_job_schedule
+          display_name: Simple cron job schedule
+          description: a simple hourly cron job schedule
+
+          trigger:
+            type: cron
+            expression: "0 * * * *"
+            start_time: "2022-07-10T10:00:00" # optional
+            time_zone: "Pacific Standard Time" # optional
+
+          # create_job: azureml:simple-pipeline-job
+          create_job: ./targets/azure_rm_ml_schedule/files/simple-pipeline-job.yml
+      register: results
+
+    - name: Assert the ML Schedule created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Create Schedule (idempotent)
+      azure.azcollection.azure_rm_ml_schedule:
+        name: "{{ schedule_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/schedule.schema.json
+          name: simple_cron_job_schedule
+          display_name: Simple cron job schedule
+          description: a simple hourly cron job schedule
+
+          trigger:
+            type: cron
+            expression: "0 * * * *"
+            start_time: "2022-07-10T10:00:00" # optional
+            time_zone: "Pacific Standard Time" # optional
+
+          # create_job: azureml:simple-pipeline-job
+          create_job: ./targets/azure_rm_ml_schedule/files/simple-pipeline-job.yml
+      register: results
+
+    - name: Assert the ML Schedule created (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: Update Schedule
+      azure.azcollection.azure_rm_ml_schedule:
+        name: "{{ schedule_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        resource_definition: |
+          $schema: https://azuremlschemas.azureedge.net/latest/schedule.schema.json
+          name: simple_cron_job_schedule
+          display_name: Simple cron job schedule
+          description: a simple hourly cron job schedule
+
+          trigger:
+            type: cron
+            expression: "1 * * * *"
+            start_time: "2022-07-10T10:00:00" # optional
+            time_zone: "Pacific Standard Time" # optional
+
+          # create_job: azureml:simple-pipeline-job
+          create_job: ./targets/azure_rm_ml_schedule/files/simple-pipeline-job.yml
+      register: results
+
+    - name: Assert the ML Schedule updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: List ML Schedule (disabled)
+      azure.azcollection.azure_rm_ml_schedule_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        list_type: disabled
+      register: results
+
+    - name: Assert Disabled schedules are zero
+      ansible.builtin.assert:
+        that:
+          - results.ml_schedules | length == 0
+
+    - name: Disable Schedule
+      azure.azcollection.azure_rm_ml_schedule:
+        name: "{{ schedule_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: disabled
+      register: results
+
+    - name: Assert the ML Schedule is disabled
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Disable Schedule (idempotent)
+      azure.azcollection.azure_rm_ml_schedule:
+        name: "{{ schedule_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: disabled
+      register: results
+
+    - name: Assert the ML Schedule is disabled (idempotent)
+      ansible.builtin.assert:
+        that:
+          - results is not changed
+
+    - name: List ML Schedule (disabled)
+      azure.azcollection.azure_rm_ml_schedule_info:
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        list_type: disabled
+      register: results
+
+    - name: Assert Disabled schedules are one
+      ansible.builtin.assert:
+        that:
+          - results.ml_schedules | length == 1
+
+    # cleanup
+    - name: Delete Schedule
+      azure.azcollection.azure_rm_ml_schedule:
+        name: "{{ schedule_name }}"
+        resource_group: "{{ new_resource_group }}"
+        ml_workspace: "{{ workspace_name }}"
+        state: absent
+
+    - name: Delete ML Workspace
+      azure.azcollection.azure_rm_ml_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ new_resource_group }}"
+        all_resources: true
+        permanently_delete: true
+        state: absent
+      register: results
+
+    - name: Assert the ML Workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ new_resource_group }}"
+        force_delete_nonempty: true
+        state: absent

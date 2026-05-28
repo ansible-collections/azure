@@ -11,6 +11,7 @@ try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
     from azure.ai.ml import MLClient
     from azure.ai.ml._restclient.v2022_02_01_preview.models import ListViewType
+    from azure.ai.ml._restclient.v2022_10_01_preview.models import ScheduleListViewType
     from azure.ai.ml.entities._builders.base_node import BaseNode
     from azure.ai.ml._restclient.v2020_09_01_dataplanepreview.models import BatchJobResource
     import json
@@ -72,3 +73,9 @@ class MLClientCommon(AzureRMModuleBaseExt):
                           archived=ListViewType.ARCHIVED_ONLY,
                           all=ListViewType.ALL)
         return list_types.get(list_type, ListViewType.ACTIVE_ONLY)
+
+    def get_schedule_list_view_type(self, list_type):
+        list_types = dict(enabled=ScheduleListViewType.ENABLED_ONLY,
+                          disabled=ScheduleListViewType.DISABLED_ONLY,
+                          all=ScheduleListViewType.ALL)
+        return list_types.get(list_type, ScheduleListViewType.ENABLED_ONLY)
