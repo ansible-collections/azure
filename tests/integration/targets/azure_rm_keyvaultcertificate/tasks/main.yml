@@ -166,6 +166,48 @@
       ansible.builtin.assert:
         that: output is changed
 
+    - name: List all active keyvault certificates (no name, default show_deleted_certificate)
+      azure.azcollection.azure_rm_keyvaultcertificate_info:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+      register: list_active_facts
+
+    - name: Assert active certificate listing returns the expected shape
+      ansible.builtin.assert:
+        that:
+          - list_active_facts['certificates'] is defined
+          - list_active_facts['certificates'] is iterable
+          # imported "-secondary" cert is enabled by default and should be present;
+          # the original "cert{{ rpfx }}" is disabled and is intentionally skipped.
+          - list_active_facts['certificates'] | length >= 1
+          - "'cert' + rpfx + '-secondary' in (list_active_facts['certificates'] | map(attribute='name') | list)"
+          - "'cert' + rpfx not in (list_active_facts['certificates'] | map(attribute='name') | list)"
+          - list_active_facts['certificates'][0]['policy'] is defined
+          - list_active_facts['certificates'][0]['properties']['attributes'] is defined
+
+    - name: List all active keyvault certificates with include_pending=true
+      azure.azcollection.azure_rm_keyvaultcertificate_info:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        include_pending: true
+      register: list_active_pending_facts
+
+    - name: Assert include_pending listing succeeds
+      ansible.builtin.assert:
+        that:
+          - list_active_pending_facts['certificates'] is defined
+          - list_active_pending_facts['certificates'] is iterable
+
+    - name: List active certificates with a non-matching tag filter
+      azure.azcollection.azure_rm_keyvaultcertificate_info:
+        vault_uri: https://vault{{ rpfx }}.vault.azure.net
+        tags:
+          - this_tag_does_not_exist
+      register: list_active_tag_facts
+
+    - name: Assert tag filter narrows the listing to zero items
+      ansible.builtin.assert:
+        that:
+          - list_active_tag_facts['certificates'] | length == 0
+
     - name: Delete the keyvault certificate
       azure.azcollection.azure_rm_keyvaultcertificate:
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
