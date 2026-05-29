@@ -18,6 +18,7 @@ parameters:
       - "2.18"
       - "2.19"
       - "2.20"
+      - "2.21"
       - "devel"
   - name: MODULE_NAME
     displayName: 'Test Module'
