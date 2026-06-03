@@ -8,7 +8,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_cognitiveservices_models_info
+module: azure_rm_cognitiveservicesmodel_info
 
 version_added: "3.20.0"
 
@@ -33,7 +33,7 @@ author:
 
 EXAMPLES = '''
 - name: List all models at location
-  azure_rm_cognitiveservices_models_info:
+  azure_rm_cognitiveservicesmodel_info:
     location: eastus
 '''
 
@@ -134,10 +134,7 @@ models:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-AZURE_OBJECT_CLASS = 'CognitiveServicesModels'
-
-
-class AzureRMCognitiveServicesModelsInfo(AzureRMModuleBase):
+class AzureRMCognitiveServicesModelInfo(AzureRMModuleBase):
 
     def __init__(self):
 
@@ -153,7 +150,7 @@ class AzureRMCognitiveServicesModelsInfo(AzureRMModuleBase):
             models=[],
         )
 
-        super(AzureRMCognitiveServicesModelsInfo, self).__init__(
+        super(AzureRMCognitiveServicesModelInfo, self).__init__(
             self.module_arg_spec,
             supports_check_mode=True,
             supports_tags=False,
@@ -182,7 +179,7 @@ class AzureRMCognitiveServicesModelsInfo(AzureRMModuleBase):
 
 
 def main():
-    AzureRMCognitiveServicesModelsInfo()
+    AzureRMCognitiveServicesModelInfo()
 
 
 if __name__ == '__main__':
