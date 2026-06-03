@@ -14,6 +14,7 @@ import copy
 import inspect
 import traceback
 import json
+import sys
 
 from os.path import expanduser
 
@@ -288,6 +289,7 @@ try:
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
     from azure.mgmt.cdn import CdnManagementClient
     from azure.mgmt.hybridcompute import HybridComputeManagementClient
+    import httpxyz as httpx
 
 except ImportError as exc:
     AZURE_IMPORT_ERROR = traceback.format_exc()
@@ -308,6 +310,10 @@ try:
     from azure.cli.core import cloud as azure_cloud
 except ImportError:
     CLIError = Exception
+
+
+def httpx_is_loaded():
+    return sys.modules['httpx'] == httpx
 
 
 def azure_id_to_dict(id):
