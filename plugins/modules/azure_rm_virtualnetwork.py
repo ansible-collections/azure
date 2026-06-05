@@ -376,8 +376,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                         vnet_param.tags = self.tags
                     self.results['state'] = self.create_or_update_vnet(vnet_param)
                 else:
-                    # Mutate the fetched VNet so properties this module does not
-                    # manage are preserved across the PUT (see issue #2262).
+                    # Mutate the fetched VNet so properties are preserved.
                     self.log("Update virtual network {0}".format(self.name))
                     vnet_param = vnet
                     vnet_param.address_space = self.network_models.AddressSpace(
