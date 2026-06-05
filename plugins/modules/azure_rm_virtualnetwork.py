@@ -376,20 +376,20 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                         vnet_param.tags = self.tags
                     self.results['state'] = self.create_or_update_vnet(vnet_param)
                 else:
-                    # update existing virtual network
+                    # Mutate the fetched VNet so properties this module does not
+                    # manage are preserved across the PUT (see issue #2262).
                     self.log("Update virtual network {0}".format(self.name))
-                    vnet_param = self.network_models.VirtualNetwork(
-                        location=results['location'],
-                        address_space=self.network_models.AddressSpace(
-                            address_prefixes=results['address_prefixes']
-                        ),
-                        tags=results['tags'],
-                        subnets=vnet.subnets
+                    vnet_param = vnet
+                    vnet_param.address_space = self.network_models.AddressSpace(
+                        address_prefixes=results['address_prefixes']
                     )
-                    if results.get('dns_servers'):
+                    vnet_param.tags = results['tags']
+                    if self.dns_servers:
                         vnet_param.dhcp_options = self.network_models.DhcpOptions(
                             dns_servers=results['dns_servers']
                         )
+                    elif self.purge_dns_servers:
+                        vnet_param.dhcp_options = None
                     if self.flow_timeout_in_minutes:
                         vnet_param.flow_timeout_in_minutes = self.flow_timeout_in_minutes
                     self.results['state'] = self.create_or_update_vnet(vnet_param)
