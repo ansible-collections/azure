@@ -98,7 +98,6 @@ notes:
     - Authentication is also possible using a service principal.
     - To authenticate via OIDC, pass client_id, tenant and oidc_token or oidc_token_file_path, or set environment
       variables AZURE_CLIENT_ID, AZURE_TENANT and AZURE_FEDERATED_TOKEN or AZURE_FEDERATED_TOKEN_FILE.
-      AZURE_TENANT_ID is also accepted in place of AZURE_TENANT.
     - To authenticate via service principal, pass subscription_id, client_id, secret and tenant or set environment
       variables AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_ID, AZURE_SECRET and AZURE_TENANT.
     - "Alternatively, credentials can be stored in ~/.azure/credentials. This is an ini file containing
