@@ -223,6 +223,9 @@
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
         show_deleted_certificate: true
       register: facts
+      until: facts['certificates'] | length == 2
+      retries: 30
+      delay: 10
 
     - name: Assert certificate facts
       ansible.builtin.assert:
@@ -256,6 +259,9 @@
         vault_uri: https://vault{{ rpfx }}.vault.azure.net
         show_deleted_certificate: true
       register: facts
+      until: facts['certificates'] | length == 0
+      retries: 30
+      delay: 10
 
     - name: Assert certificate facts
       ansible.builtin.assert:
