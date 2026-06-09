@@ -72,6 +72,11 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
     oidc_token_file_path='AZURE_FEDERATED_TOKEN_FILE'
 )
 
+# Fallback env-var names honoured when the primary is unset (e.g. AKS workload-identity webhook uses AZURE_TENANT_ID).
+AZURE_CREDENTIAL_ENV_MAPPING_FALLBACK = dict(
+    tenant='AZURE_TENANT_ID',
+)
+
 
 class SDKProfile(object):  # pylint: disable=too-few-public-methods
 
@@ -1796,8 +1801,13 @@ class AzureRMAuth(object):
         raise AzureRMAuthException(msg)
 
     def _get_env(self, module_key, default=None):
-        "Read envvar matching module parameter"
-        return os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING[module_key], default)
+        "Read envvar matching module parameter, honouring fallback aliases."
+        value = os.environ.get(AZURE_CREDENTIAL_ENV_MAPPING[module_key])
+        if value is None:
+            fallback_name = AZURE_CREDENTIAL_ENV_MAPPING_FALLBACK.get(module_key)
+            if fallback_name:
+                value = os.environ.get(fallback_name)
+        return value if value is not None else default
 
     def _get_profile(self, profile="default", subscription_id=None):
         path = expanduser("~/.azure/credentials")
@@ -1891,18 +1901,19 @@ class AzureRMAuth(object):
 
     def _get_env_credentials(self, subscription_id=None):
         env_credentials = dict()
-        for attribute, env_variable in AZURE_CREDENTIAL_ENV_MAPPING.items():
-            env_credentials[attribute] = os.environ.get(env_variable, None)
+        for attribute in AZURE_CREDENTIAL_ENV_MAPPING:
+            env_credentials[attribute] = self._get_env(attribute)
 
         if env_credentials['profile']:
             credentials = self._get_profile(env_credentials['profile'], subscription_id=subscription_id)
             return credentials
 
-        if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
-            return None
-
+        # Merge caller-supplied subscription_id before the no-subscription early-return so inventory/profile values are honoured under workload identity.
         if subscription_id is not None:
             env_credentials['subscription_id'] = subscription_id
+
+        if env_credentials.get('subscription_id') is None and not self.is_ad_resource:
+            return None
 
         return env_credentials
 
