@@ -652,34 +652,39 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
         '''
         self.log("List all active certificates in the key vault")
 
-        results = []
         list_kwargs = {}
         if self.include_pending is not None:
             list_kwargs['include_pending'] = self.include_pending
 
+        results = []
         try:
             response = self._client.list_properties_of_certificates(**list_kwargs)
             self.log("Response : {0}".format(response))
-
-            if response:
-                for item in response:
-                    # Skip confirmed-disabled certs
-                    if item.enabled is False:
-                        continue
-                    try:
-                        bundle = self._client.get_certificate(certificate_name=item.name)
-                    except ResourceNotFoundError as ec:
-                        self.log("Certificate {0} disappeared between list and get: {1}".format(item.name, str(ec)))
-                        continue
-                    except Exception as ec2:
-                        self.log("Skipping certificate {0} due to error: {1}".format(item.name, str(ec2)))
-                        continue
-                    cert = certificatebundle_to_dict(bundle)
-                    if self.has_tags(cert['properties'].get('tags'), self.tags):
-                        results.append(cert)
+            for item in response or []:
+                cert = self._fetch_active_certificate(item)
+                if cert is not None and self.has_tags(cert['properties'].get('tags'), self.tags):
+                    results.append(cert)
         except Exception as e:
             self.fail("Did not find certificate in current key vault {0}.".format(str(e)))
         return results
+
+    def _fetch_active_certificate(self, item):
+        '''
+        Fetch one cert bundle; return None to skip disabled/deleted/inaccessible.
+
+        :return: deserialized certificate dict, or None if the certificate should be skipped.
+        '''
+        if item.enabled is False:
+            return None
+        try:
+            bundle = self._client.get_certificate(certificate_name=item.name)
+        except ResourceNotFoundError as ec:
+            self.log("Certificate {0} disappeared between list and get: {1}".format(item.name, str(ec)))
+            return None
+        except Exception as ec2:
+            self.log("Skipping certificate {0} due to error: {1}".format(item.name, str(ec2)))
+            return None
+        return certificatebundle_to_dict(bundle)
 
 
 def main():
