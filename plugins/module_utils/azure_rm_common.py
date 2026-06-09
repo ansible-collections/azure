@@ -1908,7 +1908,11 @@ class AzureRMAuth(object):
             credentials = self._get_profile(env_credentials['profile'], subscription_id=subscription_id)
             return credentials
 
-        # Merge caller-supplied subscription_id before the no-subscription early-return so inventory/profile values are honoured under workload identity.
+        # Env counts as usable auth only when client_id (SP / OIDC paths) or ad_user (user/password path) is set; otherwise let the auto cascade fall through to credential_file / az-cli.
+        if not env_credentials.get('client_id') and not env_credentials.get('ad_user'):
+            return None
+
+        # Merge caller-supplied subscription_id so workload-identity flows succeed when AZURE_SUBSCRIPTION_ID is not injected.
         if subscription_id is not None:
             env_credentials['subscription_id'] = subscription_id
 
