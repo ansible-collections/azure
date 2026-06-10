@@ -500,6 +500,31 @@ def deleted_certificatebundle_to_dict(certificate):
     return response
 
 
+def certificateproperties_to_dict(properties):
+    '''
+    Convert a brief ``CertificateProperties`` item (as yielded by ``list_properties_of_certificates``) to a dict.
+    No ``policy`` or ``cert_data`` is included.
+
+    :return: dict with ``name`` and a ``properties`` sub-dict (attributes, id, vault_id, x509_thumbprint, tags).
+    '''
+    response = dict(properties=dict())
+    response['name'] = properties.name
+    response['properties']['attributes'] = dict(enabled=properties._attributes.enabled,
+                                                not_before=properties._attributes.not_before,
+                                                expires=properties._attributes.expires,
+                                                created=properties._attributes.created,
+                                                updated=properties._attributes.updated,
+                                                recovery_level=properties._attributes.recovery_level)
+    response['properties']['id'] = properties._id
+    response['properties']['vault_id'] = properties._vault_id.vault_url if properties._vault_id is not None else None
+    if properties._x509_thumbprint is not None:
+        response['properties']['x509_thumbprint'] = base64.b64encode(properties._x509_thumbprint).decode('utf-8')
+    else:
+        response['properties']['x509_thumbprint'] = None
+    response['properties']['tags'] = properties._tags
+    return response
+
+
 class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(version=dict(type='str'),
@@ -648,7 +673,7 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
         '''
         Lists all active certificates in the specific key vault.
 
-        :return: deserialized certificates, includes certificate identifier, attributes, policy and tags.
+        :return: deserialized brief properties (name, attributes, id, vault_id, x509_thumbprint, tags) for each active certificate.
         '''
         self.log("List all active certificates in the key vault")
 
@@ -660,31 +685,17 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
         try:
             response = self._client.list_properties_of_certificates(**list_kwargs)
             self.log("Response : {0}".format(response))
-            for item in response or []:
-                cert = self._fetch_active_certificate(item)
-                if cert is not None and self.has_tags(cert['properties'].get('tags'), self.tags):
-                    results.append(cert)
+
+            if response:
+                for item in response:
+                    if item.enabled is False:
+                        continue
+                    cert = certificateproperties_to_dict(item)
+                    if self.has_tags(cert['properties'].get('tags'), self.tags):
+                        results.append(cert)
         except Exception as e:
             self.fail("Did not find certificate in current key vault {0}.".format(str(e)))
         return results
-
-    def _fetch_active_certificate(self, item):
-        '''
-        Fetch one cert bundle; return None to skip disabled/deleted/inaccessible.
-
-        :return: deserialized certificate dict, or None if the certificate should be skipped.
-        '''
-        if item.enabled is False:
-            return None
-        try:
-            bundle = self._client.get_certificate(certificate_name=item.name)
-        except ResourceNotFoundError as ec:
-            self.log("Certificate {0} disappeared between list and get: {1}".format(item.name, str(ec)))
-            return None
-        except Exception as ec2:
-            self.log("Skipping certificate {0} due to error: {1}".format(item.name, str(ec2)))
-            return None
-        return certificatebundle_to_dict(bundle)
 
 
 def main():
