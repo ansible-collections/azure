@@ -23,7 +23,9 @@ options:
         type: str
     name:
         description:
-            - Certificate name. If not set, will list all certificates in vault_uri.
+            - Certificate name.
+            - If not set, when I(show_deleted_certificate=false) (the default) the module returns the list of all active certificates in I(vault_uri).
+            - If not set and I(show_deleted_certificate=true), the module returns the list of all deleted certificates in I(vault_uri).
         type: str
     version:
         description:
@@ -34,6 +36,14 @@ options:
             - Set to I(show_delete_certificate=true) to show deleted certificates. Set to I(show_deleted_certificate=false) to show not deleted certificates.
         type: bool
         default: false
+    include_pending:
+        description:
+            - When listing all active certificates (I(name) omitted and I(show_deleted_certificate=false)),
+              include certificates that are not yet completely provisioned.
+            - Only honoured by the Key Vault REST API v7.0 and above. If omitted, Key Vault treats this as C(false).
+            - Has no effect when I(name) is specified or when I(show_deleted_certificate=true).
+        type: bool
+        version_added: "3.20.0"
     tags:
         description:
             - Limit results by providing a list of tags. Format tags as 'key' or 'key:value'.
@@ -71,6 +81,15 @@ EXAMPLES = '''
   azure_rm_keyvaultcertificate_info:
     vault_uri: "https://myVault.vault.azure.net"
     show_deleted_certificate: true
+
+- name: List all active certificates in the key vault
+  azure.azcollection.azure_rm_keyvaultcertificate_info:
+    vault_uri: "https://myVault.vault.azure.net"
+
+- name: List all active certificates including pending ones
+  azure.azcollection.azure_rm_keyvaultcertificate_info:
+    vault_uri: "https://myVault.vault.azure.net"
+    include_pending: true
 '''
 
 RETURN = '''
@@ -481,18 +500,45 @@ def deleted_certificatebundle_to_dict(certificate):
     return response
 
 
+def certificateproperties_to_dict(properties):
+    '''
+    Convert a brief ``CertificateProperties`` item (as yielded by ``list_properties_of_certificates``) to a dict.
+    No ``policy`` or ``cert_data`` is included.
+
+    :return: dict with ``name`` and a ``properties`` sub-dict (attributes, id, vault_id, x509_thumbprint, tags).
+    '''
+    response = dict(properties=dict())
+    response['name'] = properties.name
+    response['properties']['attributes'] = dict(enabled=properties._attributes.enabled,
+                                                not_before=properties._attributes.not_before,
+                                                expires=properties._attributes.expires,
+                                                created=properties._attributes.created,
+                                                updated=properties._attributes.updated,
+                                                recovery_level=properties._attributes.recovery_level)
+    response['properties']['id'] = properties._id
+    response['properties']['vault_id'] = properties._vault_id.vault_url if properties._vault_id is not None else None
+    if properties._x509_thumbprint is not None:
+        response['properties']['x509_thumbprint'] = base64.b64encode(properties._x509_thumbprint).decode('utf-8')
+    else:
+        response['properties']['x509_thumbprint'] = None
+    response['properties']['tags'] = properties._tags
+    return response
+
+
 class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(version=dict(type='str'),
                                     name=dict(type='str'),
                                     vault_uri=dict(type='str', required=True),
                                     show_deleted_certificate=dict(type='bool', default=False),
+                                    include_pending=dict(type='bool'),
                                     tags=dict(type='list', elements='str'))
 
         self.vault_uri = None
         self.name = None
         self.version = None
         self.show_deleted_certificate = False
+        self.include_pending = None
         self.tags = None
 
         self.results = dict(changed=False)
@@ -524,6 +570,8 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
         else:
             if self.show_deleted_certificate:
                 self.results['certificates'] = self.list_deleted_certificates()
+            else:
+                self.results['certificates'] = self.list_certificates()
 
         return self.results
 
@@ -617,6 +665,34 @@ class AzureRMKeyVaultCertificateInfo(AzureRMModuleBase):
                     item = deleted_certificatebundle_to_dict(item)
                     if self.has_tags(item['properties'].get('tags'), self.tags):
                         results.append(item)
+        except Exception as e:
+            self.fail("Did not find certificate in current key vault {0}.".format(str(e)))
+        return results
+
+    def list_certificates(self):
+        '''
+        Lists all active certificates in the specific key vault.
+
+        :return: deserialized brief properties (name, attributes, id, vault_id, x509_thumbprint, tags) for each active certificate.
+        '''
+        self.log("List all active certificates in the key vault")
+
+        list_kwargs = {}
+        if self.include_pending is not None:
+            list_kwargs['include_pending'] = self.include_pending
+
+        results = []
+        try:
+            response = self._client.list_properties_of_certificates(**list_kwargs)
+            self.log("Response : {0}".format(response))
+
+            if response:
+                for item in response:
+                    if item.enabled is False:
+                        continue
+                    cert = certificateproperties_to_dict(item)
+                    if self.has_tags(cert['properties'].get('tags'), self.tags):
+                        results.append(cert)
         except Exception as e:
             self.fail("Did not find certificate in current key vault {0}.".format(str(e)))
         return results
