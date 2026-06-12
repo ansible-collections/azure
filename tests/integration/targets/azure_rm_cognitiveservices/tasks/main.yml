@@ -1,0 +1,9 @@
+- name: List all models in the eastus location
+  azure.azcollection.azure_rm_cognitiveservicesmodel_info:
+    location: eastus
+  register: results
+
+- name: Assert models returned is greater than 0
+  ansible.builtin.assert:
+    that:
+      - results.models | length > 0

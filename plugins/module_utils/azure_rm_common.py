@@ -140,7 +140,8 @@ AZURE_API_PROFILES = {
         'BatchManagementClient': 'latest',
         'EventGridManagementClient': '2025-02-15',
         'AppConfigurationManagementClient': '2024-05-01',
-        'HybridComputeManagementClient': 'latest'
+        'HybridComputeManagementClient': 'latest',
+        'CognitiveServicesManagementClient': 'latest'
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -288,6 +289,7 @@ try:
     from azure.mgmt.resourcehealth import ResourceHealthMgmtClient
     from azure.mgmt.cdn import CdnManagementClient
     from azure.mgmt.hybridcompute import HybridComputeManagementClient
+    from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 
 except ImportError as exc:
     AZURE_IMPORT_ERROR = traceback.format_exc()
@@ -449,6 +451,7 @@ class AzureRMModuleBase(object):
         self._resourcehealth_client = None
         self._cdn_client = None
         self._hybrid_compute_management_client = None
+        self._cognitive_services_management_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1603,6 +1606,16 @@ class AzureRMModuleBase(object):
             self._hybrid_compute_management_client = self.get_mgmt_svc_client(HybridComputeManagementClient,
                                                                               base_url=self._cloud_environment.endpoints.resource_manager)
         return self._hybrid_compute_management_client
+
+    @property
+    def cognitive_services_management_client(self):
+        self.log('Getting cognitive services management client...')
+        if not self._cognitive_services_management_client:
+            self._cognitive_services_management_client = self.get_mgmt_svc_client(
+                CognitiveServicesManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager
+            )
+        return self._cognitive_services_management_client
 
 
 class AzureRMAuthException(Exception):
