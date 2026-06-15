@@ -52,14 +52,9 @@ options:
                     - standard
                     - premium
                     - trial
-            tier:
-                description:
-                    - The SKU tier.
-                type: str
     managed_resource_group_id:
         description:
             - The managed resource group ID.
-            - If not specified, a new resource group will be created automatically.
         type: str
     parameters:
         description:
@@ -199,7 +194,7 @@ sku:
         - The SKU of the workspace.
     type: dict
     returned: success
-    example: {'name': 'premium', 'tier': 'Premium'}
+    example: {'name': 'premium'}
 managed_resource_group_id:
     description:
         - The managed resource group ID.
@@ -252,7 +247,6 @@ class AzureRMDatabricksWorkspace(AzureRMModuleBaseExt):
                 type='dict',
                 options=dict(
                     name=dict(type='str', required=True, choices=['standard', 'premium', 'trial']),
-                    tier=dict(type='str')
                 )
             ),
             managed_resource_group_id=dict(type='str'),
@@ -316,7 +310,7 @@ class AzureRMDatabricksWorkspace(AzureRMModuleBaseExt):
             ('state', 'present', ['managed_resource_group_id']),
         ]
 
-        super(AzureRMDatabricksWorkspace, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+        super(AzureRMDatabricksWorkspace, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=True, required_if=required_if)
 
     def exec_module(self, **kwargs):
 
@@ -343,7 +337,6 @@ class AzureRMDatabricksWorkspace(AzureRMModuleBaseExt):
         elif workspace and self.state == 'present':
             update_tags, new_tags = self.update_tags(workspace.tags)
             if update_tags:
-                changed = True
                 self.tags = new_tags
 
             workspace_obj = self.create_workspace_obj()
@@ -363,7 +356,7 @@ class AzureRMDatabricksWorkspace(AzureRMModuleBaseExt):
                 self.delete_workspace()
 
         if workspace:
-            self.results = self.to_dict(workspace)
+            self.results = workspace.as_dict()
 
         self.results['changed'] = changed
         return self.results
@@ -378,44 +371,44 @@ class AzureRMDatabricksWorkspace(AzureRMModuleBaseExt):
             if self.sku:
                 workspace_params['sku'] = self.databricks_models.Sku(
                     name=self.sku.get('name'),
-                    tier=self.sku.get('tier')
                 )
 
             if self.managed_resource_group_id:
                 workspace_params['managed_resource_group_id'] = self.managed_resource_group_id
 
             if self.parameters:
-                workspace_params['parameters'] = {}
+                parameters = {}
 
                 if 'enable_no_public_ip' in self.parameters and self.parameters['enable_no_public_ip']:
-                    workspace_params['parameters']['enable_no_public_ip'] = self.databricks_models.WorkspaceCustomBooleanParameter(
+                    parameters['enable_no_public_ip'] = self.databricks_models.WorkspaceCustomBooleanParameter(
                         value=self.parameters['enable_no_public_ip']['value']
                     )
 
                 if 'prepare_encryption' in self.parameters and self.parameters['prepare_encryption']:
-                    workspace_params['parameters']['prepare_encryption'] = self.databricks_models.WorkspaceCustomBooleanParameter(
+                    parameters['prepare_encryption'] = self.databricks_models.WorkspaceCustomBooleanParameter(
                         value=self.parameters['prepare_encryption']['value']
                     )
 
                 if 'require_infrastructure_encryption' in self.parameters and self.parameters['require_infrastructure_encryption']:
-                    workspace_params['parameters']['require_infrastructure_encryption'] = self.databricks_models.WorkspaceCustomBooleanParameter(
+                    parameters['require_infrastructure_encryption'] = self.databricks_models.WorkspaceCustomBooleanParameter(
                         value=self.parameters['require_infrastructure_encryption']['value']
                     )
 
                 if 'custom_virtual_network_id' in self.parameters and self.parameters['custom_virtual_network_id']:
-                    workspace_params['parameters']['custom_virtual_network_id'] = self.databricks_models.WorkspaceCustomStringParameter(
+                    parameters['custom_virtual_network_id'] = self.databricks_models.WorkspaceCustomStringParameter(
                         value=self.parameters['custom_virtual_network_id']['value']
                     )
 
                 if 'custom_public_subnet_name' in self.parameters and self.parameters['custom_public_subnet_name']:
-                    workspace_params['parameters']['custom_public_subnet_name'] = self.databricks_models.WorkspaceCustomStringParameter(
+                    parameters['custom_public_subnet_name'] = self.databricks_models.WorkspaceCustomStringParameter(
                         value=self.parameters['custom_public_subnet_name']['value']
                     )
 
                 if 'custom_private_subnet_name' in self.parameters and self.parameters['custom_private_subnet_name']:
-                    workspace_params['parameters']['custom_private_subnet_name'] = self.databricks_models.WorkspaceCustomStringParameter(
+                    parameters['custom_private_subnet_name'] = self.databricks_models.WorkspaceCustomStringParameter(
                         value=self.parameters['custom_private_subnet_name']['value']
                     )
+                workspace_params['parameters'] = self.databricks_models.WorkspaceCustomParameters(**parameters)
 
             return self.databricks_models.Workspace(**workspace_params)
         except Exception as exc:
@@ -445,10 +438,6 @@ class AzureRMDatabricksWorkspace(AzureRMModuleBaseExt):
             return self.get_poller_result(poller)
         except Exception as exc:
             self.fail('Error deleting workspace {0} - {1}'.format(self.name, str(exc)))
-
-    def to_dict(self, workspace):
-        result = workspace.as_dict()
-        return result
 
 
 def main():

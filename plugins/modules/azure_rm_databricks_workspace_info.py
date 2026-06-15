@@ -190,22 +190,22 @@ class AzureRMDatabricksWorkspaceInfo(AzureRMModuleBase):
     def get_workspace(self):
         try:
             return self.databricks_client.workspaces.get(self.resource_group, self.name)
-        except ResourceNotFoundError:
-            pass
+        except ResourceNotFoundError as exc:
+            self.fail('Error getting workspace {0} - {1}'.format(self.name, str(exc)))
         return None
 
     def list_by_resource_group(self):
         try:
             return list(self.databricks_client.workspaces.list_by_resource_group(self.resource_group))
-        except Exception:
-            pass
+        except Exception as exc:
+            self.fail('Error listing workspaces by resource group {0} - {1}'.format(self.resource_group, str(exc)))
         return []
 
     def list_by_subscription(self):
         try:
             return list(self.databricks_client.workspaces.list_by_subscription())
-        except Exception:
-            pass
+        except Exception as exc:
+            self.fail('Error listing workspaces by subscription - {1}'.format(str(exc)))
         return []
 
     def to_dict(self, workspace):

@@ -19,7 +19,8 @@
       ansible.builtin.set_fact:
         location: "{{ __rg_info.resourcegroups.0.location }}"
         resource_group: "{{ resource_group }}-databricks"
-        new_resource_group: "{{ resource_group }}-managed"
+        managed_resource_group: "{{ resource_group }}-managed"
+        managed_resource_group2: "{{ resource_group }}-params"
         workspace_name: "myDatabricksWorkspace-{{ rpfx }}"
 
     - name: Create a basic Databricks workspace
@@ -27,7 +28,7 @@
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}"
         location: "{{ location }}"
-        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}"
+        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ managed_resource_group }}"
         sku:
           name: premium
         tags:
@@ -39,6 +40,7 @@
       ansible.builtin.assert:
         that:
           - workspace_result is changed
+          - workspace_result.parameters.enable_no_public_ip.value == false
 
     - name: Display workspace information
       ansible.builtin.debug:
@@ -49,7 +51,7 @@
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}"
         location: "{{ location }}"
-        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}"
+        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ managed_resource_group }}"
         sku:
           name: premium
         tags:
@@ -91,30 +93,62 @@
         that:
           - subscription_workspaces.workspaces | length > 0
 
-    # Example with custom VNet configuration
-    - name: Create Databricks workspace with custom VNet
+    # Example with parameters
+    - name: Create Databricks workspace with parameters
       azure.azcollection.azure_rm_databricks_workspace:
         resource_group: "{{ resource_group }}"
-        name: myDatabricksWorkspaceVNet
+        name: "{{ workspace_name }}-params"
         location: "{{ location }}"
-        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ new_resource_group }}"
+        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ managed_resource_group2 }}"
         sku:
           name: premium
         parameters:
-          custom_virtual_network_id:
-            value: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myVnetRG/providers/Microsoft.Network/virtualNetworks/myVnet
-          custom_public_subnet_name:
-            value: public-subnet
-          custom_private_subnet_name:
-            value: private-subnet
           enable_no_public_ip:
             value: true
         tags:
           environment: production
           purpose: analytics
-      when: false  # Set to true if you have a VNet configured
+      register: workspace_result
+
+    - name: Assert the workspace created
+      ansible.builtin.assert:
+        that:
+          - workspace_result is changed
+          - workspace_result.parameters.enable_no_public_ip.value == true
+
+    - name: Create Databricks workspace with parameters (Idempotent)
+      azure.azcollection.azure_rm_databricks_workspace:
+        resource_group: "{{ resource_group }}"
+        name: "{{ workspace_name }}-params"
+        location: "{{ location }}"
+        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ managed_resource_group2 }}"
+        sku:
+          name: premium
+        parameters:
+          enable_no_public_ip:
+            value: true
+        tags:
+          environment: production
+          purpose: analytics
+      register: workspace_result
+
+    - name: Assert the workspace didn't change
+      ansible.builtin.assert:
+        that:
+          - workspace_result is not changed
 
     # cleanup
+    - name: Delete the workspace with parameters
+      azure.azcollection.azure_rm_databricks_workspace:
+        name: "{{ workspace_name }}-params"
+        resource_group: "{{ resource_group }}"
+        state: absent
+      register: results
+
+    - name: Assert the workspace deleted
+      ansible.builtin.assert:
+        that: results is changed
+
     - name: Delete the workspace
       azure.azcollection.azure_rm_databricks_workspace:
         name: "{{ workspace_name }}"
@@ -125,6 +159,17 @@
     - name: Assert the workspace deleted
       ansible.builtin.assert:
         that: results is changed
+
+    - name: Delete the workspace (Idempotent)
+      azure.azcollection.azure_rm_databricks_workspace:
+        name: "{{ workspace_name }}"
+        resource_group: "{{ resource_group }}"
+        state: absent
+      register: results
+
+    - name: Assert the workspace deleted (Idempotent)
+      ansible.builtin.assert:
+        that: results is not changed
 
   always:
     - name: Force delete the resource group
