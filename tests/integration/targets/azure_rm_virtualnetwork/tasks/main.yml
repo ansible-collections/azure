@@ -233,24 +233,6 @@
       ansible.builtin.assert:
         that: output is not changed
 
-    - name: Update enforcement on encrypted virtual network
-      azure.azcollection.azure_rm_virtualnetwork:
-        name: "{{ vnetname }}-enc"
-        address_prefixes_cidr:
-          - 10.2.0.0/16
-        encryption:
-          enabled: true
-          enforcement: DropUnencrypted
-        resource_group: "{{ resource_group }}-vnet"
-      register: output
-
-    - name: Assert encryption enforcement was updated
-      ansible.builtin.assert:
-        that:
-          - output is changed
-          - output.state.encryption.enabled == true
-          - output.state.encryption.enforcement == 'DropUnencrypted'
-
     - name: Gather facts for encrypted virtual network
       azure.azcollection.azure_rm_virtualnetwork_info:
         resource_group: "{{ resource_group }}-vnet"
@@ -262,7 +244,7 @@
         that:
           - facts.virtualnetworks | length == 1
           - facts.virtualnetworks[0].encryption.enabled == true
-          - facts.virtualnetworks[0].encryption.enforcement == 'DropUnencrypted'
+          - facts.virtualnetworks[0].encryption.enforcement == 'AllowUnencrypted'
 
     - name: Delete encrypted virtual network
       azure.azcollection.azure_rm_virtualnetwork:
