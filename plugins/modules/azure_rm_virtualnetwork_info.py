@@ -135,6 +135,24 @@ virtualnetworks:
                 type: int
                 returned: always
                 sample: 8
+            encryption:
+                description:
+                    - Virtual network encryption settings.
+                type: complex
+                returned: when configured on the virtual network
+                contains:
+                    enabled:
+                        description:
+                            - Whether virtual network encryption is enabled.
+                        type: bool
+                        returned: always
+                        sample: true
+                    enforcement:
+                        description:
+                            - How traffic from unencrypted VMs is handled.
+                        type: str
+                        returned: always
+                        sample: AllowUnencrypted
             name:
                 description:
                     - Name of the virtual network.
@@ -349,6 +367,11 @@ class AzureRMNetworkInterfaceInfo(AzureRMModuleBase):
                 results['address_prefixes'].append(space)
         if vnet.subnets and len(vnet.subnets) > 0:
             results['subnets'] = [self.subnet_to_dict(x) for x in vnet.subnets]
+        if vnet.encryption:
+            results['encryption'] = dict(
+                enabled=vnet.encryption.enabled,
+                enforcement=vnet.encryption.enforcement,
+            )
         if self.list_usage:
             results['usages'] = self.list_usages(results['resource_group'], results['name'])
 
