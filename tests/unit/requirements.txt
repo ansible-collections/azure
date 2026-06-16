@@ -1,3 +1,5 @@
 azure-servicebus
 azure-eventhub
 aiohttp
+pytest-asyncio
+azure-identity==1.25.2
