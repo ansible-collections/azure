@@ -1,8 +1,6 @@
 ---
 - name: Use azure arc agent to connect to azure
   become: true
-  # This command produces output that includes an access token
-  no_log: true
   ansible.builtin.command:
     argv:
       - azcmagent

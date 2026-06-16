@@ -1,0 +1,52 @@
+---
+- name: Check if azcmagent is installed
+  ansible.builtin.raw: >-
+    & "{{ ansible_env['ProgramFiles'] }}/AzureConnectedMachineAgent/azcmagent.exe" --version
+  register: azure_arc_azcmagent_version_cmd
+  failed_when: false
+  changed_when: false
+
+- name: Set azcmagent installed fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_installed: "{{ azure_arc_azcmagent_version_cmd.rc == 0 }}"
+
+- name: Install Azure Connected Machine Agent
+  when: not azure_arc_azcmagent_installed
+  block:
+    - name: Create temp directory for installer
+      ansible.builtin.raw: >-
+        (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ('azure_arc_' + [guid]::NewGuid().ToString('N')))).FullName
+      register: azure_arc_tmpdir
+      changed_when: true
+
+    - name: Set installer path fact
+      ansible.builtin.set_fact:
+        azure_arc_tmpdir_path: "{{ azure_arc_tmpdir.stdout_lines[0] | trim }}"
+        azure_arc_installer_path: "{{ azure_arc_tmpdir.stdout_lines[0] | trim }}\\AzureConnectedMachineAgent.msi"
+
+    - name: Download the Connected Machine Agent
+      ansible.builtin.raw: >-
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
+        $ProgressPreference = 'SilentlyContinue';
+        $url = '{{ azure_arc_altdownload | default('https://aka.ms/AzureConnectedMachineAgent') }}';
+        $dest = '{{ azure_arc_installer_path }}';
+        $retries = 50; $delay = 5; $success = $false;
+        for ($i = 1; $i -le $retries; $i++) {
+          try { Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing; $success = $true; break }
+          catch { Start-Sleep -Seconds $delay }
+        };
+        if (-not $success) { throw 'Failed to download after $retries attempts' };
+        Write-Output 'Downloaded successfully'
+      register: _azure_arc_response
+      changed_when: true
+
+    - name: Install the Connected Machine Agent
+      ansible.builtin.raw: >-
+        Start-Process msiexec.exe -ArgumentList '/i','{{ azure_arc_installer_path }}','REBOOT=ReallySuppress','/qn' -Wait -NoNewWindow
+      changed_when: true
+
+    - name: Remove temp directory
+      ansible.builtin.raw: >-
+        Remove-Item -Recurse -Force '{{ azure_arc_tmpdir_path }}'
+      when: azure_arc_tmpdir_path is defined
+      changed_when: true

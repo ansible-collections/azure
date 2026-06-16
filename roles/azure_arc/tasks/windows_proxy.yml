@@ -1,0 +1,7 @@
+---
+- name: Set azcmagent proxy setting
+  ansible.builtin.raw: >-
+    & "{{ ansible_env['ProgramFiles'] }}/AzureConnectedMachineAgent/azcmagent.exe"
+    config set proxy.url "{{ azure_arc_proxy_url }}"
+  register: azure_arc_proxy_set
+  changed_when: azure_arc_proxy_set.rc == 0
