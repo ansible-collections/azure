@@ -158,6 +158,7 @@ options:
                     - Microsoft.Kusto/clusters
                     - Microsoft.App/environments
                     - Microsoft.Network/applicationGateways
+                    - Microsoft.ServiceNetworking/trafficControllers
             actions:
                 description:
                     - A list of actions.
@@ -398,7 +399,8 @@ delegations_spec = dict(
                  'Microsoft.DBforMySQL/flexibleServers', 'Microsoft.ApiManagement/service', 'Microsoft.Synapse/workspaces',
                  'Microsoft.PowerPlatform/vnetaccesslinks', 'Microsoft.Network/managedResolvers', 'Microsoft.Kusto/clusters',
                  'Microsoft.ContainerService/managedClusters', 'Microsoft.App/environments',
-                 'Microsoft.Network/applicationGateways']
+                 'Microsoft.Network/applicationGateways',
+                 'Microsoft.ServiceNetworking/trafficControllers']
     ),
     actions=dict(
         type='list',
