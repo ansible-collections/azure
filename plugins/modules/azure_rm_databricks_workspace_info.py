@@ -205,7 +205,7 @@ class AzureRMDatabricksWorkspaceInfo(AzureRMModuleBase):
         try:
             return list(self.databricks_client.workspaces.list_by_subscription())
         except Exception as exc:
-            self.fail('Error listing workspaces by subscription - {1}'.format(str(exc)))
+            self.fail('Error listing workspaces by subscription - {0}'.format(str(exc)))
         return []
 
     def to_dict(self, workspace):

@@ -135,6 +135,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myDatabricksWorkspace
     location: eastus
+    managed_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/myManagedResourceGroup"
     sku:
       name: premium
     tags:
@@ -145,6 +146,7 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myDatabricksWorkspace
     location: eastus
+    managed_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/myManagedResourceGroup"
     sku:
       name: premium
     parameters:
