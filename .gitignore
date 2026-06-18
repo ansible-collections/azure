@@ -8,3 +8,6 @@ venv*
 ansible_collections/
 .idea/
 tests/integration/inventory
+.claude
+.lola
+CLAUDE.md

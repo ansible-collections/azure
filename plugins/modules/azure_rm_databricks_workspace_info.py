@@ -190,8 +190,8 @@ class AzureRMDatabricksWorkspaceInfo(AzureRMModuleBase):
     def get_workspace(self):
         try:
             return self.databricks_client.workspaces.get(self.resource_group, self.name)
-        except ResourceNotFoundError as exc:
-            self.fail('Error getting workspace {0} - {1}'.format(self.name, str(exc)))
+        except ResourceNotFoundError:
+            pass
         return None
 
     def list_by_resource_group(self):
