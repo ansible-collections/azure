@@ -6,7 +6,7 @@
 #   azure_arc_signal_os_type      : "linux" or "windows", defaults to azure_arc_os_type
 #   azure_arc_signal_correlation_id : optional correlation id
 #   azure_arc_signal_auth_type    : optional auth type, defaults to "token"
-- name: "Log {{ azure_arc_signal_message_type }} ({{ azure_arc_signal_operation | default('onboarding') }})"
+- name: "Log signal"
   delegate_to: localhost
   when: azure_arc_log_enabled | default(true) | bool
   ansible.builtin.uri:
