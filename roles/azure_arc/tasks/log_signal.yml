@@ -1,0 +1,31 @@
+---
+# Caller-provided variables:
+#   azure_arc_signal_message_type : signal type, e.g. "info" or "error" (required)
+#   azure_arc_signal_message      : free-form message, truncated to 500 chars (required)
+#   azure_arc_signal_operation    : operation name, defaults to "onboarding"
+#   azure_arc_signal_os_type      : "linux" or "windows", defaults to azure_arc_os_type
+#   azure_arc_signal_correlation_id : optional correlation id
+#   azure_arc_signal_auth_type    : optional auth type, defaults to "token"
+- name: "Log {{ azure_arc_signal_message_type }} ({{ azure_arc_signal_operation | default('onboarding') }})"
+  delegate_to: localhost
+  when: azure_arc_log_enabled | default(true) | bool
+  ansible.builtin.uri:
+    url: "{{ azure_arc_his_endpoint }}/log"
+    method: PUT
+    body_format: json
+    body:
+      subscriptionId: "{{ azure_arc_subscription_id | default('') }}"
+      resourceGroup: "{{ azure_arc_resource_group | default('') }}"
+      tenantId: "{{ azure_arc_tenant_id | default('') }}"
+      location: "{{ azure_arc_location | default('') }}"
+      correlationId: "{{ azure_arc_signal_correlation_id | default('') }}"
+      authType: "{{ azure_arc_signal_auth_type | default('token') }}"
+      operation: "{{ azure_arc_signal_operation | default('onboarding') }}"
+      namespace: "{{ azure_arc_provider_namespace | default('Microsoft.HybridCompute') }}"
+      osType: "{{ azure_arc_signal_os_type | default(azure_arc_os_type) }}"
+      messageType: "{{ azure_arc_signal_message_type }}"
+      message: "{{ azure_arc_signal_message | default('') | string | truncate(500, True, '') }}"
+    status_code: [200, 201, 202, 204]
+  register: azure_arc_signal_result
+  failed_when: false
+  changed_when: false

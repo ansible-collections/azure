@@ -76,6 +76,15 @@
   changed_when: false
   failed_when: azure_arc_azcmagent_install_cmd.rc != 0
 
+- name: Log successful agent installation
+  when: not azure_arc_azcmagent_installed
+  vars:
+    azure_arc_signal_message_type: info
+    azure_arc_signal_operation: onboarding
+    azure_arc_signal_os_type: linux
+    azure_arc_signal_message: "azcmagent installed successfully via Ansible azure_arc role"
+  ansible.builtin.include_tasks: "log_signal.yml"
+
 - name: Remove temp directory for azcmagent install script
   when: not azure_arc_azcmagent_installed
   become: true
