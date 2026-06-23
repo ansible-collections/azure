@@ -36,9 +36,11 @@ options:
     tenant:
         description:
             - Azure tenant ID. Use when authenticating with a Service Principal.
+            - C(AZURE_TENANT_ID) is honoured as a fallback.
         type: str
         env:
           - name: AZURE_TENANT
+          - name: AZURE_TENANT_ID
     oidc_token:
         description:
             - Direct OpenID Connect (OIDC) token (JWT) used for workload identity authentication.
