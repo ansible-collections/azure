@@ -64,6 +64,26 @@ options:
         description:
             - The FlowTimeout value (in minutes) for the Virtual Network.
         type: int
+    encryption:
+        description:
+            - Virtual network encryption settings.
+            - Used to enable encryption of vNet traffic between VMs and enforce its handling.
+        type: dict
+        suboptions:
+            enabled:
+                description:
+                    - Whether virtual network encryption is enabled.
+                type: bool
+                required: true
+            enforcement:
+                description:
+                    - How traffic from unencrypted VMs is handled when I(enabled=true).
+                    - C(DropUnencrypted) drops traffic from VMs that do not support encryption.
+                    - C(AllowUnencrypted) allows traffic from VMs that do not support encryption.
+                type: str
+                choices:
+                    - DropUnencrypted
+                    - AllowUnencrypted
     state:
         description:
             - State of the virtual network. Use C(present) to create or update and C(absent) to delete.
@@ -103,6 +123,16 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myVirtualNetwork
     state: absent
+
+- name: Create a virtual network with encryption enabled
+  azure_rm_virtualnetwork:
+    resource_group: myResourceGroup
+    name: myEncryptedVirtualNetwork
+    address_prefixes_cidr:
+      - 10.0.0.0/16
+    encryption:
+      enabled: true
+      enforcement: AllowUnencrypted
 '''
 RETURN = '''
 state:
@@ -178,6 +208,24 @@ state:
             type: int
             returned: always
             sample: 8
+        encryption:
+            description:
+                - Virtual network encryption settings.
+            type: complex
+            returned: when configured on the virtual network
+            contains:
+                enabled:
+                    description:
+                        - Whether virtual network encryption is enabled.
+                    type: bool
+                    returned: always
+                    sample: true
+                enforcement:
+                    description:
+                        - How traffic from unencrypted VMs is handled.
+                    type: str
+                    returned: always
+                    sample: AllowUnencrypted
 '''
 
 try:
@@ -214,6 +262,11 @@ def virtual_network_to_dict(vnet):
         results['address_prefixes'] = []
         for space in vnet.address_space.address_prefixes:
             results['address_prefixes'].append(space)
+    if vnet.encryption:
+        results['encryption'] = dict(
+            enabled=vnet.encryption.enabled,
+            enforcement=vnet.encryption.enforcement,
+        )
     return results
 
 
@@ -231,6 +284,16 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
             purge_address_prefixes=dict(type='bool', default=False, aliases=['purge']),
             purge_dns_servers=dict(type='bool', default=False),
             flow_timeout_in_minutes=dict(type='int'),
+            encryption=dict(
+                type='dict',
+                options=dict(
+                    enabled=dict(type='bool', required=True),
+                    enforcement=dict(
+                        type='str',
+                        choices=['DropUnencrypted', 'AllowUnencrypted'],
+                    ),
+                ),
+            ),
         )
 
         mutually_exclusive = [
@@ -250,6 +313,7 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
         self.dns_servers = None
         self.purge_dns_servers = None
         self.flow_timeout_in_minutes = None
+        self.encryption = None
 
         self.results = dict(
             changed=False,
@@ -339,6 +403,22 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                     results['flow_timeout_in_minutes'] = self.flow_timeout_in_minutes
                 else:
                     self.flow_timeout_in_minutes = vnet.flow_timeout_in_minutes
+
+                if self.encryption is not None:
+                    existing_encryption = results.get('encryption') or {}
+                    desired_enabled = self.encryption.get('enabled')
+                    desired_enforcement = self.encryption.get('enforcement')
+                    if (existing_encryption.get('enabled') != desired_enabled
+                            or (desired_enforcement is not None
+                                and existing_encryption.get('enforcement') != desired_enforcement)):
+                        self.log('CHANGED: Update encryption')
+                        changed = True
+                        new_encryption = dict(enabled=desired_enabled)
+                        if desired_enforcement is not None:
+                            new_encryption['enforcement'] = desired_enforcement
+                        elif existing_encryption.get('enforcement') is not None:
+                            new_encryption['enforcement'] = existing_encryption['enforcement']
+                        results['encryption'] = new_encryption
             elif self.state == 'absent':
                 self.log("CHANGED: vnet exists but requested state is 'absent'")
                 changed = True
@@ -372,6 +452,11 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                         vnet_param.dhcp_options = self.network_models.DhcpOptions(
                             dns_servers=self.dns_servers
                         )
+                    if self.encryption:
+                        vnet_param.encryption = self.network_models.VirtualNetworkEncryption(
+                            enabled=self.encryption.get('enabled'),
+                            enforcement=self.encryption.get('enforcement'),
+                        )
                     if self.tags:
                         vnet_param.tags = self.tags
                     self.results['state'] = self.create_or_update_vnet(vnet_param)
@@ -391,6 +476,11 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                         vnet_param.dhcp_options = None
                     if self.flow_timeout_in_minutes:
                         vnet_param.flow_timeout_in_minutes = self.flow_timeout_in_minutes
+                    if results.get('encryption'):
+                        vnet_param.encryption = self.network_models.VirtualNetworkEncryption(
+                            enabled=results['encryption'].get('enabled'),
+                            enforcement=results['encryption'].get('enforcement'),
+                        )
                     self.results['state'] = self.create_or_update_vnet(vnet_param)
             elif self.state == 'absent':
                 self.delete_virtual_network()

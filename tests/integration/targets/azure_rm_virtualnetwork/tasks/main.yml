@@ -200,6 +200,58 @@
           - facts.virtualnetworks | length == 1
           - "facts.virtualnetworks[0].subnets | length == 1"
 
+    - name: Create virtual network with encryption enabled
+      azure.azcollection.azure_rm_virtualnetwork:
+        name: "{{ vnetname }}-enc"
+        address_prefixes_cidr:
+          - 10.2.0.0/16
+        encryption:
+          enabled: true
+          enforcement: AllowUnencrypted
+        resource_group: "{{ resource_group }}-vnet"
+      register: output
+
+    - name: Assert the encrypted virtual network was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.encryption.enabled == true
+          - output.state.encryption.enforcement == 'AllowUnencrypted'
+
+    - name: Create encrypted virtual network again (idempotent)
+      azure.azcollection.azure_rm_virtualnetwork:
+        name: "{{ vnetname }}-enc"
+        address_prefixes_cidr:
+          - 10.2.0.0/16
+        encryption:
+          enabled: true
+          enforcement: AllowUnencrypted
+        resource_group: "{{ resource_group }}-vnet"
+      register: output
+
+    - name: Assert the encrypted virtual network is idempotent
+      ansible.builtin.assert:
+        that: output is not changed
+
+    - name: Gather facts for encrypted virtual network
+      azure.azcollection.azure_rm_virtualnetwork_info:
+        resource_group: "{{ resource_group }}-vnet"
+        name: "{{ vnetname }}-enc"
+      register: facts
+
+    - name: Assert info module returns encryption block
+      ansible.builtin.assert:
+        that:
+          - facts.virtualnetworks | length == 1
+          - facts.virtualnetworks[0].encryption.enabled == true
+          - facts.virtualnetworks[0].encryption.enforcement == 'AllowUnencrypted'
+
+    - name: Delete encrypted virtual network
+      azure.azcollection.azure_rm_virtualnetwork:
+        name: "{{ vnetname }}-enc"
+        resource_group: "{{ resource_group }}-vnet"
+        state: absent
+
     - name: Delete virtual network
       azure.azcollection.azure_rm_virtualnetwork:
         name: "{{ vnetname }}"
