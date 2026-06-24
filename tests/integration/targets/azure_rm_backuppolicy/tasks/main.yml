@@ -13,6 +13,7 @@
         policy_name_daily_enhanced: "bp-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}-enhanced"
         policy_name_weekly: "bp-weekly-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
         policy_name_long_term: "bp-longterm-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        policy_name_monthly_daily: "bp-monthly-daily-policy-{{ resource_group | hash('md5') | truncate(22, True, '') }}"
 
     - name: Create Azure Recovery Service vault
       azure.azcollection.azure_rm_recoveryservicesvault:
@@ -289,6 +290,74 @@
         that:
           - long_term_policy_output_idempotent is not changed
 
+    - name: Create a daily VM backup policy with monthly retention using the Daily format
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_monthly_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        schedule_run_time: 14
+        monthly_retention_count: 6
+        retention_schedule_format_type: Daily
+        retention_schedule_daily:
+          days_of_the_month:
+            - date: 1
+              is_last: false
+            - date: 0
+              is_last: true
+      register: monthly_daily_policy_output
+
+    - name: Read back the monthly-daily retention policy
+      azure.azcollection.azure_rm_backuppolicy_info:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_monthly_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+      register: monthly_daily_policy_info
+
+    - name: Assert monthly retention with Daily format is set
+      ansible.builtin.assert:
+        that:
+          - monthly_daily_policy_output is changed
+          - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_duration.count == 6
+          - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_duration.duration_type == 'Months'
+          - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_schedule_format_type == 'Daily'
+          - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_schedule_daily.days_of_the_month | length == 2
+
+    - name: Reject mutually-exclusive retention_schedule_daily + retention_schedule_weekly
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_monthly_daily }}-bad"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        schedule_run_time: 14
+        monthly_retention_count: 6
+        retention_schedule_format_type: Daily
+        retention_schedule_daily:
+          days_of_the_month:
+            - date: 1
+              is_last: false
+        retention_schedule_weekly:
+          days_of_the_week:
+            - Sunday
+          weeks_of_the_month:
+            - Last
+      register: bad_policy_output
+      ignore_errors: true
+
+    - name: Assert mutually-exclusive validation fired
+      ansible.builtin.assert:
+        that:
+          - bad_policy_output is failed
+          - "'mutually exclusive' in bad_policy_output.msg"
+
     - name: Delete a daily VM backup policy
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
@@ -379,6 +448,19 @@
       ansible.builtin.assert:
         that:
           - long_term_policy_output_delete is changed
+
+    - name: Delete the monthly-daily retention policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_monthly_daily }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: absent
+      register: monthly_daily_policy_output_delete
+
+    - name: Assert success on monthly-daily retention policy deletion
+      ansible.builtin.assert:
+        that:
+          - monthly_daily_policy_output_delete is changed
   always:
     - name: Force delete the resource group
       azure.azcollection.azure_rm_resourcegroup:
