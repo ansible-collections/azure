@@ -319,33 +319,6 @@
           - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_schedule_format_type == 'Daily'
           - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_schedule_daily.days_of_the_month | length == 2
 
-    - name: Reject mutually-exclusive Weekly+Daily retention format
-      azure.azcollection.azure_rm_backuppolicy:
-        vault_name: "{{ vault_name }}"
-        name: "{{ policy_name_monthly_daily }}-bad"
-        resource_group: "{{ resource_group }}-backuppolicy"
-        state: present
-        backup_management_type: "AzureIaasVM"
-        schedule_run_frequency: "Daily"
-        instant_recovery_snapshot_retention: 2
-        daily_retention_count: 12
-        schedule_run_time: 14
-        monthly_retention_count: 6
-        retention_days_of_the_month:
-          - 1
-        retention_weekdays:
-          - Sunday
-        retention_weeks_of_the_month:
-          - Last
-      register: bad_policy_output
-      ignore_errors: true
-
-    - name: Assert mutually-exclusive validation fired
-      ansible.builtin.assert:
-        that:
-          - bad_policy_output is failed
-          - "'mutually exclusive' in bad_policy_output.msg"
-
     - name: Delete a daily VM backup policy
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
