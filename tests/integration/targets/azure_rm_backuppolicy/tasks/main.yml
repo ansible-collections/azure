@@ -235,14 +235,12 @@
         schedule_run_time: 14
         monthly_retention_count: 12
         yearly_retention_count: 5
-        retention_schedule_format_type: Weekly
         months_of_year:
           - January
-        retention_schedule_weekly:
-          days_of_the_week:
-            - Sunday
-          weeks_of_the_month:
-            - Last
+        retention_weekdays:
+          - Sunday
+        retention_weeks_of_the_month:
+          - Last
       register: long_term_policy_output
 
     - name: Read back the long-term retention policy
@@ -275,14 +273,12 @@
         schedule_run_time: 14
         monthly_retention_count: 12
         yearly_retention_count: 5
-        retention_schedule_format_type: Weekly
         months_of_year:
           - January
-        retention_schedule_weekly:
-          days_of_the_week:
-            - Sunday
-          weeks_of_the_month:
-            - Last
+        retention_weekdays:
+          - Sunday
+        retention_weeks_of_the_month:
+          - Last
       register: long_term_policy_output_idempotent
 
     - name: Assert idempotency for long-term retention policy
@@ -302,13 +298,9 @@
         daily_retention_count: 12
         schedule_run_time: 14
         monthly_retention_count: 6
-        retention_schedule_format_type: Daily
-        retention_schedule_daily:
-          days_of_the_month:
-            - date: 1
-              is_last: false
-            - date: 0
-              is_last: true
+        retention_days_of_the_month:
+          - 1
+        retention_include_last_day: true
       register: monthly_daily_policy_output
 
     - name: Read back the monthly-daily retention policy
@@ -327,7 +319,7 @@
           - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_schedule_format_type == 'Daily'
           - monthly_daily_policy_info.properties.retention_policy.monthly_schedule.retention_schedule_daily.days_of_the_month | length == 2
 
-    - name: Reject mutually-exclusive retention_schedule_daily + retention_schedule_weekly
+    - name: Reject mutually-exclusive Weekly+Daily retention format
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"
         name: "{{ policy_name_monthly_daily }}-bad"
@@ -339,16 +331,12 @@
         daily_retention_count: 12
         schedule_run_time: 14
         monthly_retention_count: 6
-        retention_schedule_format_type: Daily
-        retention_schedule_daily:
-          days_of_the_month:
-            - date: 1
-              is_last: false
-        retention_schedule_weekly:
-          days_of_the_week:
-            - Sunday
-          weeks_of_the_month:
-            - Last
+        retention_days_of_the_month:
+          - 1
+        retention_weekdays:
+          - Sunday
+        retention_weeks_of_the_month:
+          - Last
       register: bad_policy_output
       ignore_errors: true
 

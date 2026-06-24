@@ -94,73 +94,55 @@ options:
     monthly_retention_count:
         description:
             - The amount of months to retain backups.
-            - Requires I(retention_schedule_format_type) and the matching
-              I(retention_schedule_daily) or I(retention_schedule_weekly).
+            - Requires either the I(retention_weekdays)+I(retention_weeks_of_the_month) pair
+              (Weekly format) or the I(retention_days_of_the_month)/I(retention_include_last_day)
+              pair (Daily format). Set one pair; the two pairs are mutually exclusive.
         type: int
     yearly_retention_count:
         description:
             - The amount of years to retain backups.
-            - Requires I(retention_schedule_format_type), I(months_of_year),
-              and the matching I(retention_schedule_daily) or
-              I(retention_schedule_weekly).
+            - Requires I(months_of_year) and one of the two format pairs described in
+              I(monthly_retention_count).
         type: int
-    retention_schedule_format_type:
-        description:
-            - Retention schedule format for monthly and yearly retention.
-            - Determines whether retention points are picked by day-of-month
-              (Daily) or by week-of-month (Weekly).
-        type: str
-        choices:
-            - Daily
-            - Weekly
     months_of_year:
         description:
             - List of months of the year to retain backups for yearly retention.
             - Valid values are full month names (January, February, ...).
         type: list
         elements: str
-    retention_schedule_daily:
+    retention_weekdays:
         description:
-            - Daily retention format used when
-              I(retention_schedule_format_type=Daily).
-        type: dict
-        suboptions:
-            days_of_the_month:
-                description:
-                    - List of days of the month to retain backups on.
-                type: list
-                elements: dict
-                suboptions:
-                    date:
-                        description:
-                            - Day of the month to retain backups on.
-                            - Use 1-28 to guarantee the day exists in every month;
-                              values 29, 30, and 31 are accepted but the backup is
-                              skipped in months that do not have that day.
-                            - To retain the last day of every month regardless of
-                              month length, set I(is_last=true) instead.
-                        type: int
-                    is_last:
-                        description:
-                            - Retain on the last day of every month.
-                            - When true, I(date) is ignored.
-                        type: bool
-    retention_schedule_weekly:
+            - Days of the week to retain monthly/yearly backups on (Weekly format).
+            - Use with I(retention_weeks_of_the_month).
+            - Mutually exclusive with I(retention_days_of_the_month) and
+              I(retention_include_last_day).
+        type: list
+        elements: str
+    retention_weeks_of_the_month:
         description:
-            - Weekly retention format used when
-              I(retention_schedule_format_type=Weekly).
-        type: dict
-        suboptions:
-            days_of_the_week:
-                description:
-                    - List of days of the week.
-                type: list
-                elements: str
-            weeks_of_the_month:
-                description:
-                    - List of weeks of the month (First, Second, Third, Fourth, Last).
-                type: list
-                elements: str
+            - Weeks of the month to retain monthly/yearly backups on (Weekly format).
+            - Valid values are First, Second, Third, Fourth, Last.
+            - Use with I(retention_weekdays).
+        type: list
+        elements: str
+    retention_days_of_the_month:
+        description:
+            - Days of the month to retain monthly/yearly backups on (Daily format).
+            - Use 1-28 to guarantee the day exists in every month; values 29, 30, and 31
+              are accepted but the backup is skipped in months that do not have that day.
+            - To also retain the last day of every month regardless of length, set
+              I(retention_include_last_day=true).
+            - Mutually exclusive with I(retention_weekdays) and I(retention_weeks_of_the_month).
+        type: list
+        elements: int
+    retention_include_last_day:
+        description:
+            - Include the last day of every month in the Daily-format retention set,
+              regardless of month length.
+            - Use with I(retention_days_of_the_month) (or on its own to retain only the
+              last day of each month).
+        type: bool
+        default: false
     schedule_weekly_frequency:
         description:
             - The amount of weeks between backups.
@@ -245,14 +227,29 @@ EXAMPLES = '''
     schedule_run_time: 14
     monthly_retention_count: 12
     yearly_retention_count: 5
-    retention_schedule_format_type: Weekly
     months_of_year:
       - January
-    retention_schedule_weekly:
-      days_of_the_week:
-        - Sunday
-      weeks_of_the_month:
-        - Last
+    retention_weekdays:
+      - Sunday
+    retention_weeks_of_the_month:
+      - Last
+
+- name: Create a daily VM backup policy with monthly retention on specific days of the month
+  azure_rm_backuppolicy:
+    vault_name: Vault_Name
+    name: Policy_Name
+    resource_group: Resource_Group_Name
+    state: present
+    backup_management_type: "AzureIaasVM"
+    schedule_run_frequency: "Daily"
+    instant_recovery_snapshot_retention: 2
+    daily_retention_count: 12
+    schedule_run_time: 14
+    monthly_retention_count: 6
+    retention_days_of_the_month:
+      - 1
+      - 15
+    retention_include_last_day: true
 '''
 
 RETURN = '''
@@ -354,28 +351,11 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             daily_retention_count=dict(type='int'),
             monthly_retention_count=dict(type='int'),
             yearly_retention_count=dict(type='int'),
-            retention_schedule_format_type=dict(type='str', choices=['Daily', 'Weekly']),
             months_of_year=dict(type='list', elements='str'),
-            retention_schedule_daily=dict(
-                type='dict',
-                options=dict(
-                    days_of_the_month=dict(
-                        type='list',
-                        elements='dict',
-                        options=dict(
-                            date=dict(type='int'),
-                            is_last=dict(type='bool'),
-                        ),
-                    ),
-                ),
-            ),
-            retention_schedule_weekly=dict(
-                type='dict',
-                options=dict(
-                    days_of_the_week=dict(type='list', elements='str'),
-                    weeks_of_the_month=dict(type='list', elements='str'),
-                ),
-            ),
+            retention_weekdays=dict(type='list', elements='str'),
+            retention_weeks_of_the_month=dict(type='list', elements='str'),
+            retention_days_of_the_month=dict(type='list', elements='int'),
+            retention_include_last_day=dict(type='bool', default=False),
             schedule_weekly_frequency=dict(type='int'),
             time_zone=dict(type='str', default='UTC'),
         )
@@ -394,10 +374,11 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
         self.daily_retention_count = None
         self.monthly_retention_count = None
         self.yearly_retention_count = None
-        self.retention_schedule_format_type = None
         self.months_of_year = None
-        self.retention_schedule_daily = None
-        self.retention_schedule_weekly = None
+        self.retention_weekdays = None
+        self.retention_weeks_of_the_month = None
+        self.retention_days_of_the_month = None
+        self.retention_include_last_day = False
         self.time_zone = None
 
         self.results = dict(
@@ -407,17 +388,23 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
 
         required_if = [('schedule_run_frequency', 'Weekly', ['schedule_days', 'weekly_retention_count', 'schedule_run_time']),
                        ('schedule_run_frequency', 'Daily', ['daily_retention_count', 'schedule_run_time']),
-                       ('retention_schedule_format_type', 'Daily', ['retention_schedule_daily']),
-                       ('retention_schedule_format_type', 'Weekly', ['retention_schedule_weekly']),
                        ('state', 'present', ['schedule_run_frequency', 'backup_management_type']),
                        ('log_mode', 'file', ['log_path'])]
 
-        mutually_exclusive = [('retention_schedule_daily', 'retention_schedule_weekly')]
+        mutually_exclusive = [
+            ('retention_weekdays', 'retention_days_of_the_month'),
+            ('retention_weeks_of_the_month', 'retention_days_of_the_month'),
+            ('retention_weekdays', 'retention_include_last_day'),
+            ('retention_weeks_of_the_month', 'retention_include_last_day'),
+        ]
+
+        required_together = [('retention_weekdays', 'retention_weeks_of_the_month')]
 
         super(AzureRMBackupPolicy, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                   supports_check_mode=True,
                                                   supports_tags=False,
                                                   mutually_exclusive=mutually_exclusive,
+                                                  required_together=required_together,
                                                   required_if=required_if)
 
     def exec_module(self, **kwargs):
@@ -565,15 +552,21 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                     if not (1 <= self.monthly_retention_count <= 9999):
                         raise ValueError('Paramater monthly_retention_count was {0} but must be between 1 and 9999'
                                          .format(self.monthly_retention_count))
-                    if self.retention_schedule_format_type is None:
-                        raise ValueError('Paramater retention_schedule_format_type is required when monthly_retention_count is set')
+                    if not (self.retention_weekdays or self.retention_days_of_the_month or self.retention_include_last_day):
+                        raise ValueError('Either retention_weekdays+retention_weeks_of_the_month (Weekly format) or '
+                                         'retention_days_of_the_month/retention_include_last_day (Daily format) is required '
+                                         'when monthly_retention_count is set')
 
                 if self.yearly_retention_count is not None:
                     if not (1 <= self.yearly_retention_count <= 9999):
                         raise ValueError('Paramater yearly_retention_count was {0} but must be between 1 and 9999'
                                          .format(self.yearly_retention_count))
-                    if self.retention_schedule_format_type is None or not self.months_of_year:
-                        raise ValueError('Paramaters retention_schedule_format_type and months_of_year are required when yearly_retention_count is set')
+                    if not self.months_of_year:
+                        raise ValueError('Paramater months_of_year is required when yearly_retention_count is set')
+                    if not (self.retention_weekdays or self.retention_days_of_the_month or self.retention_include_last_day):
+                        raise ValueError('Either retention_weekdays+retention_weeks_of_the_month (Weekly format) or '
+                                         'retention_days_of_the_month/retention_include_last_day (Daily format) is required '
+                                         'when yearly_retention_count is set')
 
             except ValueError as e:
                 self.results['changed'] = False
@@ -608,25 +601,31 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                                                                                                          retention_times=schedule_run_times_as_datetimes,
                                                                                                          retention_duration=retention_duration)
 
+            # Infer format-type from which retention-target fields the user set.
+            # The mutually_exclusive + required_together constraints already guarantee
+            # only one of the two groups can be present.
+            retention_format_type = None
             retention_format_daily = None
-            if self.retention_schedule_daily:
-                retention_format_daily = self.recovery_services_backup_models.DailyRetentionFormat(
-                    days_of_the_month=[
-                        self.recovery_services_backup_models.Day(date=d.get('date'), is_last=d.get('is_last'))
-                        for d in (self.retention_schedule_daily.get('days_of_the_month') or [])
-                    ])
-
             retention_format_weekly = None
-            if self.retention_schedule_weekly:
+
+            if self.retention_weekdays or self.retention_weeks_of_the_month:
+                retention_format_type = 'Weekly'
                 retention_format_weekly = self.recovery_services_backup_models.WeeklyRetentionFormat(
-                    days_of_the_week=self.retention_schedule_weekly.get('days_of_the_week'),
-                    weeks_of_the_month=self.retention_schedule_weekly.get('weeks_of_the_month'))
+                    days_of_the_week=self.retention_weekdays,
+                    weeks_of_the_month=self.retention_weeks_of_the_month)
+            elif self.retention_days_of_the_month or self.retention_include_last_day:
+                retention_format_type = 'Daily'
+                days = [self.recovery_services_backup_models.Day(date=d, is_last=False)
+                        for d in (self.retention_days_of_the_month or [])]
+                if self.retention_include_last_day:
+                    days.append(self.recovery_services_backup_models.Day(date=0, is_last=True))
+                retention_format_daily = self.recovery_services_backup_models.DailyRetentionFormat(days_of_the_month=days)
 
             if self.monthly_retention_count is not None:
                 retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.monthly_retention_count,
                                                                                             duration_type="Months")
                 monthly_retention_schedule = self.recovery_services_backup_models.MonthlyRetentionSchedule(
-                    retention_schedule_format_type=self.retention_schedule_format_type,
+                    retention_schedule_format_type=retention_format_type,
                     retention_schedule_daily=retention_format_daily,
                     retention_schedule_weekly=retention_format_weekly,
                     retention_times=schedule_run_times_as_datetimes,
@@ -636,7 +635,7 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                 retention_duration = self.recovery_services_backup_models.RetentionDuration(count=self.yearly_retention_count,
                                                                                             duration_type="Years")
                 yearly_retention_schedule = self.recovery_services_backup_models.YearlyRetentionSchedule(
-                    retention_schedule_format_type=self.retention_schedule_format_type,
+                    retention_schedule_format_type=retention_format_type,
                     months_of_year=self.months_of_year,
                     retention_schedule_daily=retention_format_daily,
                     retention_schedule_weekly=retention_format_weekly,
