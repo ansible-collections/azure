@@ -1,0 +1,302 @@
+---
+- name: Create resource group for Cognitive Services tests
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-csa"
+    location: eastus
+
+- name: Cognitive Services tests
+  block:
+    - name: Create Cognitive Services account names
+      ansible.builtin.set_fact:
+        account_name: "cs{{ resource_group | hash('md5') | truncate(16, True, '') }}"
+        account_name_s0: "cs{{ resource_group | hash('md5') | truncate(16, True, '') }}s0"
+
+    - name: Create Cognitive Services account with F0 SKU
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        tags:
+          testing: "true"
+      register: first_run
+
+    - name: Assert F0 account created successfully
+      ansible.builtin.assert:
+        that:
+          - first_run.changed == true
+          - first_run.state.sku.name == 'F0'
+          - first_run.state.properties.provisioning_state == 'Succeeded'
+          - first_run.state.name == account_name
+          - first_run.state.location == 'eastus'
+          - first_run.state.kind == 'ContentSafety'
+          - first_run.state.properties.endpoint is defined
+
+    - name: Create same account again (should be idempotent)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        tags:
+          testing: "true"
+      register: second_run
+
+    - name: Assert second run not changed
+      ansible.builtin.assert:
+        that:
+          - second_run.changed == false
+          - second_run.state.name == account_name
+
+    - name: Update tags on existing account
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        tags:
+          environment: production
+      register: tag_update
+
+    - name: Assert tags updated
+      ansible.builtin.assert:
+        that:
+          - tag_update.changed == true
+          - tag_update.state.tags.environment == 'production'
+
+    - name: Update same tags again (idempotent)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        tags:
+          environment: production
+      register: tag_update_again
+
+    - name: Assert no change on second tag update
+      ansible.builtin.assert:
+        that:
+          - tag_update_again.changed == false
+
+    - name: Create Cognitive Services account with S0 SKU
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name_s0 }}"
+        kind: ContentSafety
+        sku: S0
+        location: eastus
+      register: result_s0
+
+    - name: Assert S0 account created successfully
+      ansible.builtin.assert:
+        that:
+          - result_s0.changed == true
+          - result_s0.state.sku.name == 'S0'
+          - result_s0.state.properties.provisioning_state == 'Succeeded'
+
+    - name: Get specific Cognitive Services account info
+      azure.azcollection.azure_rm_cognitiveservicesaccount_info:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+      register: info_result
+
+    - name: Assert account info retrieved
+      ansible.builtin.assert:
+        that:
+          - info_result.accounts | length == 1
+          - info_result.accounts[0].name == account_name
+          - info_result.accounts[0].sku.name == 'F0'
+          - info_result.accounts[0].kind == 'ContentSafety'
+          - info_result.accounts[0].auth_keys is not defined
+
+    - name: Get account info with keys
+      azure.azcollection.azure_rm_cognitiveservicesaccount_info:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        show_keys: true
+      register: keys_result
+      no_log: true
+
+    - name: Assert keys retrieved
+      ansible.builtin.assert:
+        that:
+          - keys_result.accounts | length == 1
+          - keys_result.accounts[0].auth_keys.key1 is defined
+          - keys_result.accounts[0].auth_keys.key2 is defined
+
+    - name: List all Cognitive Services accounts in resource group
+      azure.azcollection.azure_rm_cognitiveservicesaccount_info:
+        resource_group: "{{ resource_group }}-csa"
+      register: list_result
+
+    - name: Assert multiple accounts listed
+      ansible.builtin.assert:
+        that:
+          - list_result.accounts | length >= 2
+          - list_result.accounts | selectattr('kind', 'equalto', 'ContentSafety') | list | length >= 2
+
+    - name: Query nonexistent account
+      azure.azcollection.azure_rm_cognitiveservicesaccount_info:
+        resource_group: "{{ resource_group }}-csa"
+        name: "nonexistent-account"
+      register: nonexistent_result
+
+    - name: Assert empty result for nonexistent account
+      ansible.builtin.assert:
+        that:
+          - nonexistent_result.accounts | length == 0
+
+    - name: Delete Cognitive Services account
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        state: absent
+        purge: true
+      register: delete_result
+
+    - name: Assert account deleted
+      ansible.builtin.assert:
+        that:
+          - delete_result.changed == true
+
+    - name: Create account with network restrictions
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        public_network_access: Disabled
+        network_acls:
+          default_action: Deny
+          ip_rules:
+            - value: "203.0.113.0/24"
+      register: network_result
+
+    - name: Assert network configuration applied
+      ansible.builtin.assert:
+        that:
+          - network_result.changed == true
+          - network_result.state.properties.public_network_access == 'Disabled'
+
+    - name: Update account with network restrictions (idempotent)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        public_network_access: Disabled
+        network_acls:
+          default_action: Deny
+          ip_rules:
+            - value: "203.0.113.0/24"
+      register: network_result
+
+    - name: Assert network configuration applied
+      ansible.builtin.assert:
+        that:
+          - network_result.changed == false
+          - network_result.state.properties.public_network_access == 'Disabled'
+
+    - name: Delete Cognitive Services account
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        state: absent
+        purge: true
+      register: delete_result
+
+    - name: Assert account deleted
+      ansible.builtin.assert:
+        that:
+          - delete_result.changed == true
+
+    - name: Create account with managed identity
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        identity:
+          type: SystemAssigned
+        disable_local_auth: true
+      register: identity_result
+
+    - name: Assert identity configured
+      ansible.builtin.assert:
+        that:
+          - identity_result.changed == true
+          - identity_result.state.identity.type == 'SystemAssigned'
+          - identity_result.state.identity.principal_id is defined
+
+    - name: Create account in check mode
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "checkmode-account"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+      check_mode: true
+      register: check_mode_result
+
+    - name: Assert check mode reports change
+      ansible.builtin.assert:
+        that:
+          - check_mode_result.changed == true
+
+    - name: Verify account was not actually created
+      azure.azcollection.azure_rm_cognitiveservicesaccount_info:
+        resource_group: "{{ resource_group }}-csa"
+        name: "checkmode-account"
+      register: verify_check_mode
+
+    - name: Assert account does not exist
+      ansible.builtin.assert:
+        that:
+          - verify_check_mode.accounts | length == 0
+
+    - name: Delete Cognitive Services account
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        state: absent
+        purge: true
+      register: delete_result
+
+    - name: Assert account deleted
+      ansible.builtin.assert:
+        that:
+          - delete_result.changed == true
+
+    - name: Delete account again (idempotent)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        state: absent
+        purge: true
+      register: delete_again
+
+    - name: Assert no change on second delete
+      ansible.builtin.assert:
+        that:
+          - delete_again.changed == false
+
+  always:
+    - name: Cleanup all test accounts
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ item }}"
+        state: absent
+        purge: true
+      loop:
+        - "{{ account_name }}"
+        - "{{ account_name_s0 }}"
+      ignore_errors: true
+
+    - name: Cleanup resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-csa"
+        state: absent
+        force_delete_nonempty: true
+      ignore_errors: true

@@ -52,6 +52,7 @@ parameters:
       - "azure_rm_capacityreservationgroup"
       - "azure_rm_cdnprofile"
       - "azure_rm_cognitiveservices"
+      - "azure_rm_cognitiveservicesaccount"
       - "azure_rm_containerinstance"
       - "azure_rm_containerregistry"
       - "azure_rm_containerregistryscopemap"
