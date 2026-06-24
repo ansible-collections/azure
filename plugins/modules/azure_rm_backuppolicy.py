@@ -133,11 +133,17 @@ options:
                 suboptions:
                     date:
                         description:
-                            - Date of the month (1-28).
+                            - Day of the month to retain backups on.
+                            - Use 1-28 to guarantee the day exists in every month;
+                              values 29, 30, and 31 are accepted but the backup is
+                              skipped in months that do not have that day.
+                            - To retain the last day of every month regardless of
+                              month length, set I(is_last=true) instead.
                         type: int
                     is_last:
                         description:
-                            - Whether to retain on the last day of the month.
+                            - Retain on the last day of every month.
+                            - When true, I(date) is ignored.
                         type: bool
     retention_schedule_weekly:
         description:
