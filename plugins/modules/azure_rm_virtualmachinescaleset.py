@@ -1453,6 +1453,9 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     vmss_resource.single_placement_group = self.single_placement_group
                     vmss_resource.tags = self.tags
 
+                    if self.custom_data:
+                        vmss_resource.virtual_machine_profile.os_profile.custom_data = self.custom_data
+
                     if support_lb_change:
                         if self.load_balancer:
                             vmss_resource.virtual_machine_profile.network_profile.network_interface_configurations[0] \
