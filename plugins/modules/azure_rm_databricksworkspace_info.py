@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_databricks_workspace_info
+module: azure_rm_databricksworkspace_info
 version_added: "3.20.0"
 short_description: Get facts of Azure Databricks workspaces
 description:
@@ -40,19 +40,19 @@ author:
 
 EXAMPLES = '''
 - name: Get a specific workspace
-  azure_rm_databricks_workspace_info:
+  azure_rm_databricksworkspace_info:
     resource_group: myResourceGroup
     name: myDatabricksWorkspace
 
 - name: List workspaces in a resource group
-  azure_rm_databricks_workspace_info:
+  azure_rm_databricksworkspace_info:
     resource_group: myResourceGroup
 
 - name: List all workspaces in subscription
-  azure_rm_databricks_workspace_info:
+  azure_rm_databricksworkspace_info:
 
 - name: List workspaces with specific tags
-  azure_rm_databricks_workspace_info:
+  azure_rm_databricksworkspace_info:
     tags:
       - environment:test
       - purpose:databricks

@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_databricks_workspace
+module: azure_rm_databricksworkspace
 version_added: "3.20.0"
 short_description: Manage Azure Databricks workspaces
 description:
@@ -131,7 +131,7 @@ author:
 
 EXAMPLES = '''
 - name: Create a Databricks workspace
-  azure_rm_databricks_workspace:
+  azure_rm_databricksworkspace:
     resource_group: myResourceGroup
     name: myDatabricksWorkspace
     location: eastus
@@ -142,7 +142,7 @@ EXAMPLES = '''
       environment: test
 
 - name: Create a Databricks workspace with custom VNet
-  azure_rm_databricks_workspace:
+  azure_rm_databricksworkspace:
     resource_group: myResourceGroup
     name: myDatabricksWorkspace
     location: eastus
@@ -160,7 +160,7 @@ EXAMPLES = '''
         value: true
 
 - name: Delete a Databricks workspace
-  azure_rm_databricks_workspace:
+  azure_rm_databricksworkspace:
     resource_group: myResourceGroup
     name: myDatabricksWorkspace
     state: absent

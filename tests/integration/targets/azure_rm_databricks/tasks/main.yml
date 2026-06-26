@@ -24,7 +24,7 @@
         workspace_name: "myDatabricksWorkspace-{{ rpfx }}"
 
     - name: Create a basic Databricks workspace
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}"
         location: "{{ location }}"
@@ -47,7 +47,7 @@
         var: workspace_result
 
     - name: Create a basic Databricks workspace (idempotent)
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}"
         location: "{{ location }}"
@@ -65,7 +65,7 @@
           - workspace_result is not changed
 
     - name: Get information about the workspace
-      azure.azcollection.azure_rm_databricks_workspace_info:
+      azure.azcollection.azure_rm_databricksworkspace_info:
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}"
       register: workspace_info
@@ -75,7 +75,7 @@
         var: workspace_info
 
     - name: List all workspaces in the resource group
-      azure.azcollection.azure_rm_databricks_workspace_info:
+      azure.azcollection.azure_rm_databricksworkspace_info:
         resource_group: "{{ resource_group }}"
       register: all_workspaces
 
@@ -85,7 +85,7 @@
           - all_workspaces.workspaces | length > 0
 
     - name: List all workspaces in the subscription
-      azure.azcollection.azure_rm_databricks_workspace_info:
+      azure.azcollection.azure_rm_databricksworkspace_info:
       register: subscription_workspaces
 
     - name: Assert that we have more than 0 workspaces by subscription
@@ -95,7 +95,7 @@
 
     # Example with parameters
     - name: Create Databricks workspace with parameters
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}-params"
         location: "{{ location }}"
@@ -117,7 +117,7 @@
           - workspace_result.parameters.enable_no_public_ip.value == true
 
     - name: Create Databricks workspace with parameters (Idempotent)
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         resource_group: "{{ resource_group }}"
         name: "{{ workspace_name }}-params"
         location: "{{ location }}"
@@ -139,7 +139,7 @@
 
     # cleanup
     - name: Delete the workspace with parameters
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         name: "{{ workspace_name }}-params"
         resource_group: "{{ resource_group }}"
         state: absent
@@ -150,7 +150,7 @@
         that: results is changed
 
     - name: Delete the workspace
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         name: "{{ workspace_name }}"
         resource_group: "{{ resource_group }}"
         state: absent
@@ -161,7 +161,7 @@
         that: results is changed
 
     - name: Delete the workspace (Idempotent)
-      azure.azcollection.azure_rm_databricks_workspace:
+      azure.azcollection.azure_rm_databricksworkspace:
         name: "{{ workspace_name }}"
         resource_group: "{{ resource_group }}"
         state: absent
