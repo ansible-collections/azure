@@ -286,6 +286,100 @@
         that:
           - long_term_policy_output_idempotent is not changed
 
+    - name: Update long-term policy with same counts but different months_of_year
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_long_term }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        schedule_run_time: 14
+        monthly_retention_count: 12
+        yearly_retention_count: 5
+        months_of_year:
+          - February
+        retention_weekdays:
+          - Sunday
+        retention_weeks_of_the_month:
+          - Last
+      register: long_term_policy_output_months_change
+
+    - name: Read back after months_of_year change
+      azure.azcollection.azure_rm_backuppolicy_info:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_long_term }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+      register: long_term_policy_info_months_change
+
+    - name: Assert format-field change was detected and applied
+      ansible.builtin.assert:
+        that:
+          - long_term_policy_output_months_change is changed
+          - long_term_policy_info_months_change.properties.retention_policy.yearly_schedule.months_of_year == ['February']
+
+    - name: Re-apply same months_of_year (idempotent on new value)
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_long_term }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        schedule_run_time: 14
+        monthly_retention_count: 12
+        yearly_retention_count: 5
+        months_of_year:
+          - February
+        retention_weekdays:
+          - Sunday
+        retention_weeks_of_the_month:
+          - Last
+      register: long_term_policy_output_months_idempotent
+
+    - name: Assert idempotency on changed months_of_year
+      ansible.builtin.assert:
+        that:
+          - long_term_policy_output_months_idempotent is not changed
+
+    - name: Update long-term policy with same counts but different retention_weekdays
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_long_term }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 12
+        schedule_run_time: 14
+        monthly_retention_count: 12
+        yearly_retention_count: 5
+        months_of_year:
+          - February
+        retention_weekdays:
+          - Monday
+        retention_weeks_of_the_month:
+          - Last
+      register: long_term_policy_output_weekdays_change
+
+    - name: Read back after retention_weekdays change
+      azure.azcollection.azure_rm_backuppolicy_info:
+        vault_name: "{{ vault_name }}"
+        name: "{{ policy_name_long_term }}"
+        resource_group: "{{ resource_group }}-backuppolicy"
+      register: long_term_policy_info_weekdays_change
+
+    - name: Assert retention_weekdays change was detected and applied
+      ansible.builtin.assert:
+        that:
+          - long_term_policy_output_weekdays_change is changed
+          - long_term_policy_info_weekdays_change.properties.retention_policy.yearly_schedule.retention_schedule_weekly.days_of_the_week == ['Monday']
+
     - name: Create a daily VM backup policy with monthly retention using the Daily format
       azure.azcollection.azure_rm_backuppolicy:
         vault_name: "{{ vault_name }}"

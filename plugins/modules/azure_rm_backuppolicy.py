@@ -459,12 +459,16 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
                        old_res['properties']['retention_policy'].get('daily_schedule', {}).get('retention_duration', {}).get('count'):
                         self.results['changed'] = True
                 if self.monthly_retention_count is not None:
-                    if self.monthly_retention_count !=\
-                       old_res['properties']['retention_policy'].get('monthly_schedule', {}).get('retention_duration', {}).get('count'):
+                    old_monthly = old_res['properties']['retention_policy'].get('monthly_schedule', {}) or {}
+                    if self.monthly_retention_count != old_monthly.get('retention_duration', {}).get('count'):
+                        self.results['changed'] = True
+                    elif self._long_term_schedule_changed(old_monthly, is_yearly=False):
                         self.results['changed'] = True
                 if self.yearly_retention_count is not None:
-                    if self.yearly_retention_count !=\
-                       old_res['properties']['retention_policy'].get('yearly_schedule', {}).get('retention_duration', {}).get('count'):
+                    old_yearly = old_res['properties']['retention_policy'].get('yearly_schedule', {}) or {}
+                    if self.yearly_retention_count != old_yearly.get('retention_duration', {}).get('count'):
+                        self.results['changed'] = True
+                    elif self._long_term_schedule_changed(old_yearly, is_yearly=True):
                         self.results['changed'] = True
                 if self.schedule_days is not None:
                     if old_res['properties']['schedule_policy'].get('schedule_run_days') is not None:
@@ -717,6 +721,33 @@ class AzureRMBackupPolicy(AzureRMModuleBase):
             self.log("Could not find backup policy {0} for vault {1} in resource group {2}".format(self.name, self.vault_name, self.resource_group))
 
         return self.set_results(policy)
+
+    def _long_term_schedule_changed(self, old_schedule, is_yearly):
+        """
+        Detect changes to monthly/yearly format fields the user passed.
+        """
+        weekly = (old_schedule.get('retention_schedule_weekly') or {})
+        daily = (old_schedule.get('retention_schedule_daily') or {})
+        old_days_of_month = daily.get('days_of_the_month') or []
+
+        if is_yearly and self.months_of_year is not None:
+            if set(self.months_of_year) != set(old_schedule.get('months_of_year') or []):
+                return True
+        if self.retention_weekdays is not None:
+            if set(self.retention_weekdays) != set(weekly.get('days_of_the_week') or []):
+                return True
+        if self.retention_weeks_of_the_month is not None:
+            if set(self.retention_weeks_of_the_month) != set(weekly.get('weeks_of_the_month') or []):
+                return True
+        if self.retention_days_of_the_month is not None:
+            old_dates = {d.get('date') for d in old_days_of_month if not d.get('is_last')}
+            if set(self.retention_days_of_the_month) != old_dates:
+                return True
+        if self.retention_include_last_day is not None:
+            old_include_last = any(d.get('is_last') for d in old_days_of_month)
+            if bool(self.retention_include_last_day) != old_include_last:
+                return True
+        return False
 
     def set_results(self, policy):
         result = dict()
