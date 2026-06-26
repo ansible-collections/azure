@@ -12,9 +12,9 @@ DOCUMENTATION = '''
 ---
 module: azure_rm_cognitiveservicesaccount_info
 version_added: "3.20.0"
-short_description: Get Azure AI Cognitive Services account information
+short_description: Get Azure Cognitive Services account information
 description:
-    - Retrieve information about Azure AI Cognitive Services accounts.
+    - Retrieve information about Azure Cognitive Services accounts.
     - Can query a specific account, all accounts in a resource group, or all accounts in a subscription.
 options:
     resource_group:
@@ -195,7 +195,7 @@ except ImportError:
     pass
 
 
-class AzureRMAICognitiveServicesAccountInfo(AzureRMModuleBase):
+class AzureRMCognitiveServicesAccountInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
             resource_group=dict(type='str'),
@@ -212,7 +212,7 @@ class AzureRMAICognitiveServicesAccountInfo(AzureRMModuleBase):
             accounts=[]
         )
 
-        super(AzureRMAICognitiveServicesAccountInfo, self).__init__(
+        super(AzureRMCognitiveServicesAccountInfo, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
             supports_tags=False
@@ -307,12 +307,11 @@ class AzureRMAICognitiveServicesAccountInfo(AzureRMModuleBase):
                 'key2': keys_obj.key2
             }
         except Exception as exc:
-            self.log('Error retrieving keys: {0}'.format(str(exc)))
-            return {}
+            self.module.fail_json(msg='Error retrieving keys: {0}'.format(str(exc)))
 
 
 def main():
-    AzureRMAICognitiveServicesAccountInfo()
+    AzureRMCognitiveServicesAccountInfo()
 
 
 if __name__ == '__main__':

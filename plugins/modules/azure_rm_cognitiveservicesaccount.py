@@ -25,7 +25,7 @@ options:
     name:
         description:
             - Name of the Cognitive Services account.
-            - Must be 2-64 characters, alphanumeric, hyphens, underscores.
+            - Must be 2-64 characters, alphanumeric, hyphens, underscores and dots.
             - Must be globally unique.
         required: true
         type: str
@@ -76,7 +76,7 @@ options:
             - The SKU/pricing tier of the Cognitive Services account.
             - C(F0) is the free tier with rate limits.
             - C(S0) is the standard tier.
-        default: F0
+            - If not specified on Create F0 is the default.
         type: str
         choices:
             - F0
@@ -88,7 +88,7 @@ options:
     public_network_access:
         description:
             - Whether public network access is allowed.
-        default: Enabled
+            - Defaults to Enabled on Creation.
         type: str
         choices:
             - Enabled
@@ -96,7 +96,7 @@ options:
     disable_local_auth:
         description:
             - Disable key-based authentication, require Microsoft Entra ID.
-        default: false
+            - Defaults to False on Creation.
         type: bool
     network_acls:
         description:
@@ -147,6 +147,11 @@ options:
                     - SystemAssigned
                     - UserAssigned
                     - SystemAssigned, UserAssigned
+            user_assigned_identities:
+                description:
+                    - User Assigned Identities.
+                type: list
+                elements: str
     purge:
         description:
             - When I(state) is C(absent) setting this to true
@@ -373,14 +378,11 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
                        choices=['present', 'absent']),
             location=dict(type='str'),
             sku=dict(type='str',
-                     default='F0',
                      choices=['F0', 'S0']),
             custom_domain_name=dict(type='str'),
             public_network_access=dict(type='str',
-                                       default='Enabled',
                                        choices=['Enabled', 'Disabled']),
-            disable_local_auth=dict(type='bool',
-                                    default=False),
+            disable_local_auth=dict(type='bool'),
             purge=dict(type='bool',
                        default=False),
             network_acls=dict(
@@ -413,7 +415,11 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
                                        'SystemAssigned',
                                        'UserAssigned',
                                        'SystemAssigned, UserAssigned']
-                              )
+                              ),
+                    user_assigned_identities=dict(type='list',
+                                                  elements='str',
+                                                  required=False,
+                                                  ),
                 )
             ),
             tags=dict(type='dict')
@@ -459,12 +465,18 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         # Get existing account
         account = self.get_account()
 
-        params = self.build_account_parameters()
-
         if self.state == 'present':
             if not account:
+                if not self.sku:
+                    self.sku = 'F0'
+                if not self.public_network_access:
+                    self.public_network_access = 'Enabled'
+                if self.disable_local_auth is None:
+                    self.disable_local_auth = False
                 if not self.kind:
                     self.module.fail_json(msg="kind must be specified when creating")
+                params = self.build_account_parameters()
+
                 # Create new account
                 if not self.check_mode:
                     self.results['state'] = self.create_account(params)
@@ -473,6 +485,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
                 self.results['changed'] = True
             else:
                 # Update existing account
+                params = self.build_account_parameters()
                 update_needed = self.check_update_needed(account, params)
                 if update_needed:
                     if not self.check_mode:
@@ -485,7 +498,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         else:  # state == 'absent'
             if account:
                 if not self.check_mode:
-                    self.delete_account()
+                    self.delete_account(account['location'])
                 self.results['changed'] = True
                 self.results['state'] = dict()
             else:
@@ -523,12 +536,6 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         update_tags, dummy = self.update_tags(account.get('tags'))
         if update_tags:
             return True
-
-        # Check identity
-        if self.identity:
-            account_identity_type = account.get('identity', {}).get('type', 'None')
-            if account_identity_type != self.identity.get('type', 'None'):
-                return True
 
         if not self.default_compare({},
                                     params,
@@ -587,6 +594,12 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
                 'type': self.identity['type']
             }
 
+            userAssignedTypes = ['UserAssigned', 'SystemAssigned, UserAssigned']
+            if self.identity.get('type') in userAssignedTypes and \
+                    self.identity.get('user_assigned_identities'):
+                identities = {identity: dict() for identity in self.identity['user_assigned_identities']}
+                params['identity']['user_assigned_identities'] = identities
+
         # Tags
         params['tags'] = self.tags
 
@@ -615,10 +628,10 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         params['kind'] = current_account['kind']
 
         # Update SKU if specified and different
-        if self.sku and current_account['sku'] != self.sku:
+        if self.sku and current_account['sku']['name'] != self.sku:
             params['sku'] = {'name': self.sku}
         else:
-            params['sku'] = {'name': current_account['sku']}
+            params['sku'] = {'name': current_account['sku']['name']}
 
         # Handle tags
         update_tags, new_tags = self.update_tags(current_account.get('tags'))
@@ -635,7 +648,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         except Exception as exc:
             self.module.fail_json(msg="Failed to update Cognitive Services account: {0}".format(str(exc)))
 
-    def delete_account(self):
+    def delete_account(self, location):
         """Delete Cognitive Services account"""
         self.log('Deleting Cognitive Services account {0}'.format(self.name))
 
@@ -650,7 +663,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         if self.purge:
             try:
                 poller = self.cognitive_services_management_client.deleted_accounts.begin_purge(
-                    self.location,
+                    location,
                     self.resource_group,
                     self.name
                 )

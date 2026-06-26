@@ -11,6 +11,28 @@
         account_name: "cs{{ resource_group | hash('md5') | truncate(16, True, '') }}"
         account_name_s0: "cs{{ resource_group | hash('md5') | truncate(16, True, '') }}s0"
 
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-csa"
+      register: __rg_info
+
+    - name: Set location and managed_identity_ids
+      ansible.builtin.set_fact:
+        location: eastus
+        managed_identity_ids: []
+
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'csa'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-csa"
+      with_items:
+        - '1'
+        - '2'
+
     - name: Create Cognitive Services account with F0 SKU
       azure.azcollection.azure_rm_cognitiveservicesaccount:
         resource_group: "{{ resource_group }}-csa"
@@ -230,6 +252,66 @@
           - identity_result.state.identity.type == 'SystemAssigned'
           - identity_result.state.identity.principal_id is defined
 
+    - name: Create account with managed identity (UserAssigned)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            - "{{ managed_identity_ids[0] }}"
+        disable_local_auth: true
+      register: identity_result
+
+    - name: Assert identity configured
+      ansible.builtin.assert:
+        that:
+          - identity_result.changed == true
+          - identity_result.state.identity.type == 'UserAssigned'
+          - identity_result.state.identity.user_assigned_identities is defined
+
+    - name: Create account with managed identity (UserAssigned) (Idempotent)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            - "{{ managed_identity_ids[0] }}"
+        disable_local_auth: true
+      register: identity_result
+
+    - name: Assert identity did not Change
+      ansible.builtin.assert:
+        that:
+          - identity_result.changed == false
+
+    - name: Create account with managed identity (UserAssigned) (Change)
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            - "{{ managed_identity_ids[0] }}"
+            - "{{ managed_identity_ids[1] }}"
+        disable_local_auth: true
+      register: identity_result
+
+    - name: Assert identity configured
+      ansible.builtin.assert:
+        that:
+          - identity_result.changed == true
+
     - name: Create account in check mode
       azure.azcollection.azure_rm_cognitiveservicesaccount:
         resource_group: "{{ resource_group }}-csa"
@@ -281,6 +363,18 @@
       ansible.builtin.assert:
         that:
           - delete_again.changed == false
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'csa'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        new_resource_group: "{{ resource_group }}-csa"
+      with_items:
+        - '1'
+        - '2'
 
   always:
     - name: Cleanup all test accounts

@@ -62,6 +62,8 @@ action_groups:
     - azure.azcollection.azure_rm_cdnprofile_info
     - azure.azcollection.azure_rm_cognitivesearch
     - azure.azcollection.azure_rm_cognitivesearch_info
+    - azure.azcollection.azure_rm_cognitiveservicesaccount
+    - azure.azcollection.azure_rm_cognitiveservicesaccount_info
     - azure.azcollection.azure_rm_containerinstance
     - azure.azcollection.azure_rm_containerinstance_info
     - azure.azcollection.azure_rm_containerregistry
