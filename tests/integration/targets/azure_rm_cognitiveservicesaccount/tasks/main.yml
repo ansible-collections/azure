@@ -312,6 +312,21 @@
         that:
           - identity_result.changed == true
 
+    - name: Create account without managed identity
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        identity:
+          type: None
+
+      register: identity_result
+
+    - name: Assert identity configured
+      ansible.builtin.assert:
+        that:
+          - identity_result.changed == true
+          - identity_result.state.identity.user_assigned_identities is not defined
+
     - name: Create account in check mode
       azure.azcollection.azure_rm_cognitiveservicesaccount:
         resource_group: "{{ resource_group }}-csa"

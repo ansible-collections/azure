@@ -537,6 +537,12 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         if update_tags:
             return True
 
+        # Check identity
+        if self.identity:
+            account_identity_type = account.get('identity', {}).get('type', 'None')
+            if account_identity_type != self.identity.get('type', 'None'):
+                return True
+
         if not self.default_compare({},
                                     params,
                                     account,
@@ -632,6 +638,10 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
             params['sku'] = {'name': self.sku}
         else:
             params['sku'] = {'name': current_account['sku']['name']}
+
+        # Handle identity
+        if not self.identity and 'identity' in current_account:
+            params['identity'] = current_account['identity']
 
         # Handle tags
         update_tags, new_tags = self.update_tags(current_account.get('tags'))
