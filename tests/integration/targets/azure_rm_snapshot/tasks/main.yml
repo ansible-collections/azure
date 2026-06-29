@@ -10,69 +10,6 @@
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}{{ 1000 | random }}"
       run_once: true
 
-    - name: Create virtual network
-      azure.azcollection.azure_rm_virtualnetwork:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "testVnet{{ rpfx }}"
-        address_prefixes: "10.0.0.0/16"
-
-    - name: Add subnet
-      azure.azcollection.azure_rm_subnet:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "testSubnet{{ rpfx }}"
-        address_prefix: "10.0.1.0/24"
-        virtual_network: "testVnet{{ rpfx }}"
-
-    - name: Create network interface
-      azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "interface{{ rpfx }}"
-        open_ports:
-          - 33
-        virtual_network: "testVnet{{ rpfx }}"
-        subnet: "testSubnet{{ rpfx }}"
-
-    - name: Create gen1 VM
-      azure.azcollection.azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "vmforimage{{ rpfx }}"
-        location: eastus
-        admin_username: testuser
-        ssh_password_enabled: false
-        network_interfaces: "interface{{ rpfx }}"
-        open_ports:
-          - 33
-        ssh_public_keys:
-          - path: /home/testuser/.ssh/authorized_keys
-            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-        vm_size: Standard_D2s_v3
-        image:
-          offer: 0001-com-ubuntu-server-focal
-          publisher: Canonical
-          sku: 20_04-lts
-          version: latest
-
-    - name: Get VM facts
-      azure.azcollection.azure_rm_virtualmachine_info:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "vmforimage{{ rpfx }}"
-      register: vm_output
-
-    - name: Create a snapshot by importing an unmanaged blob from the same subscription.
-      azure.azcollection.azure_rm_snapshot:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "mySnapshot-{{ rpfx }}"
-        location: eastus
-        creation_data:
-          create_option: Import
-          source_uri: 'https://{{ vm_output.vms[0].storage_account_name }}.blob.core.windows.net/{{ vm_output.vms[0].storage_container_name }}/{{ vm_output.vms[0].storage_blob_name }}'
-      register: output
-
-    - name: Assert the snapshot created
-      ansible.builtin.assert:
-        that:
-          - output is changed
-
     - name: Create a managed disk
       azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-snapshot"
@@ -83,45 +20,55 @@
     - name: Create a snapshot with I(incremental=True)
       azure.azcollection.azure_rm_snapshot:
         resource_group: "{{ resource_group }}-snapshot"
-        name: "mySnapshot-{{ rpfx }}02"
+        name: "mySnapshot-{{ rpfx }}"
         location: eastus
         incremental: true
+        sku:
+          name: Standard_LRS
+        os_type: Linux
         creation_data:
           create_option: Copy
           source_id: "{{ disk_output.state.id }}"
       register: output
 
-    - name: Assert the snapshot idempotent result
+    - name: Assert the snapshot created
       ansible.builtin.assert:
         that:
           - output is changed
+
+    - name: Create the snapshot again (idempotency check)
+      azure.azcollection.azure_rm_snapshot:
+        resource_group: "{{ resource_group }}-snapshot"
+        name: "mySnapshot-{{ rpfx }}"
+        location: eastus
+        incremental: true
+        sku:
+          name: Standard_LRS
+        os_type: Linux
+        creation_data:
+          create_option: Copy
+          source_id: "{{ disk_output.state.id }}"
+      register: output
+
+    - name: Assert the snapshot is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
     - name: List the snapshot instance by resource group
       azure.azcollection.azure_rm_snapshot_info:
         resource_group: "{{ resource_group }}-snapshot"
       register: output
 
-    - name: Assert there are two snapshots
+    - name: Assert there is one snapshot
       ansible.builtin.assert:
         that:
-          - output.state |length == 2
+          - output.state | length == 1
 
-    - name: Delete the first snapshot
+    - name: Delete the snapshot
       azure.azcollection.azure_rm_snapshot:
         resource_group: "{{ resource_group }}-snapshot"
         name: "mySnapshot-{{ rpfx }}"
-        state: absent
-
-    - name: Delete the secondary snapshot
-      azure.azcollection.azure_rm_snapshot:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "mySnapshot-{{ rpfx }}02"
-        state: absent
-
-    - name: Delete the gen1 VM
-      azure.azcollection.azure_rm_virtualmachine:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "vmforimage{{ rpfx }}"
         state: absent
   always:
     - name: Force delete the resource group
