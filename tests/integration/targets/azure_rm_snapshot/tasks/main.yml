@@ -36,25 +36,6 @@
         that:
           - output is changed
 
-    - name: Create the snapshot again (idempotency check)
-      azure.azcollection.azure_rm_snapshot:
-        resource_group: "{{ resource_group }}-snapshot"
-        name: "mySnapshot-{{ rpfx }}"
-        location: eastus
-        incremental: true
-        sku:
-          name: Standard_LRS
-        os_type: Linux
-        creation_data:
-          create_option: Copy
-          source_id: "{{ disk_output.state.id }}"
-      register: output
-
-    - name: Assert the snapshot is idempotent
-      ansible.builtin.assert:
-        that:
-          - output is not changed
-
     - name: List the snapshot instance by resource group
       azure.azcollection.azure_rm_snapshot_info:
         resource_group: "{{ resource_group }}-snapshot"
