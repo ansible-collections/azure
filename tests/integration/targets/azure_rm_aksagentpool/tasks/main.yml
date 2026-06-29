@@ -29,7 +29,7 @@
         zones:
           - 2
         public_ip_address_version: IPV4
-        prefix_length: 29
+        prefix_length: 28
         sku:
           name: Standard
           tier: Regional
