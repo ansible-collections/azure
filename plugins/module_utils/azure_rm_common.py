@@ -146,7 +146,8 @@ AZURE_API_PROFILES = {
         'EventGridManagementClient': '2025-02-15',
         'AppConfigurationManagementClient': '2024-05-01',
         'HybridComputeManagementClient': 'latest',
-        'CognitiveServicesManagementClient': 'latest'
+        'CognitiveServicesManagementClient': 'latest',
+        'AzureDatabricksManagementClient': 'latest',
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -295,6 +296,8 @@ try:
     from azure.mgmt.cdn import CdnManagementClient
     from azure.mgmt.hybridcompute import HybridComputeManagementClient
     from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
+    from azure.mgmt.databricks import AzureDatabricksManagementClient
+    import azure.mgmt.databricks.models as DatabricksModels
 
 except ImportError as exc:
     AZURE_IMPORT_ERROR = traceback.format_exc()
@@ -457,6 +460,7 @@ class AzureRMModuleBase(object):
         self._cdn_client = None
         self._hybrid_compute_management_client = None
         self._cognitive_services_management_client = None
+        self._databricks_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1621,6 +1625,19 @@ class AzureRMModuleBase(object):
                 base_url=self._cloud_environment.endpoints.resource_manager
             )
         return self._cognitive_services_management_client
+
+    @property
+    def databricks_client(self):
+        self.log('Getting databricks client')
+        if not self._databricks_client:
+            self._databricks_client = self.get_mgmt_svc_client(AzureDatabricksManagementClient,
+                                                               base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._databricks_client
+
+    @property
+    def databricks_models(self):
+        self.log('Getting databricks models')
+        return DatabricksModels
 
 
 class AzureRMAuthException(Exception):

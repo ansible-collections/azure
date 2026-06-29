@@ -78,6 +78,8 @@ action_groups:
     - azure.azcollection.azure_rm_containerregistrywebhook_info
     - azure.azcollection.azure_rm_cosmosdbaccount
     - azure.azcollection.azure_rm_cosmosdbaccount_info
+    - azure.azcollection.azure_rm_databricksworkspace
+    - azure.azcollection.azure_rm_databricksworkspace_info
     - azure.azcollection.azure_rm_datafactory
     - azure.azcollection.azure_rm_datafactory_info
     - azure.azcollection.azure_rm_ddosprotectionplan

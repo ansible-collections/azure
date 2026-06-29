@@ -23,6 +23,7 @@ azure-mgmt-containerservice==32.1.0
 azure-mgmt-core==1.6.0
 azure-mgmt-cosmosdb==10.0.0b3
 azure-mgmt-datafactory==9.0.0
+azure-mgmt-databricks==2.0.0
 azure-mgmt-devtestlabs==10.0.0b2
 azure-mgmt-dns==8.1.0
 azure-mgmt-eventhub==11.1.0
