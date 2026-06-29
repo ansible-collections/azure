@@ -1213,7 +1213,6 @@ try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
     from azure.mgmt.core.tools import parse_resource_id
-    from datetime import datetime
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -1558,11 +1557,11 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
             if self.image and isinstance(self.image, dict):
                 if all(key in self.image for key in ('publisher', 'offer', 'sku', 'version')):
-                    marketplace_image = self.get_marketplace_image_version()
-
                     if self.image['version'] == 'latest':
-                        self.image['version'] = marketplace_image.name
-                        self.log("Using image version {0}".format(self.image['version']))
+                        # Pass the literal "latest" through to ARM and let it resolve the actual version.
+                        self.log("Using image version 'latest'.")
+                    else:
+                        self.get_marketplace_image_version()
 
                     image_reference = self.compute_models.ImageReference(
                         publisher=self.image['publisher'],
@@ -3082,45 +3081,14 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             versions = self.compute_client.virtual_machine_images.list(self.location,
                                                                        self.image['publisher'],
                                                                        self.image['offer'],
-                                                                       self.image['sku'],
-                                                                       orderby='name')
+                                                                       self.image['sku'])
         except Exception as exc:
             self.fail("Error fetching image {0} {1} {2} - {3}".format(self.image['publisher'],
                                                                       self.image['offer'],
                                                                       self.image['sku'],
                                                                       str(exc)))
 
-        if versions and len(versions) > 0:
-            if self.image['version'] == 'latest':
-                version = versions[len(versions) - 1]
-
-                def image_timestamp_to_datetime(version_string):
-                    version_len = len(version_string)
-                    if version_len == 8:
-                        t_format = "%Y%m%d"
-                    elif version_len <= 10:
-                        t_format = "%Y%m%d%H"
-                    elif version_len <= 12:
-                        t_format = "%Y%m%d%H%M"
-                    elif version_len <= 14:
-                        t_format = "%Y%m%d%H%M%S"
-                    return datetime.strptime(version_string, t_format)
-
-                if 8 <= len(version.name.split('.')[-1]) and len(version.name.split('.')[-1]) <= 14:
-                    version_date = image_timestamp_to_datetime(version.name.split('.')[-1])
-                    for item in versions:
-                        item_date = image_timestamp_to_datetime(item.name.split('.')[-1])
-                        if item_date > version_date:
-                            version = item
-                            version_date = item_date
-                else:
-                    version_name = version.name.split('.')[-1]
-                    for item in versions:
-                        item_name = item.name.split('.')[-1]
-                        if item_name > version_name:
-                            version = item
-                            version_name = item_name
-                return version
+        if versions:
             for version in versions:
                 if version.name == self.image['version']:
                     return version
