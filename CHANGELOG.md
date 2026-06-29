@@ -1,4 +1,38 @@
 # Change Log
+## v3.20.0 (2026-06-30)
+
+### NEW MODULES
+  - azure_rm_cognitiveservicesmodel_info:([#2265](https://github.com/ansible-collections/azure/pull/2265))
+  - azure_rm_databricksworkspace: ([#2278](https://github.com/ansible-collections/azure/pull/2278))
+  - azure_rm_databricksworkspace_info: ([#2278](https://github.com/ansible-collections/azure/pull/2278))
+
+### FEATURE ENHANCEMENT
+  - plugins/inventory/azure_rm.py:
+    - Fix plugin failure while looping on a VM that is currently being created ([#2246](https://github.com/ansible-collections/azure/pull/2246))
+    - Raise filter exclusion log verbosity from `-v` to `-vv` ([#2266](https://github.com/ansible-collections/azure/pull/2266))
+  - pr-pipelines: Add `2.21` to ansible test versions ([#2264](https://github.com/ansible-collections/azure/pull/2264))
+  - plugins/modules/azure_rm_keyvaultcertificate_info.py: List active certificates when name is omitted ([#2263](https://github.com/ansible-collections/azure/pull/2263))
+  - requirements.txt: Added `azure-mgmt-cognitiveservices` dependency ([#2265](https://github.com/ansible-collections/azure/pull/2265))
+  - plugins/module_utils/azure_rm_common.py:
+    - Add `azure_rm_cognitiveservicesmodel_info` module ([#2265](https://github.com/ansible-collections/azure/pull/2265))
+    - Add `azure_rm_databricksworkspace` and `azure_rm_databricksworkspace_info` modules ([#2278](https://github.com/ansible-collections/azure/pull/2278))
+  - tests/unit/requirements.txt: Added `pytest-asyncio` and `azure-identity==1.25.2` dependencies ([#2271](https://github.com/ansible-collections/azure/pull/2271))
+  - roles/azure_arc: Expand Azure Arc onboarding role to include Windows support ([#2170](https://github.com/ansible-collections/azure/pull/2170))
+  - plugins/modules/azure_rm_subnet.py: Add `Microsoft.ServiceNetworking/trafficControllers` to subnet delegation choices ([#2281](https://github.com/ansible-collections/azure/pull/2281))
+  - plugins/modules/azure_rm_virtualnetwork.py: Add support to vNet encryption parameters ([#2279](https://github.com/ansible-collections/azure/pull/2279))
+  - plugins/modules/azure_rm_backuppolicy.py: Add support to monthly and yearly retention ([#2285](https://github.com/ansible-collections/azure/pull/2285))
+  - sanity-requirements.txt: Bump cryptography from 46.0.7 to 48.0.1 ([#2280](https://github.com/ansible-collections/azure/pull/2280))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_virtualnetwork.py: Preserves unmanaged properties on update ([#2272](https://github.com/ansible-collections/azure/pull/2272))
+  - plugins/module_utils/azure_rm_common.py: Honour `AZURE_TENANT_ID` and caller-supplied `subscription_id` in `azure_rm` `workload-identity` auth ([#2276](https://github.com/ansible-collections/azure/pull/2276))
+  - plugins/doc_fragments/azure_plugin.py: Update doc fragments to honour `AZURE_TENANT_ID` and caller-supplied `subscription_id` in `azure_rm` `workload-identity` auth ([#2276](https://github.com/ansible-collections/azure/pull/2276))
+  - plugins/modules/azure_rm_virtualmachinescaleset.py: Fix `custom_data` update ([#2289](https://github.com/ansible-collections/azure/pull/2289))
+  - plugins/modules/azure_rm_virtualmachine.py:
+    - Fix virtual machine creation default to managed disks (Note that azure retired unmanaged disks,`storage_account_name`, `storage_container_name`, `storage_blob_name` parameters are deprecated, and will be removed in the future major release.)
+    - Fix image `version=latest` to match ARM ([#2284](https://github.com/ansible-collections/azure/pull/2284))
+
+
 ## v3.19.0 (2026-05-28)
 
 ### NEW MODULES
