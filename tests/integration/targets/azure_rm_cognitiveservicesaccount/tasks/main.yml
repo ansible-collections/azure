@@ -292,6 +292,23 @@
         that:
           - identity_result.changed == false
 
+    - name: Update account without changing identity
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        public_network_access: Disabled
+      register: identity_result
+
+    - name: Assert identity did not Change
+      ansible.builtin.assert:
+        that:
+          - identity_result.changed == true
+          - identity_result.state.identity.type == 'UserAssigned'
+          - identity_result.state.identity.user_assigned_identities is defined
+
     - name: Create account with managed identity (UserAssigned) (Change)
       azure.azcollection.azure_rm_cognitiveservicesaccount:
         resource_group: "{{ resource_group }}-csa"

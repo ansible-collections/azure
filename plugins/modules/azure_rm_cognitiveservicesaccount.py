@@ -639,10 +639,6 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         else:
             params['sku'] = {'name': current_account['sku']['name']}
 
-        # Handle identity
-        if not self.identity and 'identity' in current_account:
-            params['identity'] = current_account['identity']
-
         # Handle tags
         update_tags, new_tags = self.update_tags(current_account.get('tags'))
         params['tags'] = new_tags
