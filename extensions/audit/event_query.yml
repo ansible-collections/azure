@@ -76,7 +76,7 @@ azure.azcollection.*:
        .ml_data_assets //
        .ml_data_asset //
        .ml_datastore //
-       .ml_datastore //
+       .ml_datastores //
        .ml_environments //
        .ml_environment //
        .ml_jobs //
