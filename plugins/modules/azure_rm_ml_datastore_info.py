@@ -50,7 +50,7 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-ml_datastore:
+ml_datastores:
     description:
         - Datastore that was just created or updated.
     returned: always

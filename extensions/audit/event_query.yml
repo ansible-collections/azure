@@ -24,6 +24,7 @@ azure.azcollection.*:
        "insights": "Data Processing & Analytics",
        "keyvault": "Database",
        "maintenance": "Governance & Operations",
+       "machinelearningservices": "Machine Learning Services",
        "managedidentity": "Governance & Operations",
        "managedservices": "Governance & Operations",
        "management": "Governance & Operations",
@@ -61,6 +62,38 @@ azure.azcollection.*:
        .link_service //
        .loadbalancers //
        .long_term_retention_policy //
+       .ml_batch_deployments //
+       .ml_batch_deployment //
+       .ml_batch_endpoints //
+       .ml_batch_endpoint_invoke //
+       .ml_batch_endpoint //
+       .ml_components //
+       .ml_component //
+       .ml_computes //
+       .ml_compute //
+       .ml_connections //
+       .ml_connection //
+       .ml_data_assets //
+       .ml_data_asset //
+       .ml_datastore //
+       .ml_datastores //
+       .ml_environments //
+       .ml_environment //
+       .ml_jobs //
+       .ml_job //
+       .ml_models //
+       .ml_model //
+       .ml_online_deployments //
+       .ml_online_deployment //
+       .ml_online_endpoints //
+       .ml_online_endpoint_invoke //
+       .ml_online_endpoint //
+       .ml_registries //
+       .ml_registry //
+       .ml_schedules //
+       .ml_schedule //
+       .ml_workspaces //
+       .ml_workspace //
        .networkinterfaces //
        .publicipaddresses //
        .rediscaches //
