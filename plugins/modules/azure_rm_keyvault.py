@@ -334,6 +334,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.serialization import as_attribute_dict
     from azure.mgmt.keyvault import KeyVaultManagementClient
     from azure.mgmt.keyvault.models import (ManagedServiceIdentity, UserAssignedIdentity, NetworkRuleSet,
                                             NetworkRuleBypassOptions, NetworkRuleAction, ManagedHsmProperties,
@@ -341,6 +342,18 @@ try:
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
+
+def _normalize_permissions_keys(response_dict):
+    # SDK 13.0.0 renamed Permissions.keys to keys_property; restore old dict key for backcompat.
+    if not isinstance(response_dict, dict):
+        return response_dict
+    props = response_dict.get('properties') or {}
+    for policy in (props.get('access_policies') or []):
+        perms = policy.get('permissions')
+        if isinstance(perms, dict) and 'keys_property' in perms:
+            perms['keys'] = perms.pop('keys_property')
+    return response_dict
 
 
 class Actions:
@@ -761,7 +774,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the Key Vault instance.')
             self.fail("Error creating the Key Vault instance: {0}".format(str(exc)))
-        return response and response.as_dict() or None
+        return response and _normalize_permissions_keys(as_attribute_dict(response, exclude_readonly=False)) or None
 
     def create_update_hsm(self):
         '''
@@ -800,7 +813,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         except Exception as exc:
             self.log('Error attempting to create the HSM instance.')
             self.fail("Error creating the HSM instance: {0}".format(str(exc)))
-        return response and response.as_dict() or None
+        return response and as_attribute_dict(response, exclude_readonly=False) or None
 
     def delete_keyvault(self):
         '''
@@ -899,7 +912,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
                 self.log('Did not find the hsm instance.')
 
         if found is True:
-            return response.as_dict()
+            return _normalize_permissions_keys(as_attribute_dict(response, exclude_readonly=False))
 
         return False
 
