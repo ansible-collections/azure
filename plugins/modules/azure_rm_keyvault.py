@@ -338,7 +338,9 @@ try:
     from azure.mgmt.keyvault import KeyVaultManagementClient
     from azure.mgmt.keyvault.models import (ManagedServiceIdentity, UserAssignedIdentity, NetworkRuleSet,
                                             NetworkRuleBypassOptions, NetworkRuleAction, ManagedHsmProperties,
-                                            ManagedHsm, ManagedHsmSku)
+                                            ManagedHsm, ManagedHsmSku, VaultCreateOrUpdateParameters,
+                                            VaultProperties, Sku, AccessPolicyEntry, Permissions,
+                                            IPRule, VirtualNetworkRule)
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -354,6 +356,68 @@ def _normalize_permissions_keys(response_dict):
         if isinstance(perms, dict) and 'keys_property' in perms:
             perms['keys'] = perms.pop('keys_property')
     return response_dict
+
+
+def _build_vault_params(parameters):
+    # SDK 13.0.0 hybrid models no longer auto-translate snake_case dict keys to
+    # camelCase wire names; construct model instances explicitly so tenant_id,
+    # enable_*, soft_delete_retention_in_days, network_acls, access_policies etc.
+    # serialize correctly. Also preserves user-supplied tag keys verbatim.
+    props = parameters.get('properties') or {}
+
+    def _sku(s):
+        return Sku(family=s['family'], name=s['name']) if s else None
+
+    def _perms(p):
+        if not p:
+            return None
+        return Permissions(
+            keys_property=p.get('keys'),
+            secrets=p.get('secrets'),
+            certificates=p.get('certificates'),
+            storage=p.get('storage'),
+        )
+
+    def _ap(a):
+        return AccessPolicyEntry(
+            tenant_id=a.get('tenant_id'),
+            object_id=a.get('object_id'),
+            application_id=a.get('application_id'),
+            permissions=_perms(a.get('permissions')),
+        )
+
+    def _net(n):
+        if not n:
+            return None
+        return NetworkRuleSet(
+            bypass=n.get('bypass'),
+            default_action=n.get('default_action'),
+            ip_rules=[IPRule(value=r['value']) for r in (n.get('ip_rules') or [])] or None,
+            virtual_network_rules=[VirtualNetworkRule(
+                id=r['id'],
+                ignore_missing_vnet_service_endpoint=r.get('ignore_missing_vnet_service_endpoint')
+            ) for r in (n.get('virtual_network_rules') or [])] or None,
+        )
+
+    return VaultCreateOrUpdateParameters(
+        location=parameters.get('location'),
+        tags=parameters.get('tags'),
+        properties=VaultProperties(
+            tenant_id=props.get('tenant_id'),
+            sku=_sku(props.get('sku')),
+            access_policies=[_ap(a) for a in (props.get('access_policies') or [])] or None,
+            enabled_for_deployment=props.get('enabled_for_deployment'),
+            enabled_for_disk_encryption=props.get('enabled_for_disk_encryption'),
+            enabled_for_template_deployment=props.get('enabled_for_template_deployment'),
+            enable_soft_delete=props.get('enable_soft_delete'),
+            enable_rbac_authorization=props.get('enable_rbac_authorization'),
+            enable_purge_protection=props.get('enable_purge_protection'),
+            soft_delete_retention_in_days=props.get('soft_delete_retention_in_days'),
+            create_mode=props.get('create_mode'),
+            public_network_access=props.get('public_network_access'),
+            network_acls=_net(props.get('network_acls')),
+        ),
+    )
 
 
 class Actions:
@@ -767,7 +831,7 @@ class AzureRMVaults(AzureRMModuleBaseExt):
         try:
             response = self.mgmt_client.vaults.begin_create_or_update(resource_group_name=self.resource_group,
                                                                       vault_name=self.vault_name,
-                                                                      parameters=self.parameters)
+                                                                      parameters=_build_vault_params(self.parameters))
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
