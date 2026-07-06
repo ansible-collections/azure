@@ -26,6 +26,9 @@
       messageType: "{{ azure_arc_signal_message_type }}"
       message: "{{ azure_arc_signal_message | default('') | string | truncate(500, True, '') }}"
     status_code: [200, 201, 202, 204]
+  # Route the request through the proxy (when configured), mirroring the
+  # log_failure behavior of the azcmagent install script.
+  environment: "{{ {'http_proxy': azure_arc_proxy_url, 'https_proxy': azure_arc_proxy_url} if azure_arc_proxy_url is defined else {} }}"
   register: azure_arc_signal_result
   failed_when: false
   changed_when: false

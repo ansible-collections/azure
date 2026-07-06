@@ -21,6 +21,7 @@ Role Variables
 * **proxy**: Object used to provide details for proxy setup if needed.  Contains the following:
   - * **hostname**: The hostname of the proxy server.
   - * **port**: The port that the proxy server is listening on.
+* **azure_arc_log_enabled**: Log success / failure to Azure for assistance with debugging (true by default, set to false to disable)
 
 Limitations
 ------------
