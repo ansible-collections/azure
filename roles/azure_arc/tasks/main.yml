@@ -9,7 +9,7 @@
 
 - name: Generate correlation id
   ansible.builtin.set_fact:
-    azure_arc_correlation_id: "{{ (2 ** 64) | random | to_uuid }}"
+    azure_arc_correlation_id: "{{ (2**64) | random | to_uuid }}"
 
 - name: Generate tags string
   ansible.builtin.set_fact:

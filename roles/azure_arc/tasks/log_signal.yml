@@ -33,19 +33,26 @@
   failed_when: false
   changed_when: false
 
-- name: "Log signal (Windows)"
+- name: "Build signal (Windows)"
   when:
     - azure_arc_log_enabled | default(true) | bool
     - azure_arc_os_type == 'windows'
-  ansible.builtin.raw: >-
-    $ErrorActionPreference = 'SilentlyContinue';
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-    try {
-    Invoke-RestMethod -Uri '{{ azure_arc_his_endpoint }}/log' -Method Put
-    -ContentType 'application/json'
-    -Body '{{ __azure_arc_signal_body | to_json | replace("'", "''") }}'
-    {{ "-Proxy '" + azure_arc_proxy_url + "'" if azure_arc_proxy_url is defined else "" }} | Out-Null
-    } catch { }
+  ansible.builtin.set_fact:
+    __azure_arc_signal_ps: >-
+      $ErrorActionPreference = 'SilentlyContinue';
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
+      try {
+      Invoke-RestMethod -Uri '{{ azure_arc_his_endpoint }}/log' -Method Put
+      -ContentType 'application/json'
+      -Body '{{ __azure_arc_signal_body | to_json | replace("'", "''") }}'
+      {{ "-Proxy '" + azure_arc_proxy_url + "'" if azure_arc_proxy_url is defined else "" }} | Out-Null
+      } catch { }
+
+- name: "Send signal (Windows)"
+  when:
+    - azure_arc_log_enabled | default(true) | bool
+    - azure_arc_os_type == 'windows'
+  ansible.builtin.raw: "{{ __azure_arc_signal_ps }}"
   register: azure_arc_signal_result_win
   failed_when: false
   changed_when: false
