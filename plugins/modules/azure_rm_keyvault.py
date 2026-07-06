@@ -389,23 +389,26 @@ def _build_vault_params(parameters):
     def _net(n):
         if not n:
             return None
+        ipr = n.get('ip_rules')
+        vnr = n.get('virtual_network_rules')
         return NetworkRuleSet(
             bypass=n.get('bypass'),
             default_action=n.get('default_action'),
-            ip_rules=[IPRule(value=r['value']) for r in (n.get('ip_rules') or [])] or None,
+            ip_rules=[IPRule(value=r['value']) for r in ipr] if ipr is not None else None,
             virtual_network_rules=[VirtualNetworkRule(
                 id=r['id'],
                 ignore_missing_vnet_service_endpoint=r.get('ignore_missing_vnet_service_endpoint')
-            ) for r in (n.get('virtual_network_rules') or [])] or None,
+            ) for r in vnr] if vnr is not None else None,
         )
 
+    ap = props.get('access_policies')
     return VaultCreateOrUpdateParameters(
         location=parameters.get('location'),
         tags=parameters.get('tags'),
         properties=VaultProperties(
             tenant_id=props.get('tenant_id'),
             sku=_sku(props.get('sku')),
-            access_policies=[_ap(a) for a in (props.get('access_policies') or [])] or None,
+            access_policies=[_ap(a) for a in ap] if ap is not None else None,
             enabled_for_deployment=props.get('enabled_for_deployment'),
             enabled_for_disk_encryption=props.get('enabled_for_disk_encryption'),
             enabled_for_template_deployment=props.get('enabled_for_template_deployment'),
