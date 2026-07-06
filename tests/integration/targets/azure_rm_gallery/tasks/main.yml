@@ -42,6 +42,7 @@
         sku:
           name: standard
           family: A
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         access_policies:
           - tenant_id: "{{ azure_tenant }}"
             object_id: "{{ object_id }}"
@@ -71,6 +72,7 @@
         sku:
           name: standard
           family: A
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         access_policies:
           - tenant_id: "{{ azure_tenant }}"
             object_id: "{{ object_id }}"
@@ -153,6 +155,7 @@
         sku:
           name: standard
           family: A
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         access_policies:
           - tenant_id: "{{ azure_tenant }}"
             object_id: "{{ object_id }}"
@@ -189,6 +192,7 @@
         sku:
           name: standard
           family: A
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         access_policies:
           - tenant_id: "{{ azure_tenant }}"
             object_id: "{{ object_id }}"
