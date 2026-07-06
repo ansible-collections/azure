@@ -7,6 +7,10 @@
   ansible.builtin.set_fact:
     azure_arc_os_type: "{{ 'windows' if ansible_os_family == 'Windows' else 'linux' }}"
 
+- name: Generate correlation id
+  ansible.builtin.set_fact:
+    azure_arc_correlation_id: "{{ (2 ** 64) | random | to_uuid }}"
+
 - name: Generate tags string
   ansible.builtin.set_fact:
     azure_arc_processed_tags: |-
@@ -118,7 +122,6 @@
     - name: Log onboarding success
       vars:
         azure_arc_signal_message_type: info
-        azure_arc_signal_operation: onboarding
         azure_arc_signal_message: "azcmagent connect succeeded via Ansible azure_arc role"
       ansible.builtin.include_tasks: "log_signal.yml"
 
@@ -133,7 +136,6 @@
     - name: Log onboarding failure
       vars:
         azure_arc_signal_message_type: error
-        azure_arc_signal_operation: onboarding
         azure_arc_signal_message: >-
           azcmagent connect failed:
           {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}

@@ -54,7 +54,5 @@
     - name: Log successful agent installation
       vars:
         azure_arc_signal_message_type: info
-        azure_arc_signal_operation: onboarding
-        azure_arc_signal_os_type: windows
         azure_arc_signal_message: "azcmagent installed successfully via Ansible azure_arc role"
       ansible.builtin.include_tasks: "log_signal.yml"
