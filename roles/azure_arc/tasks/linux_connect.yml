@@ -22,6 +22,8 @@
       - --correlation-id
       - "{{ azure_arc_correlation_id }}"
       - --json
+  no_log: true
   # If this command is run, it will always change the connection status from unconnected to connected
   changed_when: true
+  failed_when: false
   register: azure_arc_azcmagent_connect_json

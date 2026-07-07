@@ -119,6 +119,15 @@
       ansible.builtin.include_tasks: "windows_connect.yml"
       when: ansible_os_family == 'Windows'
 
+    # The connect task is no_log (its command line carries an access token), so
+    # surface only stderr here to keep failures debuggable without leaking the token.
+    - name: Fail if azcmagent connect was unsuccessful
+      when: azure_arc_azcmagent_connect_json.rc != 0
+      ansible.builtin.fail:
+        msg: >-
+          azcmagent connect failed (rc={{ azure_arc_azcmagent_connect_json.rc }}):
+          {{ azure_arc_azcmagent_connect_json.stderr | default('') }}
+
     - name: Log onboarding success
       vars:
         azure_arc_signal_message_type: info
