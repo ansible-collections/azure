@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_cognitiveservicesaccount_info
-version_added: "3.20.0"
+version_added: "3.21.0"
 short_description: Get Azure Cognitive Services account information
 description:
     - Retrieve information about Azure Cognitive Services accounts.

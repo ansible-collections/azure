@@ -262,7 +262,8 @@
         identity:
           type: UserAssigned
           user_assigned_identities:
-            - "{{ managed_identity_ids[0] }}"
+            id:
+              - "{{ managed_identity_ids[0] }}"
         disable_local_auth: true
       register: identity_result
 
@@ -283,7 +284,8 @@
         identity:
           type: UserAssigned
           user_assigned_identities:
-            - "{{ managed_identity_ids[0] }}"
+            id:
+              - "{{ managed_identity_ids[0] }}"
         disable_local_auth: true
       register: identity_result
 
@@ -302,7 +304,7 @@
         public_network_access: Disabled
       register: identity_result
 
-    - name: Assert identity did not Change
+    - name: Assert account changed but identity preserved
       ansible.builtin.assert:
         that:
           - identity_result.changed == true
@@ -319,8 +321,9 @@
         identity:
           type: UserAssigned
           user_assigned_identities:
-            - "{{ managed_identity_ids[0] }}"
-            - "{{ managed_identity_ids[1] }}"
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
         disable_local_auth: true
       register: identity_result
 
@@ -396,18 +399,6 @@
         that:
           - delete_again.changed == false
 
-    - name: Delete user managed identities
-      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
-      vars:
-        managed_identity_test_unique: 'csa'
-        managed_identity_unique: "{{ item }}"
-        managed_identity_action: 'delete'
-        managed_identity_location: "{{ location }}"
-        new_resource_group: "{{ resource_group }}-csa"
-      with_items:
-        - '1'
-        - '2'
-
   always:
     - name: Cleanup all test accounts
       azure.azcollection.azure_rm_cognitiveservicesaccount:
@@ -419,6 +410,18 @@
         - "{{ account_name }}"
         - "{{ account_name_s0 }}"
       ignore_errors: true
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'csa'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        new_resource_group: "{{ resource_group }}-csa"
+      with_items:
+        - '1'
+        - '2'
 
     - name: Cleanup resource group
       azure.azcollection.azure_rm_resourcegroup:

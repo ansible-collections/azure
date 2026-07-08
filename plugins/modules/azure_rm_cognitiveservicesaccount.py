@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_cognitiveservicesaccount
-version_added: "3.20.0"
+version_added: "3.21.0"
 short_description: Manage Azure AI Cognitive Services accounts
 description:
     - Create, update, or delete Azure AI Cognitive Services accounts.
@@ -133,25 +133,6 @@ options:
                             - Full resource ID of the subnet.
                         type: str
                         required: true
-    identity:
-        description:
-            - Managed identity configuration.
-        type: dict
-        suboptions:
-            type:
-                description:
-                    - Type of managed identity.
-                type: str
-                choices:
-                    - None
-                    - SystemAssigned
-                    - UserAssigned
-                    - SystemAssigned, UserAssigned
-            user_assigned_identities:
-                description:
-                    - User Assigned Identities.
-                type: list
-                elements: str
     purge:
         description:
             - When I(state) is C(absent) setting this to true
@@ -162,6 +143,7 @@ options:
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
+    - azure.azcollection.azure_identity_multiple_user
 
 author:
     - Bill Peck (@p3ck)
@@ -334,6 +316,7 @@ import re
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
+    from azure.mgmt.cognitiveservices.models import Identity
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
@@ -409,18 +392,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
             ),
             identity=dict(
                 type='dict',
-                options=dict(
-                    type=dict(type='str',
-                              choices=['None',
-                                       'SystemAssigned',
-                                       'UserAssigned',
-                                       'SystemAssigned, UserAssigned']
-                              ),
-                    user_assigned_identities=dict(type='list',
-                                                  elements='str',
-                                                  required=False,
-                                                  ),
-                )
+                options=self.managed_identity_multiple_user_assigned_spec
             ),
             tags=dict(type='dict')
         )
@@ -437,6 +409,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         self.identity = None
         self.tags = None
         self.purge = None
+        self._managed_identity = None
 
         self.results = dict(changed=False,
                             compare=[])
@@ -446,6 +419,14 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
             supports_check_mode=True,
             supports_tags=True
         )
+
+    @property
+    def managed_identity(self):
+        if not self._managed_identity:
+            self._managed_identity = {"identity": Identity,
+                                      "user_assigned": dict
+                                      }
+        return self._managed_identity
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -466,17 +447,8 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         account = self.get_account()
 
         if self.state == 'present':
+            params = self.build_account_parameters(current_account=account)
             if not account:
-                if not self.sku:
-                    self.sku = 'F0'
-                if not self.public_network_access:
-                    self.public_network_access = 'Enabled'
-                if self.disable_local_auth is None:
-                    self.disable_local_auth = False
-                if not self.kind:
-                    self.module.fail_json(msg="kind must be specified when creating")
-                params = self.build_account_parameters()
-
                 # Create new account
                 if not self.check_mode:
                     self.results['state'] = self.create_account(params)
@@ -485,11 +457,10 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
                 self.results['changed'] = True
             else:
                 # Update existing account
-                params = self.build_account_parameters()
                 update_needed = self.check_update_needed(account, params)
                 if update_needed:
                     if not self.check_mode:
-                        self.results['state'] = self.update_account(account, params)
+                        self.results['state'] = self.update_account(params)
                     else:
                         self.results['state'] = account
                     self.results['changed'] = True
@@ -500,9 +471,7 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
                 if not self.check_mode:
                     self.delete_account(account['location'])
                 self.results['changed'] = True
-                self.results['state'] = dict()
-            else:
-                self.results['state'] = dict()
+            self.results['state'] = dict()
 
         return self.results
 
@@ -521,56 +490,85 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
 
     def check_update_needed(self, account, params):
         """Check if account needs to be updated"""
+
+        changed = False
+
         # Check immutable properties
-        if account['location'].lower() != self.location.lower():
+        if account['location'].lower() != params['location'].lower():
             self.module.fail_json(msg="Cannot change location of existing account")
 
         # Check SKU
-        if self.sku and account['sku']['name'] != self.sku:
+        if account['sku']['name'] != params['sku']['name']:
             # Only allow F0 -> S0 upgrade
-            if not (account['sku']['name'] == 'F0' and self.sku == 'S0'):
-                self.module.fail_json(msg="Cannot change SKU from {0} to {1}".format(account['sku']['name'], self.sku))
-            return True
+            if not (account['sku']['name'] == 'F0' and params['sku']['name'] == 'S0'):
+                self.module.fail_json(msg="Cannot change SKU from {0} to {1}".format(account['sku']['name'], params['sku']['name']))
+            changed = True
 
         # Check tags
-        update_tags, dummy = self.update_tags(account.get('tags'))
+        update_tags, params['tags'] = self.update_tags(account.get('tags'))
         if update_tags:
-            return True
-
-        # Check identity
-        if self.identity:
-            account_identity_type = account.get('identity', {}).get('type', 'None')
-            if account_identity_type != self.identity.get('type', 'None'):
-                return True
+            changed = True
 
         if not self.default_compare({},
                                     params,
                                     account,
                                     '',
                                     self.results):
-            return True
-        return False
+            changed = True
 
-    def build_account_parameters(self):
+        # Check identity
+        if self.identity:
+            update_identity, identity = self.update_managed_identity(
+                self.identity,
+                account['identity'],
+                patch_support=True
+            )
+            params['identity'] = dict(type=identity.type)
+            if identity.user_assigned_identities:
+                params['identity']['user_assigned_identities'] = identity.user_assigned_identities
+            if update_identity:
+                changed = True
+
+        return changed
+
+    def build_account_parameters(self, current_account=None):
         """Build account parameters for create/update"""
+
+        # Properties
+        properties = {}
         params = {}
 
         # Required fields
         params['location'] = self.location
-        params['kind'] = self.kind
-        params['sku'] = {'name': self.sku}
 
-        # Properties
-        properties = {}
+        if isinstance(current_account, dict):
+            params['kind'] = current_account['kind']
+            if self.sku:
+                params['sku'] = {'name': self.sku}
+            else:
+                params['sku'] = current_account['sku']
+            if self.public_network_access:
+                properties['public_network_access'] = self.public_network_access
+            if self.disable_local_auth is not None:
+                properties['disable_local_auth'] = self.disable_local_auth
+        else:
+            if not self.kind:
+                self.module.fail_json(msg="kind must be specified when creating")
+            params['kind'] = self.kind
+            update_tags, params['tags'] = self.update_tags(None)
+            params['sku'] = {'name': self.sku or 'F0'}
+            properties['public_network_access'] = self.public_network_access or 'Enabled'
+            properties['disable_local_auth'] = self.disable_local_auth if self.disable_local_auth is not None else False
+            if self.identity:
+                update_identity, identity = self.update_managed_identity(
+                    self.identity,
+                )
+                params['identity'] = dict(type=identity.type)
+                if identity.user_assigned_identities:
+                    params['identity']['user_assigned_identities'] = identity.user_assigned_identities
 
         if self.custom_domain_name:
             properties['custom_sub_domain_name'] = self.custom_domain_name
-
-        if self.public_network_access:
-            properties['public_network_access'] = self.public_network_access
-
-        if self.disable_local_auth is not None:
-            properties['disable_local_auth'] = self.disable_local_auth
 
         # Network ACLs
         if self.network_acls:
@@ -594,21 +592,6 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         if properties:
             params['properties'] = properties
 
-        # Identity
-        if self.identity and self.identity.get('type'):
-            params['identity'] = {
-                'type': self.identity['type']
-            }
-
-            userAssignedTypes = ['UserAssigned', 'SystemAssigned, UserAssigned']
-            if self.identity.get('type') in userAssignedTypes and \
-                    self.identity.get('user_assigned_identities'):
-                identities = {identity: dict() for identity in self.identity['user_assigned_identities']}
-                params['identity']['user_assigned_identities'] = identities
-
-        # Tags
-        params['tags'] = self.tags
-
         return params
 
     def create_account(self, params):
@@ -626,22 +609,9 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         except Exception as exc:
             self.module.fail_json(msg="Failed to create Cognitive Services account: {0}".format(str(exc)))
 
-    def update_account(self, current_account, params):
+    def update_account(self, params):
         """Update existing Cognitive Services account"""
         self.log('Updating Cognitive Services account {0}'.format(self.name))
-
-        # Preserve immutable fields from current account
-        params['kind'] = current_account['kind']
-
-        # Update SKU if specified and different
-        if self.sku and current_account['sku']['name'] != self.sku:
-            params['sku'] = {'name': self.sku}
-        else:
-            params['sku'] = {'name': current_account['sku']['name']}
-
-        # Handle tags
-        update_tags, new_tags = self.update_tags(current_account.get('tags'))
-        params['tags'] = new_tags
 
         try:
             poller = self.cognitive_services_management_client.accounts.begin_update(
