@@ -448,7 +448,7 @@ changed:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import format_resource_id
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible.module_utils._text import to_native
+from ansible.module_utils.common.text.converters import to_native
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.core.tools import parse_resource_id
