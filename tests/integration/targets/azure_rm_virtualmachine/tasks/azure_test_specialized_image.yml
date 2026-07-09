@@ -1,0 +1,154 @@
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
+
+# Create a source VM to capture (its OS keeps its baked-in accounts; register it as a Specialized SIG version below)
+- name: Create source VM (source of the specialized image)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    admin_username: testuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: source_vm
+
+- name: Assert source VM created
+  ansible.builtin.assert:
+    that:
+      - source_vm.changed
+
+# Publish the specialized SIG image (osState=Specialized) from the running source VM. Note we do NOT generalize the source VM here.
+- name: Create Compute Gallery
+  azure.azcollection.azure_rm_gallery:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "gal{{ uid_short }}"
+    location: eastus
+    description: Specialized image gallery for integration tests
+
+- name: Create Specialized gallery image definition
+  azure.azcollection.azure_rm_galleryimage:
+    resource_group: "{{ resource_group }}-vm01"
+    gallery_name: "gal{{ uid_short }}"
+    name: "imgdef{{ uid_short }}"
+    location: eastus
+    os_type: linux
+    os_state: specialized
+    hyper_v_generation: V1
+    identifier:
+      publisher: OrgName
+      offer: TestOffer
+      sku: TestSku
+
+- name: Create gallery image version from the source VM (specialized)
+  azure.azcollection.azure_rm_galleryimageversion:
+    resource_group: "{{ resource_group }}-vm01"
+    gallery_name: "gal{{ uid_short }}"
+    gallery_image_name: "imgdef{{ uid_short }}"
+    name: 1.0.0
+    location: eastus
+    publishing_profile:
+      target_regions:
+        - name: eastus
+          regional_replica_count: 1
+      managed_image:
+        resource_group: "{{ resource_group }}-vm01"
+        name: "{{ vm_name }}-src"
+  register: sig_specialized
+
+- name: Set specialized SIG version ID
+  ansible.builtin.set_fact:
+    sig_specialized_version_id: "{{ sig_specialized.id }}"
+
+- name: Create VM from specialized SIG version WITHOUT specialized_image (expect failure)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-negspec"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    os_type: Linux
+    image:
+      id: "{{ sig_specialized_version_id }}"
+  register: negspec
+  failed_when: >
+    negspec is not failed
+    or 'admin_username required' not in (negspec.msg | default(''))
+
+- name: Create VM from specialized SIG version (specialized_image=true)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-spec"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    specialized_image: true
+    os_type: Linux
+    image:
+      id: "{{ sig_specialized_version_id }}"
+  register: specvm
+
+- name: Assert specialized VM created without osProfile
+  ansible.builtin.assert:
+    that:
+      - specvm.changed
+      - specvm.ansible_facts.azure_vm.properties.osProfile is not defined
+
+- name: Idempotency check - re-run specialized create
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-spec"
+    vm_size: Standard_DS1_v2
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    specialized_image: true
+    os_type: Linux
+    image:
+      id: "{{ sig_specialized_version_id }}"
+  register: specvm_idem
+
+- name: Assert specialized VM re-create is idempotent
+  ansible.builtin.assert:
+    that:
+      - not specvm_idem.changed
+
+- name: Delete specialized VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-spec"
+    state: absent
+
+- name: Delete source VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    state: absent
+
+- name: Delete gallery image version
+  azure.azcollection.azure_rm_galleryimageversion:
+    resource_group: "{{ resource_group }}-vm01"
+    gallery_name: "gal{{ uid_short }}"
+    gallery_image_name: "imgdef{{ uid_short }}"
+    name: 1.0.0
+    state: absent
+
+- name: Delete gallery image definition
+  azure.azcollection.azure_rm_galleryimage:
+    resource_group: "{{ resource_group }}-vm01"
+    gallery_name: "gal{{ uid_short }}"
+    name: "imgdef{{ uid_short }}"
+    state: absent
+
+- name: Delete gallery
+  azure.azcollection.azure_rm_gallery:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "gal{{ uid_short }}"
+    state: absent

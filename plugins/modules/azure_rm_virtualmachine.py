@@ -79,6 +79,19 @@ options:
             - Generalizing a VM is irreversible.
         type: bool
         default: False
+    specialized_image:
+        description:
+            - Set to C(true) when the source image referenced by I(image) has an C(osState) of C(Specialized). For example a Shared Image Gallery
+              (Azure Compute Gallery) version, managed image, or attached OS disk that already has accounts, hostname and OS-level settings baked in.
+            - When C(true), the module omits the C(osProfile) block from the Virtual Machine create request. Azure rejects specialized sources
+              with C(Parameter OSProfile is not allowed with a specialized image) when C(osProfile) is present.
+            - When C(true), these options are ignored during VM creation - I(admin_username), I(admin_password), I(ssh_public_keys),
+              I(ssh_password_enabled), I(custom_data), I(short_hostname), I(windows_config) and I(linux_config).
+            - Distinct from I(generalized), which requests a power-state transition (sysprep/deprovision) on an existing VM and does not
+              describe the source image.
+        type: bool
+        default: False
+        version_added: "3.20.0"
     restarted:
         description:
             - Set to C(true) with I(state=present) to restart a running VM.
@@ -126,7 +139,9 @@ options:
     admin_username:
         description:
             - Admin username used to access the VM after it is created.
-            - Required when creating a VM.
+            - Required when creating a VM, except when I(specialized_image=true)
+              or I(swap_os_disk) is set - in those cases the OS user identities
+              are already baked into the source image or disk.
         type: str
     admin_password:
         description:
@@ -1024,6 +1039,19 @@ EXAMPLES = '''
     name: testvm002
     remove_on_absent: all_autocreated
     state: absent
+
+- name: Create a VM from a Specialized Shared Image Gallery version
+  azure_rm_virtualmachine:
+    resource_group: myResourceGroup
+    name: testvm-specialized
+    vm_size: Standard_B1s
+    specialized_image: true
+    os_type: Linux
+    managed_disk_type: StandardSSD_LRS
+    network_interfaces: testvm-specialized-nic
+    image:
+      id: >-
+        /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/galleries/myGallery/images/myImage/versions/1.0.0
 '''
 
 RETURN = '''
@@ -1321,6 +1349,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             started=dict(type='bool'),
             force=dict(type='bool', default=False),
             generalized=dict(type='bool', default=False),
+            specialized_image=dict(type='bool', default=False),
             swap_os_disk=dict(
                 type='dict',
                 options=dict(
@@ -1428,6 +1457,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.restarted = None
         self.started = None
         self.generalized = None
+        self.specialized_image = None
         self.differences = None
         self.data_disks = None
         self.plan = None
@@ -2010,12 +2040,27 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     self.results['actions'].append('Created VM {0}'.format(self.name))
 
                     # Validate parameters
-                    if not self.admin_username and not self.swap_os_disk:
+                    if not self.admin_username and not self.swap_os_disk and not self.specialized_image:
                         self.fail("Parameter error: admin_username required when creating a virtual machine.")
 
                     if self.os_type == 'Linux' or self.os_type == 'linux':
-                        if disable_ssh_password and not self.ssh_public_keys and not self.swap_os_disk:
+                        if disable_ssh_password and not self.ssh_public_keys and not self.swap_os_disk and not self.specialized_image:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
+
+                    if self.specialized_image:
+                        ignored = [
+                            name for name, value in (
+                                ('admin_username', self.admin_username),
+                                ('admin_password', self.admin_password),
+                                ('ssh_public_keys', self.ssh_public_keys),
+                                ('custom_data', self.custom_data),
+                                ('short_hostname', self.short_hostname),
+                                ('windows_config', self.windows_config),
+                                ('linux_config', self.linux_config),
+                            ) if value
+                        ]
+                        if ignored:
+                            self.module.warn("specialized_image=true; the following options are ignored on create: {0}".format(", ".join(ignored)))
 
                     availability_set_resource = None
                     if self.availability_set:
@@ -2163,10 +2208,13 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             ),
                             image_reference=image_reference
                         )
-                        os_profile = self.compute_models.OSProfile(
-                            admin_username=self.admin_username,
-                            computer_name=self.short_hostname,
-                        )
+                        if self.specialized_image:
+                            os_profile = None
+                        else:
+                            os_profile = self.compute_models.OSProfile(
+                                admin_username=self.admin_username,
+                                computer_name=self.short_hostname,
+                            )
 
                     vm_resource.storage_profile = storage_profile
                     vm_resource.os_profile = os_profile
