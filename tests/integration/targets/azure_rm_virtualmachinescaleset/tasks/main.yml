@@ -1190,7 +1190,7 @@
         name: "srcvm{{ rpfx }}"
         admin_username: testuser
         admin_password: "Password1234!"
-        vm_size: Standard_DS1_v2
+        vm_size: Standard_D2s_v3
         virtual_network: VMSStestVnet
         managed_disk_type: StandardSSD_LRS
         image:
@@ -1214,7 +1214,7 @@
         location: "{{ location }}"
         os_type: linux
         os_state: specialized
-        hyper_v_generation: V1
+        hypervgeneration: V1
         identifier:
           publisher: OrgName
           offer: TestOffer
@@ -1240,7 +1240,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: "specvmss{{ rpfx }}"
-        vm_size: Standard_DS1_v2
+        vm_size: Standard_D2s_v3
         capacity: 1
         specialized_image: true
         os_type: Linux
@@ -1264,7 +1264,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
         name: "specvmss{{ rpfx }}"
-        vm_size: Standard_DS1_v2
+        vm_size: Standard_D2s_v3
         capacity: 1
         specialized_image: true
         os_type: Linux

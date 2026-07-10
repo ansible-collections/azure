@@ -42,7 +42,7 @@
     location: eastus
     os_type: linux
     os_state: specialized
-    hyper_v_generation: V1
+    hypervgeneration: V1
     identifier:
       publisher: OrgName
       offer: TestOffer
@@ -72,7 +72,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-negspec"
-    vm_size: Standard_DS1_v2
+    vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     os_type: Linux
@@ -87,7 +87,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-spec"
-    vm_size: Standard_DS1_v2
+    vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     specialized_image: true
@@ -106,7 +106,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-spec"
-    vm_size: Standard_DS1_v2
+    vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     specialized_image: true
