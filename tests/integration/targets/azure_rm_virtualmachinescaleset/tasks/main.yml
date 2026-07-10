@@ -1220,6 +1220,12 @@
           offer: TestOffer
           sku: TestSku
 
+    - name: Get source VM info
+      azure.azcollection.azure_rm_virtualmachine_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "srcvm{{ rpfx }}"
+      register: srcvm_info
+
     - name: Create gallery image version from the source VM (specialized)
       azure.azcollection.azure_rm_galleryimageversion:
         resource_group: "{{ resource_group }}-vmss01"
@@ -1227,13 +1233,13 @@
         gallery_image_name: "imgdef{{ rpfx }}"
         name: 1.0.0
         location: "{{ location }}"
+        storage_profile:
+          source_image:
+            virtual_machine_id: "{{ srcvm_info.vms[0].id }}"
         publishing_profile:
           target_regions:
             - name: "{{ location }}"
               regional_replica_count: 1
-          managed_image:
-            resource_group: "{{ resource_group }}-vmss01"
-            name: "srcvm{{ rpfx }}"
       register: vmss_sig_specialized
 
     - name: Create VMSS from specialized SIG version (specialized_image=true)

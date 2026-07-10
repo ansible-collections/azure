@@ -1287,9 +1287,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.subnet_name:
                         subnet = self.get_subnet(self.virtual_network_name, self.subnet_name)
 
-                    if not self.short_hostname:
-                        self.short_hostname = self.name
-
                     if not image_reference:
                         self.fail("Parameter error: an image is required when creating a virtual machine.")
 
@@ -1325,6 +1322,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         if ignored:
                             self.module.warn("specialized_image=true; the following options are ignored on create: {0}".format(", ".join(ignored)))
                     elif self.admin_username or self.custom_data or self.ssh_public_keys:
+                        if not self.short_hostname:
+                            self.short_hostname = self.name
                         os_profile = self.compute_models.VirtualMachineScaleSetOSProfile(
                             admin_username=self.admin_username,
                             computer_name_prefix=self.short_hostname,

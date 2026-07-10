@@ -48,6 +48,12 @@
       offer: TestOffer
       sku: TestSku
 
+- name: Get source VM info
+  azure.azcollection.azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+  register: srcvm_info
+
 - name: Create gallery image version from the source VM (specialized)
   azure.azcollection.azure_rm_galleryimageversion:
     resource_group: "{{ resource_group }}-vm01"
@@ -55,13 +61,13 @@
     gallery_image_name: "imgdef{{ uid_short }}"
     name: 1.0.0
     location: eastus
+    storage_profile:
+      source_image:
+        virtual_machine_id: "{{ srcvm_info.vms[0].id }}"
     publishing_profile:
       target_regions:
         - name: eastus
           regional_replica_count: 1
-      managed_image:
-        resource_group: "{{ resource_group }}-vm01"
-        name: "{{ vm_name }}-src"
   register: sig_specialized
 
 - name: Set specialized SIG version ID
