@@ -47,6 +47,7 @@
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
@@ -85,6 +86,7 @@
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
@@ -113,6 +115,7 @@
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:
@@ -140,6 +143,7 @@
         resource_group: "{{ resource_group }}-keyvault"
         vault_name: "vault{{ rpfx }}"
         enabled_for_deployment: true
+        enable_rbac_authorization: false  # Required: subsequent keyvaultkey/secret data-plane tests rely on access_policies; API 2026-02-01 defaults RBAC to true when omitted.
         vault_tenant: "{{ tenant_id }}"
         soft_delete_retention_in_days: 7
         sku:

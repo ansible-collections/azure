@@ -251,6 +251,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.mgmt.keyvault import KeyVaultManagementClient
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.serialization import as_attribute_dict
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -276,8 +277,8 @@ def keyvault_to_dict(vault):
             tenant_id=policy.tenant_id,
             object_id=policy.object_id,
             permissions=dict(
-                key_permissions=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
-                keys=[kp.lower() for kp in policy.permissions.keys] if policy.permissions.keys else None,
+                key_permissions=[kp.lower() for kp in policy.permissions.keys_property] if policy.permissions.keys_property else None,
+                keys=[kp.lower() for kp in policy.permissions.keys_property] if policy.permissions.keys_property else None,
                 secrets=[sp.lower() for sp in policy.permissions.secrets] if policy.permissions.secrets else None,
                 certificates=[cp.lower() for cp in policy.permissions.certificates] if policy.permissions.certificates else None,
                 storage=[stp.lower() for stp in policy.permissions.storage] if policy.permissions.storage else None
@@ -286,7 +287,7 @@ def keyvault_to_dict(vault):
         sku=dict(
             family=vault.properties.sku.family,
             name=vault.properties.sku.name
-        ),
+        ) if vault.properties.sku else None,
         public_network_access=vault.properties.public_network_access,
         network_acls=dict(
             bypass=vault.properties.network_acls.bypass,
@@ -309,7 +310,7 @@ def hsm_to_dict(hsm):
         hsm_uri=hsm.properties.hsm_uri,
         location=hsm.location,
         tags=hsm.tags,
-        identity=hsm.identity and hsm.identity.as_dict() or None,
+        identity=hsm.identity and as_attribute_dict(hsm.identity, exclude_readonly=False) or None,
         enable_soft_delete=hsm.properties.enable_soft_delete,
         soft_delete_retention_in_days=hsm.properties.soft_delete_retention_in_days
         if hsm.properties.soft_delete_retention_in_days else 90,
@@ -452,7 +453,12 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
             if response:
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
-                        results.append(keyvault_to_dict(item))
+                        try:
+                            results.append(keyvault_to_dict(item))
+                        except Exception as item_exc:
+                            self.module.warn("Skipping key vault {0}: {1}".format(
+                                getattr(item, 'id', None) or getattr(item, 'name', '<unknown>'),
+                                str(item_exc)))
         except Exception as e:
             self.log("Did not find key vaults in resource group {0} : {1}.".format(self.resource_group, str(e)))
         return results
@@ -473,8 +479,13 @@ class AzureRMKeyVaultInfo(AzureRMModuleBase):
             if response:
                 for item in response:
                     if self.has_tags(item.tags, self.tags):
-                        source_id = item.id.split('/')
-                        results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
+                        try:
+                            source_id = item.id.split('/')
+                            results.append(keyvault_to_dict(self._client.vaults.get(source_id[4], source_id[8])))
+                        except Exception as item_exc:
+                            self.module.warn("Skipping key vault {0}: {1}".format(
+                                getattr(item, 'id', None) or getattr(item, 'name', '<unknown>'),
+                                str(item_exc)))
         except Exception as e:
             self.log("Did not find key vault in current subscription {0}.".format(str(e)))
         return results
