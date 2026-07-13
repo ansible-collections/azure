@@ -272,7 +272,7 @@ class AzureRMCognitiveServicesAccountInfo(AzureRMModuleBase):
                                                               account_obj.name)
                 results.append(account_dict)
         except Exception as exc:
-            self.log('Error listing accounts: {0}'.format(str(exc)))
+            self.module.fail_json(msg='Error listing accounts: {0}'.format(str(exc)))
         return results
 
     def list_all(self):
@@ -292,7 +292,7 @@ class AzureRMCognitiveServicesAccountInfo(AzureRMModuleBase):
                                                               account_obj.name)
                 results.append(account_dict)
         except Exception as exc:
-            self.log('Error listing accounts: {0}'.format(str(exc)))
+            self.module.fail_json(msg='Error listing accounts: {0}'.format(str(exc)))
         return results
 
     def get_keys(self, resource_group, account_name):

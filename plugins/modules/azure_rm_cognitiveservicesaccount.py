@@ -438,11 +438,6 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         if len(self.name) < 2 or len(self.name) > 64:
             self.module.fail_json(msg="Account name must be between 2 and 64 characters")
 
-        # Get resource group location if location not specified
-        resource_group = self.get_resource_group(self.resource_group)
-        if not self.location:
-            self.location = resource_group.location
-
         # Get existing account
         account = self.get_account()
 
@@ -539,9 +534,14 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
         params = {}
 
         # Required fields
-        params['location'] = self.location
 
         if isinstance(current_account, dict):
+            # Location can't be changed, but it will be checked
+            # in check_update method.
+            if self.location:
+                params['location'] = self.location
+            else:
+                params['location'] = current_account['location']
             params['kind'] = current_account['kind']
             if self.sku:
                 params['sku'] = {'name': self.sku}
@@ -552,6 +552,13 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
             if self.disable_local_auth is not None:
                 properties['disable_local_auth'] = self.disable_local_auth
         else:
+            if self.location:
+                params['location'] = self.location
+            else:
+                # Get resource group location if location not specified
+                resource_group = self.get_resource_group(self.resource_group)
+                self.location = resource_group.location
+
             if not self.kind:
                 self.module.fail_json(msg="kind must be specified when creating")
             params['kind'] = self.kind
@@ -577,12 +584,14 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
             if 'default_action' in self.network_acls:
                 network_rule_set['default_action'] = self.network_acls['default_action']
 
-            if 'ip_rules' in self.network_acls and self.network_acls['ip_rules']:
+            if 'ip_rules' in self.network_acls and \
+                    self.network_acls['ip_rules'] is not None:
                 network_rule_set['ip_rules'] = [
                     {'value': rule['value']} for rule in self.network_acls['ip_rules']
                 ]
 
-            if 'virtual_network_rules' in self.network_acls and self.network_acls['virtual_network_rules']:
+            if 'virtual_network_rules' in self.network_acls and \
+                    self.network_acls['virtual_network_rules'] is not None:
                 network_rule_set['virtual_network_rules'] = [
                     {'id': rule['id']} for rule in self.network_acls['virtual_network_rules']
                 ]

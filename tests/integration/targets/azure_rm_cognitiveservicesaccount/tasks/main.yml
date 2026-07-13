@@ -218,7 +218,26 @@
       ansible.builtin.assert:
         that:
           - network_result.changed == false
-          - network_result.state.properties.public_network_access == 'Disabled'
+          - network_result.state.properties.network_acls.ip_rules | length > 0
+
+    - name: Update account without network restrictions
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-csa"
+        name: "{{ account_name }}"
+        kind: ContentSafety
+        sku: F0
+        location: eastus
+        public_network_access: Disabled
+        network_acls:
+          default_action: Deny
+          ip_rules: []
+      register: network_result
+
+    - name: Assert network configuration applied
+      ansible.builtin.assert:
+        that:
+          - network_result.changed == true
+          - network_result.state.properties.network_acls.ip_rules | length == 0
 
     - name: Delete Cognitive Services account
       azure.azcollection.azure_rm_cognitiveservicesaccount:
