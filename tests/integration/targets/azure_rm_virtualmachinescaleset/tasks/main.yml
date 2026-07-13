@@ -1289,6 +1289,31 @@
         that:
           - not specvmss_idem.changed
 
+    - name: Scale specialized VMSS to capacity 2
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "specvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        capacity: 2
+        specialized_image: true
+        os_type: Linux
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        managed_disk_type: Standard_LRS
+        upgrade_policy: Manual
+        orchestration_mode: Uniform
+        single_placement_group: true
+        image:
+          id: "{{ vmss_sig_specialized.id }}"
+      register: specvmss_scale
+
+    - name: Assert specialized VMSS scaled without touching osProfile
+      ansible.builtin.assert:
+        that:
+          - specvmss_scale.changed
+          - specvmss_scale.ansible_facts.azure_vmss.sku.capacity == 2
+          - specvmss_scale.ansible_facts.azure_vmss.properties.virtualMachineProfile.osProfile is not defined
+
     - name: Delete specialized VMSS
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-vmss01"
