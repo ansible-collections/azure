@@ -1,0 +1,58 @@
+---
+# Caller-provided variables:
+#   azure_arc_signal_message_type : signal type, e.g. "info" or "error" (required)
+#   azure_arc_signal_message      : free-form message, truncated to 500 chars (required)
+- name: Build signal body
+  when: azure_arc_log_enabled | default(true) | bool
+  ansible.builtin.set_fact:
+    __azure_arc_signal_body:
+      subscriptionId: "{{ azure_arc_subscription_id | default('') }}"
+      resourceGroup: "{{ azure_arc_resource_group | default('') }}"
+      tenantId: "{{ azure_arc_tenant_id | default('') }}"
+      location: "{{ azure_arc_location | default('') }}"
+      correlationId: "{{ azure_arc_correlation_id | default('') }}"
+      authType: token
+      operation: onboarding
+      namespace: "{{ azure_arc_provider_namespace | default('Microsoft.HybridCompute') }}"
+      osType: "{{ azure_arc_os_type }}"
+      messageType: "{{ azure_arc_signal_message_type }}"
+      message: "{{ azure_arc_signal_message | default('') | string | truncate(500, True, '') }}"
+
+- name: "Log signal (Linux)"
+  when:
+    - azure_arc_log_enabled | default(true) | bool
+    - azure_arc_os_type == 'linux'
+  ansible.builtin.uri:
+    url: "{{ azure_arc_his_endpoint }}/log"
+    method: PUT
+    body_format: json
+    body: "{{ __azure_arc_signal_body }}"
+    status_code: [200, 201, 202, 204]
+  environment: "{{ {'http_proxy': azure_arc_proxy_url, 'https_proxy': azure_arc_proxy_url} if azure_arc_proxy_url is defined else {} }}"
+  register: azure_arc_signal_result
+  failed_when: false
+  changed_when: false
+
+- name: "Build signal (Windows)"
+  when:
+    - azure_arc_log_enabled | default(true) | bool
+    - azure_arc_os_type == 'windows'
+  ansible.builtin.set_fact:
+    __azure_arc_signal_ps: >-
+      $ErrorActionPreference = 'SilentlyContinue';
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
+      try {
+      Invoke-RestMethod -Uri '{{ azure_arc_his_endpoint }}/log' -Method Put
+      -ContentType 'application/json'
+      -Body '{{ __azure_arc_signal_body | to_json | replace("'", "''") }}'
+      {{ "-Proxy '" + azure_arc_proxy_url + "'" if azure_arc_proxy_url is defined else "" }} | Out-Null
+      } catch { }
+
+- name: "Send signal (Windows)"
+  when:
+    - azure_arc_log_enabled | default(true) | bool
+    - azure_arc_os_type == 'windows'
+  ansible.builtin.raw: "{{ __azure_arc_signal_ps }}"
+  register: azure_arc_signal_result_win
+  failed_when: false
+  changed_when: false

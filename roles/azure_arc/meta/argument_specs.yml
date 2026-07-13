@@ -50,3 +50,7 @@ argument_specs:
         description:
           - Alternative download URL for the azcmagent package.
         required: false
+      azure_arc_log_enabled:
+        description:
+          - Enable or disable logging of signals to Azure
+        required: false

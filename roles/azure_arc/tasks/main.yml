@@ -3,6 +3,14 @@
   ansible.builtin.setup:
   when: ansible_system is not defined
 
+- name: Set helper fact for OS type reported in logs
+  ansible.builtin.set_fact:
+    azure_arc_os_type: "{{ 'windows' if ansible_os_family == 'Windows' else 'linux' }}"
+
+- name: Generate correlation id
+  ansible.builtin.set_fact:
+    azure_arc_correlation_id: "{{ (2**64) | random | to_uuid }}"
+
 - name: Generate tags string
   ansible.builtin.set_fact:
     azure_arc_processed_tags: |-
@@ -111,6 +119,21 @@
       ansible.builtin.include_tasks: "windows_connect.yml"
       when: ansible_os_family == 'Windows'
 
+    # The connect task is no_log (its command line carries an access token), so
+    # surface only stderr here to keep failures debuggable without leaking the token.
+    - name: Fail if azcmagent connect was unsuccessful
+      when: azure_arc_azcmagent_connect_json.rc != 0
+      ansible.builtin.fail:
+        msg: >-
+          azcmagent connect failed (rc={{ azure_arc_azcmagent_connect_json.rc }}):
+          {{ azure_arc_azcmagent_connect_json.stderr | default('') }}
+
+    - name: Log onboarding success
+      vars:
+        azure_arc_signal_message_type: info
+        azure_arc_signal_message: "azcmagent connect succeeded via Ansible azure_arc role"
+      ansible.builtin.include_tasks: "log_signal.yml"
+
     - name: Transform json stdout output to variable
       ansible.builtin.set_fact:
         azure_arc_azcmagent_connect: "{{ azure_arc_azcmagent_connect_json.stdout | ansible.builtin.from_json }}"
@@ -118,3 +141,17 @@
     - name: Set resource id as variable for easy access in other roles (newly registered system in azure arc)
       ansible.builtin.set_fact:
         azure_arc_resource_id: "{{ azure_arc_azcmagent_connect.resourceId }}"
+  rescue:
+    - name: Log onboarding failure
+      vars:
+        azure_arc_signal_message_type: error
+        azure_arc_signal_message: >-
+          azcmagent connect failed:
+          {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}
+      ansible.builtin.include_tasks: "log_signal.yml"
+
+    - name: Raise Azure Arc onboarding failure
+      ansible.builtin.fail:
+        msg: >-
+          Azure Arc onboarding (azcmagent connect) failed:
+          {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}

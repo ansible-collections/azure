@@ -72,9 +72,29 @@
   become: true
   ansible.builtin.command:
     argv: "{{ azure_arc_azcmagent_install_script_argv }}"
+  # The install script's log_failure reads these as environment variables, so
+  # its failure telemetry is correlated with the rest of this run.
+  environment: >-
+    {{
+      (azure_arc_proxy_environment | default({})) | combine({
+        'correlationId': azure_arc_correlation_id,
+        'subscriptionId': azure_arc_subscription_id | default(''),
+        'resourceGroup': azure_arc_resource_group | default(''),
+        'tenantId': azure_arc_tenant_id | default(''),
+        'location': azure_arc_location | default(''),
+        'cloud': azure_arc_cloud | default('')
+      })
+    }}
   register: azure_arc_azcmagent_install_cmd
   changed_when: false
   failed_when: azure_arc_azcmagent_install_cmd.rc != 0
+
+- name: Log successful agent installation
+  when: not azure_arc_azcmagent_installed
+  vars:
+    azure_arc_signal_message_type: info
+    azure_arc_signal_message: "azcmagent installed successfully via Ansible azure_arc role"
+  ansible.builtin.include_tasks: "log_signal.yml"
 
 - name: Remove temp directory for azcmagent install script
   when: not azure_arc_azcmagent_installed

@@ -7,6 +7,20 @@ azure_arc_cloud: AzureCloud
 # Default url for arc install script download
 azure_arc_azcmagent_install_script_url: https://aka.ms/azcmagent
 
+azure_arc_log_enabled: true
+
+# Resource provider namespace reported in emitted signals.
+azure_arc_provider_namespace: Microsoft.HybridCompute
+
+# HIS (Hybrid Instance Service) endpoints per cloud, used to emit signals.
+azure_arc_his_endpoints:
+  AzureCloud: https://gbl.his.arc.azure.com
+  AzureUSGovernment: https://gbl.his.arc.azure.us
+  AzureChinaCloud: https://gbl.his.arc.azure.cn
+
+# Resolved HIS endpoint for the configured cloud (falls back to public cloud).
+azure_arc_his_endpoint: "{{ azure_arc_his_endpoints[azure_arc_cloud] | default('https://gbl.his.arc.azure.com') }}"
+
 # Mandatory variables for role:
 # azure_arc_resource_group: NoDefault
 # azure_arc_subscription_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
