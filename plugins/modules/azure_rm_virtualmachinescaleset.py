@@ -1278,7 +1278,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     self.results['actions'].append('Created VMSS {0}'.format(self.name))
 
                     if self.os_type == 'Linux' or self.os_type == 'linux':
-                        if disable_ssh_password and not self.ssh_public_keys:
+                        if disable_ssh_password and not self.ssh_public_keys and not self.specialized_image:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
 
                     if not self.virtual_network_name:

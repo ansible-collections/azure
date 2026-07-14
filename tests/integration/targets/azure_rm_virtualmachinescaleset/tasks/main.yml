@@ -1249,6 +1249,7 @@
         vm_size: Standard_D2s_v3
         capacity: 1
         specialized_image: true
+        ssh_password_enabled: false
         os_type: Linux
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
