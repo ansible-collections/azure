@@ -103,6 +103,7 @@ options:
     admin_username:
         description:
             - Admin username used to access the host after it is created. Required when creating a VM.
+            - Not required when I(specialized_image=true) - the OS user identities are baked into the source image.
         type: str
     admin_password:
         description:
@@ -348,6 +349,20 @@ options:
             - Flexible
             - Uniform
         default: Flexible
+    specialized_image:
+        description:
+            - Set to C(true) when the source image referenced by I(image) has an C(osState) of C(Specialized). For example a Shared Image Gallery
+              (Azure Compute Gallery) version that already has accounts, hostname and OS-level settings baked in.
+            - When C(true), the module omits the C(osProfile) block from the Virtual Machine Scale Set create request. Azure rejects
+              specialized sources with C(Parameter OSProfile is not allowed with a specialized image) when C(osProfile) is present.
+            - When C(true), these options are ignored during scale set creation - I(admin_username), I(admin_password),
+              I(ssh_public_keys), I(ssh_password_enabled), I(custom_data) and I(short_hostname).
+            - For backward compatibility, the scale set is also created without C(osProfile) when I(admin_username), I(custom_data) and
+              I(ssh_public_keys) are all omitted; setting this option explicitly is preferred as it produces clearer error messages
+              and documents intent.
+        type: bool
+        default: False
+        version_added: "3.20.0"
     security_profile:
         description:
             - Specifies the Security related profile settings for the virtual machine sclaset.
@@ -582,6 +597,21 @@ EXAMPLES = '''
         disk_size_gb: 64
         caching: ReadWrite
         managed_disk_type: Standard_LRS
+
+- name: Create a scale set from a Specialized Shared Image Gallery version
+  azure.azcollection.azure_rm_virtualmachinescaleset:
+    resource_group: myResourceGroup
+    name: testvmss-specialized
+    vm_size: Standard_DS1_v2
+    capacity: 2
+    specialized_image: true
+    os_type: Linux
+    managed_disk_type: Standard_LRS
+    image:
+      id: >-
+        /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/galleries/myGallery/images/myImage/versions/1.0.0
+    virtual_network_name: testvnet
+    subnet_name: testsubnet
 '''
 
 RETURN = '''
@@ -804,6 +834,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
             orchestration_mode=dict(type='str',
                                     choices=['Uniform', 'Flexible'],
                                     default='Flexible',),
+            specialized_image=dict(type='bool', default=False),
             platform_fault_domain_count=dict(type='int', default=1),
             os_disk_size_gb=dict(type='int'),
             security_profile=dict(
@@ -873,6 +904,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.terminate_event_timeout_minutes = None
         self.ephemeral_os_disk = None
         self.orchestration_mode = None
+        self.specialized_image = None
         self.os_disk_size_gb = None
         self.security_profile = None
         self._managed_identity = None
@@ -1164,10 +1196,11 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                         differences.append('application_security_groups')
 
                 if self.custom_data:
-                    if self.custom_data != vmss_dict['virtual_machine_profile']['os_profile'].get('custom_data'):
+                    existing_os_profile = vmss_dict['virtual_machine_profile'].get('os_profile') or {}
+                    if self.custom_data != existing_os_profile.get('custom_data'):
                         differences.append('custom_data')
                         changed = True
-                        vmss_dict['virtual_machine_profile']['os_profile']['custom_data'] = self.custom_data
+                        vmss_dict['virtual_machine_profile'].setdefault('os_profile', {})['custom_data'] = self.custom_data
 
                 if self.orchestration_mode and self.orchestration_mode != vmss_dict.get('orchestration_mode'):
                     self.fail("The orchestration_mode parameter cannot be updated!")
@@ -1245,7 +1278,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     self.results['actions'].append('Created VMSS {0}'.format(self.name))
 
                     if self.os_type == 'Linux' or self.os_type == 'linux':
-                        if disable_ssh_password and not self.ssh_public_keys:
+                        if disable_ssh_password and not self.ssh_public_keys and not self.specialized_image:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
 
                     if not self.virtual_network_name:
@@ -1253,9 +1286,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
 
                     if self.subnet_name:
                         subnet = self.get_subnet(self.virtual_network_name, self.subnet_name)
-
-                    if not self.short_hostname:
-                        self.short_hostname = self.name
 
                     if not image_reference:
                         self.fail("Parameter error: an image is required when creating a virtual machine.")
@@ -1279,7 +1309,21 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                                                         promotion_code=self.plan.get('promotion_code'))
 
                     os_profile = None
-                    if self.admin_username or self.custom_data or self.ssh_public_keys:
+                    if self.specialized_image:
+                        ignored = [
+                            name for name, value in (
+                                ('admin_username', self.admin_username),
+                                ('admin_password', self.admin_password),
+                                ('ssh_public_keys', self.ssh_public_keys),
+                                ('custom_data', self.custom_data),
+                                ('short_hostname', self.short_hostname),
+                            ) if value
+                        ]
+                        if ignored:
+                            self.module.warn("specialized_image=true; the following options are ignored on create: {0}".format(", ".join(ignored)))
+                    elif self.admin_username or self.custom_data or self.ssh_public_keys:
+                        if not self.short_hostname:
+                            self.short_hostname = self.name
                         os_profile = self.compute_models.VirtualMachineScaleSetOSProfile(
                             admin_username=self.admin_username,
                             computer_name_prefix=self.short_hostname,
@@ -1363,7 +1407,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.terminate_event_timeout_minutes:
                         vmss_resource.virtual_machine_profile.scheduled_events_profile = self.gen_scheduled_event_profile()
 
-                    if self.admin_password:
+                    if self.admin_password and vmss_resource.virtual_machine_profile.os_profile is not None:
                         vmss_resource.virtual_machine_profile.os_profile.admin_password = self.admin_password
 
                     if (self.os_type == 'Linux' or self.os_type == 'linux') and os_profile:
@@ -1371,7 +1415,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                             disable_password_authentication=disable_ssh_password
                         )
 
-                    if self.ssh_public_keys:
+                    if self.ssh_public_keys and vmss_resource.virtual_machine_profile.os_profile is not None \
+                            and vmss_resource.virtual_machine_profile.os_profile.linux_configuration is not None:
                         ssh_config = self.compute_models.SshConfiguration()
                         ssh_config.public_keys = \
                             [self.compute_models.SshPublicKey(path=key['path'], key_data=key['key_data']) for key in self.ssh_public_keys]
@@ -1453,7 +1498,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     vmss_resource.single_placement_group = self.single_placement_group
                     vmss_resource.tags = self.tags
 
-                    if self.custom_data:
+                    if self.custom_data and vmss_resource.virtual_machine_profile.os_profile is not None:
                         vmss_resource.virtual_machine_profile.os_profile.custom_data = self.custom_data
 
                     if support_lb_change:

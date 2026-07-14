@@ -855,6 +855,8 @@ class AzureRMGalleryImageVersions(AzureRMModuleBaseExt):
         # self.log('Deleting the GalleryImageVersion instance {0}'.format(self.))
         try:
             response = self.image_version_client.gallery_image_versions.begin_delete(self.resource_group, self.gallery_name, self.gallery_image_name, self.name)
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
         except Exception as e:
             self.log('Error attempting to delete the GalleryImageVersion instance.')
             self.fail('Error deleting the GalleryImageVersion instance: {0}'.format(str(e)))
