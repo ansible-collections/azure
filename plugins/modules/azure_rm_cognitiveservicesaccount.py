@@ -552,12 +552,11 @@ class AzureRMCognitiveServicesAccount(AzureRMModuleBaseExt):
             if self.disable_local_auth is not None:
                 properties['disable_local_auth'] = self.disable_local_auth
         else:
-            if self.location:
-                params['location'] = self.location
-            else:
-                # Get resource group location if location not specified
+            # Get resource group location if location not specified
+            if not self.location:
                 resource_group = self.get_resource_group(self.resource_group)
                 self.location = resource_group.location
+            params['location'] = self.location
 
             if not self.kind:
                 self.module.fail_json(msg="kind must be specified when creating")
