@@ -308,7 +308,6 @@ options:
     smb_oauth_enabled:
         description:
             - Whether managed identities can access Azure Files SMB shares using OAuth.
-            - Corresponds to C(properties.azureFilesIdentityBasedAuthentication.smbOAuthSettings.isSmbOAuthEnabled) in the REST API.
             - When unset, the value on Azure is left unchanged (the service default is C(false) for new accounts).
         type: bool
     encryption:
