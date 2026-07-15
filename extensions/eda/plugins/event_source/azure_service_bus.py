@@ -8,8 +8,10 @@ import asyncio
 import contextlib
 import json
 import logging
+import uuid
 from typing import Any
 
+from azure.servicebus import ServiceBusReceivedMessage
 from azure.servicebus.aio import ServiceBusClient
 
 DOCUMENTATION = r"""
@@ -19,6 +21,11 @@ description:
   - An ansible-rulebook event source module for receiving events from an Azure service bus.
   - In order to get the service bus and the connection string, refer to
     https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-python-how-to-use-queues?tabs=passwordless
+  - Each event is assigned a valid RFC 4122 UUID under meta.uuid.
+  - If the message_id from Azure Service Bus is already a valid UUID it is used directly.
+  - If the message_id is not a valid UUID, a deterministic UUID5 is generated from
+    queue_name and sequence_number (broker-assigned, unique within the queue) to ensure
+    uniqueness within the configured queue. The original value is always preserved under meta.message_id.
 options:
   conn_str:
     description:
@@ -71,6 +78,50 @@ DEFAULT_FEEDBACK_TIMEOUT = 120
 
 logger = logging.getLogger()
 
+_uuid_warning = {"emitted": False}
+
+
+def is_valid_uuid(value: str) -> bool:
+    """Check if a string is a valid RFC 4122 UUID.
+
+    Accepts a str but handles non-string types defensively by catching
+    TypeError, so callers do not need to guard against unexpected types.
+    """
+    try:
+        uuid.UUID(value)
+        return True  # noqa: TRY300
+    except (ValueError, AttributeError, TypeError):
+        return False
+
+
+def _process_service_bus_uuid(
+    msg: ServiceBusReceivedMessage,
+    queue_name: str,
+    meta: dict[str, Any],
+) -> None:
+    """Assign a valid UUID to meta["uuid"].
+
+    Uses msg.message_id if it is a valid UUID, otherwise generates a
+    deterministic UUID5 from queue_name and sequence_number to ensure
+    uniqueness within the configured queue. The original message_id is
+    always preserved under meta["message_id"] regardless of validity;
+    it is set to None when message_id is absent.
+    """
+    raw_id = str(msg.message_id) if msg.message_id is not None else None
+    meta["message_id"] = raw_id
+
+    if raw_id and is_valid_uuid(raw_id):
+        meta["uuid"] = raw_id
+    else:
+        meta["uuid"] = str(uuid.uuid5(uuid.NAMESPACE_OID, f"{queue_name}:{msg.sequence_number}"))
+        if raw_id and not _uuid_warning["emitted"]:
+            _uuid_warning["emitted"] = True
+            logger.warning(
+                "Provided message_id is not a valid UUID,"
+                " using generated UUID. The original value has been"
+                " stored under event.meta.message_id for tracking.",
+            )
+
 
 async def receive_events(
     queue: asyncio.Queue[Any],
@@ -97,10 +148,10 @@ async def receive_events(
         receiver = servicebus_client.get_queue_receiver(queue_name=args["queue_name"])
         async with receiver:
             async for msg in receiver:
-                meta = {"message_id": msg.message_id, "event": {}}
-                meta["event"]["uuid"] = msg.message_id
+                meta: dict[str, Any] = {}
                 if msg.enqueued_time_utc:
-                    meta["event"]["produced_at"] = msg.enqueued_time_utc.isoformat()
+                    meta["produced_at"] = msg.enqueued_time_utc.isoformat()
+                _process_service_bus_uuid(msg, args["queue_name"], meta)
 
                 body = str(msg)
                 with contextlib.suppress(json.JSONDecodeError):

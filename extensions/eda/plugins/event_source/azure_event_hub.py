@@ -7,6 +7,7 @@ events into Ansible EDA rulebooks.
 import asyncio
 import json
 import logging
+import uuid
 from typing import Any
 
 from azure.eventhub import EventData
@@ -19,6 +20,14 @@ short_description: Receive events via a Azure Event Hub
 description:
   - An ansible-rulebook event source plugin for receiving events
     via Azure Event Hub
+  - Each event is assigned a valid RFC 4122 UUID under meta.uuid.
+  - If message_id is a valid UUID it is used. Otherwise if correlation_id is a valid UUID
+    it is used. Each is validated independently so an invalid message_id does not hide
+    a valid correlation_id.
+  - AMQP ID values of any type (str, bytes, uuid.UUID, int) are normalised to str
+    before validation.
+  - If neither is a valid UUID, a deterministic UUID5 is generated from
+    partition_id:sequence_number. The original value is preserved under meta.message_id.
 options:
   azure_tenant_id:
     description:
@@ -94,6 +103,74 @@ EXAMPLES = r"""
 
 logger = logging.getLogger()
 
+_uuid_warning = {"emitted": False}
+
+
+def is_valid_uuid(value: str) -> bool:
+    """Check if a string is a valid RFC 4122 UUID.
+
+    Accepts a str but handles non-string types defensively by catching
+    TypeError, so callers do not need to guard against unexpected types.
+    """
+    try:
+        uuid.UUID(value)
+        return True  # noqa: TRY300
+    except (ValueError, AttributeError, TypeError):
+        return False
+
+
+def _normalize_amqp_id(value: str | bytes | uuid.UUID | int | None) -> str | None:
+    """Normalize an AMQP ID value to a string suitable for UUID validation.
+
+    AMQP message-id and correlation-id may be str, bytes, uuid.UUID, or int (ulong).
+    Returns None if value is None.
+    """
+    if value is None:
+        return None
+    if isinstance(value, bytes):
+        try:
+            return value.decode("utf-8")
+        except UnicodeDecodeError:
+            return value.hex()
+    return str(value)
+
+
+def _process_event_hub_uuid(
+    partition_context: PartitionContext,
+    event: EventData,
+    meta: dict[str, Any],
+) -> None:
+    """Assign a valid UUID to meta["uuid"].
+
+    Priority: message_id > correlation_id > generated UUID5.
+    Each candidate is validated independently so an invalid message_id does
+    not hide a valid correlation_id. Generated UUID5 uses
+    partition_id:sequence_number as coordinates. The original value is
+    preserved under meta["message_id"] when the fallback is used.
+    """
+    coordinates = f"{partition_context.partition_id}:{event.sequence_number}"
+    generated_uuid = str(uuid.uuid5(uuid.NAMESPACE_OID, coordinates))
+
+    message_id = _normalize_amqp_id(event.message_id)
+    correlation_id = _normalize_amqp_id(event.correlation_id)
+
+    if message_id and is_valid_uuid(message_id):
+        meta["uuid"] = message_id
+    elif correlation_id and is_valid_uuid(correlation_id):
+        meta["uuid"] = correlation_id
+    else:
+        meta["uuid"] = generated_uuid
+        raw_id = message_id or correlation_id
+        if raw_id:
+            meta["message_id"] = raw_id
+            if not _uuid_warning["emitted"]:
+                _uuid_warning["emitted"] = True
+                logger.warning(
+                    "Provided message_id/correlation_id is not a valid UUID,"
+                    " using generated UUID. The original value has been"
+                    " stored under event.meta.message_id for tracking.",
+                )
+
 
 REQUIRED_ARGS = [
     "azure_tenant_id",
@@ -144,16 +221,10 @@ class AzureHubConsumer:
     ) -> None:
         """Receiving event data."""
         if event:
-            meta = {}
-            msg_id = (
-                event.message_id
-                or event.correlation_id
-                or f"{partition_context.partition_id}:{event.sequence_number}"
-            )
-
-            meta["event"] = {"uuid": msg_id}
+            meta: dict[str, Any] = {}
             if event.enqueued_time:
-                meta["event"]["produced_at"] = event.enqueued_time.isoformat()
+                meta["produced_at"] = event.enqueued_time.isoformat()
+            _process_event_hub_uuid(partition_context, event, meta)
             # Process message body
             try:
                 value = event.body_as_str()
