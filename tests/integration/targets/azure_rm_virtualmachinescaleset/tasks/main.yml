@@ -1347,6 +1347,391 @@
         resource_group: "{{ resource_group }}-vmss01"
         name: "srcvm{{ rpfx }}"
         state: absent
+
+    - name: Create Uniform VMSS with security_profile and scale_in_policy
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadWrite
+        os_type: Linux
+        single_placement_group: true
+        orchestration_mode: Uniform
+        scale_in_policy: NewestVM
+        security_profile:
+          uefi_settings:
+            secure_boot_enabled: true
+            v_tpm_enabled: true
+          encryption_at_host: false
+          security_type: TrustedLaunch
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+      register: auditvmss_create
+
+    - name: Assert audit VMSS created with security_profile and scale_in_policy
+      ansible.builtin.assert:
+        that:
+          - auditvmss_create.changed
+          - auditvmss_create.ansible_facts.azure_vmss.virtual_machine_profile.security_profile.security_type == 'TrustedLaunch'
+          - auditvmss_create.ansible_facts.azure_vmss.virtual_machine_profile.security_profile.uefi_settings.secure_boot_enabled
+          - auditvmss_create.ansible_facts.azure_vmss.virtual_machine_profile.security_profile.uefi_settings.v_tpm_enabled
+          - auditvmss_create.ansible_facts.azure_vmss.scale_in_policy.rules[0] == 'NewestVM'
+
+    - name: Re-run same task to assert idempotence
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadWrite
+        os_type: Linux
+        single_placement_group: true
+        orchestration_mode: Uniform
+        scale_in_policy: NewestVM
+        security_profile:
+          uefi_settings:
+            secure_boot_enabled: true
+            v_tpm_enabled: true
+          encryption_at_host: false
+          security_type: TrustedLaunch
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            caching: ReadWrite
+            managed_disk_type: Standard_LRS
+      register: auditvmss_idem
+
+    - name: Assert audit VMSS re-run is idempotent
+      ansible.builtin.assert:
+        that:
+          - not auditvmss_idem.changed
+
+    - name: Update audit VMSS without specifying orchestration_mode
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        capacity: 2
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadWrite
+        single_placement_group: true
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+      register: auditvmss_b12
+
+    - name: Assert update without orchestration_mode succeeded
+      ansible.builtin.assert:
+        that:
+          - auditvmss_b12.changed
+          - auditvmss_b12.ansible_facts.azure_vmss.sku.capacity == 2
+
+    - name: Update audit VMSS data_disks with minimal fields
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        capacity: 2
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadWrite
+        single_placement_group: true
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 128
+            managed_disk_type: Standard_LRS
+      register: auditvmss_b11
+
+    - name: Assert update with minimal data_disks did not fail
+      ansible.builtin.assert:
+        that:
+          - auditvmss_b11 is not failed
+
+    - name: Update audit VMSS security_profile.uefi_settings.v_tpm_enabled
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        capacity: 2
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadWrite
+        single_placement_group: true
+        security_profile:
+          uefi_settings:
+            secure_boot_enabled: true
+            v_tpm_enabled: false
+          encryption_at_host: false
+          security_type: TrustedLaunch
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+      register: auditvmss_secprof
+
+    - name: Assert security_profile update did not fail
+      ansible.builtin.assert:
+        that:
+          - auditvmss_secprof is not failed
+
+    - name: Delete audit VMSS
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+        state: absent
+
+    - name: Attempt VMSS create without subnet_name
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "nosubnetvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        virtual_network_name: VMSStestVnet
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_type: Linux
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+      register: no_subnet_result
+      failed_when: false
+
+    - name: Assert missing subnet_name fails with clear error
+      ansible.builtin.assert:
+        that:
+          - no_subnet_result is failed
+          - "'subnet' in (no_subnet_result.msg | lower)"
+
+    - name: Create Uniform VMSS with distinctive values for preserve-live-values baseline
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 3
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadWrite
+        os_type: linux
+        overprovision: true
+        single_placement_group: true
+        orchestration_mode: Uniform
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 64
+            managed_disk_type: Standard_LRS
+
+    - name: Update preserve VMSS with tags only and no other options provided
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        tags:
+          preserve_test: "yes"
+
+    - name: Fetch preserve VMSS live state
+      azure.azcollection.azure_rm_virtualmachinescaleset_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+      register: preserve_live
+
+    - name: Assert live values preserved after tags-only update
+      ansible.builtin.assert:
+        that:
+          - preserve_live.vmss[0].sku.capacity == 3
+          - preserve_live.vmss[0].properties.overprovision == true
+          - preserve_live.vmss[0].properties.singlePlacementGroup == true
+          - preserve_live.vmss[0].sku.name == 'Standard_D2s_v3'
+          - preserve_live.vmss[0].properties.virtualMachineProfile.storageProfile.osDisk.caching == 'ReadWrite'
+
+    - name: Update preserve VMSS upgrade_policy Manual to Automatic
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Automatic
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+      register: upgrade_policy_result
+
+    - name: Fetch preserve VMSS after upgrade_policy flip
+      azure.azcollection.azure_rm_virtualmachinescaleset_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+      register: upgrade_policy_live
+
+    - name: Assert upgrade_policy actually changed on Azure
+      ansible.builtin.assert:
+        that:
+          - upgrade_policy_result.changed
+          - upgrade_policy_live.vmss[0].properties.upgradePolicy.mode == 'Automatic'
+
+    - name: Update preserve VMSS data_disks size only
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        data_disks:
+          - lun: 0
+            disk_size_gb: 128
+            managed_disk_type: Standard_LRS
+      register: data_disk_resize_result
+
+    - name: Fetch preserve VMSS after data_disks resize
+      azure.azcollection.azure_rm_virtualmachinescaleset_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+      register: data_disk_resize_live
+
+    - name: Assert data_disks size change detected and applied
+      ansible.builtin.assert:
+        that:
+          - data_disk_resize_result.changed
+          - data_disk_resize_live.vmss[0].properties.virtualMachineProfile.storageProfile.dataDisks[0].diskSizeGB == 128
+
+    - name: Delete preserve VMSS
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "preservevmss{{ rpfx }}"
+        state: absent
+
+    - name: Create Spot VMSS with max_price for spot-preservation baseline
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "spotvmss{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        admin_username: testuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/testuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        capacity: 1
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_type: Linux
+        priority: Spot
+        eviction_policy: Deallocate
+        max_price: 0.5
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+
+    - name: Update Spot VMSS tags without providing max_price
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "spotvmss{{ rpfx }}"
+        virtual_network_name: VMSStestVnet
+        subnet_name: VMSStestSubnet
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts-gen2
+          version: latest
+        tags:
+          spot_test: "yes"
+      register: spot_tags_result
+
+    - name: Assert Spot VMSS tags update did not falsely fail on max_price
+      ansible.builtin.assert:
+        that:
+          - spot_tags_result is not failed
+
+    - name: Delete Spot VMSS
+      azure.azcollection.azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "spotvmss{{ rpfx }}"
+        state: absent
     # ---------------------------------------------------------------------
 
     - name: Delete user managed identities
