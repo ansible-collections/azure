@@ -1137,7 +1137,7 @@
         image:
           offer: 0001-com-ubuntu-server-focal
       register: fail_invalid_image_dict
-      failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group] or [id]"'
+      failed_when: 'fail_invalid_image_dict.msg != "parameter error: expecting image to contain [publisher, offer, sku, version], [name, resource_group], [id] or [community_gallery_image_id]"'
 
     - name: Assert error thrown with invalid image type
       azure.azcollection.azure_rm_virtualmachinescaleset:
