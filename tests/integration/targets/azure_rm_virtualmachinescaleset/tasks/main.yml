@@ -1609,10 +1609,10 @@
       ansible.builtin.assert:
         that:
           - preserve_live.vmss[0].sku.capacity == 3
-          - preserve_live.vmss[0].properties.overprovision == true
-          - preserve_live.vmss[0].properties.singlePlacementGroup == true
+          - preserve_live.vmss[0].overprovision == true
+          - preserve_live.vmss[0].single_placement_group == true
           - preserve_live.vmss[0].sku.name == 'Standard_D2s_v3'
-          - preserve_live.vmss[0].properties.virtualMachineProfile.storageProfile.osDisk.caching == 'ReadWrite'
+          - preserve_live.vmss[0].virtual_machine_profile.storage_profile.os_disk.caching == 'ReadWrite'
 
     - name: Update preserve VMSS upgrade_policy Manual to Automatic
       azure.azcollection.azure_rm_virtualmachinescaleset:
@@ -1638,7 +1638,7 @@
       ansible.builtin.assert:
         that:
           - upgrade_policy_result.changed
-          - upgrade_policy_live.vmss[0].properties.upgradePolicy.mode == 'Automatic'
+          - upgrade_policy_live.vmss[0].upgrade_policy.mode == 'Automatic'
 
     - name: Update preserve VMSS data_disks size only
       azure.azcollection.azure_rm_virtualmachinescaleset:
@@ -1667,7 +1667,7 @@
       ansible.builtin.assert:
         that:
           - data_disk_resize_result.changed
-          - data_disk_resize_live.vmss[0].properties.virtualMachineProfile.storageProfile.dataDisks[0].diskSizeGB == 128
+          - data_disk_resize_live.vmss[0].virtual_machine_profile.storage_profile.data_disks[0].disk_size_gb == 128
 
     - name: Delete preserve VMSS
       azure.azcollection.azure_rm_virtualmachinescaleset:
