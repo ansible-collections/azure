@@ -465,7 +465,7 @@
         capacity: 1
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
-        upgrade_policy: Automatic
+        upgrade_policy: Manual
         load_balancer: testLB1
         tier: Standard
         managed_disk_type: Standard_LRS
@@ -502,7 +502,7 @@
         capacity: 1
         virtual_network_name: VMSStestVnet
         subnet_name: VMSStestSubnet
-        upgrade_policy: Automatic
+        upgrade_policy: Manual
         load_balancer: testLB1
         tier: Standard
         managed_disk_type: Standard_LRS
