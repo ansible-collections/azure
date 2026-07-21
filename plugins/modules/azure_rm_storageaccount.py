@@ -1161,6 +1161,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         self.allow_cross_tenant_replication = None
         self.default_to_o_auth_authentication = None
         self.smb_oauth_enabled = None
+        self._existing_azure_files_auth = None
         self._managed_identity = None
         self.identity = None
         self.update_identity = False
@@ -1372,6 +1373,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         afa = getattr(account_obj, 'azure_files_identity_based_authentication', None)
         smb = getattr(afa, 'smb_o_auth_settings', None) if afa else None
         account_dict['smb_oauth_enabled'] = bool(getattr(smb, 'is_smb_o_auth_enabled', False)) if smb else False
+        self._existing_azure_files_auth = afa
 
         return account_dict
 
@@ -1668,7 +1670,8 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             if not self.check_mode:
                 try:
                     parameters = self.storage_models.StorageAccountUpdateParameters(
-                        azure_files_identity_based_authentication=self._build_azure_files_identity_auth_payload())
+                        azure_files_identity_based_authentication=self._build_azure_files_identity_auth_payload(
+                            existing_afa=self._existing_azure_files_auth))
                     self.storage_client.storage_accounts.update(self.resource_group, self.name, parameters)
                 except Exception as exc:
                     self.fail("Failed to update smb_oauth_enabled: {0}".format(str(exc)))
@@ -1767,7 +1770,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             immutability_policy=self.storage_models.AccountImmutabilityPolicyProperties(**policy) if policy else None,
         )
 
-    def _build_azure_files_identity_auth_payload(self):
+    def _build_azure_files_identity_auth_payload(self, existing_afa=None):
         '''
         Build an AzureFilesIdentityBasedAuthentication SDK model that carries the
         smb_oauth_enabled toggle. Returns None when the caller did not set the
@@ -1775,11 +1778,20 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
         '''
         if self.smb_oauth_enabled is None:
             return None
+
+        smb_settings = self.storage_models.SmbOAuthSettings(
+            is_smb_o_auth_enabled=self.smb_oauth_enabled,
+        )
+
+        directory_service_options = getattr(existing_afa, 'directory_service_options', None) or "None"
+        active_directory_properties = getattr(existing_afa, 'active_directory_properties', None)
+        default_share_permission = getattr(existing_afa, 'default_share_permission', None)
+
         return self.storage_models.AzureFilesIdentityBasedAuthentication(
-            directory_service_options="None",
-            smb_o_auth_settings=self.storage_models.SmbOAuthSettings(
-                is_smb_o_auth_enabled=self.smb_oauth_enabled,
-            ),
+            directory_service_options=directory_service_options,
+            active_directory_properties=active_directory_properties,
+            default_share_permission=default_share_permission,
+            smb_o_auth_settings=smb_settings,
         )
 
     def create_account(self):
