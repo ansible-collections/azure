@@ -69,6 +69,7 @@
         - "{{ storage_account_name_default }}10"
         - "{{ storage_account_name_default }}11"
         - "{{ storage_account_name_default }}12"
+        - "{{ storage_account_name_default }}13"
 
     - name: Create new storage account with defaults (omitted parameters)
       azure.azcollection.azure_rm_storageaccount:
@@ -1006,6 +1007,73 @@
         that:
           - "output.storageaccounts | length >= 2"
 
+    - name: Create a storage account with smb_oauth_enabled=true
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+        account_type: Standard_LRS
+        kind: StorageV2
+        smb_oauth_enabled: true
+      register: smb_oauth_create
+
+    - name: Assert storage account is created with smb_oauth_enabled=true
+      ansible.builtin.assert:
+        that:
+          - smb_oauth_create is changed
+          - smb_oauth_create.state.smb_oauth_enabled == true
+
+    - name: Create a storage account with smb_oauth_enabled=true (Idempotent test)
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+        account_type: Standard_LRS
+        kind: StorageV2
+        smb_oauth_enabled: true
+      register: smb_oauth_idem
+
+    - name: Assert idempotency
+      ansible.builtin.assert:
+        that:
+          - smb_oauth_idem is not changed
+
+    - name: Update the storage account to disable smb_oauth_enabled
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+        account_type: Standard_LRS
+        kind: StorageV2
+        smb_oauth_enabled: false
+      register: smb_oauth_disable
+
+    - name: Assert smb_oauth_enabled was disabled
+      ansible.builtin.assert:
+        that:
+          - smb_oauth_disable is changed
+
+    - name: Get storage account facts for smb_oauth account
+      azure.azcollection.azure_rm_storageaccount_info:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+      register: smb_oauth_facts
+
+    - name: Assert info module reports smb_oauth_enabled=false
+      ansible.builtin.assert:
+        that:
+          - smb_oauth_facts.storageaccounts[0].smb_oauth_enabled == false
+
+    - name: Update the storage account omitting smb_oauth_enabled (tri-state no-op)
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-storageaccount"
+        name: "{{ storage_account_name_default }}13"
+        account_type: Standard_LRS
+        kind: StorageV2
+      register: smb_oauth_noop
+
+    - name: Assert omitting smb_oauth_enabled does not trigger a change
+      ansible.builtin.assert:
+        that:
+          - smb_oauth_noop is not changed
+
     - name: Delete storage accounts
       azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ resource_group }}-storageaccount"
@@ -1027,6 +1095,7 @@
         - "{{ storage_account_name_default }}10"
         - "{{ storage_account_name_default }}11"
         - "{{ storage_account_name_default }}12"
+        - "{{ storage_account_name_default }}13"
 
     - name: Delete user managed identities
       ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"

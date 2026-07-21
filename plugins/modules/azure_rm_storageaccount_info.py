@@ -168,6 +168,12 @@ storageaccounts:
             type: bool
             returned: always
             sample: true
+        smb_oauth_enabled:
+            description:
+                - Whether managed identities can access Azure Files SMB shares using OAuth.
+            type: bool
+            returned: always
+            sample: true
         custom_domain:
             description:
                 - User domain assigned to the storage account.
@@ -889,6 +895,10 @@ class AzureRMStorageAccountInfo(AzureRMModuleBase):
         account_dict['encryption'] = as_attribute_dict(account_obj.encryption) if account_obj.encryption else dict()
 
         account_dict['identity'] = as_attribute_dict(account_obj.identity) if account_obj.identity else dict()
+
+        afa = getattr(account_obj, 'azure_files_identity_based_authentication', None)
+        smb = getattr(afa, 'smb_o_auth_settings', None) if afa else None
+        account_dict['smb_oauth_enabled'] = bool(getattr(smb, 'is_smb_o_auth_enabled', False)) if smb else False
 
         return account_dict
 
