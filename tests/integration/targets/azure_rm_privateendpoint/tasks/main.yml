@@ -226,6 +226,20 @@
         that:
           - output is changed
 
+    - name: Get secondary private endpoint info (manual connections)
+      azure.azcollection.azure_rm_privateendpoint_info:
+        name: "privateendpoint{{ rpfx }}02"
+        resource_group: "{{ resource_group }}-privateendpoint"
+      register: manual_output
+
+    - name: Assert secondary private endpoint info exposes manual connection state
+      ansible.builtin.assert:
+        that:
+          - manual_output.privateendpoints[0].provisioning_state == "Succeeded"
+          - manual_output.privateendpoints[0].manual_private_link_service_connections | length == 1
+          - manual_output.privateendpoints[0].manual_private_link_service_connections[0].name == "privateEndpoints_test_name02"
+          - manual_output.privateendpoints[0].manual_private_link_service_connections[0].connection_state.status is defined
+
     - name: Create an application security group
       azure.azcollection.azure_rm_applicationsecuritygroup:
         resource_group: "{{ resource_group }}-privateendpoint"
@@ -238,7 +252,7 @@
         name: "app{{ rpfx }}"
       register: app_group_output
 
-    - name: Create third private endpoint with manual_private_link_service_connections parameters
+    - name: Create third private endpoint with application_security_groups and ip_configurations
       azure.azcollection.azure_rm_privateendpoint:
         name: "privateendpoint{{ rpfx }}03"
         resource_group: "{{ resource_group }}-privateendpoint"

@@ -412,9 +412,9 @@ class AzureRMPrivateEndpointInfo(AzureRMModuleBase):
                 connection['name'] = connections.name
                 connection['type'] = connections.type
                 connection['group_ids'] = connections.group_ids
-                connection['connection_state']['status'] = connections.manual_private_link_service_connection_state.status
-                connection['connection_state']['description'] = connections.manual_private_link_service_connection_state.description
-                connection['connection_state']['actions_required'] = connections.manual_private_link_service_connection_state.actions_required
+                connection['connection_state']['status'] = connections.private_link_service_connection_state.status
+                connection['connection_state']['description'] = connections.private_link_service_connection_state.description
+                connection['connection_state']['actions_required'] = connections.private_link_service_connection_state.actions_required
                 results['manual_private_link_service_connections'].append(connection)
         if privateendpoint.ip_configurations:
             for item in privateendpoint.ip_configurations:
