@@ -1552,13 +1552,7 @@
           sku: 22_04-lts-gen2
           version: latest
       register: no_subnet_result
-      failed_when: false
-
-    - name: Assert missing subnet_name fails with clear error
-      ansible.builtin.assert:
-        that:
-          - no_subnet_result is failed
-          - "'subnet' in (no_subnet_result.msg | lower)"
+      failed_when: no_subnet_result.msg != "subnet name is required"
 
     - name: Create Uniform VMSS with distinctive values for preserve-live-values baseline
       azure.azcollection.azure_rm_virtualmachinescaleset:
