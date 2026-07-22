@@ -1494,6 +1494,18 @@
       ansible.builtin.assert:
         that:
           - auditvmss_b11 is not failed
+          - auditvmss_b11.changed
+
+    - name: Fetch audit VMSS after minimal data_disks resize
+      azure.azcollection.azure_rm_virtualmachinescaleset_info:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: "auditvmss{{ rpfx }}"
+      register: auditvmss_b11_live
+
+    - name: Assert audit VMSS data_disks resize actually applied on Azure
+      ansible.builtin.assert:
+        that:
+          - auditvmss_b11_live.vmss[0].virtual_machine_profile.storage_profile.data_disks[0].disk_size_gb == 128
 
     - name: Update audit VMSS security_profile.uefi_settings.v_tpm_enabled
       azure.azcollection.azure_rm_virtualmachinescaleset:

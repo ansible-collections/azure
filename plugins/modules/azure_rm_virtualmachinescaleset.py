@@ -1094,7 +1094,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     differences.append('Capacity')
                     changed = True
                     vmss_dict['sku']['capacity'] = self.capacity
-                else:
+                elif self.capacity is None:
                     self.capacity = vmss_dict['sku']['capacity']
 
                 if self.vm_size and \
