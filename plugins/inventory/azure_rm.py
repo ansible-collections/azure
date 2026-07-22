@@ -31,7 +31,7 @@ DOCUMENTATION = r'''
 
 EXAMPLES = '''
 # The following host variables are always available:
-# public_ipv4_addresses: all public IP addresses, with the primary IP config from the primary NIC first
+# public_ipv4_address: all public IP addresses, with the primary IP config from the primary NIC first
 # public_dns_hostnames: all public DNS hostnames, with the primary IP config from the primary NIC first
 # private_ipv4_addresses: all private IP addressses, with the primary IP config from the primary NIC first
 # id: the VM's Azure resource ID, eg /subscriptions/00000000-0000-0000-1111-1111aaaabb/resourceGroups/my_rg/providers/Microsoft.Compute/virtualMachines/my_vm
@@ -99,7 +99,7 @@ hostvar_expressions:
     some_statically_valued_var: "'staticvalue'"
     # overrides the default ansible_host value with a custom Jinja2 expression, in this case, the first DNS hostname, or
     # if none are found, the first public IP address.
-    ansible_host: (public_dns_hostnames + public_ipv4_addresses) | first
+    ansible_host: (public_dns_hostnames + public_ipv4_address) | first
 
 # change how inventory_hostname is generated. Each item is a jinja2 expression similar to hostvar_expressions.
 hostnames:
