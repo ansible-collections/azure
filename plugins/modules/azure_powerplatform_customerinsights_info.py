@@ -30,6 +30,16 @@ options:
             - UUID of a specific Customer Insights instance.
             - Takes precedence over I(name) when both are provided.
         type: str
+    subscription_key:
+        description:
+            - The API subscription key for the Customer Insights environment.
+            - Found in Customer Insights under Settings > Permissions > APIs.
+            - Required for all API calls; the Customer Insights API is fronted
+              by Azure API Management and requires this key in addition to the
+              Bearer token.
+        type: str
+        required: true
+        no_log: true
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -39,16 +49,19 @@ author:
 EXAMPLES = '''
 - name: Get all Customer Insights instances
   azure.azcollection.azure_powerplatform_customerinsights_info:
+    subscription_key: "{{ ci_subscription_key }}"
   register: ci_info
 
 - name: Get a specific Customer Insights instance by name
   azure.azcollection.azure_powerplatform_customerinsights_info:
     name: my-ci-instance
+    subscription_key: "{{ ci_subscription_key }}"
   register: ci_info
 
 - name: Get a specific Customer Insights instance by ID
   azure.azcollection.azure_powerplatform_customerinsights_info:
     instance_id: "12345678-1234-1234-1234-123456789012"
+    subscription_key: "{{ ci_subscription_key }}"
   register: ci_info
 '''
 
@@ -113,10 +126,12 @@ class AzureRMPowerPlatformCustomerInsightsInfo(AzureRMModuleBase):
         self.module_arg_spec = dict(
             name=dict(type='str'),
             instance_id=dict(type='str'),
+            subscription_key=dict(type='str', required=True, no_log=True),
         )
 
         self.name = None
         self.instance_id = None
+        self.subscription_key = None
 
         self.results = dict(changed=False, instances=[])
 
@@ -148,6 +163,7 @@ class AzureRMPowerPlatformCustomerInsightsInfo(AzureRMModuleBase):
         token = cred.get_token(CI_TOKEN_SCOPE)
         return {
             'Authorization': 'Bearer {0}'.format(token.token),
+            'Ocp-Apim-Subscription-Key': self.subscription_key,
             'Accept': 'application/json',
         }
 

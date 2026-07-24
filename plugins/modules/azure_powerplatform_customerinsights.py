@@ -62,6 +62,16 @@ options:
             - skip
             - attach
         default: create
+    subscription_key:
+        description:
+            - The API subscription key for the Customer Insights environment.
+            - Found in Customer Insights under Settings > Permissions > APIs.
+            - Required for all API calls; the Customer Insights API is fronted
+              by Azure API Management and requires this key in addition to the
+              Bearer token.
+        type: str
+        required: true
+        no_log: true
     state:
         description:
             - State of the Customer Insights instance.
@@ -85,6 +95,7 @@ EXAMPLES = '''
     region: unitedstates
     instance_type: trial
     bap_provisioning_type: create
+    subscription_key: "{{ ci_subscription_key }}"
     state: present
 
 - name: Create a production Customer Insights instance
@@ -92,17 +103,20 @@ EXAMPLES = '''
     name: prod-ci-instance
     region: europe
     instance_type: production
+    subscription_key: "{{ ci_subscription_key }}"
     state: present
 
 - name: Delete a Customer Insights instance by name
   azure.azcollection.azure_powerplatform_customerinsights:
     name: my-ci-instance
+    subscription_key: "{{ ci_subscription_key }}"
     state: absent
 
 - name: Delete a Customer Insights instance by ID
   azure.azcollection.azure_powerplatform_customerinsights:
     name: my-ci-instance
     instance_id: "12345678-1234-1234-1234-123456789012"
+    subscription_key: "{{ ci_subscription_key }}"
     state: absent
 '''
 
@@ -185,6 +199,7 @@ class AzureRMPowerPlatformCustomerInsights(AzureRMModuleBase):
                 choices=['create', 'skip', 'attach'],
                 default='create',
             ),
+            subscription_key=dict(type='str', required=True, no_log=True),
             state=dict(
                 type='str',
                 choices=['present', 'absent'],
@@ -197,6 +212,7 @@ class AzureRMPowerPlatformCustomerInsights(AzureRMModuleBase):
         self.region = None
         self.instance_type = None
         self.bap_provisioning_type = None
+        self.subscription_key = None
         self.state = None
 
         self.results = dict(changed=False)
@@ -248,6 +264,7 @@ class AzureRMPowerPlatformCustomerInsights(AzureRMModuleBase):
         token = cred.get_token(CI_TOKEN_SCOPE)
         return {
             'Authorization': 'Bearer {0}'.format(token.token),
+            'Ocp-Apim-Subscription-Key': self.subscription_key,
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }

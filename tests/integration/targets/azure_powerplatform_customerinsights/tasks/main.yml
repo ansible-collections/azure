@@ -8,6 +8,7 @@
     # --- Info module: list all (may be empty) ---
     - name: List all Customer Insights instances
       azure.azcollection.azure_powerplatform_customerinsights_info:
+        subscription_key: "{{ ci_subscription_key }}"
       register: ci_list_all
 
     - name: Assert info module returns a list
@@ -23,6 +24,7 @@
         region: unitedstates
         instance_type: trial
         bap_provisioning_type: create
+        subscription_key: "{{ ci_subscription_key }}"
         state: present
       register: ci_create
 
@@ -44,6 +46,7 @@
         name: "{{ ci_instance_name }}"
         region: unitedstates
         instance_type: trial
+        subscription_key: "{{ ci_subscription_key }}"
         state: present
       register: ci_create_again
 
@@ -56,6 +59,7 @@
     - name: Get instance info by name
       azure.azcollection.azure_powerplatform_customerinsights_info:
         name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
       register: ci_info_name
 
     - name: Assert info returns the instance
@@ -68,6 +72,7 @@
     - name: Get instance info by ID
       azure.azcollection.azure_powerplatform_customerinsights_info:
         instance_id: "{{ ci_instance_id }}"
+        subscription_key: "{{ ci_subscription_key }}"
       register: ci_info_id
 
     - name: Assert info by ID returns the instance
@@ -80,6 +85,7 @@
     - name: Get info for nonexistent instance
       azure.azcollection.azure_powerplatform_customerinsights_info:
         name: "nonexistent-ci-instance-{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        subscription_key: "{{ ci_subscription_key }}"
       register: ci_info_missing
 
     - name: Assert empty result for nonexistent instance
@@ -91,6 +97,7 @@
     - name: Delete instance in check mode
       azure.azcollection.azure_powerplatform_customerinsights:
         name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
         state: absent
       check_mode: true
       register: ci_delete_check
@@ -103,6 +110,7 @@
     - name: Verify instance still exists after check mode
       azure.azcollection.azure_powerplatform_customerinsights_info:
         instance_id: "{{ ci_instance_id }}"
+        subscription_key: "{{ ci_subscription_key }}"
       register: ci_verify_exists
 
     - name: Assert instance still exists
@@ -114,6 +122,7 @@
     - name: Delete Customer Insights instance
       azure.azcollection.azure_powerplatform_customerinsights:
         name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
         state: absent
       register: ci_delete
 
@@ -126,6 +135,7 @@
     - name: Delete instance again (idempotency)
       azure.azcollection.azure_powerplatform_customerinsights:
         name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
         state: absent
       register: ci_delete_again
 
@@ -138,5 +148,6 @@
     - name: Cleanup - ensure test instance is deleted
       azure.azcollection.azure_powerplatform_customerinsights:
         name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
         state: absent
       ignore_errors: true
