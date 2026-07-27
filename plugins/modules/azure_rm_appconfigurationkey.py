@@ -305,8 +305,13 @@ class AzureRMAppConfigurationKey(AzureRMModuleBaseExt):
             return response.as_dict()
         except ResourceNotFoundError:
             return False
+        except json.JSONDecodeError:
+            # SDK bug: when the service returns 404 with an empty body, the SDK
+            # attempts to deserialize the empty body into an Error model via
+            # response.json(), which raises JSONDecodeError instead of the
+            # expected ResourceNotFoundError. Treat it as "not found".
+            return False
         except Exception as e:
-            # Catch SDK bug: empty response causes JSONDecodeError
             self.fail("Failed to retrieve setting '{}': {}\n{}".format(self.key, str(e), traceback.format_exc()))
 
     def upsert_setting(self):
