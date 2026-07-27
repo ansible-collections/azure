@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Red Hat, Inc.
+#
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 """Ansible-rulebook event source plugin for Azure Event Hub.
 
 This module provides asynchronous consumers for Azure Event Hub to feed
