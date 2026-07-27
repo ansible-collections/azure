@@ -383,9 +383,9 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
         # Best-effort signal about the applied change (never on check mode / no-op).
         if self.results['changed'] and not self.check_mode:
             if self.state == 'present':
-                self._emit_signal('info', "extension '{0}' on machine '{1}' applied".format(self.name, self.machine_name), 'extensionUpdate')
+                self._emit_signal('info', "extension '{0}' on machine '{1}' applied".format(self.name, self.machine_name), 'ansibleExtensionUpdate')
             elif self.state == 'absent':
-                self._emit_signal('info', "extension '{0}' on machine '{1}' deleted".format(self.name, self.machine_name), 'extensionDelete')
+                self._emit_signal('info', "extension '{0}' on machine '{1}' deleted".format(self.name, self.machine_name), 'ansibleExtensionDelete')
 
         return self.results
 
