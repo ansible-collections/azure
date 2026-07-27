@@ -1205,6 +1205,19 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
         if self.kind in ['FileStorage', 'BlockBlobStorage', ] and self.account_type not in ['Premium_LRS', 'Premium_ZRS']:
             self.fail("Parameter error: Storage account with {0} kind require account type is Premium_LRS or Premium_ZRS".format(self.kind))
+
+        if self.state == 'present' and self.kind in ('Storage', 'BlobStorage'):
+            self.module.deprecate(
+                "kind='{0}' is a legacy Azure storage account type. Microsoft is disabling creation of new "
+                "legacy blob storage accounts in September 2026 and fully retiring both 'Storage' "
+                "(general-purpose v1) and 'BlobStorage' accounts in October 2026, after which remaining "
+                "accounts will be auto-migrated to 'StorageV2'. Set kind='StorageV2' instead. See "
+                "https://learn.microsoft.com/en-us/azure/storage/common/legacy-blob-storage-account-migration-overview "
+                "and "
+                "https://learn.microsoft.com/en-us/azure/storage/common/general-purpose-version-1-account-migration-overview".format(self.kind),
+                version='4.0.0',
+                collection_name='azure.azcollection',
+            )
         self.account_dict = self.get_account()
 
         curr_identity = self.account_dict["identity"] if self.account_dict else None
@@ -1809,19 +1822,6 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
         if not self.access_tier and self.kind == 'BlobStorage':
             self.fail('Parameter error: access_tier required when creating a storage account of type BlobStorage.')
-
-        if self.kind in ('Storage', 'BlobStorage'):
-            self.module.deprecate(
-                "kind='{0}' is a legacy Azure storage account type. Microsoft is disabling creation of new "
-                "legacy blob storage accounts in September 2026 and fully retiring both 'Storage' "
-                "(general-purpose v1) and 'BlobStorage' accounts in October 2026, after which remaining "
-                "accounts will be auto-migrated to 'StorageV2'. Set kind='StorageV2' instead. See "
-                "https://learn.microsoft.com/en-us/azure/storage/common/legacy-blob-storage-account-migration-overview "
-                "and "
-                "https://learn.microsoft.com/en-us/azure/storage/common/general-purpose-version-1-account-migration-overview".format(self.kind),
-                version='4.0.0',
-                collection_name='azure.azcollection',
-            )
 
         self.check_name_availability()
         self.results['changed'] = True
