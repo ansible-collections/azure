@@ -15,7 +15,7 @@
         name: "group{{ rpfx }}"
         location: eastus
         zones:
-          - "1"
+          - "2"
         platform_fault_domain_count: 1
         state: present
       register: results
