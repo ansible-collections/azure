@@ -29,7 +29,7 @@
         auto_replace_on_failure: false
         license_type: 'None'
         sku:
-          name: "DCSv2-Type1"
+          name: "DSv3-Type1"
         tags:
           key1: value1
       check_mode: true
@@ -49,7 +49,7 @@
         auto_replace_on_failure: false
         license_type: 'None'
         sku:
-          name: "DCSv2-Type1"
+          name: "DSv3-Type1"
         tags:
           key1: value1
       register: output
@@ -67,7 +67,7 @@
         platform_fault_domain: 0
         auto_replace_on_failure: false
         sku:
-          name: "DCSv2-Type1"
+          name: "DSv3-Type1"
         tags:
           key1: value1
       register: output
@@ -86,7 +86,7 @@
         auto_replace_on_failure: true
         license_type: Windows_Server_Hybrid
         sku:
-          name: "DCSv2-Type1"
+          name: "DSv3-Type1"
         tags:
           key2: value2
       register: output
