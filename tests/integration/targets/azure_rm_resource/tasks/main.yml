@@ -129,7 +129,7 @@
         body:
           sku:
             name: Standard_GRS
-          kind: Storage
+          kind: StorageV2
           location: eastus
       register: output
 
