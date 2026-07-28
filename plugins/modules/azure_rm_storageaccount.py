@@ -85,7 +85,11 @@ options:
         description:
             - The kind of storage.
             - The C(FileStorage) and (BlockBlobStorage) only used when I(account_type=Premium_LRS) or I(account_type=Premium_ZRS).
-        default: 'Storage'
+            - C(Storage) (general-purpose v1) and C(BlobStorage) are legacy account kinds that Azure is retiring. Microsoft
+              is disabling creation of new legacy blob storage accounts in September 2026 and will fully retire both kinds
+              in October 2026 (any remaining accounts will be auto-migrated to C(StorageV2)). Use C(StorageV2) for all new
+              accounts.
+        default: 'StorageV2'
         type: str
         choices:
             - Storage
@@ -1022,7 +1026,7 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
             state=dict(default='present', choices=['present', 'absent', 'failover']),
             force_delete_nonempty=dict(type='bool', default=False, aliases=['force']),
             tags=dict(type='dict'),
-            kind=dict(type='str', default='Storage', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
+            kind=dict(type='str', default='StorageV2', choices=['Storage', 'StorageV2', 'BlobStorage', 'FileStorage', 'BlockBlobStorage']),
             access_tier=dict(type='str', choices=['Hot', 'Cool', 'Cold', 'Premium', 'Smart']),
             https_only=dict(type='bool'),
             minimum_tls_version=dict(type='str', choices=['TLS1_0', 'TLS1_1', 'TLS1_2']),
@@ -1201,6 +1205,19 @@ class AzureRMStorageAccount(AzureRMModuleBaseExt):
 
         if self.kind in ['FileStorage', 'BlockBlobStorage', ] and self.account_type not in ['Premium_LRS', 'Premium_ZRS']:
             self.fail("Parameter error: Storage account with {0} kind require account type is Premium_LRS or Premium_ZRS".format(self.kind))
+
+        if self.state == 'present' and self.kind in ('Storage', 'BlobStorage'):
+            self.module.deprecate(
+                "kind='{0}' is a legacy Azure storage account type. Microsoft is disabling creation of new "
+                "legacy blob storage accounts in September 2026 and fully retiring both 'Storage' "
+                "(general-purpose v1) and 'BlobStorage' accounts in October 2026, after which remaining "
+                "accounts will be auto-migrated to 'StorageV2'. Set kind='StorageV2' instead. See "
+                "https://learn.microsoft.com/en-us/azure/storage/common/legacy-blob-storage-account-migration-overview "
+                "and "
+                "https://learn.microsoft.com/en-us/azure/storage/common/general-purpose-version-1-account-migration-overview".format(self.kind),
+                version='4.0.0',
+                collection_name='azure.azcollection',
+            )
         self.account_dict = self.get_account()
 
         curr_identity = self.account_dict["identity"] if self.account_dict else None

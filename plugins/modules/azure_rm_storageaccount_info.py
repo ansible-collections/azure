@@ -317,7 +317,7 @@ storageaccounts:
                 - The kind of storage.
             returned: always
             type: str
-            sample: Storage
+            sample: StorageV2
         access_tier:
             description:
                 - The access tier for this storage account.
