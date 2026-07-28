@@ -1,4 +1,24 @@
 # Change Log
+## v3.21.0 (2026-07-28)
+
+### NEW MODULES
+  - azure_rm_cognitiveservicesaccount:([#2287](https://github.com/ansible-collections/azure/pull/2287))
+  - azure_rm_cognitiveservicesaccount_info:([#2287](https://github.com/ansible-collections/azure/pull/2287))
+
+### FEATURE ENHANCEMENT
+  - extensions/audit/event_query.yml: Add Machine Learning services to indirect node counting ([#2293](https://github.com/ansible-collections/azure/pull/2293))
+  - roles/azure_arc: Log success and failure signals for `azure_arc` role ([#2283](https://github.com/ansible-collections/azure/pull/2283))
+  - plugins/modules/azure_rm_virtualmachine.py: Add `specialized_image` option ([#2295](https://github.com/ansible-collections/azure/pull/2295))
+  - plugins/modules/azure_rm_virtualmachinescaleset.py: Add `specialized_image` option ([#2295](https://github.com/ansible-collections/azure/pull/2295))
+  - plugins/modules/azure_rm_storageaccount*: Add `smb_oauth_enabled` support ([#2298](https://github.com/ansible-collections/azure/pull/2298))
+  - plugins/modules/azure_rm_storageaccount.py: Deprecate legacy `kind` values (Note that the default is now `StorageV2` instead of `Storage`)([#2304](https://github.com/ansible-collections/azure/pull/2304))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_keyvault*: Migrate modules to `azure-mgmt-keyvault==14.0.1` hybrid models and fixed info module silently drops key vaults ([#2294](https://github.com/ansible-collections/azure/pull/2294))
+  - plugins/inventory/azure_rm.py: Fix documentation reference to `public_ipv4_address` ([#2301](https://github.com/ansible-collections/azure/pull/2301))
+  - plugins/modules/azure_rm_privateendpoint_info.py: Fix `AttributeError` on manual connections ([#2303](https://github.com/ansible-collections/azure/pull/2303))
+
+
 ## v3.20.0 (2026-06-30)
 
 ### NEW MODULES
