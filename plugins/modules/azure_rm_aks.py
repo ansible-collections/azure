@@ -1200,8 +1200,13 @@ def create_addon_profiles_spec():
         )
         configs = values.get('config') or {}
         for name, info in configs.items():
-            addon_spec[name] = dict(type=info.get('type', 'str'), aliases=[info['azure']], required=info.get('required', False))
-        spec[key] = dict(type='dict', options=addon_spec, aliases=[values['name']])
+            addon_spec[name] = dict(
+                type=info.get('type', 'str'),
+                aliases=[info['azure']],
+                required=info.get('required', False),
+                no_log=info.get('no_log', False)
+            )
+        spec[key] = dict(type='dict', options=addon_spec, aliases=[values['name']], no_log=False)
     return spec
 
 
