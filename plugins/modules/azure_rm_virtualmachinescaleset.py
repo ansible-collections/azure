@@ -1094,8 +1094,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     differences.append('Capacity')
                     changed = True
                     vmss_dict['sku']['capacity'] = self.capacity
-                elif self.capacity is None:
-                    self.capacity = vmss_dict['sku']['capacity']
 
                 if self.vm_size and \
                    self.vm_size != vmss_dict['sku']['name']:
@@ -1144,8 +1142,6 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                    bool(self.single_placement_group) != bool(vmss_dict['single_placement_group']):
                     differences.append('single_placement_group')
                     changed = True
-                elif self.single_placement_group is None:
-                    self.single_placement_group = vmss_dict['single_placement_group']
 
                 vmss_dict['zones'] = [int(i) for i in vmss_dict['zones']] if 'zones' in vmss_dict and vmss_dict['zones'] else None
                 if self.zones is not None and self.zones != vmss_dict['zones']:
@@ -1467,7 +1463,10 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     vmss_resource.tags = self.tags
 
                     if self.upgrade_policy:
-                        vmss_resource.upgrade_policy = self.compute_models.UpgradePolicy(mode=self.upgrade_policy)
+                        if vmss_resource.upgrade_policy is not None:
+                            vmss_resource.upgrade_policy.mode = self.upgrade_policy
+                        else:
+                            vmss_resource.upgrade_policy = self.compute_models.UpgradePolicy(mode=self.upgrade_policy)
 
                     if self.custom_data and vmss_resource.virtual_machine_profile.os_profile is not None:
                         vmss_resource.virtual_machine_profile.os_profile.custom_data = self.custom_data
