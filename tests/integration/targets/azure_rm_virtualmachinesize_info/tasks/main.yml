@@ -10,7 +10,27 @@
 
 - name: Assert the virtuam machine size
   ansible.builtin.assert:
-    that: output['sizes'] | length == 1
+    that:
+      - output['sizes'] | length == 1
+      - output['sizes'][0]['name'] == 'Standard_D2s_v3'
+      - output['sizes'][0]['number_of_cores'] is integer
+      - output['sizes'][0]['memory_in_mb'] is integer
+      - output['sizes'][0]['max_data_disk_count'] is integer
+      - output['sizes'][0]['os_disk_size_in_mb'] is integer
+      - output['sizes'][0]['resource_disk_size_in_mb'] is integer
+      - output['sizes'][0]['max_write_accelerator_enabled_disk_count'] == 0
+
+- name: Get a size that supports Write Accelerator
+  azure.azcollection.azure_rm_virtualmachinesize_info:
+    location: "{{ location }}"
+    name: Standard_M32ms
+  register: write_accelerator_output
+
+- name: Assert the Write Accelerator disk limit
+  ansible.builtin.assert:
+    that:
+      - write_accelerator_output['sizes'] | length == 1
+      - write_accelerator_output['sizes'][0]['max_write_accelerator_enabled_disk_count'] == 4
 
 - name: Get available sizes for a specific location
   azure.azcollection.azure_rm_virtualmachinesize_info:
@@ -19,4 +39,6 @@
 
 - name: Assert the virtualmachine size
   ansible.builtin.assert:
-    that: output['sizes'] | length > 0
+    that:
+      - output['sizes'] | length > 0
+      - output['sizes'][0]['max_write_accelerator_enabled_disk_count'] is integer

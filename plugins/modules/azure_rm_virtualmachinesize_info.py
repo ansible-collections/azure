@@ -62,27 +62,33 @@ sizes:
                 - The name of the virtual machine size
             type: str
             sample: Standard_A1_v2
-        memoryInMB:
+        memory_in_mb:
             description:
                 - The amount of memory, in MB, supported by the virtual machine size
             type: int
             sample: 2048
-        numberOfCores:
+        number_of_cores:
             description:
                 - The number of cores supported by the virtual machine size
             type: int
             sample: 1
-        maxDataDiskCount:
+        max_data_disk_count:
             description:
                 - The maximum number of data disks that can be attached to the virtual machine size
             type: int
             sample: 2
-        osDiskSizeInMB:
+        max_write_accelerator_enabled_disk_count:
+            description:
+                - The maximum number of disks that can have Write Accelerator enabled.
+                - Returns C(0) when Write Accelerator is not supported by the virtual machine size.
+            type: int
+            sample: 4
+        os_disk_size_in_mb:
             description:
                 - The OS disk size, in MB, allowed by the virtual machine size
             type: int
             sample: 1047552
-        resourceDiskSizeInMB:
+        resource_disk_size_in_mb:
             description:
                 - The resource disk size, in MB, allowed by the virtual machine size
             type: int
@@ -90,16 +96,16 @@ sizes:
 '''
 
 try:
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError
+    from azure.mgmt.compute import ComputeManagementClient
 except Exception:
     # This is handled in azure_rm_common
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-AZURE_OBJECT_CLASS = 'VirtualMachineSize'
-
-AZURE_ENUM_MODULES = ['azure.mgmt.compute.models']
+RESOURCE_SKU_API_VERSION = '2021-07-01'
+HYBRID_RESOURCE_SKU_API_VERSION = '2017-09-01'
 
 
 class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
@@ -134,20 +140,53 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
     def list_items_by_location(self):
         self.log('List items by location')
         try:
-            items = self.compute_client.virtual_machine_sizes.list(location=self.location)
-        except ResourceNotFoundError as exc:
+            is_hybrid_profile = self.api_profile == '2019-03-01-hybrid'
+            compute_client = self.get_mgmt_svc_client(
+                ComputeManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version=HYBRID_RESOURCE_SKU_API_VERSION if is_hybrid_profile else RESOURCE_SKU_API_VERSION
+            )
+            if is_hybrid_profile:
+                items = compute_client.resource_skus.list()
+            else:
+                items = compute_client.resource_skus.list(filter="location eq '{0}'".format(self.location))
+            return [
+                self.serialize_size(item)
+                for item in items
+                if item.resource_type == 'virtualMachines'
+                and (not is_hybrid_profile or _match_location(self.location, item.locations or []))
+                and (self.name is None or self.name == item.name)
+            ]
+        except HttpResponseError as exc:
             self.fail("Failed to list items - {0}".format(str(exc)))
-        return [self.serialize_size(item) for item in items if self.name is None or self.name == item.name]
 
     def serialize_size(self, size):
         '''
-        Convert a VirtualMachineSize object to dict.
+        Convert a ResourceSku object to a virtual machine size dict.
 
-        :param size: VirtualMachineSize object
+        :param size: ResourceSku object
         :return: dict
         '''
 
-        return self.serialize_obj(size, AZURE_OBJECT_CLASS, enum_modules=AZURE_ENUM_MODULES)
+        capabilities = dict((capability.name, capability.value) for capability in size.capabilities or [])
+        try:
+            return dict(
+                name=size.name,
+                number_of_cores=int(capabilities['vCPUs']),
+                os_disk_size_in_mb=int(capabilities['OSVhdSizeMB']),
+                resource_disk_size_in_mb=int(capabilities['MaxResourceVolumeMB']),
+                memory_in_mb=int(float(capabilities['MemoryGB']) * 1024),
+                max_data_disk_count=int(capabilities['MaxDataDiskCount']),
+                max_write_accelerator_enabled_disk_count=int(
+                    capabilities.get('MaxWriteAcceleratorDisksAllowed', 0)
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            self.fail("Failed to serialize size {0} - {1}".format(size.name, str(exc)))
+
+
+def _match_location(location, locations):
+    return next((item for item in locations if item.lower() == location.lower()), None)
 
 
 def main():
