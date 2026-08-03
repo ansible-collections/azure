@@ -36,18 +36,6 @@ options:
         description:
             - Enable internet security.
         type: bool
-    allow_remote_vnet_to_use_hub_vnet_gateways:
-        description:
-            - (Deprecated) Allow RemoteVnet to use Virtual Hub's gateways.
-            - This parameter has been deprecated and is ignored by the service.
-            - It will be removed in next major version release.
-        type: bool
-    allow_hub_to_remote_vnet_transit:
-        description:
-            - (Deprecated) VirtualHub to RemoteVnet transit to enabled or not.
-            - This parameter has been deprecated and is ignored by the service.
-            - It will be removed in next major version release.
-        type: bool
     remote_virtual_network:
         description:
             - ID of the remote VNet to connect to.
@@ -268,20 +256,6 @@ state:
             returned: always
             type: str
             sample: Succeeded
-        allow_hub_to_remote_vnet_transit:
-            description:
-                - (Deprecated) Enable hub to remote VNet transit.
-                - This field has been deprecated and will be removed in next major version release.
-            returned: always
-            type: bool
-            sample: true
-        allow_remote_vnet_to_use_hub_vnet_gateways:
-            description:
-                - (Deprecated) Allow remote VNet to use hub's VNet gateways.
-                - This field has been deprecated and will be removed in next major version release.
-            returned: always
-            type: bool
-            sample: true
         enable_internet_security:
             description:
                 - Enable internet security and default is enabled.
@@ -327,16 +301,6 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
             ),
             enable_internet_security=dict(
                 type='bool'
-            ),
-            allow_remote_vnet_to_use_hub_vnet_gateways=dict(
-                type='bool',
-                removed_in_version='4.0.0',
-                removed_from_collection='azure.azcollection'
-            ),
-            allow_hub_to_remote_vnet_transit=dict(
-                type='bool',
-                removed_in_version='4.0.0',
-                removed_from_collection='azure.azcollection'
             ),
             remote_virtual_network=dict(
                 type='dict',
@@ -425,16 +389,6 @@ class AzureRMVirtualHubConnection(AzureRMModuleBaseExt):
                         self.to_do = Actions.Update
                 else:
                     self.body['enable_internet_security'] = old_response['enable_internet_security']
-                if self.body.get('allow_remote_vnet_to_use_hub_vnet_gateways') is not None:
-                    if bool(self.body['allow_remote_vnet_to_use_hub_vnet_gateways']) != bool(old_response['allow_remote_vnet_to_use_hub_vnet_gateways']):
-                        self.to_do = Actions.Update
-                else:
-                    self.body['allow_remote_vnet_to_use_hub_vnet_gateways'] = old_response['allow_remote_vnet_to_use_hub_vnet_gateways']
-                if self.body.get('allow_hub_to_remote_vnet_transit') is not None:
-                    if bool(self.body['allow_hub_to_remote_vnet_transit']) != bool(old_response['allow_hub_to_remote_vnet_transit']):
-                        self.to_do = Actions.Update
-                else:
-                    self.body['allow_hub_to_remote_vnet_transit'] = old_response['allow_hub_to_remote_vnet_transit']
 
                 if self.body.get('routing_configuration') is not None:
                     modifiers = {}
