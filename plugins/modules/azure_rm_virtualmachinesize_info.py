@@ -169,20 +169,33 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
         '''
 
         capabilities = dict((capability.name, capability.value) for capability in size.capabilities or [])
+
+        def _as_int(key, default=None):
+            raw = capabilities.get(key)
+            if raw is None:
+                return default
+            try:
+                return int(raw)
+            except (TypeError, ValueError):
+                return default
+
+        memory_gb = capabilities.get('MemoryGB')
         try:
-            return dict(
-                name=size.name,
-                number_of_cores=int(capabilities['vCPUs']),
-                os_disk_size_in_mb=int(capabilities['OSVhdSizeMB']),
-                resource_disk_size_in_mb=int(capabilities['MaxResourceVolumeMB']),
-                memory_in_mb=int(float(capabilities['MemoryGB']) * 1024),
-                max_data_disk_count=int(capabilities['MaxDataDiskCount']),
-                max_write_accelerator_enabled_disk_count=int(
-                    capabilities.get('MaxWriteAcceleratorDisksAllowed', 0)
-                )
-            )
-        except (KeyError, TypeError, ValueError) as exc:
-            self.fail("Failed to serialize size {0} - {1}".format(size.name, str(exc)))
+            memory_in_mb = int(float(memory_gb) * 1024) if memory_gb is not None else None
+        except (TypeError, ValueError):
+            memory_in_mb = None
+
+        return dict(
+            name=size.name,
+            number_of_cores=_as_int('vCPUs'),
+            os_disk_size_in_mb=_as_int('OSVhdSizeMB'),
+            resource_disk_size_in_mb=_as_int('MaxResourceVolumeMB'),
+            memory_in_mb=memory_in_mb,
+            max_data_disk_count=_as_int('MaxDataDiskCount'),
+            # MaxWriteAcceleratorDisksAllowed: Azure Resource SKUs API uses 0 to indicate
+            # "not supported" for this capability, so default missing values to 0.
+            max_write_accelerator_enabled_disk_count=_as_int('MaxWriteAcceleratorDisksAllowed', default=0),
+        )
 
 
 def _match_location(location, locations):

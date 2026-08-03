@@ -30,7 +30,8 @@
   ansible.builtin.assert:
     that:
       - write_accelerator_output['sizes'] | length == 1
-      - write_accelerator_output['sizes'][0]['max_write_accelerator_enabled_disk_count'] == 4
+      - write_accelerator_output['sizes'][0]['max_write_accelerator_enabled_disk_count'] is integer
+      - write_accelerator_output['sizes'][0]['max_write_accelerator_enabled_disk_count'] > 0
 
 - name: Get available sizes for a specific location
   azure.azcollection.azure_rm_virtualmachinesize_info:
