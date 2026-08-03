@@ -50,7 +50,7 @@ options:
             - C(recovery), Creates a database by restoring a geo-replicated backup.
             - C(restore), Creates a database by restoring a backup of a deleted database.
             - C(restore_long_term_retention_backup), Creates a database by restoring from a long term retention vault.
-            - C(copy), C(non_readable_secondary), C(online_secondary) and C(restore_long_term_retention_backup) are not supported for C(data_warehouse) edition.
+            - C(copy), C(non_readable_secondary), C(online_secondary) and C(restore_long_term_retention_backup) are not supported for Data Warehouse SKUs.
         type: str
         choices:
             - 'copy'
@@ -77,35 +77,17 @@ options:
             - Specifies the point in time (ISO8601 format) of the source database that will be restored to create the new database.
             - Must be greater than or equal to the source database's earliestRestoreDate value.
         type: str
-    recovery_services_recovery_point_resource_id:
+    recovery_services_recovery_point_id:
         description:
             - Required if I(create_mode=restore_long_term_retention_backup), then this value is required.
             - Specifies the resource ID of the recovery point to restore from.
         type: str
-    edition:
-        description:
-            - (Deprecate)The edition of the database. The DatabaseEditions enumeration contains all the valid editions.
-            - This option will be deprecated in 2.11, use I(sku) instead.
-            - Cannot set C(sku) when this field set.
-        type: str
-        choices:
-            - 'web'
-            - 'business'
-            - 'basic'
-            - 'standard'
-            - 'premium'
-            - 'free'
-            - 'stretch'
-            - 'data_warehouse'
-            - 'system'
-            - 'system2'
     sku:
         description:
             - The sku of the database. The DatabaseEditions enumeration contains all the valid sku.
             - If I(create_mode=non_readable_secondary) or I(create_mode=online_secondary), this value is ignored.
             - To see possible values, query the capabilities API (/subscriptions/{subscriptionId}/providers/Microsoft.Sql/locations/{locationID}/capabilities)
               referred to by operationId:'Capabilities_ListByLocation'.
-            - Cannot set C(edition) when this field set.
         type: dict
         suboptions:
             name:
@@ -138,19 +120,19 @@ options:
         type: str
     elastic_pool_name:
         description:
-            - The name of the elastic pool the database is in. Not supported for I(edition=data_warehouse).
+            - The name of the elastic pool the database is in. Not supported for Data Warehouse SKUs.
         type: str
     read_scale:
         description:
             - If the database is a geo-secondary, indicates whether read-only connections are allowed to this database or not.
-            - Not supported for I(edition=data_warehouse).
+            - Not supported for Data Warehouse SKUs.
         type: bool
         default: False
     sample_name:
         description:
             - Indicates the name of the sample schema to apply when creating this database.
             - If not I(create_mode=default), this value is ignored.
-            - Not supported for I(edition=data_warehouse).
+            - Not supported for Data Warehouse SKUs.
         type: str
         choices:
             - 'adventure_works_lt'
@@ -261,28 +243,6 @@ sku_spec = dict(
 )
 
 
-def get_sku_name(edition):
-    edition = edition.upper()
-    if edition == 'FREE':
-        return 'Free'
-    elif edition == 'SYSTEM':
-        return 'GP_Gen5_2'
-    elif edition in ['BUSINESS', 'SYSTEM2']:
-        return 'BC_Gen5_2'
-    elif edition == 'BASIC':
-        return 'Basic'
-    elif edition in ['STANDARD', 'WEB']:
-        return 'S1'
-    elif edition == 'PREMIUM':
-        return 'P2'
-    elif edition == 'STRETCH':
-        return 'DS100'
-    elif edition == 'DATA_WAREHOUSE':
-        return 'DW100c'
-    else:
-        return None
-
-
 class Actions:
     NoAction, Create, Update, Delete = range(4)
 
@@ -330,21 +290,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
             restore_point_in_time=dict(
                 type='str'
             ),
-            recovery_services_recovery_point_resource_id=dict(
+            recovery_services_recovery_point_id=dict(
                 type='str'
-            ),
-            edition=dict(
-                type='str',
-                choices=['web',
-                         'business',
-                         'basic',
-                         'standard',
-                         'premium',
-                         'free',
-                         'stretch',
-                         'data_warehouse',
-                         'system',
-                         'system2']
             ),
             sku=dict(
                 type='dict',
@@ -388,9 +335,14 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
         self.state = None
         self.to_do = Actions.NoAction
 
+        required_if = [
+            ('create_mode', 'restore_long_term_retention_backup', ['recovery_services_recovery_point_id']),
+        ]
+
         super(AzureRMSqlDatabase, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                  supports_check_mode=True,
-                                                 supports_tags=True)
+                                                 supports_tags=True,
+                                                 required_if=required_if)
 
     def exec_module(self, **kwargs):
         """Main module execution method"""
@@ -418,11 +370,8 @@ class AzureRMSqlDatabase(AzureRMModuleBase):
                         self.parameters["restore_point_in_time"] = dateutil.parser.parse(kwargs[key])
                     except dateutil.parser._parser.ParserError:
                         self.fail("Error parsing date from restore_point_in_time: {0}".format(kwargs[key]))
-                elif key == "recovery_services_recovery_point_resource_id":
-                    self.parameters["recovery_services_recovery_point_resource_id"] = kwargs[key]
-                elif key == "edition":
-                    ev = get_sku_name(kwargs[key])
-                    self.parameters["sku"] = Sku(name=ev)
+                elif key == "recovery_services_recovery_point_id":
+                    self.parameters["recovery_services_recovery_point_id"] = kwargs[key]
                 elif key == "sku":
                     ev = kwargs[key]
                     self.parameters["sku"] = Sku(

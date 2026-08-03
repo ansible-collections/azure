@@ -334,7 +334,9 @@
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
-        edition: premium
+        sku:
+          name: P2
+          tier: Premium
         tags:
           aaa: bbb
       register: output
@@ -350,7 +352,9 @@
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
-        edition: premium
+        sku:
+          name: P2
+          tier: Premium
         tags:
           aaa: bbb
       register: output
