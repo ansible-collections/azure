@@ -1502,16 +1502,8 @@
             include_query_string: true
             url_path_maps:
               - "path_mappings"
-        web_application_firewall_configuration:
-          enabled: true
-          firewall_mode: "Detection"
-          rule_set_type: "OWASP"
-          rule_set_version: "3.0"
-          request_body_check: true
-          max_request_body_size_in_kb: 128
-          file_upload_limit_in_mb: 100
-          firewall_policy:
-            name: "wafpolicy{{ rpfx }}"
+        firewall_policy:
+          name: "wafpolicy{{ rpfx }}"
       register: output
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
@@ -1670,16 +1662,8 @@
             include_query_string: true
             url_path_maps:
               - "path_mappings"
-        web_application_firewall_configuration:
-          enabled: true
-          firewall_mode: "Detection"
-          rule_set_type: "OWASP"
-          rule_set_version: "3.0"
-          request_body_check: true
-          max_request_body_size_in_kb: 128
-          file_upload_limit_in_mb: 100
-          firewall_policy:
-            name: "wafpolicy{{ rpfx }}"
+        firewall_policy:
+          name: "wafpolicy{{ rpfx }}"
       register: output
     - name: Assert the resource instance is not updated
       ansible.builtin.assert:
@@ -1845,9 +1829,8 @@
             include_query_string: true
             url_path_maps:
               - "path_mappings"
-        web_application_firewall_configuration:
-          firewall_policy:
-            name: "wafpolicy{{ rpfx }}"
+        firewall_policy:
+          name: "wafpolicy{{ rpfx }}"
       register: output
     - name: Assert the resource instance is well created
       ansible.builtin.assert:
@@ -2006,9 +1989,8 @@
             include_query_string: true
             url_path_maps:
               - "path_mappings"
-        web_application_firewall_configuration:
-          firewall_policy:
-            name: "wafpolicy{{ rpfx }}"
+        firewall_policy:
+          name: "wafpolicy{{ rpfx }}"
       register: output
     - name: Assert the resource instance is not updated
       ansible.builtin.assert:
