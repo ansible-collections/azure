@@ -74,7 +74,6 @@ azure.azcollection.*:
        "azurefirewalls": "firewall",
        "applicationinsights": "monitoring",
        "components": "monitoring",
-       "workspaces": "log_analytics",
        "servers": "database_relational",
        "databases": "database_relational",
        "elasticpools": "database_relational",
@@ -96,8 +95,7 @@ azure.azcollection.*:
        "policydefinitions": "policy",
        "resourcegroups": "resource_group",
        "deployments": "deployment",
-       "factories": "data_factory",
-       "accounts": "cognitive_service"
+       "factories": "data_factory"
       } as $device_type_mapping |
       (.accounts //
        .aks_agent_pools //
