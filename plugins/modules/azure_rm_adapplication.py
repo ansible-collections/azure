@@ -240,18 +240,10 @@ options:
                             - If a property exists in this collection, it modifies the behavior of the optional claim specified in the name property.
                         type: list
                         elements: str
-    password:
-        description:
-            - (Deprecated). Microsoft Graph generates client secrets server-side and rejects client-supplied values.
-            - When set, the supplied value is ignored and a server-generated secret is created instead.
-            - Prefer C(request_password=true) with C(password_display_name). The generated secret appears in
-              the registered result under C(generated_password_credentials[0].secret_text).
-            - For ongoing rotation/management of secrets, use I(azure.azcollection.azure_rm_adpassword).
-        type: str
     password_display_name:
         description:
             - Name for the client secret created on the new application.
-            - Used together with C(request_password=true) (or legacy C(password)).
+            - Used together with C(request_password=true).
         type: str
     key_display_name:
         description:
@@ -687,7 +679,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                     saml2_token_claims=dict(type='list', elements='dict', no_log=True, options=claims_spec),
                 )
             ),
-            password=dict(type='str', no_log=True),
             password_display_name=dict(type='str', no_log=False),
             key_display_name=dict(type='str', no_log=False),
             request_password=dict(type='bool', default=False, no_log=False),
@@ -714,7 +705,6 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         self.notes = None
         self.oauth2_allow_implicit_flow = None
         self.optional_claims = None
-        self.password = None
         self.password_display_name = None
         self.key_display_name = None
         self.request_password = None
@@ -736,29 +726,8 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
     def exec_module(self, **kwargs):
         self._client = self.get_msgraph_client()
 
-        # Guard against the AZURE_COMMON_ARGS 'password' (user-password auth) leaking in via module_defaults.
-        if kwargs.get('password') and kwargs.get('ad_user'):
-            self.module.warn(
-                "Ignoring 'password' on azure_rm_adapplication because 'ad_user' is also set; the value "
-                "appears to come from Azure user-password authentication rather than an explicit app secret. "
-            )
-            kwargs['password'] = None
-
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-
-        # Microsoft Graph generates secrets server-side; the legacy 'password' value is never honored.
-        if self.password and self.state == 'present' and not self.native_app:
-            self.module.deprecate(
-                "Setting 'password' as a client secret value on azure_rm_adapplication is incompatible "
-                "with Microsoft Graph (the value is ignored server-side). Use 'request_password=true' "
-                "with 'password_display_name' and read the generated secret from "
-                "'generated_password_credentials[0].secret_text', or manage secrets with "
-                "azure_rm_adpassword. This parameter will be removed in a future major release.",
-                version='4.0.0',
-                collection_name='azure.azcollection',
-            )
-            self.request_password = True
 
         response = self.get_resource()
         if response:
@@ -847,9 +816,9 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
                         type=(self.key_type or 'AsymmetricX509Cert'),
                         custom_key_identifier=custom_key_id,
                     )]
-                if self.request_password or self.password:
+                if self.request_password:
                     self.module.warn(
-                        "Ignoring 'request_password'/'password' on update: Microsoft Graph does not "
+                        "Ignoring 'request_password' on update: Microsoft Graph does not "
                         "allow adding password credentials via PATCH /applications. Use "
                         "azure.azcollection.azure_rm_adpassword to add or rotate client secrets on an "
                         "existing application."
@@ -1016,7 +985,7 @@ class AzureRMADApplication(AzureRMModuleBaseExt):
         # Build credential payloads for POST /applications. Microsoft Graph generates
         # keyId / secretText / hint server-side, so we never send them on create.
         if request_password and key_value:
-            self.fail('specify either a password credential (request_password / password) or key_value, but not both.')
+            self.fail('specify either a password credential (request_password) or key_value, but not both.')
 
         if not start_date:
             start_date = datetime.datetime.utcnow()
