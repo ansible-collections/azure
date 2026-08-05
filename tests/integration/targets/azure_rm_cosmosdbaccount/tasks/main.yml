@@ -279,7 +279,6 @@
           - output.accounts[0]['read_locations'] != None
           - output.accounts[0]['write_locations'] != None
           - output.accounts[0]['database_account_offer_type'] != None
-          - output.accounts[0]['ip_range_filter'] != None
           - output.accounts[0]['ip_rules'] != None
           - output.accounts[0]['is_virtual_network_filter_enabled'] != None
           - output.accounts[0]['enable_automatic_failover'] != None
@@ -365,7 +364,6 @@
           - output.accounts[0]['read_locations'] != None
           - output.accounts[0]['write_locations'] != None
           - output.accounts[0]['database_account_offer_type'] != None
-          - output.accounts[0]['ip_range_filter'] != None
           - output.accounts[0]['ip_rules'] != None
           - output.accounts[0]['is_virtual_network_filter_enabled'] != None
           - output.accounts[0]['enable_automatic_failover'] != None
@@ -439,7 +437,6 @@
           - output.accounts[0]['mongo_version'] == '4.0'
           - output.accounts[0]['enable_free_tier'] == free_tier_supported
           - output.accounts[0]['public_network_access'] == 'Disabled'
-          - output.accounts[0]['ip_range_filter'] == '1.1.1.1,2.2.2.2/28'
           - (output.accounts[0]['ip_rules'] | length) == 2
           - output.accounts[0]['ip_rules'][0] == '1.1.1.1'
           - output.accounts[0]['ip_rules'][1] == '2.2.2.2/28'

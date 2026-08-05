@@ -96,13 +96,6 @@ options:
         type: bool
         default: false
         version_added: "1.10.0"
-    ip_range_filter:
-        description:
-            - (deprecated) Cosmos DB Firewall support. This value specifies the set of IP addresses or IP address ranges.
-            - In CIDR form to be included as the allowed list of client IPs for a given database account.
-            - IP addresses/ranges must be comma separated and must not contain any spaces.
-            - This value has been deprecated, and will be removed in a later version. Use I(ip_rules) instead.
-        type: str
     ip_rules:
         description:
             - The IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs.
@@ -314,9 +307,6 @@ class AzureRMCosmosDBAccount(AzureRMModuleBaseExt):
                 type='bool',
                 default=False,
             ),
-            ip_range_filter=dict(
-                type='str'
-            ),
             ip_rules=dict(
                 type='list',
                 elements='str',
@@ -415,12 +405,8 @@ class AzureRMCosmosDBAccount(AzureRMModuleBaseExt):
         elif kind == 'parse':
             self.parameters['kind'] = 'Parse'
 
-        ip_range_filter = self.parameters.pop('ip_range_filter', None)
         ip_rules = self.parameters.pop('ip_rules', [])
-        if ip_range_filter:
-            self.parameters['ip_rules'] = [{"ip_address_or_range": ip} for ip in ip_range_filter.split(",")]
         if ip_rules:
-            # overrides deprecated 'ip_range_filter' parameter
             self.parameters['ip_rules'] = [{"ip_address_or_range": ip} for ip in ip_rules]
 
         dict_camelize(self.parameters, ['consistency_policy', 'default_consistency_level'], True)
