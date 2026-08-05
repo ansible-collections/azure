@@ -35,10 +35,6 @@ options:
           - The default is to try MSI authentication first, then use auth_source, You can disable MSI entirely
             by setting this to False.
         default: true
-    use_cli:
-        description:
-          - When I(use_cli=True), get the 'az login' credential authentication, default if false.
-          - Deprecated, please use I(auth_source=cli) instead.
     cloud_type:
         description: Specify which cloud, such as C(azure), C(usgovcloudapi).
 notes:
@@ -50,7 +46,7 @@ notes:
     - If MSI is not enabled on ansible host, it's required to provide a valid service principal which has access to the key vault.
     - To authenticate via service principal, pass client_id, secret and tenant or set environment variables
       AZURE_CLIENT_ID, AZURE_CLIENT_SECRET and AZURE_TENANT_ID.
-    - Authentication via C(az login) is also supported. Set I(use_cli=true) when using Azure CLI.
+    - Authentication via C(az login) is also supported. Set I(auth_source=cli) when using Azure CLI.
     - To use a plugin from a collection, please reference the full namespace, collection name, and lookup plugin name that you want to use.
 
 extends_documentation_fragment:
@@ -60,7 +56,7 @@ extends_documentation_fragment:
 EXAMPLE = """
 - name: Look up secret when azure cli login
   debug:
-    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri, use_cli=true)}}"
+    msg: msg: "{{ lookup('azure.azcollection.azure_keyvault_secret', 'testsecret', vault_url=key_vault_uri, auth_source='cli')}}"
 
 - name: Look up secret with cloud type
   debug:
@@ -167,9 +163,6 @@ class LookupModule(LookupBase):
         secret = self.get_option('secret')
         tenant = self.get_option('tenant')
 
-        # Legacy use_cli will set auth_source to cli.
-        if self.get_option('use_cli'):
-            auth_source = 'cli'
         # If auth_source is auto but no client_id or secret passed in switch to cli
         if auth_source == 'auto':
             if any(v is None for v in [client_id, secret, tenant]):
