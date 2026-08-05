@@ -48,9 +48,6 @@
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_D2s_v3
-    storage_account: "{{ storage_account }}"
-    storage_container: "{{ vm_name }}"
-    storage_blob: "{{ vm_name }}.vhd"
     admin_username: adminuser
     open_ports:
       - 33
@@ -215,9 +212,6 @@
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_D2s_v3
-    storage_account: "{{ storage_account }}"
-    storage_container: "{{ vm_name }}"
-    storage_blob: "{{ vm_name }}.vhd"
     admin_username: adminuser
     ssh_password_enabled: false
     open_ports:
@@ -244,9 +238,6 @@
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}"
     vm_size: Standard_D4s_v3
-    storage_account: "{{ storage_account }}"
-    storage_container: "{{ vm_name }}"
-    storage_blob: "{{ vm_name }}.vhd"
     admin_username: adminuser
     ssh_password_enabled: false
     open_ports:

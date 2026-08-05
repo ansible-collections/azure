@@ -16,11 +16,11 @@
     short_hostname: testvm
     os_type: Linux
     public_ip_allocation_method: Disabled
-    storage_account_name: "{{ storage_account }}"
     availability_set: "{{ availability_set }}"
     virtual_network: "{{ network_name }}"
     boot_diagnostics:
       enabled: true
+      storage_account: "{{ storage_account }}"
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical

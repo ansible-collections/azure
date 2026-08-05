@@ -21,6 +21,7 @@ short_description: Manage Azure virtual machines
 description:
     - Manage and configure virtual machines (VMs) and associated resources on Azure.
     - Requires a resource group containing at least one virtual network with at least one subnet.
+    - VMs are created with Azure managed disks. Unmanaged VHD page-blob disks were retired by Azure on 2026-03-31.
     - Supports images from the Azure Marketplace, which can be discovered with M(azure.azcollection.azure_rm_virtualmachineimage_info).
     - Supports custom images since Ansible 2.5.
     - To use I(custom_data) on a Linux image, the image must have cloud-init enabled. If cloud-init is not enabled, I(custom_data) is ignored.
@@ -212,45 +213,10 @@ options:
                 description:
                     - The resource group of the proximity placement group to be associated with.
                 type: str
-    storage_account_name:
-        description:
-            - (Deprecated) Name of a storage account that supports creation of VHD blobs.
-            - If not specified for a new VM, a new storage account named <vm name>01 will be created using storage type C(Standard_LRS).
-            - Unmanaged disks were retired by Azure on March 31, 2026. Use I(managed_disk_type) instead.
-            - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
-            - This option will be removed in version 4.0.0.
-        type: str
-        aliases:
-            - storage_account
-    storage_container_name:
-        description:
-            - (Deprecated) Name of the container to use within the storage account to store VHD blobs.
-            - If not specified, a default container will be created.
-            - Unmanaged disks were retired by Azure on March 31, 2026. Use I(managed_disk_type) instead.
-            - This option will be removed in version 4.0.0.
-            - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
-        default: vhds
-        type: str
-        aliases:
-            - storage_container
-    storage_blob_name:
-        description:
-            - (Deprecated) Name of the storage blob used to hold the OS disk image of the VM.
-            - Must end with '.vhd'.
-            - If not specified, defaults to the VM name + '.vhd'.
-            - Unmanaged disks were retired by Azure on March 31, 2026. Use I(managed_disk_type) instead.
-            - This option will be removed in version 4.0.0.
-            - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
-        type: str
-        aliases:
-            - storage_blob
     managed_disk_type:
         description:
-            - Managed OS disk type.
-            - Create OS disk with managed disk if defined.
-            - Defaults to C(Standard_LRS) when no disk options are specified.
-            - Unmanaged disks were retired by Azure on March 31, 2026.
-            - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
+            - Azure managed-disk storage type for the OS disk.
+            - Defaults to C(Standard_LRS) when not specified. Azure creates the OS disk automatically from I(image).
         type: str
         choices:
             - Standard_LRS
@@ -334,8 +300,6 @@ options:
                 description:
                     - Managed data disk type.
                     - Defaults to C(Standard_LRS) when no disk options are specified.
-                      Unmanaged disks were retired by Azure on March 31, 2026.
-                    - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
                 type: str
                 choices:
                     - Standard_LRS
@@ -344,35 +308,6 @@ options:
                     - Premium_LRS
                     - Premium_ZRS
                     - UltraSSD_LRS
-            storage_account_name:
-                description:
-                    - (Deprecated) Name of an existing storage account that supports creation of VHD blobs.
-                    - If not specified for a new VM, a new storage account started with I(name) will be created using storage type C(Standard_LRS).
-                    - Cannot be updated unless I(lun) updated.
-                    - Unmanaged disks were retired by Azure on March 31, 2026. Use I(managed_disk_type) instead.
-                    - This option will be removed in version 4.0.0.
-                    - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
-                type: str
-            storage_container_name:
-                description:
-                    - (Deprecated) Name of the container to use within the storage account to store VHD blobs.
-                    - If no name is specified a default container named 'vhds' will created.
-                    - Cannot be updated unless I(lun) updated.
-                    - Unmanaged disks were retired by Azure on March 31, 2026. Use I(managed_disk_type) instead.
-                    - This option will be removed in version 4.0.0.
-                    - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
-                type: str
-                default: vhds
-            storage_blob_name:
-                description:
-                    - (Deprecated) Name of the storage blob used to hold the OS disk image of the VM.
-                    - Must end with '.vhd'.
-                    - Default to the I(name) + timestamp + I(lun) + '.vhd'.
-                    - Cannot be updated unless I(lun) updated.
-                    - Unmanaged disks were retired by Azure on March 31, 2026. Use I(managed_disk_type) instead.
-                    - This option will be removed in version 4.0.0.
-                    - See U(https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation).
-                type: str
             caching:
                 description:
                     - Type of data disk caching.
@@ -603,7 +538,6 @@ options:
             storage_account:
                 description:
                     - The name of an existing storage account to use for boot diagnostics.
-                    - If not specified, uses I(storage_account_name) defined one level up.
                     - If storage account is not specified anywhere, and C(enabled) is C(true), a default storage account is created for boot diagnostics data.
                     - It is mutually exclusive with I(type)
                 type: str
@@ -757,12 +691,11 @@ EXAMPLES = '''
       version: latest
     vm_size: Standard_D4
 
-- name: Create a VM with existing storage account and NIC
+- name: Create a VM with existing NIC
   azure_rm_virtualmachine:
     resource_group: myResourceGroup
     name: testvm002
     vm_size: Standard_D4
-    storage_account: testaccount001
     admin_username: "{{ username }}"
     ssh_public_keys:
       - path: /home/adminUser/.ssh/authorized_keys
@@ -796,37 +729,6 @@ EXAMPLES = '''
         name: newdisk
         disk_size_gb: 128
         managed_disk_type: Premium_LRS
-
-- name: Create a VM with OS and multiple data storage accounts
-  azure_rm_virtualmachine:
-    resource_group: myResourceGroup
-    name: testvm001
-    vm_size: Standard_DS1_v2
-    admin_username: "{{ username }}"
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/adminUser/.ssh/authorized_keys
-        key_data: < insert your ssh public key here... >
-    network_interfaces: testvm001
-    storage_container: osdisk
-    storage_blob: osdisk.vhd
-    boot_diagnostics:
-      enabled: true
-      type: managed
-    image:
-      offer: 0001-com-ubuntu-server-focal
-      publisher: canonical
-      sku: 20_04-lts-gen2
-      version: latest
-    data_disks:
-      - lun: 0
-        disk_size_gb: 64
-        storage_container_name: datadisk1
-        storage_blob_name: datadisk1.vhd
-      - lun: 1
-        disk_size_gb: 128
-        storage_container_name: datadisk2
-        storage_blob_name: datadisk2.vhd
 
 - name: Create a VM with a custom image
   azure_rm_virtualmachine:
@@ -1029,8 +931,7 @@ EXAMPLES = '''
     data_disks:
       - lun: 0
         disk_size_gb: 64
-        storage_container_name: datadisk1
-        storage_blob_name: datadisk1.vhd
+        managed_disk_type: Standard_LRS
         delete_option: Delete
 
 - name: Remove a VM and all resources that were autocreated
@@ -1324,9 +1225,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             ssh_public_keys=dict(type='list', elements='dict'),
             image=dict(type='raw'),
             availability_set=dict(type='str'),
-            storage_account_name=dict(type='str', aliases=['storage_account']),
-            storage_container_name=dict(type='str', aliases=['storage_container'], default='vhds'),
-            storage_blob_name=dict(type='str', aliases=['storage_blob']),
             os_disk_caching=dict(type='str', aliases=['disk_caching'], choices=['None', 'ReadOnly', 'ReadWrite']),
             os_disk_size_gb=dict(type='int'),
             os_disk_encryption_set=dict(type='str'),
@@ -1369,9 +1267,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     managed_disk_id=dict(type='str'),
                     managed_disk_type=dict(type='str', choices=['Standard_LRS', 'StandardSSD_LRS',
                                            'StandardSSD_ZRS', 'Premium_LRS', 'Premium_ZRS', 'UltraSSD_LRS']),
-                    storage_account_name=dict(type='str'),
-                    storage_container_name=dict(type='str', default='vhds'),
-                    storage_blob_name=dict(type='str'),
                     caching=dict(type='str', choices=['None', 'ReadOnly', 'ReadWrite']),
                     create_option=dict(type='str', choices=['Empty', 'FromImage'], default='Empty'),
                     delete_option=dict(type='str', choices=['Delete', 'Detach'])
@@ -1431,9 +1326,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         self.ssh_public_keys = None
         self.image = None
         self.availability_set = None
-        self.storage_account_name = None
-        self.storage_container_name = None
-        self.storage_blob_name = None
         self.os_type = None
         self.os_disk_caching = None
         self.os_disk_size_gb = None
@@ -1505,7 +1397,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
         Normal behavior:
           - try the self.boot_diagnostics.storage_account field
-          - if not there, try the self.storage_account_name field
           - if not there, use the default storage account
 
         If limited is True:
@@ -1520,8 +1411,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 bsa = self.get_storage_account(self.resource_group, self.boot_diagnostics['storage_account'])
         elif limited:
             return None
-        elif self.storage_account_name:
-            bsa = self.get_storage_account(self.resource_group, self.storage_account_name)
         else:
             bsa = self.create_default_storage_account(vm_dict=vm_dict)
         self.log("boot diagnostics storage account:")
@@ -1544,9 +1433,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
         results = dict()
         vm = None
         network_interfaces = []
-        requested_storage_uri = None
-        requested_vhd_uri = None
-        data_disk_requested_vhd_uri = None
         disable_ssh_password = None
         vm_dict = None
         image_reference = None
@@ -1625,37 +1511,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                 if not self.plan.get('name') or not self.plan.get('product') or not self.plan.get('publisher'):
                     self.fail("parameter error: plan must include name, product, and publisher")
 
-            # When the caller specifies no disk options at all, default to a managed
-            # Standard_LRS OS disk instead of the legacy unmanaged-VHD path. Also
-            # default delete_option to 'Delete'.
-            if (not self.managed_disk_type
-                    and not self.storage_blob_name
-                    and not self.storage_account_name):
+            if not self.managed_disk_type:
                 self.managed_disk_type = 'Standard_LRS'
                 if not self.os_disk_delete_option:
                     self.os_disk_delete_option = 'Delete'
-            elif not self.managed_disk_type:
-                self.module.deprecate(
-                    "Unmanaged disks (VHD page blobs attached to VMs) were retired by Azure on "
-                    "2026-03-31. The 'storage_blob_name', 'storage_account_name' and "
-                    "'storage_container_name' options for the OS disk are deprecated; use "
-                    "'managed_disk_type' instead. See "
-                    "https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation",
-                    version='4.0.0',
-                    collection_name='azure.azcollection')
-
-            if not self.storage_blob_name and not self.managed_disk_type:
-                self.storage_blob_name = self.name + '.vhd'
-            elif self.managed_disk_type:
-                self.storage_blob_name = self.name
-
-            if self.storage_account_name and not self.managed_disk_type:
-                properties = self.get_storage_account(self.resource_group, self.storage_account_name)
-
-                requested_storage_uri = properties.primary_endpoints.blob
-                requested_vhd_uri = '{0}{1}/{2}'.format(requested_storage_uri,
-                                                        self.storage_container_name,
-                                                        self.storage_blob_name)
 
             disable_ssh_password = not self.ssh_password_enabled
 
@@ -2102,17 +1961,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         network_interfaces = [default_nic.id]
 
                     # os disk
-                    if not self.storage_account_name and not self.managed_disk_type:
-                        storage_account = self.create_default_storage_account()
-                        self.log("os disk storage account:")
-                        self.log(self.serialize_obj(storage_account, 'StorageAccount'), pretty_print=True)
-                        requested_storage_uri = 'https://{0}.blob.{1}/'.format(
-                            storage_account.name,
-                            self._cloud_environment.suffixes.storage_endpoint)
-                        requested_vhd_uri = '{0}{1}/{2}'.format(
-                            requested_storage_uri,
-                            self.storage_container_name,
-                            self.storage_blob_name)
                     # disk caching
                     if not self.os_disk_caching:
                         self.os_disk_caching = 'ReadOnly'
@@ -2142,13 +1990,8 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
 
                     # os disk
                     if self.managed_disk_type:
-                        vhd = None
                         managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=self.managed_disk_type)
-                    elif custom_image:
-                        vhd = None
-                        managed_disk = None
                     else:
-                        vhd = self.compute_models.VirtualHardDisk(uri=requested_vhd_uri)
                         managed_disk = None
 
                     if managed_disk and self.os_disk_encryption_set:
@@ -2197,8 +2040,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     else:
                         storage_profile = self.compute_models.StorageProfile(
                             os_disk=self.compute_models.OSDisk(
-                                name=self.os_disk_name if self.os_disk_name else self.storage_blob_name,
-                                vhd=vhd,
+                                name=self.os_disk_name if self.os_disk_name else self.name,
                                 managed_disk=managed_disk,
                                 create_option=self.compute_models.DiskCreateOptionTypes.from_image,
                                 caching=self.os_disk_caching,
@@ -2314,7 +2156,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                         count = 0
 
                         for data_disk in self.data_disks:
-                            data_disk_vhd = None
                             disk_name = None
 
                             if data_disk.get('managed_disk_id'):
@@ -2335,62 +2176,18 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             else:
                                 create_option = self.compute_models.DiskCreateOptionTypes.empty
 
-                                # If the caller specified no disk options at all, default to managed Standard_LRS
-                                # and set delete_option=Delete.
-                                # If the caller explicitly opted into the unmanaged-disk path
-                                # (storage_blob_name / storage_account_name / storage_container_name),
-                                # emit a deprecation warning.
-                                if (not data_disk.get('managed_disk_type')
-                                        and not data_disk.get('storage_blob_name')
-                                        and not data_disk.get('storage_account_name')
-                                        and not data_disk.get('storage_container_name')):
+                                if not data_disk.get('managed_disk_type'):
                                     data_disk['managed_disk_type'] = 'Standard_LRS'
                                     if not data_disk.get('delete_option'):
                                         data_disk['delete_option'] = 'Delete'
-                                elif not data_disk.get('managed_disk_type'):
-                                    self.module.deprecate(
-                                        "Unmanaged disks (VHD page blobs attached to VMs) were retired "
-                                        "by Azure on 2026-03-31. The 'storage_blob_name', "
-                                        "'storage_account_name' and 'storage_container_name' suboptions "
-                                        "of 'data_disks' are deprecated; use 'managed_disk_type' instead. "
-                                        "See https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation",
-                                        version='4.0.0',
-                                        collection_name='azure.azcollection')
 
-                                if not data_disk.get('managed_disk_type'):
-                                    if not data_disk.get('storage_blob_name'):
-                                        data_disk['storage_blob_name'] = self.name + '-data-' + str(count) + '.vhd'
-                                        count += 1
-
-                                    if data_disk.get('storage_account_name'):
-                                        data_disk_storage_account = self.get_storage_account(self.resource_group, data_disk['storage_account_name'])
-                                    else:
-                                        data_disk_storage_account = self.create_default_storage_account()
-                                        self.log("data disk storage account:")
-                                        self.log(self.serialize_obj(data_disk_storage_account, 'StorageAccount'), pretty_print=True)
-
-                                    if not data_disk.get('storage_container_name'):
-                                        data_disk['storage_container_name'] = 'vhds'
-
-                                    data_disk_requested_vhd_uri = 'https://{0}.blob.{1}/{2}/{3}'.format(
-                                        data_disk_storage_account.name,
-                                        self._cloud_environment.suffixes.storage_endpoint,
-                                        data_disk['storage_container_name'],
-                                        data_disk['storage_blob_name']
+                                data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
+                                if data_disk.get('disk_encryption_set'):
+                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                        id=data_disk['disk_encryption_set']
                                     )
-
-                                if not data_disk.get('managed_disk_type'):
-                                    data_disk_managed_disk = None
-                                    disk_name = data_disk['storage_blob_name']
-                                    data_disk_vhd = self.compute_models.VirtualHardDisk(uri=data_disk_requested_vhd_uri)
-                                else:
-                                    data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=data_disk['managed_disk_type'])
-                                    if data_disk.get('disk_encryption_set'):
-                                        data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
-                                            id=data_disk['disk_encryption_set']
-                                        )
-                                    disk_name = self.name + "-datadisk-" + str(count)
-                                    count += 1
+                                disk_name = self.name + "-datadisk-" + str(count)
+                                count += 1
 
                             data_disk['caching'] = data_disk.get(
                                 'caching', 'ReadOnly'
@@ -2399,7 +2196,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             data_disks.append(self.compute_models.DataDisk(
                                 lun=data_disk['lun'],
                                 name=data_disk.get('name') if data_disk.get('name') is not None else disk_name,
-                                vhd=data_disk_vhd,
                                 caching=data_disk['caching'],
                                 create_option=create_option,
                                 disk_size_gb=data_disk['disk_size_gb'],
@@ -2459,14 +2255,16 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             for i, interface in enumerate(vm_dict['network_profile']['network_interfaces'])]
 
                     # os disk
-                    if not vm_dict['storage_profile']['os_disk'].get('managedDisk'):
-                        managed_disk = None
-                        vhd = self.compute_models.VirtualHardDisk(uri=vm_dict['storage_profile']['os_disk'].get('vhd', {}).get('uri'))
-                    else:
-                        vhd = None
-                        managed_disk = self.compute_models.ManagedDiskParameters(
-                            storage_account_type=vm_dict['storage_profile']['os_disk']['managed_disk'].get('storage_account_type')
+                    if not vm_dict['storage_profile']['os_disk'].get('managed_disk'):
+                        self.fail(
+                            "Virtual machine {0} uses an unmanaged (VHD) OS disk. Unmanaged disks were retired by Azure "
+                            "on 2026-03-31 and are no longer supported by this module. Convert the VM to managed disks "
+                            "(Convert-AzVMDiskToManaged or 'az vm convert') before updating with Ansible. See "
+                            "https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation".format(self.name)
                         )
+                    managed_disk = self.compute_models.ManagedDiskParameters(
+                        storage_account_type=vm_dict['storage_profile']['os_disk']['managed_disk'].get('storage_account_type')
+                    )
 
                     proximity_placement_group_resource = None
                     if self.proximity_placement_group is not None:
@@ -2568,7 +2366,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             delete_opt = vm_dict['storage_profile']['os_disk'].get('delete_option')
                         os_disk_obj = self.compute_models.OSDisk(
                             name=vm_dict['storage_profile']['os_disk'].get('name'),
-                            vhd=vhd,
                             managed_disk=managed_disk,
                             create_option=vm_dict['storage_profile']['os_disk'].get('create_option'),
                             os_type=vm_dict['storage_profile']['os_disk'].get('os_type'),
@@ -2701,17 +2498,20 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                                     requested_dd_delete[int(dd['lun'])] = dd['delete_option']
 
                         for data_disk in vm_dict['storage_profile']['data_disks']:
-                            if data_disk.get('managed_disk'):
-                                managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
-                                data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
-                                if data_disk.get('disk_encryption_set'):
-                                    data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
-                                        id=data_disk['disk_encryption_set']
-                                    )
-                                data_disk_vhd = None
-                            else:
-                                data_disk_vhd = data_disk['vhd']['uri']
-                                data_disk_managed_disk = None
+                            if not data_disk.get('managed_disk'):
+                                self.fail(
+                                    "Virtual machine {0} has an unmanaged (VHD) data disk at LUN {1}. Unmanaged disks "
+                                    "were retired by Azure on 2026-03-31 and are no longer supported by this module. "
+                                    "Convert the VM to managed disks before updating with Ansible. See "
+                                    "https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation"
+                                    .format(self.name, data_disk.get('lun'))
+                                )
+                            managed_disk_type = data_disk['managed_disk'].get('storage_account_type')
+                            data_disk_managed_disk = self.compute_models.ManagedDiskParameters(storage_account_type=managed_disk_type)
+                            if data_disk.get('disk_encryption_set'):
+                                data_disk_managed_disk.disk_encryption_set = self.compute_models.DiskEncryptionSetParameters(
+                                    id=data_disk['disk_encryption_set']
+                                )
 
                             lun = int(data_disk['lun'])
                             delete_opt = requested_dd_delete.get(lun)
@@ -2721,7 +2521,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                             dd_obj = self.compute_models.DataDisk(
                                 lun=lun,
                                 name=data_disk.get('name'),
-                                vhd=data_disk_vhd,
                                 caching=data_disk.get('caching'),
                                 create_option=data_disk.get('create_option'),
                                 disk_size_gb=int(data_disk.get('disk_size_gb', 0)) or None,
