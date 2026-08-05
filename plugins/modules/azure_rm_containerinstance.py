@@ -59,13 +59,6 @@ options:
         description:
             - The Dns name label for the IP.
         type: str
-    ports:
-        description:
-            - List of ports exposed within the container group.
-            - This option is deprecated, using I(ports) under I(containers)".
-        type: list
-        elements: int
-        default: []
     location:
         description:
             - Valid azure location. Defaults to location of the resource group.
@@ -354,8 +347,6 @@ EXAMPLES = '''
     location: eastus
     subnet_ids:
       - "{{ subnet_id }}"
-    ports:
-      - 80
     containers:
       - name: mycontainer1
         image: httpd
@@ -617,11 +608,6 @@ class AzureRMContainerInstance(AzureRMModuleBaseExt):
             ),
             dns_name_label=dict(
                 type='str',
-            ),
-            ports=dict(
-                type='list',
-                elements='int',
-                default=[]
             ),
             registry_login_server=dict(
                 type='str',

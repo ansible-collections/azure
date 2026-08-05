@@ -39,8 +39,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -67,8 +65,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -90,8 +86,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -123,8 +117,6 @@
         dns_name_label: mydnslabel{{ resource_group | hash('md5') | truncate(7, True, '') }}
         location: "{{ location }}"
         restart_policy: on_failure
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -167,8 +159,6 @@
         location: "{{ location }}"
         subnet_ids:
           - "{{ subnet_output.state.id }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -238,8 +228,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -279,8 +267,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -304,8 +290,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: mcr.microsoft.com/azuredocs/aci-helloworld
@@ -377,8 +361,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: mcr.microsoft.com/azuredocs/aci-helloworld
@@ -406,8 +388,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -430,8 +410,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
@@ -448,8 +426,6 @@
         os_type: linux
         ip_address: public
         location: "{{ location }}"
-        ports:
-          - 80
         containers:
           - name: mycontainer1
             image: "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
