@@ -12,6 +12,7 @@
   azure.azcollection.azure_rm_availabilityset:
     name: "{{ availability_set }}"
     resource_group: "{{ resource_group }}-vm01"
+    sku: Aligned
 
 - name: SETUP | Create virtual network
   azure.azcollection.azure_rm_virtualnetwork:
