@@ -882,6 +882,10 @@ class AzureRMManagedDisk(AzureRMModuleBase):
                 self.image_reference = disk_instance.get('image_reference')
             if self.gallery_image_reference is None:
                 self.gallery_image_reference = disk_instance.get('gallery_image_reference')
+            if self.attach_caching is not None and self.managed_by is None:
+                current_managed_by = parse_resource_id(disk_instance.get('managed_by', '')).get('name') if disk_instance.get('managed_by') else None
+                if current_managed_by:
+                    self.managed_by = current_managed_by
 
         result = disk_instance
 
