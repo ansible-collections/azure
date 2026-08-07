@@ -31,7 +31,7 @@
   azure.azcollection.azure_rm_gallery:
     resource_group: "{{ resource_group }}-vm01"
     name: "gal{{ uid_short }}"
-    location: eastus
+    location: eastus2
     description: Specialized image gallery for integration tests
 
 - name: Create Specialized gallery image definition
@@ -39,7 +39,7 @@
     resource_group: "{{ resource_group }}-vm01"
     gallery_name: "gal{{ uid_short }}"
     name: "imgdef{{ uid_short }}"
-    location: eastus
+    location: eastus2
     os_type: linux
     os_state: specialized
     hypervgeneration: V1
@@ -60,13 +60,13 @@
     gallery_name: "gal{{ uid_short }}"
     gallery_image_name: "imgdef{{ uid_short }}"
     name: 1.0.0
-    location: eastus
+    location: eastus2
     storage_profile:
       source_image:
         virtual_machine_id: "{{ srcvm_info.vms[0].id }}"
     publishing_profile:
       target_regions:
-        - name: eastus
+        - name: eastus2
           regional_replica_count: 1
   register: sig_specialized
 

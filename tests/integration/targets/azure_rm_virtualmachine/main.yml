@@ -7,13 +7,13 @@
     - name: Create the first resource group for Virtual machine test
       azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm01"
-        location: eastus
+        location: eastus2
       failed_when: false
 
     - name: Create the secondary resource group for Virtual machine test
       azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-vm02"
-        location: eastus
+        location: eastus2
       failed_when: false
 
     - name: For Virtual machine test
