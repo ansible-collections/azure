@@ -155,6 +155,7 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
                 for item in items
                 if item.resource_type == 'virtualMachines'
                 and (not is_hybrid_profile or _match_location(self.location, item.locations or []))
+                and _is_sku_available(item, self.location)
                 and (self.name is None or self.name == item.name)
             ]
         except HttpResponseError as exc:
@@ -200,6 +201,19 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
 
 def _match_location(location, locations):
     return next((item for item in locations if item.lower() == location.lower()), None)
+
+
+def _is_sku_available(sku_info, location):
+    if not sku_info.restrictions:
+        return True
+    for restriction in sku_info.restrictions:
+        if restriction.reason_code != 'NotAvailableForSubscription':
+            continue
+        if restriction.type == 'Location':
+            restricted_locations = getattr(restriction.restriction_info, 'locations', None) or []
+            if _match_location(location, restricted_locations):
+                return False
+    return True
 
 
 def main():
