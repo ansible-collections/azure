@@ -1,7 +1,7 @@
 - name: Create a new resource group for AKS test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-aks"
-    location: eastus2
+    location: westus3
 
 - name: For AKS test
   block:
@@ -14,7 +14,7 @@
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
         noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
-        location: eastus2
+        location: westus3
 
     - name: Create User Managed Identity
       azure.azcollection.azure_rm_resource:

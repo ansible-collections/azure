@@ -1,14 +1,14 @@
 - name: Create a new resource group for AKS test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-win"
-    location: eastus2
+    location: westus3
 
 - name: For AKS test
   block:
     - name: Set variables
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-        location: eastus2
+        location: westus3
 
     - name: Find available k8s version
       azure.azcollection.azure_rm_aksversion_info:
