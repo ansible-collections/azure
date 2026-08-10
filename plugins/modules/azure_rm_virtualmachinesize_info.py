@@ -53,46 +53,67 @@ EXAMPLES = '''
 RETURN = '''
 sizes:
     description:
-        - List of virtual machine size profiles available for the location.
+        - List of virtual machine Resource SKU profiles available for the location.
     returned: always
     type: complex
     contains:
+        resource_type:
+            description:
+                - The type of resource the SKU applies to.
+            type: str
+            sample: virtualMachines
         name:
             description:
-                - The name of the virtual machine size
+                - The name of the SKU.
             type: str
             sample: Standard_A1_v2
-        memory_in_mb:
+        tier:
             description:
-                - The amount of memory, in MB, supported by the virtual machine size
-            type: int
-            sample: 2048
-        number_of_cores:
+                - The tier of the SKU.
+            type: str
+            sample: Standard
+        size:
             description:
-                - The number of cores supported by the virtual machine size
-            type: int
-            sample: 1
-        max_data_disk_count:
+                - The size of the SKU.
+            type: str
+            sample: A1_v2
+        family:
             description:
-                - The maximum number of data disks that can be attached to the virtual machine size
-            type: int
-            sample: 2
-        max_write_accelerator_enabled_disk_count:
+                - The family of the SKU.
+            type: str
+            sample: standardAv2Family
+        locations:
             description:
-                - The maximum number of disks that can have Write Accelerator enabled.
-                - Returns C(0) when Write Accelerator is not supported by the virtual machine size.
-            type: int
-            sample: 4
-        os_disk_size_in_mb:
+                - The locations where the SKU is available.
+            type: list
+            elements: str
+            sample: ["eastus"]
+        location_info:
             description:
-                - The OS disk size, in MB, allowed by the virtual machine size
-            type: int
-            sample: 1047552
-        resource_disk_size_in_mb:
+                - Location and availability zone information for the SKU.
+            type: list
+            elements: dict
+        capabilities:
             description:
-                - The resource disk size, in MB, allowed by the virtual machine size
-            type: int
-            sample: 10240
+                - The capability name and value pairs reported by Azure.
+            type: list
+            elements: dict
+            contains:
+                name:
+                    description:
+                        - The capability name.
+                    type: str
+                    sample: MaxWriteAcceleratorDisksAllowed
+                value:
+                    description:
+                        - The capability value.
+                    type: str
+                    sample: "4"
+        restrictions:
+            description:
+                - The restrictions that apply to the SKU.
+            type: list
+            elements: dict
 '''
 
 try:
@@ -169,34 +190,7 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
         :return: dict
         '''
 
-        capabilities = dict((capability.name, capability.value) for capability in size.capabilities or [])
-
-        def _as_int(key, default=None):
-            raw = capabilities.get(key)
-            if raw is None:
-                return default
-            try:
-                return int(raw)
-            except (TypeError, ValueError):
-                return default
-
-        memory_gb = capabilities.get('MemoryGB')
-        try:
-            memory_in_mb = int(float(memory_gb) * 1024) if memory_gb is not None else None
-        except (TypeError, ValueError):
-            memory_in_mb = None
-
-        return dict(
-            name=size.name,
-            number_of_cores=_as_int('vCPUs'),
-            os_disk_size_in_mb=_as_int('OSVhdSizeMB'),
-            resource_disk_size_in_mb=_as_int('MaxResourceVolumeMB'),
-            memory_in_mb=memory_in_mb,
-            max_data_disk_count=_as_int('MaxDataDiskCount'),
-            # MaxWriteAcceleratorDisksAllowed: Azure Resource SKUs API uses 0 to indicate
-            # "not supported" for this capability, so default missing values to 0.
-            max_write_accelerator_enabled_disk_count=_as_int('MaxWriteAcceleratorDisksAllowed', default=0),
-        )
+        return self.serialize_obj(size, 'ResourceSku')
 
 
 def _match_location(location, locations):
