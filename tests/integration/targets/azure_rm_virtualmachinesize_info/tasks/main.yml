@@ -34,6 +34,22 @@
         | first
         | int > 0
 
+- name: Query a SKU restricted (NotAvailableForSubscription) in this subscription/region
+  azure.azcollection.azure_rm_virtualmachinesize_info:
+    location: "{{ location }}"
+    name: Standard_A1_v2
+  register: restricted_output
+
+- name: Assert location-restricted SKU is filtered out
+  ansible.builtin.assert:
+    that:
+      - restricted_output['sizes'] | length == 0
+    fail_msg: >-
+      _is_sku_available did not filter out Standard_A1_v2 despite a
+      NotAvailableForSubscription Location restriction in {{ location }}.
+    success_msg: >-
+      _is_sku_available correctly filtered a Location-restricted SKU.
+
 - name: Get available sizes for a specific location
   azure.azcollection.azure_rm_virtualmachinesize_info:
     location: "{{ location }}"
