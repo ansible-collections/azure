@@ -274,6 +274,8 @@ jobs:
           test.key: '6'
         "Python${{ parameters.PYTHON_VER }}_7":
           test.key: '7'
+        "Python${{ parameters.PYTHON_VER }}_8":
+          test.key: '8'
         "Python${{ parameters.PYTHON_VER }}_9":
           test.key: '9'
         "Python${{ parameters.PYTHON_VER }}_10":
