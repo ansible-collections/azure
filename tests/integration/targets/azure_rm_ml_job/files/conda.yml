@@ -4,8 +4,5 @@ dependencies:
   - python=3.11
   - pip
   - pip:
-      - torch==2.4.1
-      - torchvision==0.19.1
-      - tqdm
       - mlflow
       - azureml-mlflow
