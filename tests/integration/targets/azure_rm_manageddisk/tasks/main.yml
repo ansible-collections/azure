@@ -1,7 +1,7 @@
 - name: Create a new resource group for managed disk test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-manageddisk"
-    location: eastus
+    location: eastus2
 
 - name: For managed disk test
   block:

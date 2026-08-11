@@ -1,7 +1,7 @@
 - name: Create a new resource group for VMSS test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
-    location: eastus
+    location: eastus2
   loop:
     - vmss01
     - vmss02
