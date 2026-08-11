@@ -160,8 +160,8 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.postgresql_flexible_client.administrators_microsoft_entra.get(resource_group_name=self.resource_group,
-                                                                                         server_name=self.server_name,
-                                                                                         object_id=self.object_id)
+                                                                                          server_name=self.server_name,
+                                                                                          object_id=self.object_id)
             self.log("Response : {0}".format(response))
         except ResourceNotFoundError:
             self.log('Could not get administrator facts for PostgreSQL Flexible Server.')
@@ -176,7 +176,7 @@ class AzureRMPostgreSqlFlexibleAdministratorInfo(AzureRMModuleBase):
         results = []
         try:
             response = self.postgresql_flexible_client.administrators_microsoft_entra.list_by_server(resource_group_name=self.resource_group,
-                                                                                                   server_name=self.server_name)
+                                                                                                     server_name=self.server_name)
             self.log("Response : {0}".format(response))
         except Exception as ec:
             self.log('Could not list administrators facts for PostgreSQL Flexible Servers.')

@@ -248,9 +248,9 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
 
         try:
             response = self.postgresql_flexible_client.administrators_microsoft_entra.begin_create_or_update(resource_group_name=self.resource_group,
-                                                                                                          server_name=self.server_name,
-                                                                                                          object_id=self.object_id,
-                                                                                                          parameters=body)
+                                                                                                             server_name=self.server_name,
+                                                                                                             object_id=self.object_id,
+                                                                                                             parameters=body)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
 
@@ -268,8 +268,8 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
         self.log("Deleting the PostgreSQL Flexible Administrator instance {0}".format(self.object_id))
         try:
             self.postgresql_flexible_client.administrators_microsoft_entra.begin_delete(resource_group_name=self.resource_group,
-                                                                                       server_name=self.server_name,
-                                                                                       object_id=self.object_id)
+                                                                                        server_name=self.server_name,
+                                                                                        object_id=self.object_id)
         except Exception as ec:
             self.log('Error attempting to delete the PostgreSQL Flexible Administrator instance.')
             self.fail("Error deleting the PostgreSQL Flexible Administrator instance: {0}".format(str(ec)))
@@ -284,8 +284,8 @@ class AzureRMPostgreSqlFlexibleAdministrator(AzureRMModuleBase):
         found = False
         try:
             response = self.postgresql_flexible_client.administrators_microsoft_entra.get(resource_group_name=self.resource_group,
-                                                                                         server_name=self.server_name,
-                                                                                         object_id=self.object_id)
+                                                                                          server_name=self.server_name,
+                                                                                          object_id=self.object_id)
             found = True
             self.log("Response : {0}".format(response))
             self.log("PostgreSQL Flexible Administrator instance : {0} found".format(response.name))
