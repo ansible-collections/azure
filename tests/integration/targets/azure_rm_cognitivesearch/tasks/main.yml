@@ -110,17 +110,17 @@
     - name: Assert status Succeeded and results
       ansible.builtin.assert:
         that:
-          - search_info_module.search.id is defined
-          - search_info_module.search.identity.type == "None"
-          - search_info_module.search.identity.principal_id is not defined
-          - search_info_module.search.hosting_mode == "default"
-          - search_info_module.search.name == search_name
-          - search_info_module.search.partition_count == 1
-          - search_info_module.search.replica_count == 1
-          - search_info_module.search.sku == "basic"
-          - search_info_module.search.provisioning_state == "Succeeded"
-          - search_info_module.search.public_network_access == "Enabled"
-          - search_info_module.search.status == "running"
+          - search_info_module.search[0].id is defined
+          - search_info_module.search[0].identity.type == "None"
+          - search_info_module.search[0].identity.principal_id is not defined
+          - search_info_module.search[0].hosting_mode == "default"
+          - search_info_module.search[0].name == search_name
+          - search_info_module.search[0].partition_count == 1
+          - search_info_module.search[0].replica_count == 1
+          - search_info_module.search[0].sku == "basic"
+          - search_info_module.search[0].provisioning_state == "Succeeded"
+          - search_info_module.search[0].public_network_access == "Enabled"
+          - search_info_module.search[0].status == "running"
 
     - name: Update basic Azure Search (Idempotence)
       azure.azcollection.azure_rm_cognitivesearch:
