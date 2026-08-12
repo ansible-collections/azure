@@ -360,24 +360,11 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         return groups
 
     async def get_group_owners(self, group_id):
-        request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
-            query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
-                count=True,
-                select=['id', 'displayName', 'userPrincipalName', 'mailNickname', 'mail', 'accountEnabled', 'userType',
-                        'appId', 'appRoleAssignmentRequired']
-
-            ),
-        )
-        response = await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
-        groups = []
-        if response:
-            groups += response.value
-        while response is not None and response.odata_next_link is not None:
-            response = await self._client.groups.by_group_id(group_id).owners.with_url(response.odata_next_link).get(
-                request_configuration=request_configuration)
-            if response:
-                groups += response.value
-        return groups
+        '''Query beta /groups/{id}/owners; v1.0 omits servicePrincipal owners (documented).'''
+        select = "id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired"
+        url = "{0}/groups/{1}/owners?$select={2}".format(BETA_GRAPH_BASE_URL, group_id, select)
+        return await self._collect_paged_beta(
+            self._client.groups.by_group_id(group_id).owners, url)
 
     async def get_group_members(self, group_id, filters=None):
         '''Return direct or transitive members via the Graph beta endpoint.'''
