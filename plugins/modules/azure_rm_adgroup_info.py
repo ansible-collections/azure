@@ -59,6 +59,8 @@ options:
         description:
             - When true, I(group_members) contains transitive members (nested-group expansion).
             - When false, only direct members are returned.
+            - Note that the default membership view is direct members. In prior versions the
+              default view was transitive; set this option to C(true) to preserve that behavior.
         default: false
         type: bool
     all:

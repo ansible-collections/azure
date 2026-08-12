@@ -68,6 +68,8 @@ options:
             - When true, the returned I(group_members) list contains transitive members
               (nested-group expansion). When false, only direct members are returned.
             - Add and remove operations always target direct membership regardless of this flag.
+            - Note that the default membership view is direct members. In prior versions the
+              default view was transitive; set this option to C(true) to preserve that behavior.
         default: false
         type: bool
     description:
@@ -368,7 +370,9 @@ class AzureRMADGroup(AzureRMModuleBase):
         current_members = []
 
         if self.present_members or self.absent_members:
-            ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(group_id))
+            # Always diff against direct members: add/remove target direct membership,
+            # regardless of include_transitive_members (which only shapes the return payload).
+            ret = asyncio.get_event_loop().run_until_complete(self.get_direct_group_members(group_id))
             current_members = [object.id for object in ret]
 
         if self.present_members:
