@@ -495,7 +495,7 @@ options:
                         description:
                             - Enable Key Vault Secret rotation.
                         type: bool
-                        version_added: '3.22.0'
+                        version_added: '4.0.0'
                         required: false
                         aliases:
                             - enableSecretRotation
@@ -503,7 +503,7 @@ options:
                         description:
                             - Polling interval used for rotation.
                         type: str
-                        version_added: '3.22.0'
+                        version_added: '4.0.0'
                         required: false
                         aliases:
                             - rotationPollInterval
@@ -532,7 +532,7 @@ options:
                             - Enables managed identity authentication between the cluster monitoring agent
                               and the Log Analytics workspace.
                         type: bool
-                        version_added: '3.22.0'
+                        version_added: '4.0.0'
                         required: false
                         aliases:
                             - useAADAuth
