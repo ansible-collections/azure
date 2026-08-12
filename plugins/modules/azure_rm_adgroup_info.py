@@ -182,6 +182,7 @@ description:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
+from urllib.parse import quote
 
 BETA_GRAPH_BASE_URL = "https://graph.microsoft.com/beta"
 
@@ -376,7 +377,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         '''Query beta /groups/{id}/transitiveMembers; v1.0 omits servicePrincipal objects.'''
         url = "{0}/groups/{1}/transitiveMembers".format(BETA_GRAPH_BASE_URL, group_id)
         if filters:
-            url += "?$filter={0}".format(filters)
+            url += "?$filter={0}".format(quote(filters, safe=""))
         try:
             return await self._collect_paged_beta(
                 self._client.groups.by_group_id(group_id).transitive_members, url)
@@ -387,7 +388,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         '''Query beta /groups/{id}/members; v1.0 omits servicePrincipal objects.'''
         url = "{0}/groups/{1}/members".format(BETA_GRAPH_BASE_URL, group_id)
         if filters:
-            url += "?$filter={0}".format(filters)
+            url += "?$filter={0}".format(quote(filters, safe=""))
         return await self._collect_paged_beta(
             self._client.groups.by_group_id(group_id).members, url)
 

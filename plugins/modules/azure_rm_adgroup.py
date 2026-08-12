@@ -236,6 +236,7 @@ description:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
+from urllib.parse import quote
 
 BETA_GRAPH_BASE_URL = "https://graph.microsoft.com/beta"
 
@@ -533,7 +534,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         '''Query beta /groups/{id}/members. v1.0 omits servicePrincipal objects (documented).'''
         url = "{0}/groups/{1}/members".format(BETA_GRAPH_BASE_URL, group_id)
         if filters:
-            url += "?$filter={0}".format(filters)
+            url += "?$filter={0}".format(quote(filters, safe=""))
         return await self._collect_paged_beta(
             self._client.groups.by_group_id(group_id).members, url)
 
@@ -541,7 +542,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         '''Query beta /groups/{id}/transitiveMembers; same v1.0 omission applies.'''
         url = "{0}/groups/{1}/transitiveMembers".format(BETA_GRAPH_BASE_URL, group_id)
         if filters:
-            url += "?$filter={0}".format(filters)
+            url += "?$filter={0}".format(quote(filters, safe=""))
         return await self._collect_paged_beta(
             self._client.groups.by_group_id(group_id).transitive_members, url)
 
@@ -574,7 +575,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
     async def add_group_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id="https://graph.microsoft.com/v1.0/users/{0}".format(obj_id),
+            odata_id="https://graph.microsoft.com/v1.0/directoryObjects/{0}".format(obj_id),
         )
         await self._client.groups.by_group_id(group_id).owners.ref.post(body=request_body)
 
