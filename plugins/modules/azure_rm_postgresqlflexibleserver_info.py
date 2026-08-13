@@ -323,7 +323,7 @@ servers:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    import azure.mgmt.rdbms.postgresql_flexibleservers.models as PostgreSQLFlexibleModels
+    import azure.mgmt.postgresqlflexibleservers.models as PostgreSQLFlexibleModels
     from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
@@ -401,7 +401,7 @@ class AzureRMPostgreSqlFlexibleServersInfo(AzureRMModuleBase):
         response = None
         results = []
         try:
-            response = self.postgresql_flexible_client.servers.list()
+            response = self.postgresql_flexible_client.servers.list_by_subscription()
             self.log("Response : {0}".format(response))
         except Exception:
             self.log('Could not get facts for PostgreSQL Flexible Servers.')

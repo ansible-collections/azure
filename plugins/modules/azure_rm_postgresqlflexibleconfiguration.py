@@ -81,7 +81,7 @@ id:
 
 try:
     from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-    from azure.mgmt.rdbms.postgresql_flexibleservers.models import Configuration
+    from azure.mgmt.postgresqlflexibleservers.models import ConfigurationForUpdate
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
 except ImportError:
@@ -198,7 +198,7 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
             response = self.postgresql_flexible_client.configurations.begin_update(resource_group_name=self.resource_group,
                                                                                    server_name=self.server_name,
                                                                                    configuration_name=self.name,
-                                                                                   parameters=Configuration(
+                                                                                   parameters=ConfigurationForUpdate(
                                                                                        value=self.value,
                                                                                        source='user-override'
                                                                                    ))
@@ -220,7 +220,7 @@ class AzureRMPostgreSqlFlexibleConfigurations(AzureRMModuleBase):
             response = self.postgresql_flexible_client.configurations.begin_update(resource_group_name=self.resource_group,
                                                                                    server_name=self.server_name,
                                                                                    configuration_name=self.name,
-                                                                                   parameters=Configuration(
+                                                                                   parameters=ConfigurationForUpdate(
                                                                                        value=default_value,
                                                                                        source='user-override'
                                                                                    ))

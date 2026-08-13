@@ -96,7 +96,7 @@
 - name: Connect if not already connected to azure
   when: azure_arc_show.resourceId | default('') == ''
   block:
-    - name: Get access token for arc onboarding
+    - name: Get access token for arc onboarding  # noqa: jinja[invalid]
       # Run on localhost, so that service principal secrets don't leave control node
       delegate_to: localhost
       # This command produces output that includes an access token

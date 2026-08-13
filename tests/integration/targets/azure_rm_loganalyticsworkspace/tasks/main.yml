@@ -855,6 +855,145 @@
         that:
           - output is changed
 
+    - name: Create data collection rule for Container Insights
+      azure.azcollection.azure_rm_monitordatacollectionrules:
+        name: "{{ name_rpfx }}-DCR-Insights"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        location: "{{ location }}"
+        kind: Linux
+        data_sources:
+          extensions:
+            - name: ContainerInsightsExtension
+              extension_name: ContainerInsights
+              streams:
+                - Microsoft-ContainerLogV2
+                - Microsoft-KubeEvents
+                - Microsoft-KubePodInventory
+                - Microsoft-KubeNodeInventory
+                - Microsoft-KubeServices
+                - Microsoft-KubePVInventory
+                - Microsoft-Perf
+                - Microsoft-KubeMonAgentEvents
+              extension_settings:
+                dataCollectionSettings:
+                  enableContainerLogV2: true
+                  interval: 1m
+                  namespaceFilteringMode: Exclude
+                  namespaces:
+                    - kube-system
+                    - gatekeeper-system
+                    - azure-arc
+                  streams:
+                    - Microsoft-ContainerLogV2
+                    - Microsoft-KubeEvents
+                    - Microsoft-KubePodInventory
+                    - Microsoft-KubeNodeInventory
+                    - Microsoft-KubeServices
+                    - Microsoft-KubePVInventory
+                    - Microsoft-Perf
+                    - Microsoft-KubeMonAgentEvents
+        destinations:
+          log_analytics:
+            - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+              name: "{{ log_analytics_workspace_output.name }}"
+        data_flows:
+          - streams:
+              - Microsoft-ContainerLogV2
+              - Microsoft-KubeEvents
+              - Microsoft-KubePodInventory
+              - Microsoft-KubeNodeInventory
+              - Microsoft-KubeServices
+              - Microsoft-KubePVInventory
+              - Microsoft-Perf
+              - Microsoft-KubeMonAgentEvents
+            destinations:
+              - "{{ log_analytics_workspace_output.name }}"
+      register: output
+
+    - name: Assert the data collection rule for Container Insights is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - src_ext | length == 1
+          - src_ext[0].name == 'ContainerInsightsExtension'
+          - src_ext[0].extension_name == 'ContainerInsights'
+          - src_ext[0].streams | length == 8
+          - src_ext[0].extension_settings.dataCollectionSettings.enableContainerLogV2 == true
+      vars:
+        src_ext: "{{ output.datacollectionrule.data_sources.extensions | d([]) }}"
+
+    - name: Update data collection rule for Container Insights (Idempotence)
+      azure.azcollection.azure_rm_monitordatacollectionrules:
+        name: "{{ name_rpfx }}-DCR-Insights"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        location: "{{ location }}"
+        kind: Linux
+        data_sources:
+          extensions:
+            - name: ContainerInsightsExtension
+              extension_name: ContainerInsights
+              streams:
+                - Microsoft-ContainerLogV2
+                - Microsoft-KubeEvents
+                - Microsoft-KubePodInventory
+                - Microsoft-KubeNodeInventory
+                - Microsoft-KubeServices
+                - Microsoft-KubePVInventory
+                - Microsoft-Perf
+                - Microsoft-KubeMonAgentEvents
+              extension_settings:
+                dataCollectionSettings:
+                  enableContainerLogV2: true
+                  interval: 1m
+                  namespaceFilteringMode: Exclude
+                  namespaces:
+                    - kube-system
+                    - gatekeeper-system
+                    - azure-arc
+                  streams:
+                    - Microsoft-ContainerLogV2
+                    - Microsoft-KubeEvents
+                    - Microsoft-KubePodInventory
+                    - Microsoft-KubeNodeInventory
+                    - Microsoft-KubeServices
+                    - Microsoft-KubePVInventory
+                    - Microsoft-Perf
+                    - Microsoft-KubeMonAgentEvents
+        destinations:
+          log_analytics:
+            - workspace_resource_id: "{{ log_analytics_workspace_output.id }}"
+              name: "{{ log_analytics_workspace_output.name }}"
+        data_flows:
+          - streams:
+              - Microsoft-ContainerLogV2
+              - Microsoft-KubeEvents
+              - Microsoft-KubePodInventory
+              - Microsoft-KubeNodeInventory
+              - Microsoft-KubeServices
+              - Microsoft-KubePVInventory
+              - Microsoft-Perf
+              - Microsoft-KubeMonAgentEvents
+            destinations:
+              - "{{ log_analytics_workspace_output.name }}"
+      register: output
+
+    - name: Assert the data collection rule for Container Insights is idempotence
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Remove data collection rule for Container Insights
+      azure.azcollection.azure_rm_monitordatacollectionrules:
+        name: "{{ name_rpfx }}-DCR-Insights"
+        resource_group: "{{ resource_group }}-loganalyticsworkspace"
+        state: absent
+      register: output
+
+    - name: Assert the data collection rule for Container Insights is changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
     - name: Remove Log Analytics workspace (Check Mode On)
       azure.azcollection.azure_rm_loganalyticsworkspace:
         name: "{{ name_rpfx }}"

@@ -380,8 +380,9 @@ except Exception:
     # This is handled in azure_rm_common
     pass
 
+from urllib.parse import urlparse
+
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible.module_utils.six.moves.urllib.parse import urlparse
 import re
 
 
@@ -589,13 +590,6 @@ class AzureRMVirtualMachineInfo(AzureRMModuleBase):
         if new_result['boot_diagnostics']['enabled']:
             new_result['boot_diagnostics']['console_screenshot_uri'] = result['instance_view']['boot_diagnostics'].get('console_screenshot_blob_uri')
             new_result['boot_diagnostics']['serial_console_log_uri'] = result['instance_view']['boot_diagnostics'].get('serial_console_log_blob_uri')
-
-        vhd = result['storage_profile']['os_disk'].get('vhd')
-        if vhd is not None:
-            url = urlparse(vhd['uri'])
-            new_result['storage_account_name'] = url.netloc.split('.')[0]
-            new_result['storage_container_name'] = url.path.split('/')[1]
-            new_result['storage_blob_name'] = url.path.split('/')[-1]
 
         new_result['os_disk'] = result['storage_profile']['os_disk']
         new_result['os_disk_caching'] = result['storage_profile']['os_disk']['caching']

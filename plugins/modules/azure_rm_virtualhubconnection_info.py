@@ -161,20 +161,6 @@ virtual_hub_connection:
             returned: always
             type: str
             sample: Succeeded
-        allow_hub_to_remote_vnet_transit:
-            description:
-                - (Deprecated) Enable hub to remote VNet transit.
-                - This field has been deprecated and will be removed in next major version release.
-            returned: always
-            type: bool
-            sample: true
-        allow_remote_vnet_to_use_hub_vnet_gateways:
-            description:
-                - (Deprecated) Allow remote VNet to use hub's VNet gateways.
-                - This field has been deprecated and will be removed in next major version release.
-            returned: always
-            type: bool
-            sample: true
         enable_internet_security:
             description:
                 - Enable internet security and default is enabled.

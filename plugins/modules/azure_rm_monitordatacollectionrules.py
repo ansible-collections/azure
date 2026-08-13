@@ -195,12 +195,11 @@ options:
                     extension_name:
                         description:
                             - The name of the VM extension.
-                        type: list
-                        elements: str
+                        type: str
                     extension_settings:
                         description:
                             - The extension settings. The format is specific for particular extension.
-                        type: str
+                        type: dict
                     input_data_sources:
                         description:
                             - The list of data sources this extension needs data from.
@@ -749,8 +748,8 @@ data_sources_spec_syslog_options = dict(
 
 data_sources_spec_extensions_options = dict(
     streams=dict(type='list', elements='str'),
-    extension_name=dict(type='list', elements='str'),
-    extension_settings=dict(type='str'),
+    extension_name=dict(type='str'),
+    extension_settings=dict(type='dict'),
     input_data_sources=dict(type='list', elements='str'),
     name=dict(type='str')
 )

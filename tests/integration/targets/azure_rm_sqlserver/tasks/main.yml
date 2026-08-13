@@ -42,7 +42,8 @@
         location: "{{ location }}"
         admin_username: mylogin
         admin_password: "{{ password }}"
-        identity: SystemAssigned
+        identity:
+          type: SystemAssigned
       check_mode: true
       register: output
     - name: Assert the resource instance is well created
@@ -57,7 +58,8 @@
         location: "{{ location }}"
         admin_username: mylogin
         admin_password: "{{ password }}"
-        identity: SystemAssigned
+        identity:
+          type: SystemAssigned
         tags:
           aaa: bbb
       register: output
@@ -84,7 +86,8 @@
         location: "{{ location }}"
         admin_username: mylogin
         admin_password: "{{ password }}"
-        identity: SystemAssigned
+        identity:
+          type: SystemAssigned
       register: output
     - name: Assert the state has not changed
       ansible.builtin.assert:
@@ -334,7 +337,9 @@
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
-        edition: premium
+        sku:
+          name: P2
+          tier: Premium
         tags:
           aaa: bbb
       register: output
@@ -350,7 +355,9 @@
         server_name: sqlsrv{{ random_postfix }}
         name: database{{ random_postfix }}
         location: "{{ location }}"
-        edition: premium
+        sku:
+          name: P2
+          tier: Premium
         tags:
           aaa: bbb
       register: output

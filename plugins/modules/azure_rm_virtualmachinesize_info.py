@@ -53,53 +53,80 @@ EXAMPLES = '''
 RETURN = '''
 sizes:
     description:
-        - List of virtual machine size profiles available for the location.
+        - List of virtual machine Resource SKU profiles available for the location.
     returned: always
     type: complex
     contains:
+        resource_type:
+            description:
+                - The type of resource the SKU applies to.
+            type: str
+            sample: virtualMachines
         name:
             description:
-                - The name of the virtual machine size
+                - The name of the SKU.
             type: str
             sample: Standard_A1_v2
-        memoryInMB:
+        tier:
             description:
-                - The amount of memory, in MB, supported by the virtual machine size
-            type: int
-            sample: 2048
-        numberOfCores:
+                - The tier of the SKU.
+            type: str
+            sample: Standard
+        size:
             description:
-                - The number of cores supported by the virtual machine size
-            type: int
-            sample: 1
-        maxDataDiskCount:
+                - The size of the SKU.
+            type: str
+            sample: A1_v2
+        family:
             description:
-                - The maximum number of data disks that can be attached to the virtual machine size
-            type: int
-            sample: 2
-        osDiskSizeInMB:
+                - The family of the SKU.
+            type: str
+            sample: standardAv2Family
+        locations:
             description:
-                - The OS disk size, in MB, allowed by the virtual machine size
-            type: int
-            sample: 1047552
-        resourceDiskSizeInMB:
+                - The locations where the SKU is available.
+            type: list
+            elements: str
+            sample: ["eastus"]
+        location_info:
             description:
-                - The resource disk size, in MB, allowed by the virtual machine size
-            type: int
-            sample: 10240
+                - Location and availability zone information for the SKU.
+            type: list
+            elements: dict
+        capabilities:
+            description:
+                - The capability name and value pairs reported by Azure.
+            type: list
+            elements: dict
+            contains:
+                name:
+                    description:
+                        - The capability name.
+                    type: str
+                    sample: MaxWriteAcceleratorDisksAllowed
+                value:
+                    description:
+                        - The capability value.
+                    type: str
+                    sample: "4"
+        restrictions:
+            description:
+                - The restrictions that apply to the SKU.
+            type: list
+            elements: dict
 '''
 
 try:
-    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.exceptions import HttpResponseError
+    from azure.mgmt.compute import ComputeManagementClient
 except Exception:
     # This is handled in azure_rm_common
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-AZURE_OBJECT_CLASS = 'VirtualMachineSize'
-
-AZURE_ENUM_MODULES = ['azure.mgmt.compute.models']
+RESOURCE_SKU_API_VERSION = '2021-07-01'
+HYBRID_RESOURCE_SKU_API_VERSION = '2017-09-01'
 
 
 class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
@@ -134,20 +161,53 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
     def list_items_by_location(self):
         self.log('List items by location')
         try:
-            items = self.compute_client.virtual_machine_sizes.list(location=self.location)
-        except ResourceNotFoundError as exc:
+            is_hybrid_profile = self.api_profile == '2019-03-01-hybrid'
+            compute_client = self.get_mgmt_svc_client(
+                ComputeManagementClient,
+                base_url=self._cloud_environment.endpoints.resource_manager,
+                api_version=HYBRID_RESOURCE_SKU_API_VERSION if is_hybrid_profile else RESOURCE_SKU_API_VERSION
+            )
+            if is_hybrid_profile:
+                items = compute_client.resource_skus.list()
+            else:
+                items = compute_client.resource_skus.list(filter="location eq '{0}'".format(self.location))
+            return [
+                self.serialize_size(item)
+                for item in items
+                if item.resource_type == 'virtualMachines'
+                and (not is_hybrid_profile or _match_location(self.location, item.locations or []))
+                and _is_sku_available(item, self.location)
+                and (self.name is None or self.name == item.name)
+            ]
+        except HttpResponseError as exc:
             self.fail("Failed to list items - {0}".format(str(exc)))
-        return [self.serialize_size(item) for item in items if self.name is None or self.name == item.name]
 
     def serialize_size(self, size):
         '''
-        Convert a VirtualMachineSize object to dict.
+        Convert a ResourceSku object to a virtual machine size dict.
 
-        :param size: VirtualMachineSize object
+        :param size: ResourceSku object
         :return: dict
         '''
 
-        return self.serialize_obj(size, AZURE_OBJECT_CLASS, enum_modules=AZURE_ENUM_MODULES)
+        return self.serialize_obj(size, 'ResourceSku')
+
+
+def _match_location(location, locations):
+    return next((item for item in locations if item.lower() == location.lower()), None)
+
+
+def _is_sku_available(sku_info, location):
+    if not sku_info.restrictions:
+        return True
+    for restriction in sku_info.restrictions:
+        if restriction.reason_code != 'NotAvailableForSubscription':
+            continue
+        if restriction.type == 'Location':
+            restricted_locations = getattr(restriction.restriction_info, 'locations', None) or []
+            if _match_location(location, restricted_locations):
+                return False
+    return True
 
 
 def main():

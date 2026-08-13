@@ -142,6 +142,11 @@
       retries: 60
       delay: 60
 
+    - name: Assert training job completed before consuming its outputs
+      ansible.builtin.assert:
+        that:
+          - results.ml_jobs[0].status == 'Completed'
+
     - name: Create Model from Job Output
       azure.azcollection.azure_rm_ml_model:
         name: model-command-cli

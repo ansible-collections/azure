@@ -46,19 +46,6 @@ options:
     identity:
         description:
             - Specifies the managed identity to be used with SqlServer.
-            - If a string, the Managed identity type is based on the name.
-            - Possible values include C(SystemAssigned) and C(None).
-            - If a dict with the keys I(type), I(user_assigned_identities)
-            - Possible values for I(type) include C(SystemAssigned, C(UserAssigned),
-              C(SystemAssigned, UserAssigned), and C(None).
-            - Possible values for I(user_assigned_identities) include a dict
-              with I(id) and I(append).
-            - Possible values for I(id) is a list of user assigned identities ID's
-            - Possible values for I(append) is a boolean of True to append identities
-              or False to overwrite with new I(id)'s.
-            - The string format is (deprecated) and the new dict format should be used
-              going forward.
-        type: raw
     primary_user_assigned_identity_id:
         description:
             - Specifies the primary User Assigned Identity to use.
@@ -143,6 +130,7 @@ options:
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
+    - azure.azcollection.azure_identity_multiple
 
 author:
     - Zim Kalinowski (@zikalino)
@@ -261,7 +249,8 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
                 type='str'
             ),
             identity=dict(
-                type='raw'
+                type='dict',
+                options=self.managed_identity_multiple_spec
             ),
             primary_user_assigned_identity_id=dict(
                 type='str',
@@ -319,31 +308,6 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
                                       }
         return self._managed_identity
 
-    def validate_identity_parameter(self):
-        errors = []
-        valid_identity_keys = ['type', 'user_assigned_identities']
-        valid_user_assigned_keys = ['id', 'append']
-        type_choices = ['SystemAssigned',
-                        'UserAssigned',
-                        'SystemAssigned, UserAssigned',
-                        'None']
-        for key in self.identity.keys():
-            if key not in valid_identity_keys:
-                errors.append("Invalid key {0}".format(key))
-        # Default option for type is "None"
-        self.identity["type"] = self.identity.get("type", "None")
-        if self.identity.get("type") not in type_choices:
-            errors.append("Invalid identity->type, Valid choices are: [{0}]".format(type_choices))
-        for key in self.identity.get("user_assigned_identities", dict()).keys():
-            if key not in valid_user_assigned_keys:
-                errors.append("Invalid key {0}".format(key))
-            if key == "append":
-                if isinstance(self.identity['user_assigned_identities'][key], bool) is not True:
-                    errors.append("identity->user_assigned_identity->append must be True or False")
-
-        if errors:
-            self.fail(msg="Some required options are missing from managed identity configuration.", errors=errors)
-
     def exec_module(self, **kwargs):
         """Main module execution method"""
 
@@ -370,17 +334,11 @@ class AzureRMSqlServer(AzureRMModuleBaseExt):
 
         old_response = self.get_sqlserver()
 
-        if self.identity and isinstance(self.identity, dict):
-            self.validate_identity_parameter()
+        if self.identity:
             update_identity, identity = self.update_managed_identity(new_identity=self.identity,
                                                                      curr_identity=old_response.get('identity') if old_response else None)
             if update_identity:
                 self.parameters.update({"identity": identity.as_dict()})
-        elif self.identity and isinstance(self.identity, str):
-            self.parameters.update({"identity": {"type": self.identity}})
-            self.module.warn('Specifying the identity type as a string is deprecated, please update your playbook.')
-        elif self.identity:
-            self.fail("parameter error: expecting identity to be a string or dict not {0}".format(type(self.identity).__name__))
 
         if not old_response:
             self.log("SQL Server instance doesn't exist")

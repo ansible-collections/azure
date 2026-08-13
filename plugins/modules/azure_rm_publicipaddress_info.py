@@ -57,30 +57,10 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-azure_publicipaddresses:
-    description:
-        - List of public IP address dicts.
-        - Please note that this option will be deprecated in 2.10 when curated format will become the only supported format.
-    returned: always
-    type: list
-    example: [{
-        "etag": 'W/"a31a6d7d-cb18-40a5-b16d-9f4a36c1b18a"',
-        "id": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroup/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/pip2001",
-        "location": "eastus2",
-        "name": "pip2001",
-        "properties": {
-            "idleTimeoutInMinutes": 4,
-            "provisioningState": "Succeeded",
-            "publicIPAllocationMethod": "Dynamic",
-            "resourceGuid": "29de82f4-a7da-440e-bd3d-9cabb79af95a"
-        },
-        "type": "Microsoft.Network/publicIPAddresses"
-    }]
 publicipaddresses:
     description:
         - List of publicipaddress.
         - Contains the detail which matches azure_rm_publicipaddress parameters.
-        - Returned when the format parameter set to curated.
     returned: always
     type: complex
     contains:
@@ -204,8 +184,6 @@ except Exception:
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
-AZURE_OBJECT_CLASS = 'PublicIp'
-
 
 class AzureRMPublicIPInfo(AzureRMModuleBase):
 
@@ -254,15 +232,6 @@ class AzureRMPublicIPInfo(AzureRMModuleBase):
 
     def format(self, raw):
         return [self.pip_to_dict(item) for item in raw]
-
-    def serialize(self, raw):
-        results = []
-        for item in raw:
-            pip = self.serialize_obj(item, AZURE_OBJECT_CLASS)
-            pip['name'] = item.name
-            pip['type'] = item.type
-            results.append(pip)
-        return results
 
     def filter(self, response):
         return [item for item in response if self.has_tags(item.tags, self.tags)]

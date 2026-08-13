@@ -9,7 +9,7 @@
     network_name: "vnet{{ resource_group | hash('md5') | truncate(6, True, '') }}"
     subnet_name: "subnet{{ resource_group | hash('md5') | truncate(6, True, '') }}"
     interface_name: "interface{{ resource_group | hash('md5') | truncate(6, True, '') }}"
-    location: eastus
+    location: eastus2
     offer: 0001-com-ubuntu-server-focal
     publisher: Canonical
 

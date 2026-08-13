@@ -1,7 +1,7 @@
 - name: Create a new resource group for managed disk test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-manageddisk"
-    location: eastus
+    location: eastus2
 
 - name: For managed disk test
   block:
@@ -418,6 +418,100 @@
           - output.state.tags.testtag2 == 'TestValue2'
           - output.state.tags.TestTag3 == 'TestValue3'
 
+    - name: Create virtual network for attach_caching test
+      azure.azcollection.azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "tr{{ rpfx }}"
+        address_prefixes: "10.10.0.0/16"
+
+    - name: Add subnet for attach_caching test
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "tr{{ rpfx }}"
+        address_prefix: "10.10.0.0/24"
+        virtual_network: "tr{{ rpfx }}"
+
+    - name: Create NIC for attach_caching test
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "tr{{ rpfx }}"
+        virtual_network: "tr{{ rpfx }}"
+        subnet_name: "tr{{ rpfx }}"
+        create_with_security_group: false
+
+    - name: Create virtual machine for attach_caching test
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "tr{{ rpfx }}"
+        vm_size: Standard_D2s_v3
+        managed_disk_type: Standard_LRS
+        admin_username: adminuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/adminuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        os_type: Linux
+        network_interfaces: "tr{{ rpfx }}"
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: Canonical
+          sku: 20_04-lts
+          version: latest
+
+    - name: Create managed disk attached with attach_caching=read_write
+      azure.azcollection.azure_rm_manageddisk:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "md{{ rpfx }}9"
+        disk_size_gb: 4
+        managed_by: "tr{{ rpfx }}"
+        attach_caching: read_write
+      register: output
+
+    - name: Assert disk created and attached with read_write caching
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create managed disk attached with attach_caching=read_write (idempotent)
+      azure.azcollection.azure_rm_manageddisk:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "md{{ rpfx }}9"
+        disk_size_gb: 4
+        managed_by: "tr{{ rpfx }}"
+        attach_caching: read_write
+      register: output
+
+    - name: Assert disk create is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update attach_caching to read_only without re-specifying managed_by
+      azure.azcollection.azure_rm_manageddisk:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "md{{ rpfx }}9"
+        disk_size_gb: 4
+        attach_caching: read_only
+      register: output
+
+    - name: Assert attach_caching update reported changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update attach_caching to read_only without re-specifying managed_by (idempotent)
+      azure.azcollection.azure_rm_manageddisk:
+        resource_group: "{{ resource_group }}-manageddisk"
+        name: "md{{ rpfx }}9"
+        disk_size_gb: 4
+        attach_caching: read_only
+      register: output
+
+    - name: Assert attach_caching update is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
     - name: Delete all managed disk
       azure.azcollection.azure_rm_manageddisk:
         resource_group: "{{ resource_group }}-manageddisk"
@@ -433,6 +527,7 @@
         - 6
         - 7
         - 8
+        - 9
 
     - name: Delete virtual machine
       azure.azcollection.azure_rm_virtualmachine:
