@@ -218,6 +218,143 @@
         that:
           - output.state.identity.type == 'None'
 
+    - name: Look up service principal object id and set tenant_id for Entra tests
+      ansible.builtin.set_fact:
+        tenant_id: "{{ azure_tenant }}"
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=azure_tenant) }}"
+
+    - name: Enable Entra ID authentication via auth_config
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
+        resource_group: "{{ new_resource_group }}"
+        name: postflexible{{ rpfx }}
+        auth_config:
+          active_directory_auth: Enabled
+          password_auth: Enabled
+          tenant_id: "{{ tenant_id }}"
+      register: output
+
+    - name: Assert auth_config was applied
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.auth_config.active_directory_auth == 'Enabled'
+          - output.state.auth_config.password_auth == 'Enabled'
+          - output.state.auth_config.tenant_id == tenant_id
+
+    - name: Enable Entra ID authentication via auth_config (Idempotent test)
+      azure.azcollection.azure_rm_postgresqlflexibleserver:
+        resource_group: "{{ new_resource_group }}"
+        name: postflexible{{ rpfx }}
+        auth_config:
+          active_directory_auth: Enabled
+          password_auth: Enabled
+          tenant_id: "{{ tenant_id }}"
+      register: output
+
+    - name: Assert auth_config is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Assign Entra ID administrator (check mode)
+      azure.azcollection.azure_rm_postgresqlflexibleadministrator:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        object_id: "{{ object_id }}"
+        principal_name: "{{ azure_client_id }}"
+        principal_type: ServicePrincipal
+        tenant_id: "{{ tenant_id }}"
+        state: present
+      check_mode: true
+      register: output
+
+    - name: Assert Entra admin would be created (check mode)
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Assign Entra ID administrator
+      azure.azcollection.azure_rm_postgresqlflexibleadministrator:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        object_id: "{{ object_id }}"
+        principal_name: "{{ azure_client_id }}"
+        principal_type: ServicePrincipal
+        tenant_id: "{{ tenant_id }}"
+        state: present
+      register: output
+
+    - name: Assert Entra admin was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Assign Entra ID administrator (Idempotent test)
+      azure.azcollection.azure_rm_postgresqlflexibleadministrator:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        object_id: "{{ object_id }}"
+        principal_name: "{{ azure_client_id }}"
+        principal_type: ServicePrincipal
+        tenant_id: "{{ tenant_id }}"
+        state: present
+      register: output
+
+    - name: Assert Entra admin idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Gather Entra ID administrator facts by object_id
+      azure.azcollection.azure_rm_postgresqlflexibleadministrator_info:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        object_id: "{{ object_id }}"
+      register: output
+
+    - name: Assert Entra admin facts
+      ansible.builtin.assert:
+        that:
+          - output.administrators | length == 1
+          - output.administrators[0].principal_type == 'ServicePrincipal'
+          - output.administrators[0].tenant_id == tenant_id
+
+    - name: List Entra ID administrators on the server
+      azure.azcollection.azure_rm_postgresqlflexibleadministrator_info:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+      register: output
+
+    - name: Assert list_by_server returned the administrator
+      ansible.builtin.assert:
+        that:
+          - output.administrators | length >= 1
+
+    - name: Delete Entra ID administrator
+      azure.azcollection.azure_rm_postgresqlflexibleadministrator:
+        resource_group: "{{ new_resource_group }}"
+        server_name: postflexible{{ rpfx }}
+        object_id: "{{ object_id }}"
+        state: absent
+      register: output
+
+    - name: Assert Entra admin deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: List PostgreSQL flexible servers by subscription
+      azure.azcollection.azure_rm_postgresqlflexibleserver_info:
+      register: output
+
+    - name: Assert list_by_subscription returned our test server
+      ansible.builtin.assert:
+        that:
+          - output.servers | length >= 1
+
     - name: Create postgresql elastic cluster
       azure.azcollection.azure_rm_postgresqlflexibleserver:
         resource_group: "{{ new_resource_group }}"

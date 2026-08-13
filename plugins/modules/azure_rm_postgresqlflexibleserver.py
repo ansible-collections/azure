@@ -844,6 +844,9 @@ class AzureRMPostgreSqlFlexibleServers(AzureRMModuleBaseExt):
             if update_identity:
                 self.parameters['identity'] = new_identity
 
+        if self.auth_config is not None:
+            self.parameters['auth_config'] = self.auth_config
+
         current_tags = old_response.get('tags') if old_response else None
         if self.tags is not None:
             try:
