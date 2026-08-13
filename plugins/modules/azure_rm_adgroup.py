@@ -236,9 +236,7 @@ description:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
-from urllib.parse import quote
-
-BETA_GRAPH_BASE_URL = "https://graph.microsoft.com/beta"
+from urllib.parse import quote, urlparse
 
 try:
     import asyncio
@@ -525,6 +523,15 @@ class AzureRMADGroup(AzureRMModuleBase):
                 groups += response.value
         return groups
 
+    def _graph_base(self, version):
+        '''Return the Graph base URL for the tenant's cloud (e.g. https://graph.microsoft.us/beta).
+
+        Derived from the SDK request adapter so sovereign clouds (US Gov, China, Germany)
+        receive matching @odata.id references. Cross-cloud references are not supported by Graph.
+        '''
+        parsed = urlparse(self._client.request_adapter.base_url)
+        return "{0}://{1}/{2}".format(parsed.scheme, parsed.netloc, version)
+
     async def get_group_members(self, group_id, filters=None):
         '''Return direct or transitive members; add/remove ops always target direct membership.'''
         if self.include_transitive_members:
@@ -533,7 +540,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
     async def get_direct_group_members(self, group_id, filters=None):
         '''Query beta /groups/{id}/members. v1.0 omits servicePrincipal objects (documented).'''
-        url = "{0}/groups/{1}/members".format(BETA_GRAPH_BASE_URL, group_id)
+        url = "{0}/groups/{1}/members".format(self._graph_base("beta"), group_id)
         if filters:
             url += "?$filter={0}".format(quote(filters, safe=""))
         return await self._collect_paged_beta(
@@ -545,7 +552,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         Graph classifies filtering on /transitiveMembers as an advanced query and
         requires the ConsistencyLevel: eventual header; without it Graph returns 400.
         '''
-        url = "{0}/groups/{1}/transitiveMembers".format(BETA_GRAPH_BASE_URL, group_id)
+        url = "{0}/groups/{1}/transitiveMembers".format(self._graph_base("beta"), group_id)
         if filters:
             url += "?$filter={0}".format(quote(filters, safe=""))
         request_configuration = RequestConfiguration()
@@ -570,7 +577,7 @@ class AzureRMADGroup(AzureRMModuleBase):
 
     async def add_group_member(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id="https://graph.microsoft.com/v1.0/directoryObjects/{0}".format(obj_id),
+            odata_id="{0}/directoryObjects/{1}".format(self._graph_base("v1.0"), obj_id),
         )
         await self._client.groups.by_group_id(group_id).members.ref.post(body=request_body)
 
@@ -579,13 +586,13 @@ class AzureRMADGroup(AzureRMModuleBase):
 
     async def get_group_owners(self, group_id):
         '''Query beta /groups/{id}/owners; v1.0 omits servicePrincipal owners (documented).'''
-        url = "{0}/groups/{1}/owners".format(BETA_GRAPH_BASE_URL, group_id)
+        url = "{0}/groups/{1}/owners".format(self._graph_base("beta"), group_id)
         return await self._collect_paged_beta(
             self._client.groups.by_group_id(group_id).owners, url)
 
     async def add_group_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id="https://graph.microsoft.com/v1.0/directoryObjects/{0}".format(obj_id),
+            odata_id="{0}/directoryObjects/{1}".format(self._graph_base("v1.0"), obj_id),
         )
         await self._client.groups.by_group_id(group_id).owners.ref.post(body=request_body)
 

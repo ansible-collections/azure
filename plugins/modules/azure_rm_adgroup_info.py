@@ -182,9 +182,7 @@ description:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
-from urllib.parse import quote
-
-BETA_GRAPH_BASE_URL = "https://graph.microsoft.com/beta"
+from urllib.parse import quote, urlparse
 
 try:
     import asyncio
@@ -361,10 +359,19 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
         return groups
 
+    def _graph_base(self, version):
+        '''Return the Graph base URL for the tenant's cloud (e.g. https://graph.microsoft.us/beta).
+
+        Derived from the SDK request adapter so sovereign clouds (US Gov, China, Germany)
+        receive matching @odata.id and @odata.nextLink references.
+        '''
+        parsed = urlparse(self._client.request_adapter.base_url)
+        return "{0}://{1}/{2}".format(parsed.scheme, parsed.netloc, version)
+
     async def get_group_owners(self, group_id):
         '''Query beta /groups/{id}/owners; v1.0 omits servicePrincipal owners (documented).'''
         select = "id,displayName,userPrincipalName,mailNickname,mail,accountEnabled,userType,appId,appRoleAssignmentRequired"
-        url = "{0}/groups/{1}/owners?$select={2}".format(BETA_GRAPH_BASE_URL, group_id, select)
+        url = "{0}/groups/{1}/owners?$select={2}".format(self._graph_base("beta"), group_id, select)
         return await self._collect_paged_beta(
             self._client.groups.by_group_id(group_id).owners, url)
 
@@ -380,7 +387,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
         Graph classifies filtering on /transitiveMembers as an advanced query and
         requires the ConsistencyLevel: eventual header; without it Graph returns 400.
         '''
-        url = "{0}/groups/{1}/transitiveMembers".format(BETA_GRAPH_BASE_URL, group_id)
+        url = "{0}/groups/{1}/transitiveMembers".format(self._graph_base("beta"), group_id)
         if filters:
             url += "?$filter={0}".format(quote(filters, safe=""))
         request_configuration = RequestConfiguration()
@@ -393,7 +400,7 @@ class AzureRMADGroupInfo(AzureRMModuleBase):
 
     async def get_direct_group_members(self, group_id, filters=None):
         '''Query beta /groups/{id}/members; v1.0 omits servicePrincipal objects.'''
-        url = "{0}/groups/{1}/members".format(BETA_GRAPH_BASE_URL, group_id)
+        url = "{0}/groups/{1}/members".format(self._graph_base("beta"), group_id)
         if filters:
             url += "?$filter={0}".format(quote(filters, safe=""))
         return await self._collect_paged_beta(
