@@ -242,6 +242,7 @@ BETA_GRAPH_BASE_URL = "https://graph.microsoft.com/beta"
 
 try:
     import asyncio
+    from kiota_abstractions.base_request_configuration import RequestConfiguration
     from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
     from msgraph.generated.models.group import Group
     from msgraph.generated.models.reference_create import ReferenceCreate
@@ -539,21 +540,30 @@ class AzureRMADGroup(AzureRMModuleBase):
             self._client.groups.by_group_id(group_id).members, url)
 
     async def get_transitive_group_members(self, group_id, filters=None):
-        '''Query beta /groups/{id}/transitiveMembers; same v1.0 omission applies.'''
+        '''Query beta /groups/{id}/transitiveMembers; same v1.0 omission applies.
+
+        Graph classifies filtering on /transitiveMembers as an advanced query and
+        requires the ConsistencyLevel: eventual header; without it Graph returns 400.
+        '''
         url = "{0}/groups/{1}/transitiveMembers".format(BETA_GRAPH_BASE_URL, group_id)
         if filters:
             url += "?$filter={0}".format(quote(filters, safe=""))
+        request_configuration = RequestConfiguration()
+        request_configuration.headers.try_add("ConsistencyLevel", "eventual")
         return await self._collect_paged_beta(
-            self._client.groups.by_group_id(group_id).transitive_members, url)
+            self._client.groups.by_group_id(group_id).transitive_members, url, request_configuration)
 
-    async def _collect_paged_beta(self, request_builder, initial_url):
+    async def _collect_paged_beta(self, request_builder, initial_url, request_configuration=None):
         '''Follow odata_next_link starting from a beta URL; SDK adapter/auth is preserved.'''
-        response = await request_builder.with_url(initial_url).get()
+        kwargs = {}
+        if request_configuration is not None:
+            kwargs["request_configuration"] = request_configuration
+        response = await request_builder.with_url(initial_url).get(**kwargs)
         items = []
         if response and response.value:
             items += response.value
         while response is not None and response.odata_next_link is not None:
-            response = await request_builder.with_url(response.odata_next_link).get()
+            response = await request_builder.with_url(response.odata_next_link).get(**kwargs)
             if response and response.value:
                 items += response.value
         return items
