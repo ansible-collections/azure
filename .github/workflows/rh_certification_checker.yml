@@ -40,8 +40,8 @@ jobs:
     uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@v3.0.0 # zizmor: ignore[unpinned-uses]
     # For details on tested ansible-core branches and Python versions,
     # see: https://github.com/ansible-collections/partner-certification-checker#tested-ansible-core-branches-and-python-versions
-    # with:
-    #   ansible-core-version: '2.18.0'
+    with:
+      ansible-core-version: "2.21.0"
     #   collection-root: 'ansible_collections/junipernetworks/junos'
     #   automation-hub: true
     # Uncomment the lines below if you have 'automation-hub: true' and need to install collections from Red Hat Ansible Automation Hub.
