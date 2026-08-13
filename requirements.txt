@@ -42,7 +42,6 @@ azure-mgmt-notificationhubs==8.1.0b1
 azure-mgmt-nspkg==3.0.2
 azure-mgmt-postgresqlflexibleservers==2.0.0
 azure-mgmt-privatedns==1.2.0
-azure-mgmt-rdbms==10.2.0b17
 azure-mgmt-recoveryservices==3.0.0
 azure-mgmt-recoveryservicesbackup==9.1.0
 azure-mgmt-redis==14.4.0

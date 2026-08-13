@@ -115,9 +115,6 @@ AZURE_API_PROFILES = {
         'StorageManagementClient': '2021-06-01',
         'SubscriptionClient': '2019-11-01',
         'WebSiteManagementClient': '2021-03-01',
-        'PostgreSQLManagementClient': '2017-12-01',
-        'MySQLManagementClient': '2017-12-01',
-        'MariaDBManagementClient': '2019-03-01',
         'ManagementLockClient': '2016-09-01',
         'DataLakeStoreAccountManagementClient': '2016-11-01',
         'NotificationHubsManagementClient': '2016-03-01',
@@ -264,11 +261,8 @@ try:
     from azure.mgmt.authorization import AuthorizationManagementClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
-    from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
     from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
-    from azure.mgmt.rdbms.mysql import MySQLManagementClient
     from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
-    from azure.mgmt.rdbms.mariadb import MariaDBManagementClient
     from azure.mgmt.containerregistry import ContainerRegistryManagementClient
     from azure.mgmt.containerinstance import ContainerInstanceManagementClient
     from azure.mgmt.loganalytics import LogAnalyticsManagementClient
@@ -424,10 +418,7 @@ class AzureRMModuleBase(object):
         self._web_client = None
         self._marketplace_client = None
         self._sql_client = None
-        self._mysql_client = None
         self._mysql_flexible_client = None
-        self._mariadb_client = None
-        self._postgresql_client = None
         self._postgresql_flexible_client = None
         self._containerregistry_client = None
         self._containerregistrytoken_client = None
@@ -1311,14 +1302,6 @@ class AzureRMModuleBase(object):
         return self._postgresql_flexible_client
 
     @property
-    def postgresql_client(self):
-        self.log('Getting PostgreSQL client')
-        if not self._postgresql_client:
-            self._postgresql_client = self.get_mgmt_svc_client(PostgreSQLManagementClient,
-                                                               base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._postgresql_client
-
-    @property
     def mysql_flexible_client(self):
         self.log('Getting MySQL Flexible client')
         if not self._mysql_flexible_client:
@@ -1326,22 +1309,6 @@ class AzureRMModuleBase(object):
                                                                    base_url=self._cloud_environment.endpoints.resource_manager,
                                                                    api_version='2024-08-01')
         return self._mysql_flexible_client
-
-    @property
-    def mysql_client(self):
-        self.log('Getting MySQL client')
-        if not self._mysql_client:
-            self._mysql_client = self.get_mgmt_svc_client(MySQLManagementClient,
-                                                          base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._mysql_client
-
-    @property
-    def mariadb_client(self):
-        self.log('Getting MariaDB client')
-        if not self._mariadb_client:
-            self._mariadb_client = self.get_mgmt_svc_client(MariaDBManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager)
-        return self._mariadb_client
 
     @property
     def containerregistry_client(self):
