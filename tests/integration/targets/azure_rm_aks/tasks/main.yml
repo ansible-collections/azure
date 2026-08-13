@@ -396,7 +396,56 @@
         that:
           - output is not changed
 
-    - name: Upgrade the AKS instance with monitoring addon and key rotation
+    - name: Upgrade the AKS instance with monitoring addon and key rotation interval
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 1
+        node_resource_group: "node{{ noderpfx }}"
+        addon:
+          http_application_routing:
+            enabled: false
+          azure_keyvault_secrets_provider:
+            rotation_poll_interval: 10m
+            enabled: true
+          monitoring:
+            log_analytics_workspace_resource_id: "{{ aks_log_analytics_workspace_id }}"
+            use_aad_auth: false
+            enabled: true
+        network_profile:
+          network_plugin: azure
+          load_balancer_sku: standard
+        enable_rbac: true
+      register: output
+
+    - name: Assert the AKS instance is upgraded with monitoring and key rotation interval
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.addon.azure_keyvault_secrets_provider.enabled == true
+          - output.addon.azure_keyvault_secrets_provider.rotation_poll_interval == '10m'
+          - output.addon.monitoring.enabled == true
+          - output.addon.monitoring.use_aad_auth == false
+          - output.addon.monitoring.log_analytics_workspace_resource_id == aks_log_analytics_workspace_id
+
+    - name: Upgrade the AKS instance with key rotation
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
@@ -424,7 +473,7 @@
             enabled: false
           azure_keyvault_secrets_provider:
             enable_secret_rotation: true
-            rotation_poll_interval: 10m
+            rotation_poll_interval: 5m
             enabled: true
           monitoring:
             log_analytics_workspace_resource_id: "{{ aks_log_analytics_workspace_id }}"
@@ -436,13 +485,13 @@
         enable_rbac: true
       register: output
 
-    - name: Assert the AKS instance is upgraded with monitoring and key rotation
+    - name: Assert the AKS instance is upgraded with key rotation
       ansible.builtin.assert:
         that:
           - output is changed
           - output.addon.azure_keyvault_secrets_provider.enabled == true
           - output.addon.azure_keyvault_secrets_provider.enable_secret_rotation == true
-          - output.addon.azure_keyvault_secrets_provider.rotation_poll_interval == '10m'
+          - output.addon.azure_keyvault_secrets_provider.rotation_poll_interval == '5m'
           - output.addon.monitoring.enabled == true
           - output.addon.monitoring.use_aad_auth == false
           - output.addon.monitoring.log_analytics_workspace_resource_id == aks_log_analytics_workspace_id
@@ -475,7 +524,7 @@
             enabled: false
           azure_keyvault_secrets_provider:
             enable_secret_rotation: true
-            rotation_poll_interval: 10m
+            rotation_poll_interval: 5m
             enabled: true
           monitoring:
             log_analytics_workspace_resource_id: "{{ aks_log_analytics_workspace_id }}"

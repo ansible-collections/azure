@@ -1092,6 +1092,10 @@ def create_addon_dict(addon):
 
     for azure_name, profile in addon.items():
         if azure_name not in reverse_addons:
+            # Preserve unsupported Azure addons using their Azure name.
+            config = dict(profile.config or {})
+            config['enabled'] = profile.enabled
+            result[azure_name] = config
             continue
         ansible_name, reverse_config = reverse_addons[azure_name]
         config = {}
@@ -1686,9 +1690,10 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                             return False
                         config = config or dict()
                         for key in config.keys():
-                            if origin.get(key) != patch.get(key):
-                                # if not set in requested model, keep origin
-                                return patch.get(key) is None
+                            # if not set in requested model, ignore and keep origin
+                            if patch.get(key) is not None:
+                                if origin.get(key) != patch.get(key):
+                                    return False
                         return True
 
                     if self.addon:
