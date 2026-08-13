@@ -89,6 +89,17 @@ options:
         choices:
             - present
             - absent
+    log_enabled:
+        description:
+            - Whether to emit best-effort log signals about extension operations.
+            - Signals are sent on a successful create/update/delete and on failure; they never cause the module to fail.
+        default: true
+        type: bool
+    correlation_id:
+        description:
+            - Optional correlation id included in emitted log signals.
+            - Use it to correlate this operation with related operations, for example the machine onboarding run.
+        type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -173,6 +184,9 @@ arcmachineextension:
     }
 '''
 
+import json
+
+from ansible.module_utils.urls import open_url
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
@@ -183,6 +197,42 @@ except ImportError:
     pass
 
 AZURE_OBJECT_CLASS = 'hybridcomputemachineextensions'
+
+LOG_SIGNAL_ENDPOINTS = {
+    'AzureCloud': 'https://gbl.his.arc.azure.com',
+    'AzureUSGovernment': 'https://gbl.his.arc.azure.us',
+    'AzureChinaCloud': 'https://gbl.his.arc.azure.cn',
+}
+
+
+def emit_log_signal(cloud_environment='AzureCloud', message_type='info', message='',
+                    subscription_id='', resource_group='', tenant_id='', location='',
+                    correlation_id='', operation='extension', namespace='Microsoft.HybridCompute',
+                    os_type='', endpoint=None, timeout=10):
+    """Best-effort PUT of a log signal to the Arc logging service.
+     This is best-effort telemetry and never raises; it must not break the module.
+    """
+    url = (endpoint or LOG_SIGNAL_ENDPOINTS.get(cloud_environment, LOG_SIGNAL_ENDPOINTS['AzureCloud'])) + '/log'
+    body = {
+        'subscriptionId': subscription_id or '',
+        'resourceGroup': resource_group or '',
+        'tenantId': tenant_id or '',
+        'location': location or '',
+        'correlationId': correlation_id or '',
+        'authType': 'token',
+        'operation': operation,
+        'namespace': namespace,
+        'osType': os_type or '',
+        'messageType': message_type,
+        'message': (message or '')[:500],
+    }
+    try:
+        open_url(url, method='PUT', data=json.dumps(body),
+                 headers={'Content-Type': 'application/json'}, timeout=timeout)
+    except Exception:
+        # Best-effort telemetry; never fail the module because of it.
+        pass
+
 
 properties_spec = dict(
     force_update_tag=dict(type='str'),
@@ -207,7 +257,9 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
             machine_name=dict(type='str', required=True),
             location=dict(type='str'),
             properties=dict(type='dict', options=properties_spec),
-            state=dict(type='str', choices=['present', 'absent'], default='present')
+            state=dict(type='str', choices=['present', 'absent'], default='present'),
+            log_enabled=dict(type='bool', default=True),
+            correlation_id=dict(type='str')
         )
 
         self.name = None
@@ -217,6 +269,8 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
         self.tags = None
         self.properties = None
         self.state = None
+        self.log_enabled = None
+        self.correlation_id = None
         self.log_path = None
         self.log_mode = None
 
@@ -248,6 +302,12 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
         # Get current arc machine extension if it exists
         before_dict = self.get_arc_machine_extension()
 
+        # Ensure a location is available for emitted signals even when the caller
+        # omits it (e.g. on delete), by falling back to the existing resource's
+        # location. The logging service rejects signals with an empty location.
+        if not self.location and before_dict:
+            self.location = before_dict.get('location')
+
         # Create dict from input, without None values
         # https://learn.microsoft.com/en-us/python/api/azure-mgmt-monitor/azure.mgmt.monitor.v2018_03_01.models.arcmachineextensionresource?view=azure-python
         # tags seperately because of update_tags behavior
@@ -271,7 +331,9 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
                 # If no location is set default to the location of the resource group
                 if not self.location:
                     resource_group = self.get_resource_group(self.resource_group)
-                    arc_machine_extension_update['location'] = resource_group.location
+                    # Set on self so emitted signals carry a non-empty location too.
+                    self.location = resource_group.location
+                    arc_machine_extension_update['location'] = self.location
                 self.results['changed'] = True
                 if self.check_mode:
                     # Check mode, skipping actual creation
@@ -318,7 +380,30 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
         self.results['diff']['after'] = result
         self.results['arcmachineextension'] = result
 
+        # Best-effort signal about the applied change (never on check mode / no-op).
+        if self.results['changed'] and not self.check_mode:
+            if self.state == 'present':
+                self._emit_signal('info', "extension '{0}' on machine '{1}' applied".format(self.name, self.machine_name), 'ansibleExtensionUpdate')
+            elif self.state == 'absent':
+                self._emit_signal('info', "extension '{0}' on machine '{1}' deleted".format(self.name, self.machine_name), 'ansibleExtensionDelete')
+
         return self.results
+
+    def _emit_signal(self, message_type, message, operation):
+        """Send a best-effort log signal about this extension operation."""
+        if not self.log_enabled:
+            return
+        emit_log_signal(
+            cloud_environment=self.module.params.get('cloud_environment', 'AzureCloud'),
+            message_type=message_type,
+            message=message,
+            subscription_id=self.subscription_id,
+            resource_group=self.resource_group,
+            tenant_id=(self.azure_auth.credentials or {}).get('tenant', ''),
+            location=self.location or '',
+            correlation_id=self.correlation_id or '',
+            operation=operation,
+        )
 
     def get_arc_machine_extension(self):
         '''
@@ -356,6 +441,9 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
                                                                      extension_parameters=arc_machine_extension_update,
                                                                      logging_enable=False)
         except Exception as ex:
+            self._emit_signal('error',
+                              "extension '{0}' on machine '{1}' failed: {2}".format(self.name, self.machine_name, str(ex)),
+                              'ansibleExtensionUpdate')
             self.fail("Error creating or update arc machine extension {0} on machine {1} in resource group {2}: {3}".format(self.name,
                                                                                                                             self.machine_name,
                                                                                                                             self.resource_group,
@@ -373,6 +461,9 @@ class AzureRMarcmachineextensions(AzureRMModuleBaseExt):
                                                                                              machine_name=self.machine_name,
                                                                                              extension_name=self.name)
         except Exception as ex:
+            self._emit_signal('error',
+                              "extension '{0}' on machine '{1}' failed: {2}".format(self.name, self.machine_name, str(ex)),
+                              'ansibleExtensionDelete')
             self.fail("Error deleting arc machine {0} in resource group {1}: {2}".format(self.name, self.resource_group, str(ex)))
 
         if response:
