@@ -1540,10 +1540,10 @@ provisioning_state:
 import time
 from copy import deepcopy
 import json
+from collections.abc import MutableMapping
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 from ansible.module_utils.common.dict_transformations import _snake_to_camel
-from ansible.module_utils.six.moves.collections_abc import MutableMapping
 
 try:
     from azure.core.exceptions import ResourceNotFoundError

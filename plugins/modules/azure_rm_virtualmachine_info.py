@@ -380,6 +380,8 @@ except Exception:
     # This is handled in azure_rm_common
     pass
 
+from urllib.parse import urlparse
+
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 import re
 
