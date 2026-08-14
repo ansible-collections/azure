@@ -342,6 +342,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         if self.templar.is_template(auth_options["subscription_id"]):
             auth_options["subscription_id"] = self.templar.template(variable=auth_options["subscription_id"], disable_lookups=False)
 
+        if self.templar.is_template(auth_options["cloud_environment"]):
+            auth_options["cloud_environment"] = self.templar.template(variable=auth_options["cloud_environment"], disable_lookups=False)
+
         self.azure_auth = AzureRMAuth(**auth_options)
 
         self._clientconfig = AzureRMRestConfiguration(self.azure_auth.azure_credential_track2, self.azure_auth.subscription_id,
