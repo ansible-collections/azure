@@ -530,6 +530,8 @@ state:
             sample: "Microsoft.Network/networkSecurityGroups"
 '''  # NOQA
 
+import copy
+
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.core.tools import is_valid_resource_id
@@ -798,6 +800,7 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
 
         changed = False
         results = dict()
+        diff_before = None
 
         resource_group = self.get_resource_group(self.resource_group)
         if not self.location:
@@ -823,6 +826,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
         try:
             nsg = self.network_client.network_security_groups.get(self.resource_group, self.name)
             results = create_network_security_group_dict(nsg)
+            if self.module._diff:
+                diff_before = copy.deepcopy(results)
             self.log("Found security group:")
             self.log(results, pretty_print=True)
             self.check_provisioning_state(nsg, self.state)
@@ -892,6 +897,15 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
                 # the delete does not actually return anything. if no exception, then we'll assume
                 # it worked.
                 self.results['state']['status'] = 'Deleted'
+
+        if self.module._diff:
+            after_state = self.results.get('state') or None
+            if isinstance(after_state, dict) and after_state.get('status') == 'Deleted':
+                after_state = None
+            self.results['diff'] = dict(
+                before=diff_before,
+                after=copy.deepcopy(after_state) if after_state else None,
+            )
 
         return self.results
 
