@@ -742,6 +742,22 @@ rule_spec = dict(
     direction=dict(type='str', choices=['Inbound', 'Outbound'], default='Inbound')
 )
 
+# Denylist of Azure server-computed fields to strip from diff output.
+# Extend when future SDK versions leak new fields that produce diff churn.
+_DIFF_SCRUB_KEYS = frozenset((
+    'etag',
+    'provisioning_state',
+    'resource_guid',
+))
+
+
+def _scrub_diff(obj):
+    if isinstance(obj, dict):
+        return {k: _scrub_diff(v) for k, v in obj.items() if k not in _DIFF_SCRUB_KEYS}
+    if isinstance(obj, list):
+        return [_scrub_diff(item) for item in obj]
+    return obj
+
 
 class AzureRMSecurityGroup(AzureRMModuleBase):
 
@@ -903,8 +919,8 @@ class AzureRMSecurityGroup(AzureRMModuleBase):
             if isinstance(after_state, dict) and after_state.get('status') == 'Deleted':
                 after_state = None
             self.results['diff'] = dict(
-                before=diff_before,
-                after=copy.deepcopy(after_state) if after_state else None,
+                before=_scrub_diff(diff_before) if diff_before else None,
+                after=_scrub_diff(after_state) if after_state else None,
             )
 
         return self.results
