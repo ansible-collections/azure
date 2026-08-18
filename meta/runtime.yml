@@ -48,6 +48,7 @@ action_groups:
     - azure.azcollection.azure_rm_azurefirewall_info
     - azure.azcollection.azure_rm_backupazurevm
     - azure.azcollection.azure_rm_backupazurevm_info
+    - azure.azcollection.azure_rm_backupjob_info
     - azure.azcollection.azure_rm_backuppolicy
     - azure.azcollection.azure_rm_backuppolicy_info
     - azure.azcollection.azure_rm_bastionhost
