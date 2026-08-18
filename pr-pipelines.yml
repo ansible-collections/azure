@@ -295,6 +295,8 @@ jobs:
           test.key: '18'
         "Python${{ parameters.PYTHON_VER }}_19":
           test.key: '19'
+        "Python${{ parameters.PYTHON_VER }}_20":
+          test.key: '20'
 
     steps:
       - task: UsePythonVersion@0
