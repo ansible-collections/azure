@@ -127,12 +127,21 @@ options:
         version_added: '0.0.1'
     log_path:
         description:
-            - Parent argument.
+            - Path to a per-invocation debug log file written by this module when I(log_mode=file).
+            - The file is created with mode 0o600 (owner read/write only) and rotated at 10 MB (up to 5 backups).
+            - Distinct from and complementary to Ansible-core's C(ANSIBLE_LOG_PATH) which captures playbook-level output on the controller.
+            - Records SDK diagnostics under the C(azure.azcollection) logger including the module invocation correlation_id and, on failure, the ODataV4 error body plus C(x-ms-request-id) / C(x-ms-correlation-request-id) headers.
         type: str
     log_mode:
         description:
-            - Parent argument.
+            - Verbosity mode for the collection's stdlib logger (C(azure.azcollection)).
+            - C(normal) (default) emits only WARNING-level records and matches historical behavior.
+            - C(file) requires I(log_path) and writes DEBUG-level SDK diagnostics to that rotating file.
+            - C(debug) elevates the effective log level to DEBUG regardless of Ansible verbosity.
+            - Automatically elevated to DEBUG when Ansible is invoked with C(-vvv) (or higher) or when the C(AZURE_LOG_LEVEL) environment variable is set to C(DEBUG), C(INFO), C(WARNING), C(ERROR), or C(CRITICAL).
         type: str
+        choices: [normal, file, debug]
+        default: normal
     x509_certificate_path:
         description:
             - Path to the X509 certificate used to create the service principal in PEM format.

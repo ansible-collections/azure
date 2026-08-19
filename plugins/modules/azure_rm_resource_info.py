@@ -318,6 +318,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.mgmt.core.tools import resource_id
+    from azure.core.exceptions import HttpResponseError
     import json
 
 except ImportError:
@@ -449,7 +450,11 @@ class AzureRMResourceInfo(AzureRMModuleBase):
         while True:
             if skiptoken:
                 query_parameters['skiptoken'] = skiptoken
-            response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
+            try:
+                response = self.mgmt_client.query(self.url, self.method, query_parameters, header_parameters, None, [200, 404], 0, 0)
+            except HttpResponseError as e:
+                self.fail_azure(e, msg='Azure REST query failed')
+                return
             try:
                 if isinstance(response.body(), bytes) and bool(response.body().decode()) is False:
                     self.results['status_code'] = response.status_code
