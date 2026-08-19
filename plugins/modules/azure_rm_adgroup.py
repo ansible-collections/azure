@@ -63,10 +63,13 @@ options:
             - The azure ad objects asserted to not be owners of the group.
         type: list
         elements: str
-    raw_membership:
+    include_transitive_members:
         description:
-            - By default the group_members return property is flattened and partially filtered of non-User objects before return. \
-             This argument disables those transformations.
+            - When true, the returned I(group_members) list contains transitive members
+              (nested-group expansion). When false, only direct members are returned.
+            - Add and remove operations always target direct membership regardless of this flag.
+            - Note that the default membership view is direct members. In prior versions the
+              default view was transitive; set this option to C(true) to preserve that behavior.
         default: false
         type: bool
     description:
@@ -115,14 +118,14 @@ EXAMPLES = '''
       - "{{ ad_object_1_object_id }}"
       - "{{ ad_object_2_object_id }}"
 
-- name: Ensure Users are Members of a Group using object_id. Specify the group_membership return should be unfiltered
+- name: Ensure Users are Members of a Group and expose transitive members in the return
   azure_rm_adgroup:
     object_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     state: 'present'
     present_members:
       - "{{ ad_object_1_object_id }}"
       - "{{ ad_object_2_object_id }}"
-    raw_membership: true
+    include_transitive_members: true
 
 - name: Ensure Users are not Members of a Group using display_name and mail_nickname
   azure_rm_adgroup:
@@ -218,7 +221,10 @@ group_owners:
     type: list
 group_members:
     description:
-        - The members of the group. If raw_membership is false, this contains the transitive members property. Otherwise, it contains the members property.
+        - The members of the group. Contains direct members by default, or transitive members
+          when C(include_transitive_members=true). Service Principals and Managed Identities are
+          included (the module queries the Microsoft Graph beta endpoint to work around a
+          documented v1.0 limitation where service principals are omitted from group member listings).
     returned: always
     type: list
 description:
@@ -230,14 +236,13 @@ description:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBase
+from urllib.parse import quote, urlparse
 
 try:
     import asyncio
+    from kiota_abstractions.base_request_configuration import RequestConfiguration
     from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
     from msgraph.generated.models.group import Group
-    from msgraph.generated.groups.item.transitive_members.transitive_members_request_builder import \
-        TransitiveMembersRequestBuilder
-    from msgraph.generated.groups.item.group_item_request_builder import GroupItemRequestBuilder
     from msgraph.generated.models.reference_create import ReferenceCreate
 except ImportError:
     # This is handled in azure_rm_common
@@ -255,7 +260,7 @@ class AzureRMADGroup(AzureRMModuleBase):
             present_owners=dict(type='list', elements='str'),
             absent_members=dict(type='list', elements='str'),
             absent_owners=dict(type='list', elements='str'),
-            raw_membership=dict(type='bool', default=False),
+            include_transitive_members=dict(type='bool', default=False),
             description=dict(type='str'),
             state=dict(
                 type='str',
@@ -274,7 +279,7 @@ class AzureRMADGroup(AzureRMModuleBase):
         self.state = None
         self.results = dict(changed=False)
         self._client = None
-        self.raw_membership = False
+        self.include_transitive_members = False
 
         super(AzureRMADGroup, self).__init__(derived_arg_spec=self.module_arg_spec,
                                              supports_check_mode=False,
@@ -358,14 +363,16 @@ class AzureRMADGroup(AzureRMModuleBase):
                 self.results.update(self.set_results(ad_groups[0]))
 
         except Exception as e:
-            self.fail(e)
+            self.fail(str(e))
         return self.results
 
     def update_members(self, group_id):
         current_members = []
 
         if self.present_members or self.absent_members:
-            ret = asyncio.get_event_loop().run_until_complete(self.get_group_members(group_id))
+            # Always diff against direct members: add/remove target direct membership,
+            # regardless of include_transitive_members (which only shapes the return payload).
+            ret = asyncio.get_event_loop().run_until_complete(self.get_direct_group_members(group_id))
             current_members = [object.id for object in ret]
 
         if self.present_members:
@@ -516,57 +523,61 @@ class AzureRMADGroup(AzureRMModuleBase):
                 groups += response.value
         return groups
 
+    def _graph_base(self, version):
+        '''Return the Graph base URL for the tenant's cloud (e.g. https://graph.microsoft.us/beta).
+
+        Derived from the SDK request adapter so sovereign clouds (US Gov, China, Germany)
+        receive matching @odata.id references. Cross-cloud references are not supported by Graph.
+        '''
+        parsed = urlparse(self._client.request_adapter.base_url)
+        return "{0}://{1}/{2}".format(parsed.scheme, parsed.netloc, version)
+
     async def get_group_members(self, group_id, filters=None):
-        if self.raw_membership:
-            return await self.get_raw_group_members(group_id, filters)
-        else:
+        '''Return direct or transitive members; add/remove ops always target direct membership.'''
+        if self.include_transitive_members:
             return await self.get_transitive_group_members(group_id, filters)
+        return await self.get_direct_group_members(group_id, filters)
+
+    async def get_direct_group_members(self, group_id, filters=None):
+        '''Query beta /groups/{id}/members. v1.0 omits servicePrincipal objects (documented).'''
+        url = "{0}/groups/{1}/members".format(self._graph_base("beta"), group_id)
+        if filters:
+            url += "?$filter={0}".format(quote(filters, safe=""))
+        return await self._collect_paged_beta(
+            self._client.groups.by_group_id(group_id).members, url)
 
     async def get_transitive_group_members(self, group_id, filters=None):
-        request_configuration = TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetRequestConfiguration(
-            query_parameters=TransitiveMembersRequestBuilder.TransitiveMembersRequestBuilderGetQueryParameters(
-                count=True,
-            ),
-        )
-        if filters:
-            request_configuration.query_parameters.filter = filters
-        response = await self._client.groups.by_group_id(group_id).transitive_members.get(
-            request_configuration=request_configuration)
+        '''Query beta /groups/{id}/transitiveMembers; same v1.0 omission applies.
 
-        groups = []
-        if response:
-            groups += response.value
-        while response is not None and response.odata_next_link is not None:
-            response = await self._client.groups.by_group_id(group_id).transitive_members.with_url(response.odata_next_link).get(
-                request_configuration=request_configuration)
-            if response:
-                groups += response.value
-        return groups
-
-    async def get_raw_group_members(self, group_id, filters=None):
-        request_configuration = GroupItemRequestBuilder.GroupItemRequestBuilderGetRequestConfiguration(
-            query_parameters=GroupItemRequestBuilder.GroupItemRequestBuilderGetQueryParameters(
-                # this ensures service principals are returned
-                # see https://learn.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-1.0&tabs=http
-                # expand=["members"]
-            ),
-        )
+        Graph classifies filtering on /transitiveMembers as an advanced query and
+        requires the ConsistencyLevel: eventual header; without it Graph returns 400.
+        '''
+        url = "{0}/groups/{1}/transitiveMembers".format(self._graph_base("beta"), group_id)
         if filters:
-            request_configuration.query_parameters.filter = filters
-        response = await self._client.groups.by_group_id(group_id).members.get(request_configuration=request_configuration)
-        groups = []
-        if response:
-            groups += response.value
+            url += "?$filter={0}".format(quote(filters, safe=""))
+        request_configuration = RequestConfiguration()
+        request_configuration.headers.try_add("ConsistencyLevel", "eventual")
+        return await self._collect_paged_beta(
+            self._client.groups.by_group_id(group_id).transitive_members, url, request_configuration)
+
+    async def _collect_paged_beta(self, request_builder, initial_url, request_configuration=None):
+        '''Follow odata_next_link starting from a beta URL; SDK adapter/auth is preserved.'''
+        kwargs = {}
+        if request_configuration is not None:
+            kwargs["request_configuration"] = request_configuration
+        response = await request_builder.with_url(initial_url).get(**kwargs)
+        items = []
+        if response and response.value:
+            items += response.value
         while response is not None and response.odata_next_link is not None:
-            response = await self._client.groups.by_group_id(group_id).members.with_url(response.odata_next_link).get(
-                request_configuration=request_configuration)
-            if response:
-                groups += response.value
-        return groups
+            response = await request_builder.with_url(response.odata_next_link).get(**kwargs)
+            if response and response.value:
+                items += response.value
+        return items
 
     async def add_group_member(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id="https://graph.microsoft.com/v1.0/directoryObjects/{0}".format(obj_id),
+            odata_id="{0}/directoryObjects/{1}".format(self._graph_base("v1.0"), obj_id),
         )
         await self._client.groups.by_group_id(group_id).members.ref.post(body=request_body)
 
@@ -574,25 +585,14 @@ class AzureRMADGroup(AzureRMModuleBase):
         await self._client.groups.by_group_id(group_id).members.by_directory_object_id(member_id).ref.delete()
 
     async def get_group_owners(self, group_id):
-        request_configuration = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
-            query_parameters=GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
-                count=True,
-            ),
-        )
-        response = await self._client.groups.by_group_id(group_id).owners.get(request_configuration=request_configuration)
-        groups = []
-        if response:
-            groups += response.value
-        while response is not None and response.odata_next_link is not None:
-            response = await self._client.groups.by_group_id(group_id).owners.with_url(response.odata_next_link).get(
-                request_configuration=request_configuration)
-            if response:
-                groups += response.value
-        return groups
+        '''Query beta /groups/{id}/owners; v1.0 omits servicePrincipal owners (documented).'''
+        url = "{0}/groups/{1}/owners".format(self._graph_base("beta"), group_id)
+        return await self._collect_paged_beta(
+            self._client.groups.by_group_id(group_id).owners, url)
 
     async def add_group_owner(self, group_id, obj_id):
         request_body = ReferenceCreate(
-            odata_id="https://graph.microsoft.com/v1.0/users/{0}".format(obj_id),
+            odata_id="{0}/directoryObjects/{1}".format(self._graph_base("v1.0"), obj_id),
         )
         await self._client.groups.by_group_id(group_id).owners.ref.post(body=request_body)
 
