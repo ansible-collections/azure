@@ -491,6 +491,22 @@ options:
                             - Enabled or disabled the Azure Key Vault provider in the AKS cluster.
                         type: bool
                         default: true
+                    enable_secret_rotation:
+                        description:
+                            - Enable Key Vault Secret rotation.
+                        type: bool
+                        version_added: '4.0.0'
+                        required: false
+                        aliases:
+                            - enableSecretRotation
+                    rotation_poll_interval:
+                        description:
+                            - Polling interval used for rotation.
+                        type: str
+                        version_added: '4.0.0'
+                        required: false
+                        aliases:
+                            - rotationPollInterval
             monitoring:
                 description:
                     - It gives you performance visibility by collecting memory and processor metrics from controllers, nodes,
@@ -511,6 +527,15 @@ options:
                         required: true
                         aliases:
                             - logAnalyticsWorkspaceResourceID
+                    use_aad_auth:
+                        description:
+                            - Enables managed identity authentication between the cluster monitoring agent
+                              and the Log Analytics workspace.
+                        type: bool
+                        version_added: '4.0.0'
+                        required: false
+                        aliases:
+                            - useAADAuth
             virtual_node:
                 description:
                     - With virtual nodes, you have quick provisioning of pods, and only pay per second for their execution time.
@@ -1040,13 +1065,53 @@ def create_api_server_access_profile_dict(api_server):
 
 
 def create_addon_dict(addon):
-    result = dict()
-    addon = addon or dict()
-    for key in addon.keys():
-        result[key] = addon[key].config
-        if result[key] is None:
-            result[key] = {}
-        result[key]['enabled'] = addon[key].enabled
+    '''
+    Helper method to deserialize managed cluster add-on profiles to an Ansible dict.
+    Converts Azure add-on names and configuration keys back to their Ansible
+    equivalents and restores the expected Python types for configuration values.
+
+    :param addon: Dictionary of ManagedClusterAddonProfile objects returned by Azure.
+    :return: Dictionary containing the add-on configuration in Ansible format.
+    '''
+    result = {}
+    addon = addon or {}
+    # Reverse mapping
+    reverse_addons = {
+        spec['name']: (
+            ansible_name,
+            {
+                config['azure']: {
+                    'name': ansible_key,
+                    'type': config.get('type', 'str')
+                }
+                for ansible_key, config in (spec.get('config') or {}).items()
+            }
+        )
+        for ansible_name, spec in ADDONS.items()
+    }
+
+    for azure_name, profile in addon.items():
+        if azure_name not in reverse_addons:
+            # Preserve unsupported Azure addons using their Azure name.
+            config = dict(profile.config or {})
+            config['enabled'] = profile.enabled
+            result[azure_name] = config
+            continue
+        ansible_name, reverse_config = reverse_addons[azure_name]
+        config = {}
+        for azure_key, value in (profile.config or {}).items():
+            mapping = reverse_config.get(azure_key)
+            if mapping:
+                ansible_key = mapping['name']
+                value_type = mapping['type']
+                if value_type == 'bool':
+                    value = str(value).lower() == 'true'
+            else:
+                ansible_key = azure_key
+            config[ansible_key] = value
+        config['enabled'] = profile.enabled
+        result[ansible_name] = config
+
     return result
 
 
@@ -1138,20 +1203,61 @@ def create_addon_profiles_spec():
             enabled=dict(type='bool', default=True)
         )
         configs = values.get('config') or {}
-        for item in configs.keys():
-            addon_spec[item] = dict(type='str', aliases=[configs[item]], required=True)
-        if key == 'azure_keyvault_secrets_provider':
-            spec[key] = dict(type='dict', no_log=True, options=addon_spec, aliases=[values['name']])
-        else:
-            spec[key] = dict(type='dict', options=addon_spec, aliases=[values['name']])
+        for name, info in configs.items():
+            addon_spec[name] = dict(
+                type=info.get('type', 'str'),
+                aliases=[info['azure']],
+                required=info.get('required', False),
+                no_log=info.get('no_log', False)
+            )
+        spec[key] = dict(type='dict', options=addon_spec, aliases=[values['name']], no_log=False)
     return spec
 
 
 ADDONS = {
-    'http_application_routing': dict(name='httpApplicationRouting'),
-    'monitoring': dict(name='omsagent', config={'log_analytics_workspace_resource_id': 'logAnalyticsWorkspaceResourceID'}),
-    'virtual_node': dict(name='aciConnector', config={'subnet_resource_id': 'SubnetName'}),
-    'azure_keyvault_secrets_provider': dict(name='azureKeyvaultSecretsProvider')
+    'http_application_routing': dict(
+        name='httpApplicationRouting'
+    ),
+    'monitoring': dict(
+        name='omsagent',
+        config={
+            'log_analytics_workspace_resource_id': dict(
+                azure='logAnalyticsWorkspaceResourceID',
+                type='str',
+                required=True
+            ),
+            'use_aad_auth': dict(
+                azure='useAADAuth',
+                type='bool',
+                required=False
+            )
+        }
+    ),
+    'virtual_node': dict(
+        name='aciConnector',
+        config={
+            'subnet_resource_id': dict(
+                azure='SubnetName',
+                type='str',
+                required=True
+            )
+        }
+    ),
+    'azure_keyvault_secrets_provider': dict(
+        name='azureKeyvaultSecretsProvider',
+        config={
+            'enable_secret_rotation': dict(
+                azure='enableSecretRotation',
+                type='bool',
+                required=False
+            ),
+            'rotation_poll_interval': dict(
+                azure='rotationPollInterval',
+                type='str',
+                required=False
+            )
+        }
+    )
 }
 
 
@@ -1584,14 +1690,15 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                             return False
                         config = config or dict()
                         for key in config.keys():
-                            if origin.get(config[key]) != patch.get(key):
-                                return False
+                            # if not set in requested model, ignore and keep origin
+                            if patch.get(key) is not None:
+                                if origin.get(key) != patch.get(key):
+                                    return False
                         return True
 
                     if self.addon:
                         for key in ADDONS.keys():
-                            addon_name = ADDONS[key]['name']
-                            if not compare_addon(response['addon'].get(addon_name), self.addon.get(key), ADDONS[key].get('config')):
+                            if not compare_addon(response['addon'].get(key), self.addon.get(key), ADDONS[key].get('config')):
                                 to_be_updated = True
 
                     if self.windows_profile:
@@ -2047,11 +2154,18 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                 self.fail('Unsupported addon {0}'.format(key))
             if addon.get(key):
                 name = ADDONS[key]['name']
-                config_spec = ADDONS[key].get('config') or dict()
+                config_spec = ADDONS[key].get('config') or {}
                 config = addon[key]
-                for v in config_spec.keys():
-                    config[config_spec[v]] = config[v]
-                result[name] = self.managedcluster_models.ManagedClusterAddonProfile(config=config, enabled=config['enabled'])
+                addon_config = {}
+
+                for param_name, info in config_spec.items():
+                    if param_name in config:
+                        addon_config[info['azure']] = config[param_name]
+                result[name] = self.managedcluster_models.ManagedClusterAddonProfile(
+                    config=addon_config,
+                    enabled=config['enabled']
+                )
+
         return result
 
     # AKS only supports a single UserAssigned Identity
