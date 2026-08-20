@@ -1704,13 +1704,17 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     if self.network_profile:
                         for key in self.network_profile.keys():
                             original = response['network_profile'].get(key) or ''
-                            if isinstance(original, dict):
-                                if not self.default_compare({}, self.network_profile[key], original, '', dict(compare=[])):
-                                    to_be_updated = True
+                            requested = self.network_profile.get(key) or ''
+                            if requested:
+                                if isinstance(original, dict):
+                                    if isinstance(requested, dict) and \
+                                            not self.default_compare({}, requested, original, '', dict(compare=[])):
+                                        to_be_updated = True
+                                    else:
+                                        self.network_profile[key] = original
                                 else:
-                                    self.network_profile[key] = original
-                            elif self.network_profile[key] and self.network_profile[key].lower() != original.lower():
-                                to_be_updated = True
+                                    if requested.lower() != original.lower():
+                                        to_be_updated = True
 
                     def compare_addon(origin, patch, config):
                         if not patch:
