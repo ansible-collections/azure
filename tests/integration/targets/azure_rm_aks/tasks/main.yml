@@ -805,6 +805,154 @@
           - "fact.aks | length == 1"
           - fact.aks[0].kube_config == output.kube_config
 
+    - name: Update the AKS instance with blob driver storage profile 
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 1
+          - name: default2
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+        storage_profile:
+          disk_csi_driver:
+            enabled: true
+          blob_csi_driver:
+            enabled: true
+      register: output
+
+    - name: Assert the AKS storage profile is active
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
+          - output.storage_profile.disk_csi_driver.enabled == true
+          - output.storage_profile.file_csi_driver.enabled == true
+          - output.storage_profile.snapshot_controller.enabled == true
+          - output.storage_profile.blob_csi_driver.enabled == true
+
+    - name: Update the AKS instance with blob driver storage profile (idempontent)
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 1
+          - name: default2
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+        storage_profile:
+          disk_csi_driver:
+            enabled: true
+          blob_csi_driver:
+            enabled: true
+          file_csi_driver:
+            enabled: true
+      register: output
+
+    - name: Assert the AKS storage profile is idempontent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the AKS instance disable blob driver
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ version1.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            enable_auto_scaling: true
+            max_count: 6
+            min_count: 1
+            max_pods: 42
+            availability_zones:
+              - 1
+          - name: default2
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+        storage_profile:
+          blob_csi_driver:
+            enabled: false
+      register: output
+
+    - name: Assert the AKS storage profile is inactive for blob driver only
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
+          - output.storage_profile.disk_csi_driver.enabled == true
+          - output.storage_profile.file_csi_driver.enabled == true
+          - output.storage_profile.snapshot_controller.enabled == true
+          - output.storage_profile.blob_csi_driver.enabled == false
+
     - name: Create AKS with Spot agent pool
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}-spot"

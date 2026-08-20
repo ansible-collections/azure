@@ -682,6 +682,53 @@ options:
                     - Unmanaged
                     - SecurityPatch
                     - NodeImage
+    storage_profile:
+        description:
+            - Storage profile for the AKS cluster.
+            - Defines the CSI drivers and snapshot controller enabled on the cluster.
+        type: dict
+        version_added: '4.0.0'
+        suboptions:
+            disk_csi_driver:
+                description:
+                    - Azure Disk CSI driver configuration.
+                type: dict
+                suboptions:
+                    enabled:
+                        description:
+                            - Whether the Azure Disk CSI driver is enabled.
+                        type: bool
+                        required: false
+            file_csi_driver:
+                description:
+                    - Azure File CSI driver configuration.
+                type: dict
+                suboptions:
+                    enabled:
+                        description:
+                            - Whether the Azure File CSI driver is enabled.
+                        type: bool
+                        required: false
+            snapshot_controller:
+                description:
+                    - Snapshot controller configuration.
+                type: dict
+                suboptions:
+                    enabled:
+                        description:
+                            - Whether the snapshot controller is enabled.
+                        type: bool
+                        required: false
+            blob_csi_driver:
+                description:
+                    - Azure Blob CSI driver configuration.
+                type: dict
+                suboptions:
+                    enabled:
+                        description:
+                            - Whether the Azure Blob CSI driver is enabled.
+                        type: bool
+                        required: false
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
@@ -1025,6 +1072,7 @@ def create_aks_dict(aks):
         windows_profile=create_windows_profile_dict(aks.windows_profile),
         pod_identity_profile=create_pod_identity_profile(aks.pod_identity_profile.as_dict()) if aks.pod_identity_profile else None,
         security_profile=aks.security_profile.as_dict() if aks.security_profile else None,
+        storage_profile=aks.storage_profile.as_dict() if aks.storage_profile else None
     )
 
 
@@ -1522,6 +1570,35 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     ),
                 )
             ),
+            storage_profile=dict(
+                type='dict',
+                options=dict(
+                    disk_csi_driver=dict(
+                        type='dict',
+                        options=dict(
+                            enabled=dict(type='bool', required=False),
+                        )
+                    ),
+                    file_csi_driver=dict(
+                        type='dict',
+                        options=dict(
+                            enabled=dict(type='bool', required=False),
+                        )
+                    ),
+                    snapshot_controller=dict(
+                        type='dict',
+                        options=dict(
+                            enabled=dict(type='bool', required=False),
+                        )
+                    ),
+                    blob_csi_driver=dict(
+                        type='dict',
+                        options=dict(
+                            enabled=dict(type='bool', required=False),
+                        )
+                    ),
+                )
+            ),
         )
 
         self.resource_group = None
@@ -1823,6 +1900,11 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         to_be_updated = True
                         # self.module.warn("windows_profile.admin_username cannot be updated")
 
+                    if not self.default_compare({}, self.storage_profile, response['storage_profile'], '', dict(compare=[])):
+                        to_be_updated = True
+                    else:
+                        self.storage_profile = response['storage_profile']
+
             if update_agentpool:
                 self.log("Need to update agentpool")
                 if not self.check_mode:
@@ -1968,6 +2050,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
             auto_upgrade_profile=auto_upgrade_profile,
             disable_local_accounts=self.disable_local_accounts,
             security_profile=security_profile,
+            storage_profile=self.storage_profile,
         )
 
         # self.log("service_principal_profile : {0}".format(parameters.service_principal_profile))
