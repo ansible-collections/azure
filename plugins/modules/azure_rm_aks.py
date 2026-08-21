@@ -1705,16 +1705,19 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                         for key in self.network_profile.keys():
                             original = response['network_profile'].get(key) or ''
                             requested = self.network_profile.get(key) or ''
-                            if requested:
-                                if isinstance(original, dict):
-                                    if isinstance(requested, dict) and \
-                                            not self.default_compare({}, requested, original, '', dict(compare=[])):
-                                        to_be_updated = True
-                                    else:
-                                        self.network_profile[key] = original
+
+                            if not requested:
+                                continue
+
+                            if isinstance(requested, dict):
+                                if not isinstance(original, dict):
+                                    to_be_updated = True
+                                elif not self.default_compare({}, requested, original, '', dict(compare=[])):
+                                    to_be_updated = True
                                 else:
-                                    if requested.lower() != original.lower():
-                                        to_be_updated = True
+                                    self.network_profile[key] = original
+                            elif requested.lower() != original.lower():
+                                to_be_updated = True
 
                     def compare_addon(origin, patch, config):
                         if not patch:
