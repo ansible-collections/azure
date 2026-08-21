@@ -1,0 +1,431 @@
+- name: Create a new resource group for container app test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-containerapp"
+    location: eastus2
+
+- name: For container app test
+  block:
+    - name: Prepare random suffix for names
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+      run_once: true
+
+    - name: Create Log Analytics workspace for the environment
+      azure.azcollection.azure_rm_loganalyticsworkspace:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "law-aca-{{ rpfx }}"
+        location: eastus2
+        sku: PerGB2018
+        retention_in_days: 30
+      register: law
+
+    - name: Fetch workspace shared keys
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "law-aca-{{ rpfx }}"
+        show_shared_keys: true
+      register: law_keys
+
+    - name: Create Container Apps managed environment (check mode)
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+        location: eastus2
+        app_logs_configuration:
+          destination: log-analytics
+          log_analytics_configuration:
+            customer_id: "{{ law.state.customer_id }}"
+            shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        tags:
+          role: integration
+      check_mode: true
+      register: env_check
+
+    - name: Assert environment check mode reported change
+      ansible.builtin.assert:
+        that:
+          - env_check is changed
+          - env_check.state == {} or env_check.state is defined
+
+    - name: Create Container Apps managed environment
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+        location: eastus2
+        app_logs_configuration:
+          destination: log-analytics
+          log_analytics_configuration:
+            customer_id: "{{ law.state.customer_id }}"
+            shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        tags:
+          role: integration
+      register: env_create
+
+    - name: Assert environment created
+      ansible.builtin.assert:
+        that:
+          - env_create is changed
+          - env_create.state.id is defined
+          - env_create.state.name == "env-aca-" ~ rpfx
+          - env_create.state.provisioning_state == "Succeeded"
+
+    - name: Create environment again (idempotence)
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+        location: eastus2
+        app_logs_configuration:
+          destination: log-analytics
+          log_analytics_configuration:
+            customer_id: "{{ law.state.customer_id }}"
+            shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        tags:
+          role: integration
+      register: env_idem
+
+    - name: Assert environment idempotent
+      ansible.builtin.assert:
+        that:
+          - env_idem is not changed
+
+    - name: Update environment tags
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+        location: eastus2
+        app_logs_configuration:
+          destination: log-analytics
+          log_analytics_configuration:
+            customer_id: "{{ law.state.customer_id }}"
+            shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        tags:
+          role: integration
+          updated: "true"
+      register: env_update
+
+    - name: Assert environment tag update reported change
+      ansible.builtin.assert:
+        that:
+          - env_update is changed
+          - env_update.state.tags.updated == "true"
+
+    - name: Fetch environment via info module (by name)
+      azure.azcollection.azure_rm_containerappenvironment_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+      register: env_info
+
+    - name: Assert env info returns exactly one entry
+      ansible.builtin.assert:
+        that:
+          - env_info.managed_environments | length == 1
+          - env_info.managed_environments[0].name == "env-aca-" ~ rpfx
+          - env_info.managed_environments[0].provisioning_state == "Succeeded"
+
+    - name: List all environments in the resource group
+      azure.azcollection.azure_rm_containerappenvironment_info:
+        resource_group: "{{ resource_group }}-containerapp"
+      register: env_list
+
+    - name: Assert env list contains the test environment
+      ansible.builtin.assert:
+        that:
+          - env_list.managed_environments | length >= 1
+          - "'env-aca-' ~ rpfx in (env_list.managed_environments | map(attribute='name') | list)"
+
+    - name: Create container app (check mode)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        ingress:
+          external: true
+          target_port: 80
+          transport: auto
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+        scale:
+          min_replicas: 0
+          max_replicas: 2
+        tags:
+          role: integration
+      check_mode: true
+      register: app_check
+
+    - name: Assert container app check mode reported change
+      ansible.builtin.assert:
+        that:
+          - app_check is changed
+
+    - name: Create container app
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        ingress:
+          external: true
+          target_port: 80
+          transport: auto
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+        scale:
+          min_replicas: 0
+          max_replicas: 2
+        tags:
+          role: integration
+      register: app_create
+
+    - name: Assert container app created
+      ansible.builtin.assert:
+        that:
+          - app_create is changed
+          - app_create.state.id is defined
+          - app_create.state.name == "app-aca-" ~ rpfx
+          - app_create.state.provisioning_state == "Succeeded"
+
+    - name: Create container app again (idempotence)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        ingress:
+          external: true
+          target_port: 80
+          transport: auto
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+        scale:
+          min_replicas: 0
+          max_replicas: 2
+        tags:
+          role: integration
+      register: app_idem
+
+    - name: Assert container app idempotent
+      ansible.builtin.assert:
+        that:
+          - app_idem is not changed
+
+    - name: Update container app scale + tags
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        ingress:
+          external: true
+          target_port: 80
+          transport: auto
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+        scale:
+          min_replicas: 1
+          max_replicas: 3
+        tags:
+          role: integration
+          updated: "true"
+      register: app_update
+
+    - name: Assert container app scale/tag update reported change
+      ansible.builtin.assert:
+        that:
+          - app_update is changed
+          - app_update.state.tags.updated == "true"
+
+    - name: Update container app scale + tags again (idempotence)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        ingress:
+          external: true
+          target_port: 80
+          transport: auto
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+        scale:
+          min_replicas: 1
+          max_replicas: 3
+        tags:
+          role: integration
+          updated: "true"
+      register: app_update_idem
+
+    - name: Assert container app update idempotent
+      ansible.builtin.assert:
+        that:
+          - app_update_idem is not changed
+
+    - name: Fetch container app via info (by name)
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+      register: app_info
+
+    - name: Assert app info returns exactly one entry with expected fields
+      ansible.builtin.assert:
+        that:
+          - app_info.container_apps | length == 1
+          - app_info.container_apps[0].name == "app-aca-" ~ rpfx
+          - app_info.container_apps[0].provisioning_state == "Succeeded"
+          - app_info.container_apps[0].configuration.ingress.target_port == 80
+
+    - name: List all container apps in the resource group
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+      register: app_list
+
+    - name: Assert app list contains the test app
+      ansible.builtin.assert:
+        that:
+          - app_list.container_apps | length >= 1
+          - "'app-aca-' ~ rpfx in (app_list.container_apps | map(attribute='name') | list)"
+
+    - name: Wait until container app reports Running before stopping
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+      register: app_status
+      until: (app_status.container_apps | length > 0) and (app_status.container_apps[0].running_status | default('')) == 'Running'
+      retries: 30
+      delay: 10
+
+    - name: Stop container app
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        status: stop
+      register: app_stop
+
+    - name: Assert stop reported change
+      ansible.builtin.assert:
+        that:
+          - app_stop is changed
+
+    - name: Stop container app again (idempotence)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        status: stop
+      register: app_stop_idem
+
+    - name: Assert stop idempotent
+      ansible.builtin.assert:
+        that:
+          - app_stop_idem is not changed
+
+    - name: Start container app
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        status: start
+      register: app_start
+
+    - name: Assert start reported change
+      ansible.builtin.assert:
+        that:
+          - app_start is changed
+
+    - name: Start container app again (idempotence)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        status: start
+      register: app_start_idem
+
+    - name: Assert start idempotent
+      ansible.builtin.assert:
+        that:
+          - app_start_idem is not changed
+
+    - name: Delete container app (check mode)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        state: absent
+      check_mode: true
+      register: app_delete_check
+
+    - name: Assert container app delete check mode reported change
+      ansible.builtin.assert:
+        that:
+          - app_delete_check is changed
+
+    - name: Delete container app
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        state: absent
+      register: app_delete
+
+    - name: Assert container app deleted
+      ansible.builtin.assert:
+        that:
+          - app_delete is changed
+
+    - name: Delete container app again (idempotence)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "app-aca-{{ rpfx }}"
+        state: absent
+      register: app_delete_again
+
+    - name: Assert app delete idempotent
+      ansible.builtin.assert:
+        that:
+          - app_delete_again is not changed
+
+    - name: Delete managed environment
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+        state: absent
+      register: env_delete
+
+    - name: Assert environment deleted
+      ansible.builtin.assert:
+        that:
+          - env_delete is changed
+
+    - name: Delete managed environment again (idempotence)
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "env-aca-{{ rpfx }}"
+        state: absent
+      register: env_delete_again
+
+    - name: Assert environment delete idempotent
+      ansible.builtin.assert:
+        that:
+          - env_delete_again is not changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-containerapp"
+        force_delete_nonempty: true
+        state: absent
