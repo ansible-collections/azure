@@ -219,6 +219,25 @@ jobs:
       - bash: |
           echo "Generate test resource group variable $(setvar.resource_group), $(setvar.resource_group_secondary)"
 
+      # TEMPORARY DIAGNOSTIC - remove once the AzureCLI@2 service connection failure is resolved.
+      # Since 2026-08-21 AzureCLI@2 fails with "Cannot read properties of undefined (reading
+      # 'toLowerCase')", which means Azure DevOps did not inject the ARM service connection into
+      # the job at all (azureclitask.ts reads tl.getEndpointAuthorizationScheme(conn, /*optional*/ true)
+      # and dereferences the undefined result). This step captures which service connection the
+      # job asked for and whether any endpoint data reached the agent.
+      - bash: |
+          echo "Build.Reason              = '$(Build.Reason)'"
+          echo "System.PullRequest.IsFork = '$(System.PullRequest.IsFork)'"
+          echo "SUBSCRIPTION_FULL_NAME    = '$(SUBSCRIPTION_FULL_NAME)'"
+          echo "----- ENDPOINT_* variable names visible to this step (values intentionally not printed) -----"
+          if env | grep -qi '^ENDPOINT_'; then
+            env | grep -i '^ENDPOINT_' | cut -d= -f1 | sort
+          else
+            echo ">>> NONE - no service connection was passed to this job <<<"
+          fi
+        displayName: 'DIAGNOSTIC: service connection injection'
+        continueOnError: true
+
       - task: AzureCLI@2
         inputs:
           azureSubscription: '$(SUBSCRIPTION_FULL_NAME)'
