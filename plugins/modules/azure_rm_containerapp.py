@@ -546,17 +546,6 @@ import copy
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 
-def _normalize(obj):
-    """
-    Return a snake_case flat dict for an ``azure-mgmt-appcontainers`` model.
-    """
-    if obj is None:
-        return None
-    if isinstance(obj, dict):
-        return obj
-    return as_attribute_dict(obj, exclude_readonly=False)
-
-
 def _strip_write_only(parameters):
     """
     Remove fields that Azure never returns on read (secret values, etc.)
@@ -922,8 +911,9 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
                 patch_support=True,
             )
             if identity_body is not None:
-                self.parameters['identity'] = identity_body
-                self.update_parameters['identity'] = identity_body
+                identity_dict = as_attribute_dict(identity_body, exclude_readonly=False) if identity_body else None
+                self.parameters['identity'] = identity_dict
+                self.update_parameters['identity'] = identity_dict
 
         changed = False
         if old_response is None:
@@ -1088,7 +1078,7 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
     def format_item(self, item):
         if item is None:
             return None
-        normalized = _normalize(item)
+        normalized = as_attribute_dict(item, exclude_readonly=False)
         if normalized.get('id'):
             parsed = self.parse_resource_to_dict(normalized['id'])
             normalized['resource_group'] = parsed.get('resource_group')

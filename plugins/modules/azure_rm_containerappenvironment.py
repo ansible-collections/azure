@@ -294,18 +294,22 @@ except ImportError:
     # This is handled in azure_rm_common
     pass
 
+import copy
+
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 
-def _normalize(obj):
+def _strip_write_only(parameters):
+    """Remove fields that Azure never returns on read (e.g. Log Analytics
+    ``shared_key``) so idempotence compare against the fetched state does not
+    always report a diff.
     """
-    Return a snake_case flat dict for an ``azure-mgmt-appcontainers`` model.
-    """
-    if obj is None:
-        return None
-    if isinstance(obj, dict):
-        return obj
-    return as_attribute_dict(obj, exclude_readonly=False)
+    sanitized = copy.deepcopy(parameters)
+    logs = sanitized.get('app_logs_configuration') or {}
+    la = logs.get('log_analytics_configuration') or {}
+    if 'shared_key' in la:
+        la.pop('shared_key', None)
+    return sanitized
 
 
 def _build_env_model(params):
@@ -461,10 +465,11 @@ class AzureRMContainerAppEnvironment(AzureRMModuleBaseExt):
                     changed = True
                     self.to_do = Actions.Update
 
+                sanitized = _strip_write_only(self.parameters)
                 for item in ('zone_redundant', 'public_network_access', 'infrastructure_resource_group',
                              'vnet_configuration', 'app_logs_configuration', 'workload_profiles',
                              'peer_authentication', 'peer_traffic_configuration'):
-                    if not self.default_compare({}, self.parameters.get(item), old_response.get(item), '', dict(compare=[])):
+                    if not self.default_compare({}, sanitized.get(item), old_response.get(item), '', dict(compare=[])):
                         changed = True
                         self.to_do = Actions.Update
 
@@ -553,7 +558,7 @@ class AzureRMContainerAppEnvironment(AzureRMModuleBaseExt):
     def format_item(self, item):
         if item is None:
             return None
-        normalized = _normalize(item)
+        normalized = as_attribute_dict(item, exclude_readonly=False)
         if normalized.get('id'):
             parsed = self.parse_resource_to_dict(normalized['id'])
             normalized['resource_group'] = parsed.get('resource_group')

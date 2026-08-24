@@ -1,23 +1,35 @@
-- name: Create a new resource group for container app test
+- name: Create test resource group
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-containerapp"
     location: eastus2
 
-- name: For container app test
+- name: For container app coverage
   block:
-    - name: Prepare random suffix for names
+    - name: Prepare random suffix
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}"
       run_once: true
 
-    - name: Create Log Analytics workspace for the environment
+    - name: Set derived facts
+      ansible.builtin.set_fact:
+        env_name: "env-aca-{{ rpfx }}"
+        app_name: "app-aca-{{ rpfx }}"
+        umi_name: "umi-aca-{{ rpfx }}"
+        umi_id: "/subscriptions/{{ azure_subscription_id }}/resourcegroups/{{ resource_group }}-containerapp/providers/Microsoft.ManagedIdentity/userAssignedIdentities/umi-aca-{{ rpfx }}"
+
+    - name: Create Log Analytics workspace
       azure.azcollection.azure_rm_loganalyticsworkspace:
         resource_group: "{{ resource_group }}-containerapp"
         name: "law-aca-{{ rpfx }}"
         location: eastus2
-        sku: PerGB2018
+        sku: per_gb2018
         retention_in_days: 30
       register: law
+
+    - name: Assert workspace created
+      ansible.builtin.assert:
+        that:
+          - law.customer_id is defined
 
     - name: Fetch workspace shared keys
       azure.azcollection.azure_rm_loganalyticsworkspace_info:
@@ -26,39 +38,75 @@
         show_shared_keys: true
       register: law_keys
 
-    - name: Create Container Apps managed environment (check mode)
+    - name: Assert shared keys present
+      ansible.builtin.assert:
+        that:
+          - law_keys.workspaces[0].shared_keys.primary_shared_key is defined
+
+    - name: Create user-assigned managed identity
+      azure.azcollection.azure_rm_resource:
+        resource_group: "{{ resource_group }}-containerapp"
+        provider: ManagedIdentity
+        resource_type: userAssignedIdentities
+        resource_name: "{{ umi_name }}"
+        api_version: "2023-01-31"
+        body:
+          location: eastus2
+        state: present
+      register: umi
+
+    - name: Assert UMI created
+      ansible.builtin.assert:
+        that:
+          - umi is not failed
+
+    - name: Environment create (check mode)
       azure.azcollection.azure_rm_containerappenvironment:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
         location: eastus2
         app_logs_configuration:
           destination: log-analytics
           log_analytics_configuration:
-            customer_id: "{{ law.state.customer_id }}"
+            customer_id: "{{ law.customer_id }}"
             shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        workload_profiles:
+          - name: Consumption
+            workload_profile_type: Consumption
+        public_network_access: Enabled
+        peer_authentication_mtls_enabled: false
+        peer_traffic_encryption_enabled: false
         tags:
           role: integration
+          feature: full
       check_mode: true
       register: env_check
 
-    - name: Assert environment check mode reported change
+    - name: Assert environment check mode changed
       ansible.builtin.assert:
         that:
           - env_check is changed
-          - env_check.state == {} or env_check.state is defined
+          - env_check.state.id is not defined
 
-    - name: Create Container Apps managed environment
+    - name: Environment create
       azure.azcollection.azure_rm_containerappenvironment:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
         location: eastus2
         app_logs_configuration:
           destination: log-analytics
           log_analytics_configuration:
-            customer_id: "{{ law.state.customer_id }}"
+            customer_id: "{{ law.customer_id }}"
             shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        workload_profiles:
+          - name: Consumption
+            workload_profile_type: Consumption
+        public_network_access: Enabled
+        peer_authentication_mtls_enabled: false
+        peer_traffic_encryption_enabled: false
         tags:
           role: integration
+          feature: full
       register: env_create
 
     - name: Assert environment created
@@ -66,21 +114,37 @@
         that:
           - env_create is changed
           - env_create.state.id is defined
-          - env_create.state.name == "env-aca-" ~ rpfx
+          - env_create.state.name == env_name
           - env_create.state.provisioning_state == "Succeeded"
+          - env_create.state.location | lower | replace(" ", "") == "eastus2"
+          - env_create.state.app_logs_configuration.destination == "log-analytics"
+          - env_create.state.app_logs_configuration.log_analytics_configuration.customer_id == law.customer_id
+          - env_create.state.public_network_access == "Enabled"
+          - env_create.state.peer_authentication.mtls.enabled == false
+          - env_create.state.peer_traffic_configuration.encryption.enabled == false
+          - env_create.state.workload_profiles | length >= 1
+          - env_create.state.tags.role == "integration"
+          - env_create.state.tags.feature == "full"
 
-    - name: Create environment again (idempotence)
+    - name: Environment create (idempotence)
       azure.azcollection.azure_rm_containerappenvironment:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
         location: eastus2
         app_logs_configuration:
           destination: log-analytics
           log_analytics_configuration:
-            customer_id: "{{ law.state.customer_id }}"
+            customer_id: "{{ law.customer_id }}"
             shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        workload_profiles:
+          - name: Consumption
+            workload_profile_type: Consumption
+        public_network_access: Enabled
+        peer_authentication_mtls_enabled: false
+        peer_traffic_encryption_enabled: false
         tags:
           role: integration
+          feature: full
       register: env_idem
 
     - name: Assert environment idempotent
@@ -88,343 +152,966 @@
         that:
           - env_idem is not changed
 
-    - name: Update environment tags
+    - name: Environment update peer auth and tags
       azure.azcollection.azure_rm_containerappenvironment:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
         location: eastus2
         app_logs_configuration:
           destination: log-analytics
           log_analytics_configuration:
-            customer_id: "{{ law.state.customer_id }}"
+            customer_id: "{{ law.customer_id }}"
             shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        workload_profiles:
+          - name: Consumption
+            workload_profile_type: Consumption
+        public_network_access: Enabled
+        peer_authentication_mtls_enabled: true
+        peer_traffic_encryption_enabled: true
         tags:
           role: integration
+          feature: full
           updated: "true"
       register: env_update
 
-    - name: Assert environment tag update reported change
+    - name: Assert environment update changed
       ansible.builtin.assert:
         that:
           - env_update is changed
+          - env_update.state.peer_authentication.mtls.enabled == true
+          - env_update.state.peer_traffic_configuration.encryption.enabled == true
           - env_update.state.tags.updated == "true"
 
-    - name: Fetch environment via info module (by name)
+    - name: Environment update (idempotence)
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "{{ env_name }}"
+        location: eastus2
+        app_logs_configuration:
+          destination: log-analytics
+          log_analytics_configuration:
+            customer_id: "{{ law.customer_id }}"
+            shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        workload_profiles:
+          - name: Consumption
+            workload_profile_type: Consumption
+        public_network_access: Enabled
+        peer_authentication_mtls_enabled: true
+        peer_traffic_encryption_enabled: true
+        tags:
+          role: integration
+          feature: full
+          updated: "true"
+      register: env_update_idem
+
+    - name: Assert environment update idempotent
+      ansible.builtin.assert:
+        that:
+          - env_update_idem is not changed
+
+    - name: Environment info by name
       azure.azcollection.azure_rm_containerappenvironment_info:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
       register: env_info
 
-    - name: Assert env info returns exactly one entry
+    - name: Assert environment info single entry
       ansible.builtin.assert:
         that:
           - env_info.managed_environments | length == 1
-          - env_info.managed_environments[0].name == "env-aca-" ~ rpfx
+          - env_info.managed_environments[0].name == env_name
           - env_info.managed_environments[0].provisioning_state == "Succeeded"
+          - env_info.managed_environments[0].peer_authentication.mtls.enabled == true
 
-    - name: List all environments in the resource group
+    - name: Environment info list by resource group
       azure.azcollection.azure_rm_containerappenvironment_info:
         resource_group: "{{ resource_group }}-containerapp"
-      register: env_list
+      register: env_list_rg
 
-    - name: Assert env list contains the test environment
+    - name: Assert environment list by RG contains env
       ansible.builtin.assert:
         that:
-          - env_list.managed_environments | length >= 1
-          - "'env-aca-' ~ rpfx in (env_list.managed_environments | map(attribute='name') | list)"
+          - env_list_rg.managed_environments | length >= 1
+          - env_name in (env_list_rg.managed_environments | map(attribute='name') | list)
 
-    - name: Create container app (check mode)
+    - name: Environment info tag filter match
+      azure.azcollection.azure_rm_containerappenvironment_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        tags:
+          - "role:integration"
+      register: env_tag_match
+
+    - name: Assert environment tag filter match
+      ansible.builtin.assert:
+        that:
+          - env_tag_match.managed_environments | length >= 1
+          - env_name in (env_tag_match.managed_environments | map(attribute='name') | list)
+
+    - name: Environment info tag filter miss
+      azure.azcollection.azure_rm_containerappenvironment_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        tags:
+          - "role:nonexistent-tag-value"
+      register: env_tag_miss
+
+    - name: Assert environment tag filter empty
+      ansible.builtin.assert:
+        that:
+          - env_tag_miss.managed_environments | length == 0
+
+    - name: Environment info by name not found
+      azure.azcollection.azure_rm_containerappenvironment_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "does-not-exist-{{ rpfx }}"
+      register: env_missing
+
+    - name: Assert environment info empty on missing
+      ansible.builtin.assert:
+        that:
+          - env_missing.managed_environments | length == 0
+
+    - name: Container app create (check mode)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         location: eastus2
         environment_id: "{{ env_create.state.id }}"
+        workload_profile_name: Consumption
+        identity:
+          type: SystemAssigned
+        active_revisions_mode: Multiple
+        secrets:
+          - name: my-secret
+            value: super-secret-value
+          - name: api-token
+            value: token-xyz
         ingress:
           external: true
           target_port: 80
           transport: auto
+          allow_insecure: false
+          client_certificate_mode: ignore
+          ip_security_restrictions:
+            - name: allow-all
+              description: allow all
+              ip_address_range: 0.0.0.0/0
+              action: Allow
+          cors_policy:
+            allowed_origins:
+              - "https://example.com"
+            allowed_methods:
+              - GET
+              - POST
+        dapr:
+          enabled: true
+          app_id: hello-dapr
+          app_protocol: http
+          app_port: 80
+          log_level: info
+          enable_api_logging: true
+        max_inactive_revisions: 5
+        revision_suffix: v1
+        termination_grace_period_seconds: 30
         containers:
           - name: hello
             image: mcr.microsoft.com/k8se/quickstart:latest
             resources:
+              cpu: 0.5
+              memory: 1Gi
+            env:
+              - name: PLAIN_VAR
+                value: plain
+              - name: SECRET_VAR
+                secret_ref: my-secret
+            probes:
+              - type: Liveness
+                http_get:
+                  path: /
+                  port: 80
+                  scheme: HTTP
+                initial_delay_seconds: 5
+                period_seconds: 20
+            volume_mounts:
+              - volume_name: scratch
+                mount_path: /scratch
+        init_containers:
+          - name: init-hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            command:
+              - /bin/sh
+            args:
+              - "-c"
+              - "echo init done"
+            resources:
               cpu: 0.25
               memory: 0.5Gi
         scale:
-          min_replicas: 0
-          max_replicas: 2
+          min_replicas: 1
+          max_replicas: 3
+          cooldown_period: 30
+          polling_interval: 15
+          rules:
+            - name: http-rule
+              http:
+                metadata:
+                  concurrentRequests: "10"
+        volumes:
+          - name: scratch
+            storage_type: EmptyDir
         tags:
           role: integration
       check_mode: true
       register: app_check
 
-    - name: Assert container app check mode reported change
+    - name: Assert app check mode changed
       ansible.builtin.assert:
         that:
           - app_check is changed
+          - app_check.state.id is not defined
 
-    - name: Create container app
+    - name: Container app create
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         location: eastus2
         environment_id: "{{ env_create.state.id }}"
+        workload_profile_name: Consumption
+        identity:
+          type: SystemAssigned
+        active_revisions_mode: Multiple
+        secrets:
+          - name: my-secret
+            value: super-secret-value
+          - name: api-token
+            value: token-xyz
         ingress:
           external: true
           target_port: 80
           transport: auto
+          allow_insecure: false
+          client_certificate_mode: ignore
+          ip_security_restrictions:
+            - name: allow-all
+              description: allow all
+              ip_address_range: 0.0.0.0/0
+              action: Allow
+          cors_policy:
+            allowed_origins:
+              - "https://example.com"
+            allowed_methods:
+              - GET
+              - POST
+        dapr:
+          enabled: true
+          app_id: hello-dapr
+          app_protocol: http
+          app_port: 80
+          log_level: info
+          enable_api_logging: true
+        max_inactive_revisions: 5
+        revision_suffix: v1
+        termination_grace_period_seconds: 30
         containers:
           - name: hello
             image: mcr.microsoft.com/k8se/quickstart:latest
             resources:
+              cpu: 0.5
+              memory: 1Gi
+            env:
+              - name: PLAIN_VAR
+                value: plain
+              - name: SECRET_VAR
+                secret_ref: my-secret
+            probes:
+              - type: Liveness
+                http_get:
+                  path: /
+                  port: 80
+                  scheme: HTTP
+                initial_delay_seconds: 5
+                period_seconds: 20
+            volume_mounts:
+              - volume_name: scratch
+                mount_path: /scratch
+        init_containers:
+          - name: init-hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            command:
+              - /bin/sh
+            args:
+              - "-c"
+              - "echo init done"
+            resources:
               cpu: 0.25
               memory: 0.5Gi
         scale:
-          min_replicas: 0
-          max_replicas: 2
+          min_replicas: 1
+          max_replicas: 3
+          cooldown_period: 30
+          polling_interval: 15
+          rules:
+            - name: http-rule
+              http:
+                metadata:
+                  concurrentRequests: "10"
+        volumes:
+          - name: scratch
+            storage_type: EmptyDir
         tags:
           role: integration
       register: app_create
 
-    - name: Assert container app created
+    - name: Assert app created with full payload
       ansible.builtin.assert:
         that:
           - app_create is changed
           - app_create.state.id is defined
-          - app_create.state.name == "app-aca-" ~ rpfx
+          - app_create.state.name == app_name
           - app_create.state.provisioning_state == "Succeeded"
+          - app_create.state.identity.type == "SystemAssigned"
+          - app_create.state.identity.principal_id is defined
+          - app_create.state.workload_profile_name == "Consumption"
+          - app_create.state.configuration.active_revisions_mode == "Multiple"
+          - app_create.state.configuration.max_inactive_revisions == 5
+          - app_create.state.configuration.secrets | length == 2
+          - app_create.state.configuration.ingress.external == true
+          - app_create.state.configuration.ingress.target_port == 80
+          - app_create.state.configuration.ingress.transport | lower == "auto"
+          - app_create.state.configuration.ingress.ip_security_restrictions | length == 1
+          - app_create.state.configuration.ingress.cors_policy.allowed_origins | length == 1
+          - app_create.state.configuration.dapr.enabled == true
+          - app_create.state.configuration.dapr.app_id == "hello-dapr"
+          - app_create.state.template.revision_suffix == "v1"
+          - app_create.state.template.termination_grace_period_seconds == 30
+          - app_create.state.template.containers | length == 1
+          - app_create.state.template.containers[0].image == "mcr.microsoft.com/k8se/quickstart:latest"
+          - app_create.state.template.containers[0].env | length == 2
+          - app_create.state.template.containers[0].probes | length >= 1
+          - app_create.state.template.containers[0].volume_mounts | length == 1
+          - app_create.state.template.init_containers | length == 1
+          - app_create.state.template.scale.min_replicas == 1
+          - app_create.state.template.scale.max_replicas == 3
+          - app_create.state.template.scale.rules | length == 1
+          - app_create.state.template.volumes | length == 1
 
-    - name: Create container app again (idempotence)
+    - name: Container app create (idempotence)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         location: eastus2
         environment_id: "{{ env_create.state.id }}"
+        workload_profile_name: Consumption
+        identity:
+          type: SystemAssigned
+        active_revisions_mode: Multiple
+        secrets:
+          - name: my-secret
+            value: super-secret-value
+          - name: api-token
+            value: token-xyz
         ingress:
           external: true
           target_port: 80
           transport: auto
+          allow_insecure: false
+          client_certificate_mode: ignore
+          ip_security_restrictions:
+            - name: allow-all
+              description: allow all
+              ip_address_range: 0.0.0.0/0
+              action: Allow
+          cors_policy:
+            allowed_origins:
+              - "https://example.com"
+            allowed_methods:
+              - GET
+              - POST
+        dapr:
+          enabled: true
+          app_id: hello-dapr
+          app_protocol: http
+          app_port: 80
+          log_level: info
+          enable_api_logging: true
+        max_inactive_revisions: 5
+        revision_suffix: v1
+        termination_grace_period_seconds: 30
         containers:
           - name: hello
             image: mcr.microsoft.com/k8se/quickstart:latest
             resources:
+              cpu: 0.5
+              memory: 1Gi
+            env:
+              - name: PLAIN_VAR
+                value: plain
+              - name: SECRET_VAR
+                secret_ref: my-secret
+            probes:
+              - type: Liveness
+                http_get:
+                  path: /
+                  port: 80
+                  scheme: HTTP
+                initial_delay_seconds: 5
+                period_seconds: 20
+            volume_mounts:
+              - volume_name: scratch
+                mount_path: /scratch
+        init_containers:
+          - name: init-hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            command:
+              - /bin/sh
+            args:
+              - "-c"
+              - "echo init done"
+            resources:
               cpu: 0.25
               memory: 0.5Gi
         scale:
-          min_replicas: 0
-          max_replicas: 2
+          min_replicas: 1
+          max_replicas: 3
+          cooldown_period: 30
+          polling_interval: 15
+          rules:
+            - name: http-rule
+              http:
+                metadata:
+                  concurrentRequests: "10"
+        volumes:
+          - name: scratch
+            storage_type: EmptyDir
         tags:
           role: integration
       register: app_idem
 
-    - name: Assert container app idempotent
+    - name: Assert app idempotent
       ansible.builtin.assert:
         that:
           - app_idem is not changed
 
-    - name: Update container app scale + tags
+    - name: Container app update scale and tags
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         location: eastus2
         environment_id: "{{ env_create.state.id }}"
+        workload_profile_name: Consumption
+        identity:
+          type: SystemAssigned
+        active_revisions_mode: Multiple
+        secrets:
+          - name: my-secret
+            value: super-secret-value
+          - name: api-token
+            value: token-xyz
         ingress:
           external: true
           target_port: 80
           transport: auto
+          allow_insecure: false
+          client_certificate_mode: ignore
+          ip_security_restrictions:
+            - name: allow-all
+              description: allow all
+              ip_address_range: 0.0.0.0/0
+              action: Allow
+          cors_policy:
+            allowed_origins:
+              - "https://example.com"
+            allowed_methods:
+              - GET
+              - POST
+        dapr:
+          enabled: true
+          app_id: hello-dapr
+          app_protocol: http
+          app_port: 80
+          log_level: info
+          enable_api_logging: true
+        max_inactive_revisions: 5
+        revision_suffix: v2
+        termination_grace_period_seconds: 30
         containers:
           - name: hello
             image: mcr.microsoft.com/k8se/quickstart:latest
             resources:
+              cpu: 0.5
+              memory: 1Gi
+            env:
+              - name: PLAIN_VAR
+                value: plain
+              - name: SECRET_VAR
+                secret_ref: my-secret
+            probes:
+              - type: Liveness
+                http_get:
+                  path: /
+                  port: 80
+                  scheme: HTTP
+                initial_delay_seconds: 5
+                period_seconds: 20
+            volume_mounts:
+              - volume_name: scratch
+                mount_path: /scratch
+        init_containers:
+          - name: init-hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            command:
+              - /bin/sh
+            args:
+              - "-c"
+              - "echo init done"
+            resources:
               cpu: 0.25
               memory: 0.5Gi
         scale:
-          min_replicas: 1
-          max_replicas: 3
+          min_replicas: 2
+          max_replicas: 5
+          cooldown_period: 30
+          polling_interval: 15
+          rules:
+            - name: http-rule
+              http:
+                metadata:
+                  concurrentRequests: "10"
+        volumes:
+          - name: scratch
+            storage_type: EmptyDir
         tags:
           role: integration
           updated: "true"
-      register: app_update
+      register: app_update_scale
 
-    - name: Assert container app scale/tag update reported change
+    - name: Assert app scale and tags update
       ansible.builtin.assert:
         that:
-          - app_update is changed
-          - app_update.state.tags.updated == "true"
+          - app_update_scale is changed
+          - app_update_scale.state.template.scale.min_replicas == 2
+          - app_update_scale.state.template.scale.max_replicas == 5
+          - app_update_scale.state.tags.updated == "true"
 
-    - name: Update container app scale + tags again (idempotence)
+    - name: Container app update ingress and dapr
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         location: eastus2
         environment_id: "{{ env_create.state.id }}"
+        workload_profile_name: Consumption
+        identity:
+          type: SystemAssigned
+        active_revisions_mode: Multiple
+        secrets:
+          - name: my-secret
+            value: super-secret-value
+          - name: api-token
+            value: token-xyz
         ingress:
           external: true
-          target_port: 80
-          transport: auto
+          target_port: 8080
+          transport: http
+          allow_insecure: true
+          client_certificate_mode: ignore
+          ip_security_restrictions:
+            - name: allow-all
+              description: allow all
+              ip_address_range: 0.0.0.0/0
+              action: Allow
+          cors_policy:
+            allowed_origins:
+              - "https://example.com"
+            allowed_methods:
+              - GET
+              - POST
+        dapr:
+          enabled: false
+          app_id: hello-dapr
+          app_protocol: http
+          app_port: 80
+          log_level: info
+          enable_api_logging: true
+        max_inactive_revisions: 5
+        revision_suffix: v3
+        termination_grace_period_seconds: 30
         containers:
           - name: hello
             image: mcr.microsoft.com/k8se/quickstart:latest
             resources:
+              cpu: 0.5
+              memory: 1Gi
+            env:
+              - name: PLAIN_VAR
+                value: plain
+              - name: SECRET_VAR
+                secret_ref: my-secret
+            probes:
+              - type: Liveness
+                http_get:
+                  path: /
+                  port: 80
+                  scheme: HTTP
+                initial_delay_seconds: 5
+                period_seconds: 20
+            volume_mounts:
+              - volume_name: scratch
+                mount_path: /scratch
+        init_containers:
+          - name: init-hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            command:
+              - /bin/sh
+            args:
+              - "-c"
+              - "echo init done"
+            resources:
               cpu: 0.25
               memory: 0.5Gi
         scale:
-          min_replicas: 1
-          max_replicas: 3
+          min_replicas: 2
+          max_replicas: 5
+          cooldown_period: 30
+          polling_interval: 15
+          rules:
+            - name: http-rule
+              http:
+                metadata:
+                  concurrentRequests: "10"
+        volumes:
+          - name: scratch
+            storage_type: EmptyDir
         tags:
           role: integration
           updated: "true"
-      register: app_update_idem
+      register: app_update_ingress
 
-    - name: Assert container app update idempotent
+    - name: Assert app ingress and dapr update
       ansible.builtin.assert:
         that:
-          - app_update_idem is not changed
+          - app_update_ingress is changed
+          - app_update_ingress.state.configuration.ingress.target_port == 8080
+          - app_update_ingress.state.configuration.ingress.transport | lower == "http"
+          - app_update_ingress.state.configuration.ingress.allow_insecure == true
+          - app_update_ingress.state.configuration.dapr.enabled == false
 
-    - name: Fetch container app via info (by name)
+    - name: Container app update image and identity to UserAssigned
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "{{ app_name }}"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        workload_profile_name: Consumption
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ umi_id }}"
+            append: false
+        active_revisions_mode: Multiple
+        secrets:
+          - name: my-secret
+            value: super-secret-value
+          - name: api-token
+            value: token-xyz
+        ingress:
+          external: true
+          target_port: 8080
+          transport: http
+          allow_insecure: true
+          client_certificate_mode: ignore
+          ip_security_restrictions:
+            - name: allow-all
+              description: allow all
+              ip_address_range: 0.0.0.0/0
+              action: Allow
+          cors_policy:
+            allowed_origins:
+              - "https://example.com"
+            allowed_methods:
+              - GET
+              - POST
+        dapr:
+          enabled: false
+          app_id: hello-dapr
+          app_protocol: http
+          app_port: 80
+          log_level: info
+          enable_api_logging: true
+        max_inactive_revisions: 5
+        revision_suffix: v4
+        termination_grace_period_seconds: 30
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.75
+              memory: 1.5Gi
+            env:
+              - name: PLAIN_VAR
+                value: plain-updated
+              - name: SECRET_VAR
+                secret_ref: my-secret
+            probes:
+              - type: Liveness
+                http_get:
+                  path: /
+                  port: 80
+                  scheme: HTTP
+                initial_delay_seconds: 5
+                period_seconds: 20
+            volume_mounts:
+              - volume_name: scratch
+                mount_path: /scratch
+        init_containers:
+          - name: init-hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            command:
+              - /bin/sh
+            args:
+              - "-c"
+              - "echo init done"
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+        scale:
+          min_replicas: 2
+          max_replicas: 5
+          cooldown_period: 30
+          polling_interval: 15
+          rules:
+            - name: http-rule
+              http:
+                metadata:
+                  concurrentRequests: "10"
+        volumes:
+          - name: scratch
+            storage_type: EmptyDir
+        tags:
+          role: integration
+          updated: "true"
+      register: app_update_identity
+
+    - name: Assert app identity switch and container update
+      ansible.builtin.assert:
+        that:
+          - app_update_identity is changed
+          - app_update_identity.state.identity.type == "UserAssigned"
+          - app_update_identity.state.identity.user_assigned_identities | length >= 1
+          - app_update_identity.state.template.revision_suffix == "v4"
+          - app_update_identity.state.template.containers[0].resources.cpu == 0.75
+
+    - name: Container app info by name
       azure.azcollection.azure_rm_containerapp_info:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
       register: app_info
 
-    - name: Assert app info returns exactly one entry with expected fields
+    - name: Assert app info single entry
       ansible.builtin.assert:
         that:
           - app_info.container_apps | length == 1
-          - app_info.container_apps[0].name == "app-aca-" ~ rpfx
+          - app_info.container_apps[0].name == app_name
           - app_info.container_apps[0].provisioning_state == "Succeeded"
-          - app_info.container_apps[0].configuration.ingress.target_port == 80
+          - app_info.container_apps[0].configuration.ingress.target_port == 8080
+          - app_info.container_apps[0].configuration.secrets | length == 2
+          - app_info.container_apps[0].configuration.secrets[0].value is not defined or app_info.container_apps[0].configuration.secrets[0].value is none
+          - app_info.container_apps[0].secrets is not defined
 
-    - name: List all container apps in the resource group
+    - name: Container app info with show_secrets
       azure.azcollection.azure_rm_containerapp_info:
         resource_group: "{{ resource_group }}-containerapp"
-      register: app_list
+        name: "{{ app_name }}"
+        show_secrets: true
+      register: app_info_secrets
 
-    - name: Assert app list contains the test app
+    - name: Assert app info returns secrets
       ansible.builtin.assert:
         that:
-          - app_list.container_apps | length >= 1
-          - "'app-aca-' ~ rpfx in (app_list.container_apps | map(attribute='name') | list)"
+          - app_info_secrets.container_apps | length == 1
+          - app_info_secrets.container_apps[0].secrets is defined
+          - app_info_secrets.container_apps[0].secrets | length == 2
+          - (app_info_secrets.container_apps[0].secrets | map(attribute='name') | list | sort) == ['api-token', 'my-secret']
 
-    - name: Wait until container app reports Running before stopping
+    - name: Container app info list by resource group
       azure.azcollection.azure_rm_containerapp_info:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+      register: app_list_rg
+
+    - name: Assert app list by RG contains app
+      ansible.builtin.assert:
+        that:
+          - app_list_rg.container_apps | length >= 1
+          - app_name in (app_list_rg.container_apps | map(attribute='name') | list)
+
+    - name: Container app info tag filter match
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        tags:
+          - "role:integration"
+      register: app_tag_match
+
+    - name: Assert app tag filter match
+      ansible.builtin.assert:
+        that:
+          - app_tag_match.container_apps | length >= 1
+          - app_name in (app_tag_match.container_apps | map(attribute='name') | list)
+
+    - name: Container app info tag filter miss
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        tags:
+          - "role:nonexistent-tag-value"
+      register: app_tag_miss
+
+    - name: Assert app tag filter empty
+      ansible.builtin.assert:
+        that:
+          - app_tag_miss.container_apps | length == 0
+
+    - name: Container app info by name not found
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "does-not-exist-{{ rpfx }}"
+      register: app_missing
+
+    - name: Assert app info empty on missing
+      ansible.builtin.assert:
+        that:
+          - app_missing.container_apps | length == 0
+
+    - name: Wait for container app running
+      azure.azcollection.azure_rm_containerapp_info:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "{{ app_name }}"
       register: app_status
-      until: (app_status.container_apps | length > 0) and (app_status.container_apps[0].running_status | default('')) == 'Running'
+      until: (app_status.container_apps | length > 0) and ((app_status.container_apps[0].running_status | default('')) == 'Running')
       retries: 30
       delay: 10
 
-    - name: Stop container app
+    - name: Container app stop
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         status: stop
       register: app_stop
 
-    - name: Assert stop reported change
+    - name: Assert app stop changed
       ansible.builtin.assert:
         that:
           - app_stop is changed
 
-    - name: Stop container app again (idempotence)
+    - name: Container app stop (idempotence)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         status: stop
       register: app_stop_idem
 
-    - name: Assert stop idempotent
+    - name: Assert app stop idempotent
       ansible.builtin.assert:
         that:
           - app_stop_idem is not changed
 
-    - name: Start container app
+    - name: Container app start
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         status: start
       register: app_start
 
-    - name: Assert start reported change
+    - name: Assert app start changed
       ansible.builtin.assert:
         that:
           - app_start is changed
 
-    - name: Start container app again (idempotence)
+    - name: Container app start (idempotence)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         status: start
       register: app_start_idem
 
-    - name: Assert start idempotent
+    - name: Assert app start idempotent
       ansible.builtin.assert:
         that:
           - app_start_idem is not changed
 
-    - name: Delete container app (check mode)
+    - name: Container app delete (check mode)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         state: absent
       check_mode: true
       register: app_delete_check
 
-    - name: Assert container app delete check mode reported change
+    - name: Assert app delete check mode changed
       ansible.builtin.assert:
         that:
           - app_delete_check is changed
 
-    - name: Delete container app
+    - name: Container app delete
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         state: absent
       register: app_delete
 
-    - name: Assert container app deleted
+    - name: Assert app deleted
       ansible.builtin.assert:
         that:
           - app_delete is changed
 
-    - name: Delete container app again (idempotence)
+    - name: Container app delete (idempotence)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "app-aca-{{ rpfx }}"
+        name: "{{ app_name }}"
         state: absent
-      register: app_delete_again
+      register: app_delete_idem
 
     - name: Assert app delete idempotent
       ansible.builtin.assert:
         that:
-          - app_delete_again is not changed
+          - app_delete_idem is not changed
 
-    - name: Delete managed environment
+    - name: Environment delete (check mode)
       azure.azcollection.azure_rm_containerappenvironment:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
+        state: absent
+      check_mode: true
+      register: env_delete_check
+
+    - name: Assert env delete check mode changed
+      ansible.builtin.assert:
+        that:
+          - env_delete_check is changed
+
+    - name: Environment delete
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "{{ env_name }}"
         state: absent
       register: env_delete
 
-    - name: Assert environment deleted
+    - name: Assert env deleted
       ansible.builtin.assert:
         that:
           - env_delete is changed
 
-    - name: Delete managed environment again (idempotence)
+    - name: Environment delete (idempotence)
       azure.azcollection.azure_rm_containerappenvironment:
         resource_group: "{{ resource_group }}-containerapp"
-        name: "env-aca-{{ rpfx }}"
+        name: "{{ env_name }}"
         state: absent
-      register: env_delete_again
+      register: env_delete_idem
 
-    - name: Assert environment delete idempotent
+    - name: Assert env delete idempotent
       ansible.builtin.assert:
         that:
-          - env_delete_again is not changed
+          - env_delete_idem is not changed
 
   always:
-    - name: Force delete the resource group
+    - name: Force delete test resource group
       azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}-containerapp"
         force_delete_nonempty: true

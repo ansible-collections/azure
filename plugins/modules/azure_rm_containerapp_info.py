@@ -83,18 +83,6 @@ except ImportError:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-def _normalize(obj):
-    """
-    Return a snake_case flat dict for an ``azure-mgmt-appcontainers`` model
-    via the Azure SDK's official ``as_attribute_dict`` backcompat helper.
-    """
-    if obj is None:
-        return None
-    if isinstance(obj, dict):
-        return obj
-    return as_attribute_dict(obj, exclude_readonly=False)
-
-
 class AzureRMContainerAppInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
@@ -134,7 +122,7 @@ class AzureRMContainerAppInfo(AzureRMModuleBase):
 
         formatted = []
         for item in items:
-            if not self._match_tags(item):
+            if self.tags and not self.has_tags(getattr(item, 'tags', None) or {}, self.tags):
                 continue
             entry = self._format(item)
             if self.show_secrets and self.name:
@@ -186,17 +174,11 @@ class AzureRMContainerAppInfo(AzureRMModuleBase):
         except Exception as exc:
             self.fail("Error listing secrets for container app {0}: {1}".format(self.name, str(exc)))
 
-        raw = _normalize(response)
+        raw = as_attribute_dict(response, exclude_readonly=False) if response else None
         return raw.get('value', []) if raw else []
 
     def _format(self, item):
-        return _normalize(item)
-
-    def _match_tags(self, item):
-        if not self.tags:
-            return True
-        tags = getattr(item, 'tags', None) or {}
-        return self.has_tags(tags, self.tags)
+        return as_attribute_dict(item, exclude_readonly=False) if item else None
 
 
 def main():

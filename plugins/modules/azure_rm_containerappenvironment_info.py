@@ -71,18 +71,6 @@ except ImportError:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-def _normalize(obj):
-    """
-    Return a snake_case flat dict for an ``azure-mgmt-appcontainers`` model
-    via the Azure SDK's official ``as_attribute_dict`` backcompat helper.
-    """
-    if obj is None:
-        return None
-    if isinstance(obj, dict):
-        return obj
-    return as_attribute_dict(obj, exclude_readonly=False)
-
-
 class AzureRMContainerAppEnvironmentInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
@@ -118,7 +106,10 @@ class AzureRMContainerAppEnvironmentInfo(AzureRMModuleBase):
         else:
             items = self._list_by_sub()
 
-        self.results['managed_environments'] = [self._format(i) for i in items if self._match_tags(i)]
+        self.results['managed_environments'] = [
+            self._format(i) for i in items
+            if not self.tags or self.has_tags(getattr(i, 'tags', None) or {}, self.tags)
+        ]
         return self.results
 
     def _get(self):
@@ -147,13 +138,7 @@ class AzureRMContainerAppEnvironmentInfo(AzureRMModuleBase):
             self.fail("Error listing managed environments: {0}".format(str(exc)))
 
     def _format(self, item):
-        return _normalize(item)
-
-    def _match_tags(self, item):
-        if not self.tags:
-            return True
-        tags = getattr(item, 'tags', None) or {}
-        return self.has_tags(tags, self.tags)
+        return as_attribute_dict(item, exclude_readonly=False) if item else None
 
 
 def main():
