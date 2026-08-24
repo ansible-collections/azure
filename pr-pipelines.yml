@@ -235,8 +235,19 @@ jobs:
           else
             echo ">>> NONE - no service connection was passed to this job <<<"
           fi
+          echo "----- REST: does a service connection named '$(SUBSCRIPTION_FULL_NAME)' exist in this project? -----"
+          COLLECTION_URI="$(System.CollectionUri)"
+          PROJECT_ID="$(System.TeamProjectId)"
+          CONN_NAME="$(SUBSCRIPTION_FULL_NAME)"
+          curl -sS -u ":$SYSTEM_ACCESSTOKEN" -o /tmp/sc.json \
+            "${COLLECTION_URI}${PROJECT_ID}/_apis/serviceendpoint/endpoints?endpointNames=${CONN_NAME}&api-version=7.1" || true
+          grep -o '"count":[0-9]*' /tmp/sc.json || echo "(unexpected response)"
+          head -c 400 /tmp/sc.json
+          echo
         displayName: 'DIAGNOSTIC: service connection injection'
         continueOnError: true
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
       - task: AzureCLI@2
         inputs:
