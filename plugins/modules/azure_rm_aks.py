@@ -2050,7 +2050,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
             auto_upgrade_profile=auto_upgrade_profile,
             disable_local_accounts=self.disable_local_accounts,
             security_profile=security_profile,
-            storage_profile=self.managedcluster_models.ManagedClusterStorageProfile(**self.storage_profile) if self.storage_profile else None,
+            storage_profile=self.create_cluster_storage_profile_instance(self.storage_profile),
         )
 
         # self.log("service_principal_profile : {0}".format(parameters.service_principal_profile))
@@ -2228,6 +2228,9 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
 
     def create_aad_profile_instance(self, aad):
         return self.managedcluster_models.ManagedClusterAADProfile(**aad) if aad else None
+
+    def create_cluster_storage_profile_instance(self, storage):
+        return self.managedcluster_models.ManagedClusterStorageProfile(**storage) if storage else None
 
     def create_addon_profile_instance(self, addon):
         result = dict()
