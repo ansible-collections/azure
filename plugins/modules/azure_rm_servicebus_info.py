@@ -406,7 +406,7 @@ except Exception:
     # This is handled in azure_rm_common
     pass
 from ansible.module_utils.common.dict_transformations import _camel_to_snake
-from ansible.module_utils._text import to_native
+from ansible.module_utils.common.text.converters import to_native
 from datetime import datetime, timedelta
 
 duration_spec_map = dict(
