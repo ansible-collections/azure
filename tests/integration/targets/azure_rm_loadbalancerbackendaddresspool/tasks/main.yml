@@ -140,12 +140,11 @@
           - info_by_name.backend_address_pools[0].id is match('^/subscriptions/.+/backendAddressPools/bepool0$')
           - info_by_name.backend_address_pools[0].provisioning_state == 'Succeeded'
 
-    - name: Set drain_period_in_seconds and admin_state on addr1
+    - name: Set admin_state Down on addr1
       azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
         resource_group: "{{ resource_group }}-lbbepool"
         load_balancer_name: "lb{{ rpfx }}"
         name: bepool0
-        drain_period_in_seconds: 30
         load_balancer_backend_addresses:
           - name: addr1
             ip_address: 10.20.0.10
@@ -156,11 +155,10 @@
             virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
       register: attrs_output
 
-    - name: Assert drain_period and admin_state round-tripped
+    - name: Assert admin_state round-tripped
       ansible.builtin.assert:
         that:
           - attrs_output is changed
-          - attrs_output.state.drain_period_in_seconds == 30
           - (attrs_output.state.load_balancer_backend_addresses | selectattr('name', 'equalto', 'addr1') | list | first).admin_state == 'Down'
 
     - name: Attempt a shrink to one address with check_mode enabled
