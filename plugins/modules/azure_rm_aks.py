@@ -409,6 +409,22 @@ options:
                     - userDefinedRouting
                     - managedNATGateway
                     - userAssignedNATGateway
+            load_balancer_profile:
+                description:
+                    - Configuration profile for the Azure Load Balancer.
+                type: dict
+                version_added: '4.0.0'
+                suboptions:
+                    backend_pool_type:
+                        description:
+                            - Specifies how nodes are added to the Load Balancer backend pool.
+                            - C(nodeIP) uses the node IP address as the backend pool member.
+                            - C(nodeIPConfiguration) uses the node network interface IP configuration.
+                        type: str
+                        choices:
+                            - nodeIP
+                            - nodeIPConfiguration
+                        required: false
     api_server_access_profile:
         description:
             - Profile of API Access configuration.
@@ -1052,7 +1068,8 @@ def create_network_profiles_dict(network):
         service_cidr=network.service_cidr,
         dns_service_ip=network.dns_service_ip,
         load_balancer_sku=network.load_balancer_sku,
-        outbound_type=network.outbound_type
+        outbound_type=network.outbound_type,
+        load_balancer_profile=network.load_balancer_profile.as_dict() if network.load_balancer_profile else None
     ) if network else dict()
 
 
@@ -1316,7 +1333,16 @@ network_profile_spec = dict(
     service_cidr=dict(type='str'),
     dns_service_ip=dict(type='str'),
     load_balancer_sku=dict(type='str', choices=['standard', 'basic']),
-    outbound_type=dict(type='str', default='loadBalancer', choices=['userDefinedRouting', 'loadBalancer', 'userAssignedNATGateway', 'managedNATGateway'])
+    outbound_type=dict(type='str', default='loadBalancer', choices=['userDefinedRouting', 'loadBalancer', 'userAssignedNATGateway', 'managedNATGateway']),
+    load_balancer_profile=dict(
+        type='dict',
+        options=dict(
+            backend_pool_type=dict(
+                type='str',
+                choices=['nodeIP', 'nodeIPConfiguration']
+            )
+        )
+    ),
 )
 
 
@@ -1678,7 +1704,19 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     if self.network_profile:
                         for key in self.network_profile.keys():
                             original = response['network_profile'].get(key) or ''
-                            if self.network_profile[key] and self.network_profile[key].lower() != original.lower():
+                            requested = self.network_profile.get(key) or ''
+
+                            if not requested:
+                                continue
+
+                            if isinstance(requested, dict):
+                                if not isinstance(original, dict):
+                                    to_be_updated = True
+                                elif not self.default_compare({}, requested, original, '', dict(compare=[])):
+                                    to_be_updated = True
+                                else:
+                                    self.network_profile[key] = original
+                            elif requested.lower() != original.lower():
                                 to_be_updated = True
 
                     def compare_addon(origin, patch, config):

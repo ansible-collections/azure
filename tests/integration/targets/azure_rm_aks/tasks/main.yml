@@ -307,6 +307,113 @@
         that:
           - output is not changed
 
+    - name: Configure load balancer backend pool type to nodeIP
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 1
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+          load_balancer_profile:
+            backend_pool_type: nodeIP
+      register: output
+
+    - name: Assert load balancer profile is nodeIP
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.network_profile.load_balancer_profile.backend_pool_type == 'nodeIP'
+
+    - name: Configure load balancer backend pool type to nodeIP (idempotent)
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 1
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+          load_balancer_profile:
+            backend_pool_type: nodeIP
+      register: output
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Configure load balancer backend pool type to nodeIPConfiguration
+      azure.azcollection.azure_rm_aks:
+        name: "aks{{ rpfx }}"
+        resource_group: "{{ resource_group }}-aks"
+        location: "{{ location }}"
+        dns_prefix: "aks{{ rpfx }}"
+        aad_profile:
+          managed: true
+          enable_azure_rbac: true
+        disable_local_accounts: true
+        kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
+        service_principal:
+          client_id: "{{ azure_client_id }}"
+        agent_pool_profiles:
+          - name: default
+            count: 1
+            vm_size: Standard_D2s_v3
+            type: VirtualMachineScaleSets
+            mode: System
+            max_pods: 42
+            availability_zones:
+              - 1
+        node_resource_group: "node{{ noderpfx }}"
+        enable_rbac: true
+        network_profile:
+          load_balancer_sku: standard
+          load_balancer_profile:
+            backend_pool_type: nodeIPConfiguration
+      register: output
+
+    - name: Assert load balancer profile is nodeIPConfiguration
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.network_profile.load_balancer_profile.backend_pool_type == 'nodeIPConfiguration'
+
     - name: Get available version
       azure.azcollection.azure_rm_aksversion_info:
         location: "{{ location }}"
