@@ -1,0 +1,234 @@
+- name: Prepare resource group
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-lbbepool"
+    location: eastus
+
+- name: Backend address pool child-module test
+  block:
+    - name: Prepare random names
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Create virtual network for pool addresses
+      azure.azcollection.azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-lbbepool"
+        name: "vn{{ rpfx }}"
+        address_prefixes: "10.20.0.0/16"
+
+    - name: Create subnet
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ resource_group }}-lbbepool"
+        virtual_network: "vn{{ rpfx }}"
+        name: "sn{{ rpfx }}"
+        address_prefix: "10.20.0.0/24"
+
+    - name: Get vnet facts
+      azure.azcollection.azure_rm_virtualnetwork_info:
+        resource_group: "{{ resource_group }}-lbbepool"
+        name: "vn{{ rpfx }}"
+      register: vnet_info
+
+    - name: Create public IP for load balancer
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-lbbepool"
+        name: "pip{{ rpfx }}"
+        sku: Standard
+        allocation_method: Static
+
+    - name: Create Standard SKU load balancer with an empty pool
+      azure.azcollection.azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-lbbepool"
+        name: "lb{{ rpfx }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: fe0
+            public_ip_address: "pip{{ rpfx }}"
+        backend_address_pools:
+          - name: bepool0
+
+    - name: Create backend address pool with two IP-based addresses
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        load_balancer_backend_addresses:
+          - name: addr1
+            ip_address: 10.20.0.10
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+          - name: addr2
+            ip_address: 10.20.0.11
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+      register: create_output
+
+    - name: Assert pool created with two addresses
+      ansible.builtin.assert:
+        that:
+          - create_output is changed
+          - create_output.state.name == 'bepool0'
+          - create_output.state.load_balancer_backend_addresses | length == 2
+
+    - name: Re-apply same pool addresses (idempotent)
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        load_balancer_backend_addresses:
+          - name: addr1
+            ip_address: 10.20.0.10
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+          - name: addr2
+            ip_address: 10.20.0.11
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+      register: idem_output
+
+    - name: Assert no change on re-apply
+      ansible.builtin.assert:
+        that:
+          - idem_output is not changed
+
+    - name: Update pool membership (remove addr2, add addr3)
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        load_balancer_backend_addresses:
+          - name: addr1
+            ip_address: 10.20.0.10
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+          - name: addr3
+            ip_address: 10.20.0.12
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+      register: update_output
+
+    - name: Assert membership change detected
+      ansible.builtin.assert:
+        that:
+          - update_output is changed
+          - update_output.state.load_balancer_backend_addresses | length == 2
+          - (update_output.state.load_balancer_backend_addresses | map(attribute='name') | list | sort) == ['addr1', 'addr3']
+
+    - name: Get pool facts by name
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool_info:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+      register: info_by_name
+
+    - name: Assert info returns the pool
+      ansible.builtin.assert:
+        that:
+          - info_by_name.backend_address_pools | length == 1
+          - info_by_name.backend_address_pools[0].name == 'bepool0'
+          - info_by_name.backend_address_pools[0].load_balancer_backend_addresses | length == 2
+
+    - name: List all pools on load balancer
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool_info:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+      register: info_list
+
+    - name: Assert list contains the pool
+      ansible.builtin.assert:
+        that:
+          - info_list.backend_address_pools | length >= 1
+          - "'bepool0' in (info_list.backend_address_pools | map(attribute='name') | list)"
+
+    - name: Assert pool state carries id and provisioning_state
+      ansible.builtin.assert:
+        that:
+          - info_by_name.backend_address_pools[0].id is match('^/subscriptions/.+/backendAddressPools/bepool0$')
+          - info_by_name.backend_address_pools[0].provisioning_state == 'Succeeded'
+
+    - name: Set drain_period_in_seconds and admin_state on addr1
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        drain_period_in_seconds: 30
+        load_balancer_backend_addresses:
+          - name: addr1
+            ip_address: 10.20.0.10
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+            admin_state: Down
+          - name: addr3
+            ip_address: 10.20.0.12
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+      register: attrs_output
+
+    - name: Assert drain_period and admin_state round-tripped
+      ansible.builtin.assert:
+        that:
+          - attrs_output is changed
+          - attrs_output.state.drain_period_in_seconds == 30
+          - (attrs_output.state.load_balancer_backend_addresses | selectattr('name', 'equalto', 'addr1') | list | first).admin_state == 'Down'
+
+    - name: Attempt a shrink to one address with check_mode enabled
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        load_balancer_backend_addresses:
+          - name: addr1
+            ip_address: 10.20.0.10
+            virtual_network: "{{ vnet_info.virtualnetworks[0].id }}"
+      check_mode: true
+      register: checkmode_output
+
+    - name: Read pool state after the check_mode call
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool_info:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+      register: after_checkmode
+
+    - name: Assert check_mode reported changed but did not mutate Azure state
+      ansible.builtin.assert:
+        that:
+          - checkmode_output is changed
+          - after_checkmode.backend_address_pools[0].load_balancer_backend_addresses | length == 2
+
+    - name: Query a non-existent pool via _info
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool_info:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: doesnotexist
+      register: info_missing
+
+    - name: Assert missing pool returns empty list, not error
+      ansible.builtin.assert:
+        that:
+          - info_missing.backend_address_pools | length == 0
+
+    - name: Delete backend address pool
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        state: absent
+      register: delete_output
+
+    - name: Assert pool deleted
+      ansible.builtin.assert:
+        that:
+          - delete_output is changed
+
+    - name: Delete backend address pool (idempotent)
+      azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
+        resource_group: "{{ resource_group }}-lbbepool"
+        load_balancer_name: "lb{{ rpfx }}"
+        name: bepool0
+        state: absent
+      register: delete_output_idem
+
+    - name: Assert no change on second delete
+      ansible.builtin.assert:
+        that:
+          - delete_output_idem is not changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-lbbepool"
+        force_delete_nonempty: true
+        state: absent

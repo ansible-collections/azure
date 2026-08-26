@@ -151,6 +151,8 @@ action_groups:
     - azure.azcollection.azure_rm_keyvaultsecret_info
     - azure.azcollection.azure_rm_loadbalancer
     - azure.azcollection.azure_rm_loadbalancer_info
+    - azure.azcollection.azure_rm_loadbalancerbackendaddresspool
+    - azure.azcollection.azure_rm_loadbalancerbackendaddresspool_info
     - azure.azcollection.azure_rm_localnetworkgateway
     - azure.azcollection.azure_rm_localnetworkgateway_info
     - azure.azcollection.azure_rm_lock
