@@ -18,7 +18,8 @@ short_description: Manage a backend address pool of an Azure load balancer
 
 description:
     - Create, update or delete a single backend address pool on an existing Azure load balancer.
-    - The parent module M(azure.azcollection.azure_rm_loadbalancer) only declares empty pool stubs by name; this module owns all pool-level properties and members.
+    - The parent module M(azure.azcollection.azure_rm_loadbalancer) only declares empty pool stubs by name.
+    - This module owns all pool-level properties and members.
 
 options:
     resource_group:
@@ -162,7 +163,8 @@ EXAMPLES = '''
     name: bepool0
     load_balancer_backend_addresses:
       - name: web-server1-nic
-        network_interface_ip_configuration: /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkInterfaces/web1-nic/ipConfigurations/ipconfig1
+        network_interface_ip_configuration: >-
+          /subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkInterfaces/web1-nic/ipConfigurations/ipconfig1
 
 - name: Delete backend address pool
   azure_rm_loadbalancerbackendaddresspool:
