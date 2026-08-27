@@ -724,6 +724,14 @@
             allowed_methods:
               - GET
               - POST
+          sticky_sessions:
+            affinity: sticky
+          additional_port_mappings:
+            - external: false
+              target_port: 8081
+            - external: false
+              target_port: 8082
+              exposed_port: 9082
         dapr:
           enabled: false
           app_id: hello-dapr
@@ -792,7 +800,39 @@
           - app_update_ingress.state.configuration.ingress.target_port == 8080
           - app_update_ingress.state.configuration.ingress.transport | lower == "http"
           - app_update_ingress.state.configuration.ingress.allow_insecure == true
+          - app_update_ingress.state.configuration.ingress.sticky_sessions.affinity | lower == "sticky"
+          - app_update_ingress.state.configuration.ingress.additional_port_mappings | length == 2
+          - app_update_ingress.state.configuration.ingress.additional_port_mappings | selectattr('target_port', 'equalto', 8081) | list | length == 1
+          - app_update_ingress.state.configuration.ingress.additional_port_mappings | selectattr('target_port', 'equalto', 8082) | selectattr('exposed_port', 'equalto', 9082) | list | length == 1
           - app_update_ingress.state.configuration.dapr.enabled == false
+
+    - name: Container app argspec-only acceptance for kind and service_binds (check-mode)
+      azure.azcollection.azure_rm_containerapp:
+        resource_group: "{{ resource_group }}-containerapp"
+        name: "{{ app_name }}-argspec"
+        location: eastus2
+        environment_id: "{{ env_create.state.id }}"
+        kind: functionapp
+        service_binds:
+          - name: redis-bind
+            service_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dummy/providers/Microsoft.App/containerApps/redis-dev"
+        ingress:
+          external: true
+          target_port: 80
+        containers:
+          - name: hello
+            image: mcr.microsoft.com/k8se/quickstart:latest
+            resources:
+              cpu: 0.25
+              memory: 0.5Gi
+      check_mode: true
+      register: app_argspec_check
+
+    - name: Assert argspec-only acceptance for kind and service_binds
+      ansible.builtin.assert:
+        that:
+          - app_argspec_check is changed
+          - app_argspec_check is not failed
 
     - name: Container app update image and identity to UserAssigned
       azure.azcollection.azure_rm_containerapp:

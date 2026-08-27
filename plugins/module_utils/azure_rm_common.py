@@ -1347,8 +1347,7 @@ class AzureRMModuleBase(object):
         self.log('Getting Container Apps client')
         if not self._containerapps_client:
             self._containerapps_client = self.get_mgmt_svc_client(ContainerAppsAPIClient,
-                                                                  base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                  api_version='2024-03-01')
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager)
         return self._containerapps_client
 
     @property

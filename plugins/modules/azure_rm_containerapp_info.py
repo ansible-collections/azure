@@ -72,6 +72,24 @@ container_apps:
     returned: always
     type: list
     elements: dict
+    contains:
+        secrets:
+            description:
+                - Container app secrets as returned by C(listSecrets).
+                - Only present when I(show_secrets=true) and I(name) is set.
+                - Values are added to Ansible's C(no_log_values) so they are
+                  redacted from verbose and callback logs, but returned in the
+                  module result for programmatic use.
+            returned: when I(show_secrets=true) and I(name) is set
+            type: list
+            elements: dict
+            contains:
+                name:
+                    description: Secret name.
+                    type: str
+                value:
+                    description: Secret value.
+                    type: str
 '''
 
 try:

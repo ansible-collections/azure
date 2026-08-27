@@ -32,6 +32,15 @@ options:
         description:
             - Resource location. If not set, location from the resource group will be used.
         type: str
+    kind:
+        description:
+            - Metadata used to identify the container app category.
+            - C(workflowapp) indicates a Logic Apps standard workflow app.
+            - C(functionapp) indicates an Azure Functions app hosted on Container Apps.
+        type: str
+        choices:
+            - workflowapp
+            - functionapp
     environment_id:
         description:
             - Full resource ID of the parent managed environment.
@@ -200,6 +209,32 @@ options:
             cors_policy:
                 description: CORS policy pass-through as an SDK-shaped dict.
                 type: dict
+            sticky_sessions:
+                description:
+                    - Sticky session configuration for single-revision mode.
+                type: dict
+                suboptions:
+                    affinity:
+                        description: Sticky session affinity.
+                        type: str
+                        choices: [sticky, none]
+            additional_port_mappings:
+                description:
+                    - Extra port mappings exposed by the container app ingress.
+                type: list
+                elements: dict
+                suboptions:
+                    external:
+                        description: Whether the port is accessible outside the environment.
+                        type: bool
+                        required: true
+                    target_port:
+                        description: Port the container listens on.
+                        type: int
+                        required: true
+                    exposed_port:
+                        description: Exposed port. Defaults to C(target_port) if unset.
+                        type: int
     dapr:
         description:
             - Dapr configuration for the container app.
@@ -404,6 +439,20 @@ options:
             - List of volumes for containers to mount.
         type: list
         elements: dict
+    service_binds:
+        description:
+            - List of Container App service bindings (dev-service bindings).
+        type: list
+        elements: dict
+        suboptions:
+            name:
+                description:
+                    - Name of the service bind.
+                type: str
+            service_id:
+                description:
+                    - Resource ID of the target dev service.
+                type: str
     status:
         description:
             - Runtime action to apply after any create/update.
@@ -747,6 +796,18 @@ IP_RESTRICTION_SPEC = dict(
 )
 
 
+INGRESS_STICKY_SESSIONS_SPEC = dict(
+    affinity=dict(type='str', choices=['sticky', 'none']),
+)
+
+
+INGRESS_PORT_MAPPING_SPEC = dict(
+    external=dict(type='bool', required=True),
+    target_port=dict(type='int', required=True),
+    exposed_port=dict(type='int'),
+)
+
+
 INGRESS_SPEC = dict(
     external=dict(type='bool'),
     target_port=dict(type='int'),
@@ -758,6 +819,14 @@ INGRESS_SPEC = dict(
     custom_domains=dict(type='list', elements='dict', options=CUSTOM_DOMAIN_SPEC),
     ip_security_restrictions=dict(type='list', elements='dict', options=IP_RESTRICTION_SPEC),
     cors_policy=dict(type='dict'),
+    sticky_sessions=dict(type='dict', options=INGRESS_STICKY_SESSIONS_SPEC),
+    additional_port_mappings=dict(type='list', elements='dict', options=INGRESS_PORT_MAPPING_SPEC),
+)
+
+
+SERVICE_BIND_SPEC = dict(
+    name=dict(type='str'),
+    service_id=dict(type='str'),
 )
 
 
@@ -827,7 +896,7 @@ SCALE_SPEC = dict(
 
 
 CONFIG_KEYS = ('secrets', 'active_revisions_mode', 'registries', 'ingress', 'dapr', 'max_inactive_revisions')
-TEMPLATE_KEYS = ('revision_suffix', 'termination_grace_period_seconds', 'containers', 'init_containers', 'scale', 'volumes')
+TEMPLATE_KEYS = ('revision_suffix', 'termination_grace_period_seconds', 'containers', 'init_containers', 'scale', 'volumes', 'service_binds')
 
 
 class AzureRMContainerApp(AzureRMModuleBaseExt):
@@ -838,6 +907,7 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
             resource_group=dict(type='str', required=True),
             name=dict(type='str', required=True),
             location=dict(type='str'),
+            kind=dict(type='str', choices=['workflowapp', 'functionapp']),
             environment_id=dict(type='str'),
             workload_profile_name=dict(type='str'),
             identity=dict(type='dict', options=self.managed_identity_multiple_spec),
@@ -853,6 +923,7 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
             init_containers=dict(type='list', elements='dict', options=INIT_CONTAINER_SPEC),
             scale=dict(type='dict', options=SCALE_SPEC),
             volumes=dict(type='list', elements='dict'),
+            service_binds=dict(type='list', elements='dict', options=SERVICE_BIND_SPEC),
             status=dict(type='str', choices=['start', 'stop']),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
@@ -943,13 +1014,22 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
                         changed = True
                         self.to_do = Actions.Update
 
-                # environment id / workload profile are stored in parameters using their
-                # ARM key names — compare against those directly.
-                for arm_key in ('managed_environment_id', 'workload_profile_name'):
-                    desired = self.parameters.get(arm_key)
-                    if desired is not None and desired != old_response.get(arm_key):
-                        changed = True
-                        self.to_do = Actions.Update
+                # environment id is immutable in Microsoft.App — warn on drift instead of
+                # flipping Update (the PATCH body would silently drop it and misreport changed).
+                desired_env = self.parameters.get('managed_environment_id')
+                current_env = old_response.get('managed_environment_id')
+                if desired_env and current_env and desired_env.lower() != current_env.lower():
+                    self.module.warn(
+                        "environment_id differs from the existing container app's managedEnvironmentId; "
+                        "Container Apps do not support moving between environments, ignoring the change."
+                    )
+
+                # workload profile is patchable; compare case-insensitively (ARM normalizes casing).
+                desired_wp = self.parameters.get('workload_profile_name')
+                current_wp = old_response.get('workload_profile_name')
+                if desired_wp is not None and (current_wp is None or desired_wp.lower() != current_wp.lower()):
+                    changed = True
+                    self.to_do = Actions.Update
 
         if self.to_do in (Actions.Create, Actions.Update):
             if not self.check_mode:
