@@ -724,8 +724,6 @@
             allowed_methods:
               - GET
               - POST
-          sticky_sessions:
-            affinity: sticky
           additional_port_mappings:
             - external: false
               target_port: 8081
@@ -800,13 +798,12 @@
           - app_update_ingress.state.configuration.ingress.target_port == 8080
           - app_update_ingress.state.configuration.ingress.transport | lower == "http"
           - app_update_ingress.state.configuration.ingress.allow_insecure == true
-          - app_update_ingress.state.configuration.ingress.sticky_sessions.affinity | lower == "sticky"
           - app_update_ingress.state.configuration.ingress.additional_port_mappings | length == 2
           - app_update_ingress.state.configuration.ingress.additional_port_mappings | selectattr('target_port', 'equalto', 8081) | list | length == 1
           - app_update_ingress.state.configuration.ingress.additional_port_mappings | selectattr('target_port', 'equalto', 8082) | selectattr('exposed_port', 'equalto', 9082) | list | length == 1
           - app_update_ingress.state.configuration.dapr.enabled == false
 
-    - name: Container app argspec-only acceptance for kind and service_binds (check-mode)
+    - name: Container app argspec-only acceptance for kind, service_binds, sticky_sessions (check-mode)
       azure.azcollection.azure_rm_containerapp:
         resource_group: "{{ resource_group }}-containerapp"
         name: "{{ app_name }}-argspec"
@@ -819,6 +816,8 @@
         ingress:
           external: true
           target_port: 80
+          sticky_sessions:
+            affinity: sticky
         containers:
           - name: hello
             image: mcr.microsoft.com/k8se/quickstart:latest
@@ -828,7 +827,7 @@
       check_mode: true
       register: app_argspec_check
 
-    - name: Assert argspec-only acceptance for kind and service_binds
+    - name: Assert argspec-only acceptance for kind, service_binds, sticky_sessions
       ansible.builtin.assert:
         that:
           - app_argspec_check is changed

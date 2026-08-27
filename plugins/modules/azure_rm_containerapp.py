@@ -1014,8 +1014,6 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
                         changed = True
                         self.to_do = Actions.Update
 
-                # environment id is immutable in Microsoft.App — warn on drift instead of
-                # flipping Update (the PATCH body would silently drop it and misreport changed).
                 desired_env = self.parameters.get('managed_environment_id')
                 current_env = old_response.get('managed_environment_id')
                 if desired_env and current_env and desired_env.lower() != current_env.lower():
@@ -1024,7 +1022,6 @@ class AzureRMContainerApp(AzureRMModuleBaseExt):
                         "Container Apps do not support moving between environments, ignoring the change."
                     )
 
-                # workload profile is patchable; compare case-insensitively (ARM normalizes casing).
                 desired_wp = self.parameters.get('workload_profile_name')
                 current_wp = old_response.get('workload_profile_name')
                 if desired_wp is not None and (current_wp is None or desired_wp.lower() != current_wp.lower()):
