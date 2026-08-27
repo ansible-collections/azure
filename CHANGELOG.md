@@ -1,4 +1,55 @@
 # Change Log
+## v4.0.0 (2026-08-31)
+
+### NEW MODULES
+  - azure_rm_containerapp: ([#2353](https://github.com/ansible-collections/azure/pull/2353))
+  - azure_rm_containerapp_info: ([#2353](https://github.com/ansible-collections/azure/pull/2353))
+  - azure_rm_containerappenvironment: ([#2353](https://github.com/ansible-collections/azure/pull/2353))
+  - azure_rm_containerappenvironment_info: ([#2353](https://github.com/ansible-collections/azure/pull/2353))
+  - azure_rm_loadbalancerbackendaddresspool: ([#2354](https://github.com/ansible-collections/azure/pull/2354))
+  - azure_rm_loadbalancerbackendaddresspool_info: ([#2354](https://github.com/ansible-collections/azure/pull/2354))
+
+### FEATURE ENHANCEMENT
+  - extensions/eda/plugins/event_source/azure*.py: Add UUID validation to Azure EDA source plugins. ([#2299](https://github.com/ansible-collections/azure/pull/2299))
+  - sanity-requirements.txt: Bump cryptography from `48.0.1` to `50.0.0`. ([#2330](https://github.com/ansible-collections/azure/pull/2330))
+  - requirements.txt: Remove `azure-mgmt-rdbms==10.2.0b17` (no remaining consumer after MariaDB / MySQL Single / PostgreSQL Single Server module removal). ([#2339](https://github.com/ansible-collections/azure/pull/2339))
+  - plugins/modules/azure_rm_virtualmachinesize_info.py: Migrate to Resource SKUs API and add Write Accelerator disk limit. ([#2316](https://github.com/ansible-collections/azure/pull/2316))
+  - plugins/modules/azure_rm_arcmachineextensions.py: Emit signals from arc extensions module. ([#2311](https://github.com/ansible-collections/azure/pull/2311))
+  - plugins/inventory/azure_rm.py: Templates `cloud_environment` option. ([#2341](https://github.com/ansible-collections/azure/pull/2341))
+  - plugins/modules/azure_rm_aks.py:
+    - Add support for `use_aad_auth` option of the `monitoring` add-on, `enable_secret_rotation` and `rotation_poll_interval` for `azure_keyvault_secrets_provider` add-on. ([#2314](https://github.com/ansible-collections/azure/pull/2314))
+    - Add `load_balancer_profile`. ([#2347](https://github.com/ansible-collections/azure/pull/2347))
+    - Add `storage_profile`. ([#2345](https://github.com/ansible-collections/azure/pull/2345))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_virtualmachinescaleset.py: Fix pre-existing bugs and clean up. ([#2300](https://github.com/ansible-collections/azure/pull/2300))
+  - plugins/modules/azure_rm_publicipaddress_info.py: Remove long-stale `azure_publicipaddresses` return docs and dead code. ([#2324](https://github.com/ansible-collections/azure/pull/2324))
+  - plugins/modules/azure_rm_manageddisk.py: Fix update `attach_caching` on managed disk when `managed_by` is not resupplied. ([#2331](https://github.com/ansible-collections/azure/pull/2331))
+  - extensions/audit/event_query.yml: Normalize telemetry taxonomy `device_type` and `infra_bucket` values. ([#2312](https://github.com/ansible-collections/azure/pull/2312))
+  - plugins/modules/azure_rm_monitordatacollectionrules.py: Fix `extension_name` and `extension_settings` type. ([#2315](https://github.com/ansible-collections/azure/pull/2315))
+  - plugins/modules/azure_rm_postgresqlflexible{administrator,configuration,server}*: Migrated `postgresqlflexibleservers` related modules from deprecated `azure.mgmt.rdbms.postgresql_flexibleservers` to `azure-mgmt-postgresqlflexibleservers==2.0.0`. ([#2336](https://github.com/ansible-collections/azure/pull/2336))
+  - plugins/*: Replace `ansible.module_utils.six` with Python stdlib equivalents across all remaining call sites. ([#2305](https://github.com/ansible-collections/azure/pull/2305))
+  - plugins/*: Replace deprecated `ansible.module_utils._text` import by `ansible.module_utils.common.text.converters` across all remaining call sites. ([#2352](https://github.com/ansible-collections/azure/pull/2352))
+
+### BREAKING CHANGE
+  - azure_rm_virtualmachinescaleset: Changed default values for `capacity`, `single_placement_group`, `orchestration_mode`, `platform_fault_domain_count` and `os_disk_caching`. ([#2300](https://github.com/ansible-collections/azure/pull/2300))
+  - azure_rm_containerinstance: Remove no-op top-level `ports` option. ([#2328](https://github.com/ansible-collections/azure/pull/2328))
+  - azure_rm_storageaccount: Remove legacy `Storage` and `BlobStorage` values from `kind` option. ([#2327](https://github.com/ansible-collections/azure/pull/2327))
+  - azure_rm_adapplication: Remove deprecated `password` argument. ([#2326](https://github.com/ansible-collections/azure/pull/2326))
+  - plugins/lookup/azure_keyvault_secret.py: Remove deprecated `use_cli` option (use `auth_source=cli`). ([#2325](https://github.com/ansible-collections/azure/pull/2325))
+  - azure_rm_sqlserver: Remove deprecated string form of `identity`. ([#2323](https://github.com/ansible-collections/azure/pull/2323))
+  - azure_rm_sqldatabase: Remove deprecated `edition` option (use `sku`). ([#2321](https://github.com/ansible-collections/azure/pull/2321))
+  - azure_rm_cosmosdbaccount*: Remove deprecated `ip_range_filter` option (use `ip_rules`). ([#2320](https://github.com/ansible-collections/azure/pull/2320))
+  - azure_rm_virtualhubconnection*: Remove deprecated `allow_remote_vnet_to_use_hub_vnet_gateways` and `allow_hub_to_remote_vnet_transit` options. ([#2317](https://github.com/ansible-collections/azure/pull/2317))
+  - azure_rm_appgateway: Remove `disabled_rule_groups`, `enabled`, `exclusions`, `file_upload_limit_in_mb`, `firewall_mode`, `max_request_body_size`, `max_request_body_size_in_kb`, `request_body_check`, `rule_set_type`, `rule_set_version`, and promote `firewall_policy` to top-level module option. ([#2318](https://github.com/ansible-collections/azure/pull/2318))
+  - azure_rm_virtualmachine, azure_rm_virtualmachine_info: Remove deprecated unmanaged-disk (VHD page blob) options, `storage_account_name`, `storage_container_name`, `storage_blob_name`. ([#2329](https://github.com/ansible-collections/azure/pull/2329))
+  - azure_rm_cognitivesearch_info: Always return a list for results. ([#2332](https://github.com/ansible-collections/azure/pull/2332))
+  - azure_rm_mariadb*: Modules removed as retired by Azure DB for MariaDB (2025-09-19); migrate to Flexible Server counterparts. ([#2339](https://github.com/ansible-collections/azure/pull/2339))
+  - azure_rm_mysql{configuration,database,firewallrule,server}*: Modules removed as retired by Azure DB for MySQL Single Server (2024-09-16); migrate to `azure_rm_mysqlflexible*`. ([#2339](https://github.com/ansible-collections/azure/pull/2339))
+  - azure_rm_postgresql{configuration,database,firewallrule,server}*: Modules removed as retired by Azure DB for PostgreSQL Single Server (2025-03-28); migrate to `azure_rm_postgresqlflexible*`. ([#2339](https://github.com/ansible-collections/azure/pull/2339))
+  - azure_rm_adgroup*: Removed `raw_membership` and added `include_transitive_members`, as now both modules query the Microsoft Graph beta endpoint. ([#2337](https://github.com/ansible-collections/azure/pull/2337))
+
+
 ## v3.21.0 (2026-07-28)
 
 ### NEW MODULES
