@@ -73,14 +73,17 @@ options:
                 description:
                     - Port of the gateway load balancer tunnel interface.
                 type: int
+                required: true
             identifier:
                 description:
                     - Identifier of the gateway load balancer tunnel interface.
                 type: int
+                required: true
             protocol:
                 description:
                     - Protocol of the gateway load balancer tunnel interface.
                 type: str
+                required: true
                 choices:
                     - None
                     - Native
@@ -89,6 +92,7 @@ options:
                 description:
                     - Traffic type of the gateway load balancer tunnel interface.
                 type: str
+                required: true
                 choices:
                     - None
                     - Internal
