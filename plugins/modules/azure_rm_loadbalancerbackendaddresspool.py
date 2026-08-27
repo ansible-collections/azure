@@ -260,10 +260,10 @@ backend_address_spec = dict(
 
 
 tunnel_interface_spec = dict(
-    port=dict(type='int'),
-    identifier=dict(type='int'),
-    protocol=dict(type='str', choices=['None', 'Native', 'VXLAN']),
-    type=dict(type='str', choices=['None', 'Internal', 'External']),
+    port=dict(type='int', required=True),
+    identifier=dict(type='int', required=True),
+    protocol=dict(type='str', choices=['None', 'Native', 'VXLAN'], required=True),
+    type=dict(type='str', choices=['None', 'Internal', 'External'], required=True),
 )
 
 
@@ -278,8 +278,17 @@ class AzureRMLoadBalancerBackendAddressPool(AzureRMModuleBaseExt):
             virtual_network=dict(type='str'),
             sync_mode=dict(type='str', choices=['Automatic', 'Manual']),
             drain_period_in_seconds=dict(type='int'),
-            tunnel_interfaces=dict(type='list', elements='dict', options=tunnel_interface_spec),
-            load_balancer_backend_addresses=dict(type='list', elements='dict', options=backend_address_spec),
+            tunnel_interfaces=dict(
+                type='list', elements='dict',
+                options=tunnel_interface_spec,
+            ),
+            load_balancer_backend_addresses=dict(
+                type='list', elements='dict',
+                options=backend_address_spec,
+                mutually_exclusive=[
+                    ('ip_address', 'network_interface_ip_configuration', 'load_balancer_frontend_ip_configuration'),
+                ],
+            ),
         )
 
         self.resource_group = None
@@ -298,6 +307,7 @@ class AzureRMLoadBalancerBackendAddressPool(AzureRMModuleBaseExt):
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
             supports_tags=False,
+            required_by=dict(sync_mode=['virtual_network']),
         )
 
     def exec_module(self, **kwargs):
@@ -306,6 +316,11 @@ class AzureRMLoadBalancerBackendAddressPool(AzureRMModuleBaseExt):
 
         existing = self.get_backend_address_pool()
         existing_dict = self.format_item(existing) if existing else None
+        if self.state == 'present' and existing_dict is not None:
+            for field in ('virtual_network', 'sync_mode', 'drain_period_in_seconds',
+                          'tunnel_interfaces', 'load_balancer_backend_addresses'):
+                if getattr(self, field) is None:
+                    setattr(self, field, existing_dict.get(field))
         desired = self.build_desired_dict()
         changed = False
         response = existing_dict
@@ -316,7 +331,9 @@ class AzureRMLoadBalancerBackendAddressPool(AzureRMModuleBaseExt):
                 if not self.check_mode:
                     response = self.create_or_update()
             else:
-                if not self.default_compare({}, desired, existing_dict, '', dict(compare=[])):
+                desired_cmp = self._prepare_for_compare(desired)
+                existing_cmp = self._prepare_for_compare(existing_dict)
+                if not self.default_compare({}, desired_cmp, existing_cmp, '', dict(compare=[])):
                     changed = True
                     if not self.check_mode:
                         response = self.create_or_update()
@@ -330,6 +347,23 @@ class AzureRMLoadBalancerBackendAddressPool(AzureRMModuleBaseExt):
         self.results['changed'] = changed
         self.results['state'] = response
         return self.results
+
+    @staticmethod
+    def _prepare_for_compare(pool_dict):
+        '''
+        Prepare the backend address pool dictionary for comparison by sorting
+        the load balancer backend addresses by name.
+
+        :param pool_dict: The backend address pool dictionary.
+        :return: The prepared backend address pool dictionary.
+        '''
+        if pool_dict is None:
+            return None
+        result = dict(pool_dict)
+        addresses = result.get('load_balancer_backend_addresses')
+        if addresses:
+            result['load_balancer_backend_addresses'] = sorted(addresses, key=lambda a: a.get('name') or '')
+        return result
 
     def build_desired_dict(self):
         return dict(
