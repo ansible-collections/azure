@@ -265,6 +265,7 @@ try:
     from azure.mgmt.mysqlflexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
     from azure.mgmt.containerregistry import ContainerRegistryManagementClient
     from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+    from azure.mgmt.appcontainers import ContainerAppsAPIClient
     from azure.mgmt.loganalytics import LogAnalyticsManagementClient
     import azure.mgmt.loganalytics.models as LogAnalyticsModels
     from azure.mgmt.automation import AutomationClient
@@ -425,6 +426,7 @@ class AzureRMModuleBase(object):
         self._containerinstance_client = None
         self._containerservice_client = None
         self._managedcluster_client = None
+        self._containerapps_client = None
         self._traffic_manager_management_client = None
         self._monitor_autoscale_settings_client = None
         self._monitor_log_profiles_client = None
@@ -1339,6 +1341,14 @@ class AzureRMModuleBase(object):
                                                                       api_version='2023-05-01')
 
         return self._containerinstance_client
+
+    @property
+    def containerapps_client(self):
+        self.log('Getting Container Apps client')
+        if not self._containerapps_client:
+            self._containerapps_client = self.get_mgmt_svc_client(ContainerAppsAPIClient,
+                                                                  base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._containerapps_client
 
     @property
     def marketplace_client(self):
