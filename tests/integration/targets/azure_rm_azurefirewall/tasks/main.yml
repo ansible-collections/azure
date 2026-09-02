@@ -51,6 +51,10 @@
         name: '{{ azure_firewall_name }}'
         # tags:
         #   key1: value1
+        dns_servers:
+          - 10.0.0.4
+          - 10.0.0.5
+        dns_proxy_enabled: true
         application_rule_collections:
           - priority: 110
             action: deny
@@ -129,10 +133,31 @@
         that:
           - output is changed
 
+    - name: Assert first-create state envelope shape
+      ansible.builtin.assert:
+        that:
+          - output.state is defined
+          - output.state.id | length > 0
+          - output.state.name == azure_firewall_name
+          - output.state.provisioning_state == 'Succeeded'
+          - output.state.application_rule_collections | length == 1
+          - output.state.nat_rule_collections | length == 1
+          - output.state.network_rule_collections | length == 1
+          - output.state.ip_configurations | length == 1
+          - output.state.additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - output.state.additional_properties['Network.DNS.Servers'] == '10.0.0.4,10.0.0.5'
+          - output.state.sku is defined
+          - output.state.sku.name is defined
+          - output.state.threat_intel_mode is defined
+
     - name: Create Azure Firewall -- idempotent
       azure.azcollection.azure_rm_azurefirewall:
         resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.4
+          - 10.0.0.5
+        dns_proxy_enabled: true
         application_rule_collections:
           - priority: 110
             action: deny
@@ -215,6 +240,10 @@
       azure.azcollection.azure_rm_azurefirewall:
         resource_group: '{{ resource_group }}-azurefirewall'
         name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.4
+          - 10.0.0.5
+        dns_proxy_enabled: true
         application_rule_collections:
           - priority: 110
             action: deny
@@ -300,14 +329,295 @@
       ansible.builtin.assert:
         that:
           - output is not changed
-          - output.firewalls['id'] != None
-          - output.firewalls['name'] != None
-          - output.firewalls['location'] != None
-          - output.firewalls['etag'] != None
-          - output.firewalls['nat_rule_collections'] != None
-          - output.firewalls['network_rule_collections'] != None
-          - output.firewalls['ip_configurations'] != None
-          - output.firewalls['provisioning_state'] != None
+          - output.firewalls | length == 1
+          - output.firewalls[0]['id'] | length > 0
+          - output.firewalls[0]['name'] == azure_firewall_name
+          - output.firewalls[0]['resource_group'] == resource_group ~ '-azurefirewall'
+          - output.firewalls[0]['location'] != None
+          - output.firewalls[0]['etag'] != None
+          - output.firewalls[0]['application_rule_collections'] | length == 1
+          - output.firewalls[0]['nat_rule_collections'] | length == 1
+          - output.firewalls[0]['network_rule_collections'] | length == 1
+          - output.firewalls[0]['ip_configurations'] | length == 1
+          - output.firewalls[0]['provisioning_state'] == 'Succeeded'
+          - output.firewalls[0].additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - output.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.4,10.0.0.5'
+          - output.firewalls[0].sku is defined
+          - output.firewalls[0].sku.name is defined
+          - output.firewalls[0].threat_intel_mode is defined
+
+    - name: List Azure Firewalls in resource group
+      azure.azcollection.azure_rm_azurefirewall_info:
+        resource_group: '{{ resource_group }}-azurefirewall'
+      register: rg_list
+
+    - name: Assert list-by-resource-group returns the firewall
+      ansible.builtin.assert:
+        that:
+          - rg_list.firewalls | length == 1
+          - rg_list.firewalls[0]['name'] == azure_firewall_name
+
+    - name: Filter Azure Firewalls by non-matching tag
+      azure.azcollection.azure_rm_azurefirewall_info:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        tags:
+          - nomatch
+      register: tag_filter_none
+
+    - name: Assert tag filter with no matching tag returns empty list
+      ansible.builtin.assert:
+        that:
+          - tag_filter_none.firewalls | length == 0
+
+    - name: Define shared firewall body for DNS proxy update tests
+      ansible.builtin.set_fact:
+        fw_app_rules:
+          - priority: 110
+            action: deny
+            rules:
+              - name: rule1
+                description: Deny inbound rule
+                source_addresses:
+                  - 216.58.216.164
+                  - 10.0.0.0/25
+                protocols:
+                  - type: https
+                    port: '443'
+                target_fqdns:
+                  - www.test.com
+            name: apprulecoll
+        fw_nat_rules:
+          - priority: 112
+            action: dnat
+            rules:
+              - name: DNAT-HTTPS-traffic
+                description: D-NAT all outbound web traffic for inspection
+                source_addresses:
+                  - '*'
+                destination_addresses:
+                  - "{{ pip_output.state.ip_address }}"
+                destination_ports:
+                  - '443'
+                protocols:
+                  - tcp
+                translated_address: 1.2.3.5
+                translated_port: '8443'
+            name: natrulecoll
+        fw_net_rules:
+          - priority: 112
+            action: deny
+            rules:
+              - name: L4-traffic
+                description: Block traffic based on source IPs and ports
+                protocols:
+                  - tcp
+                source_addresses:
+                  - 192.168.1.1-192.168.1.12
+                  - 10.1.4.12-10.1.4.255
+                destination_addresses:
+                  - '*'
+                destination_ports:
+                  - 443-444
+                  - '8443'
+              - name: L4-traffic-with-FQDNS
+                description: Block traffic based on source IPs and ports to amazon
+                protocols:
+                  - tcp
+                source_addresses:
+                  - 10.2.4.12-10.2.4.255
+                destination_fqdns:
+                  - 'www.test.com'
+                destination_ports:
+                  - 443-444
+                  - '8443'
+            name: netrulecoll
+        fw_ip_configs:
+          - subnet:
+              virtual_network_name: "{{ virtual_network_name }}"
+              name: "{{ subnet_name }}"
+            public_ip_address:
+              name: "{{ public_ipaddress_name }}"
+            name: azureFirewallIpConfiguration
+
+    - name: Change the DNS server list
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.6
+        dns_proxy_enabled: true
+        application_rule_collections: "{{ fw_app_rules }}"
+        nat_rule_collections: "{{ fw_nat_rules }}"
+        network_rule_collections: "{{ fw_net_rules }}"
+        ip_configurations: "{{ fw_ip_configs }}"
+      register: dns_change
+
+    - name: Assert DNS server change is applied
+      ansible.builtin.assert:
+        that:
+          - dns_change is changed
+          - dns_change.state.additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - dns_change.state.additional_properties['Network.DNS.Servers'] == '10.0.0.6'
+
+    - name: Get info after DNS server change
+      azure.azcollection.azure_rm_azurefirewall_info:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+      register: dns_change_info
+
+    - name: Assert DNS server change is reflected via info
+      ansible.builtin.assert:
+        that:
+          - dns_change_info.firewalls | length == 1
+          - dns_change_info.firewalls[0].additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - dns_change_info.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.6'
+
+    - name: Re-apply the same DNS server change -- idempotent
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.6
+        dns_proxy_enabled: true
+        application_rule_collections: "{{ fw_app_rules }}"
+        nat_rule_collections: "{{ fw_nat_rules }}"
+        network_rule_collections: "{{ fw_net_rules }}"
+        ip_configurations: "{{ fw_ip_configs }}"
+      register: dns_idem
+
+    - name: Assert DNS change re-apply is not changed
+      ansible.builtin.assert:
+        that:
+          - dns_idem is not changed
+
+    - name: Update firewall without dns_servers -- drift preservation
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        dns_proxy_enabled: true
+        application_rule_collections: "{{ fw_app_rules }}"
+        nat_rule_collections: "{{ fw_nat_rules }}"
+        network_rule_collections: "{{ fw_net_rules }}"
+        ip_configurations: "{{ fw_ip_configs }}"
+      register: dns_drift
+
+    - name: Assert dropped dns_servers is preserved from existing (no change)
+      ansible.builtin.assert:
+        that:
+          - dns_drift is not changed
+
+    - name: Get info after drift-preservation update
+      azure.azcollection.azure_rm_azurefirewall_info:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+      register: dns_drift_info
+
+    - name: Assert DNS server value survived the drift merge
+      ansible.builtin.assert:
+        that:
+          - dns_drift_info.firewalls | length == 1
+          - dns_drift_info.firewalls[0].additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - dns_drift_info.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.6'
+
+    - name: Re-apply full body with network rules in reversed order
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.6
+        dns_proxy_enabled: true
+        application_rule_collections: "{{ fw_app_rules }}"
+        nat_rule_collections: "{{ fw_nat_rules }}"
+        network_rule_collections:
+          - priority: 112
+            action: deny
+            rules:
+              - name: L4-traffic-with-FQDNS
+                description: Block traffic based on source IPs and ports to amazon
+                protocols:
+                  - tcp
+                source_addresses:
+                  - 10.2.4.12-10.2.4.255
+                destination_fqdns:
+                  - 'www.test.com'
+                destination_ports:
+                  - 443-444
+                  - '8443'
+              - name: L4-traffic
+                description: Block traffic based on source IPs and ports
+                protocols:
+                  - tcp
+                source_addresses:
+                  - 192.168.1.1-192.168.1.12
+                  - 10.1.4.12-10.1.4.255
+                destination_addresses:
+                  - '*'
+                destination_ports:
+                  - 443-444
+                  - '8443'
+            name: netrulecoll
+        ip_configurations: "{{ fw_ip_configs }}"
+      register: reorder_apply
+
+    - name: Assert reordered rules are treated as idempotent
+      ansible.builtin.assert:
+        that:
+          - reorder_apply is not changed
+
+    - name: Update only dns_servers with a partial body
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.7
+        dns_proxy_enabled: true
+      register: partial_apply
+
+    - name: Assert partial DNS update applied and preserved every other field
+      ansible.builtin.assert:
+        that:
+          - partial_apply is changed
+          - partial_apply.state.additional_properties['Network.DNS.Servers'] == '10.0.0.7'
+          - partial_apply.state.application_rule_collections | length == 1
+          - partial_apply.state.nat_rule_collections | length == 1
+          - partial_apply.state.network_rule_collections | length == 1
+          - partial_apply.state.network_rule_collections[0].rules | length == 2
+          - partial_apply.state.ip_configurations | length == 1
+          - partial_apply.state.sku.name == 'AZFW_VNet'
+          - partial_apply.state.threat_intel_mode == 'Alert'
+
+    - name: Get info after partial DNS update
+      azure.azcollection.azure_rm_azurefirewall_info:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+      register: partial_apply_info
+
+    - name: Assert info confirms every top-level collection survived the partial update
+      ansible.builtin.assert:
+        that:
+          - partial_apply_info.firewalls | length == 1
+          - partial_apply_info.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.7'
+          - partial_apply_info.firewalls[0].application_rule_collections | length == 1
+          - partial_apply_info.firewalls[0].nat_rule_collections | length == 1
+          - partial_apply_info.firewalls[0].network_rule_collections | length == 1
+          - partial_apply_info.firewalls[0].network_rule_collections[0].rules | length == 2
+          - partial_apply_info.firewalls[0].ip_configurations | length == 1
+          - partial_apply_info.firewalls[0].sku.name == 'AZFW_VNet'
+          - partial_apply_info.firewalls[0].threat_intel_mode == 'Alert'
+
+    - name: Re-apply the same partial DNS body -- idempotent
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        dns_servers:
+          - 10.0.0.7
+        dns_proxy_enabled: true
+      register: partial_idem
+
+    - name: Assert partial DNS re-apply is not changed
+      ansible.builtin.assert:
+        that:
+          - partial_idem is not changed
 
     - name: Delete Azure Firewall
       azure.azcollection.azure_rm_azurefirewall:
@@ -320,6 +630,30 @@
       ansible.builtin.assert:
         that:
           - output is changed
+
+    - name: Delete Azure Firewall -- idempotent
+      azure.azcollection.azure_rm_azurefirewall:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+        state: absent
+      register: output
+
+    - name: Assert repeated delete is not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get info of the missing firewall
+      azure.azcollection.azure_rm_azurefirewall_info:
+        resource_group: '{{ resource_group }}-azurefirewall'
+        name: '{{ azure_firewall_name }}'
+      register: missing_info
+
+    - name: Assert info returns an empty list for a missing firewall
+      ansible.builtin.assert:
+        that:
+          - missing_info is not changed
+          - missing_info.firewalls | length == 0
 
     - name: Delete the public IP address
       azure.azcollection.azure_rm_publicipaddress:

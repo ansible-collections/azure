@@ -18,12 +18,17 @@ description:
 options:
     resource_group:
         description:
-            - The name of the resource group.
+            - The name of the resource group. Required when I(name) is provided.
         type: str
     name:
         description:
-            - Resource name.
+            - Resource name. When set, I(resource_group) is required.
         type: str
+    tags:
+        description:
+            - Limit the results by providing resource tags.
+        type: list
+        elements: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -46,374 +51,161 @@ EXAMPLES = '''
 RETURN = '''
 firewalls:
     description:
-        - A list of dict results where the key is the name of the AzureFirewall and the values are the facts for that AzureFirewall.
+        - A list of Azure Firewalls matching the query.
     returned: always
-    type: complex
+    type: list
+    elements: dict
     contains:
         id:
             description:
-                - Resource ID.
-            returned: always
+                - Fully qualified Azure resource ID.
             type: str
-            sample: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/
-                     myResourceGroup/providers/Microsoft.Network/azureFirewalls/myAzureFirewall"
+            sample: >-
+                /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myAzureFirewall
         name:
             description:
-                - Resource name.
-            returned: always
+                - Firewall resource name.
             type: str
-            sample: "myAzureFirewall"
+            sample: myAzureFirewall
+        resource_group:
+            description:
+                - Name of the resource group containing the firewall.
+            type: str
+            sample: myResourceGroup
         location:
             description:
-                - Resource location.
-            returned: always
+                - Azure region.
             type: str
-            sample: "eastus"
+            sample: eastus
+        provisioning_state:
+            description:
+                - Provisioning state of the resource.
+            type: str
+            sample: Succeeded
+        application_rule_collections:
+            description:
+                - Collection of application rule collections used by the firewall.
+            type: list
+        nat_rule_collections:
+            description:
+                - Collection of NAT rule collections used by the firewall.
+            type: list
+        network_rule_collections:
+            description:
+                - Collection of network rule collections used by the firewall.
+            type: list
+        ip_configurations:
+            description:
+                - IP configuration of the firewall.
+            type: list
+        additional_properties:
+            description:
+                - Additional properties used to further configure the firewall.
+                - Includes DNS proxy settings such as C(Network.DNS.EnableProxy) and C(Network.DNS.Servers).
+            type: dict
+        sku:
+            description:
+                - The SKU of the Azure Firewall (for example C(AZFW_VNet) / C(Standard)).
+            type: dict
+        threat_intel_mode:
+            description:
+                - Operation mode for threat intelligence.
+            type: str
+            sample: Alert
         tags:
             description:
                 - Resource tags.
-            returned: always
             type: dict
-            sample: { "tag": "value" }
         etag:
             description:
-                - Gets a unique read-only string that changes whenever the resource is updated.
-            returned: always
+                - A unique read-only string that changes whenever the resource is updated.
             type: str
-            sample: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        application_rule_collections:
+        type:
             description:
-                - Collection of application rule collections used by Azure Firewall.
-            type: list
-            returned: always
-            sample: [
-                {
-                    "etag": "25b7fca4-c909-4913-8799-6cdb7da2e298",
-                    "id": "/subscriptions/xxx-xxx1/resourceGroups/myResourceGroup/providers/
-                           Microsoft.Network/azureFirewalls/myFirewall/applicationRuleCollections/apprulecoll",
-                    "name": "apprulecoll",
-                    "properties": {
-                        "action": {
-                            "type": "Deny"
-                        },
-                        "priority": 110,
-                        "provisioningState": "Failed",
-                        "rules": [
-                            {
-                                "actions": [],
-                                "description": "Deny inbound rule",
-                                "direction": "Inbound",
-                                "fqdnTags": [],
-                                "name": "rule1",
-                                "priority": 0,
-                                "protocols": [
-                                    {
-                                        "port": 443,
-                                        "protocolType": "Https"
-                                    }
-                                ],
-                                "sourceAddresses": [
-                                    "216.58.216.164",
-                                    "10.0.0.0/25"
-                                ],
-                                "sourceIpGroups": [],
-                                "targetFqdns": [
-                                    "www.test.com"
-                                ]
-                            }
-                        ]
-                    },
-                    "type": "Microsoft.Network/azureFirewalls/applicationRuleCollections"
-                }
-            ]
-        nat_rule_collections:
-            description:
-                - Collection of NAT rule collections used by Azure Firewall.
-            type: list
-            returned: always
-            sample: [
-                {
-                    "etag": '3759e8b1-cdf7-44f4-a643-3a75e2b67877',
-                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
-                           azureFirewalls/myFirewall/natRuleCollections/natrulecoll",
-                    "name": "natrulecoll",
-                    "properties": {
-                        "action": {
-                            "type": "Dnat"
-                        },
-                        "priority": 112,
-                        "provisioningState": "Failed",
-                        "rules": [
-                            {
-                                "description": "D-NAT all outbound web traffic for inspection",
-                                "destinationAddresses": [
-                                    "20.169.156.124"
-                                ],
-                                "destinationPorts": [
-                                    "443"
-                                ],
-                                "name": "DNAT-HTTPS-traffic",
-                                "protocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "*"
-                                ],
-                                "translatedAddress": "1.2.3.5",
-                                "translatedPort": "8443"
-                            }
-                        ]
-                    },
-                    "type": "Microsoft.Network/azureFirewalls/natRuleCollections"
-                }
-            ]
-        network_rule_collections:
-            description:
-                - Collection of network rule collections used by Azure Firewall.
-            type: list
-            returned: always
-            sample: [
-                {
-                    "etag": "3759e8b1-cdf7-44f4-a643-3a75e2b67877",
-                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
-                           azureFirewalls/myFirewall/networkRuleCollections/netrulecoll",
-                    "name": "netrulecoll",
-                    "properties": {
-                        "action": {
-                            "type": "Deny"
-                        },
-                        "priority": 112,
-                        "provisioningState": "Failed",
-                        "rules": [
-                            {
-                                "description": "Block traffic based on source IPs and ports",
-                                "destinationAddresses": [
-                                    "*"
-                                ],
-                                "destinationPorts": [
-                                    "443-444",
-                                    "8443"
-                                ],
-                                "name": "L4-traffic",
-                                "protocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "192.168.1.1-192.168.1.12",
-                                    "10.1.4.12-10.1.4.255"
-                                ]
-                            },
-                            {
-                                "description": "Block traffic based on source IPs and ports to amazon",
-                                "destinationAddresses": [],
-                                "destinationPorts": [
-                                    "443-444",
-                                    "8443"
-                                ],
-                                "name": "L4-traffic-with_FQDN",
-                                "protocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "10.2.4.12-10.2.4.255"
-                                ]
-                            }
-                        ]
-                    },
-                    "type": "Microsoft.Network/azureFirewalls/networkRuleCollections"
-                }
-            ]
-        ip_configurations:
-            description:
-                - IP configuration of the Azure Firewall resource.
-            type: list
-            returned: always
-            sample: [
-                {
-                    "etag": "3759e8b1-cdf7-44f4-a643-3a75e2b67877",
-                    "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myFirewall/i
-                           azureFirewallIpConfigurations/azureFirewallIpConfiguration",
-                    "name": "azureFirewallIpConfiguration",
-                    "properties": {
-                        "privateIPAllocationMethod": "Dynamic",
-                        "provisioningState": "Succeeded",
-                        "publicIPAddress": {
-                            "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/myPublicIpAddress"
-                        },
-                        "subnet": {
-                            "id": "/subscriptions/xxx-xxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/
-                                   virtualNetworks/myVirtualNetwork/subnets/AzureFirewallSubnet"
-                        }
-                    },
-                    "type": "Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations"
-                }
-            ]
-        provisioning_state:
-            description:
-                - The current state of the gallery.
+                - Azure resource type.
             type: str
-            sample: "Succeeded"
-
+            sample: Microsoft.Network/azureFirewalls
 '''
 
-import json
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+
+try:
+    from azure.core.exceptions import ResourceNotFoundError
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 
 
 class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group=dict(
-                type='str'
-            ),
-            name=dict(
-                type='str'
-            )
+            resource_group=dict(type='str'),
+            name=dict(type='str'),
+            tags=dict(type='list', elements='str'),
         )
 
         self.resource_group = None
         self.name = None
+        self.tags = None
 
-        self.results = dict(changed=False)
-        self.mgmt_client = None
-        self.state = None
-        self.url = None
-        self.status_code = [200]
+        self.results = dict(changed=False, firewalls=[])
 
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = '2024-01-01'
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
-
-        self.mgmt_client = None
-        super(AzureRMAzureFirewallsInfo, self).__init__(self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+        super(AzureRMAzureFirewallsInfo, self).__init__(
+            self.module_arg_spec,
+            supports_check_mode=True,
+            supports_tags=False,
+            facts_module=True,
+        )
 
     def exec_module(self, **kwargs):
-
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
-
-        if (self.resource_group is not None and self.name is not None):
-            self.results['firewalls'] = self.get()
-        elif (self.resource_group is not None):
-            self.results['firewalls'] = self.list()
+        if self.name is not None:
+            if self.resource_group is None:
+                self.fail("Parameter error: resource_group is required when name is provided.")
+            results = self.get_item()
+        elif self.resource_group is not None:
+            results = self.list_resource_group()
         else:
-            self.results['firewalls'] = self.listall()
+            results = self.list_all()
+
+        self.results['firewalls'] = [self.firewall_to_dict(item) for item in results]
         return self.results
 
-    def get(self):
-        response = None
-        results = {}
-        # prepare url
-        self.url = ('/subscriptions' +
-                    '/{{ subscription_id }}' +
-                    '/resourceGroups' +
-                    '/{{ resource_group }}' +
-                    '/providers' +
-                    '/Microsoft.Network' +
-                    '/azureFirewalls' +
-                    '/{{ azure_firewall_name }}')
-        self.url = self.url.replace('{{ subscription_id }}', self.subscription_id)
-        self.url = self.url.replace('{{ resource_group }}', self.resource_group)
-        self.url = self.url.replace('{{ azure_firewall_name }}', self.name)
-
+    def get_item(self):
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            results = json.loads(response.body())
-            # self.log('Response : {0}'.format(response))
-        except Exception as e:
-            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+            item = self.network_client.azure_firewalls.get(self.resource_group, self.name)
+        except ResourceNotFoundError:
+            return []
+        if self.has_tags(item.tags, self.tags):
+            return [item]
+        return []
 
-        return self.format_item(results)
-
-    def list(self):
-        response = None
-        results = {}
-        # prepare url
-        self.url = ('/subscriptions' +
-                    '/{{ subscription_id }}' +
-                    '/resourceGroups' +
-                    '/{{ resource_group }}' +
-                    '/providers' +
-                    '/Microsoft.Network' +
-                    '/azureFirewalls')
-        self.url = self.url.replace('{{ subscription_id }}', self.subscription_id)
-        self.url = self.url.replace('{{ resource_group }}', self.resource_group)
-
+    def list_resource_group(self):
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            results = json.loads(response.body())
-            # self.log('Response : {0}'.format(response))
-        except Exception as e:
-            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+            response = self.network_client.azure_firewalls.list(self.resource_group)
+        except Exception as exc:
+            self.fail("Failed to list Azure Firewalls in resource group {0}: {1}".format(self.resource_group, str(exc)))
+        return [item for item in response if self.has_tags(item.tags, self.tags)]
 
-        return [self.format_item(x) for x in results['value']] if results['value'] else []
-
-    def listall(self):
-        response = None
-        results = {}
-        # prepare url
-        self.url = ('/subscriptions' +
-                    '/{{ subscription_id }}' +
-                    '/providers' +
-                    '/Microsoft.Network' +
-                    '/azureFirewalls')
-        self.url = self.url.replace('{{ subscription_id }}', self.subscription_id)
-
+    def list_all(self):
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            results = json.loads(response.body())
-            # self.log('Response : {0}'.format(response))
-        except Exception as e:
-            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+            response = self.network_client.azure_firewalls.list_all()
+        except Exception as exc:
+            self.fail("Failed to list Azure Firewalls in subscription: {0}".format(str(exc)))
+        return [item for item in response if self.has_tags(item.tags, self.tags)]
 
-        return [self.format_item(x) for x in results['value']] if results['value'] else []
-
-    def format_item(self, item):
-        if item is None or item == {}:
-            return {}
-        d = {
-            'id': item.get('id'),
-            'name': item.get('name'),
-            'location': item.get('location'),
-            'etag': item.get('etag'),
-            'tags': item.get('tags'),
-            'nat_rule_collections': dict(),
-            'network_rule_collections': dict(),
-            'ip_configurations': dict(),
-        }
-        if isinstance(item.get('properties'), dict):
-            d['nat_rule_collections'] = item.get('properties').get('natRuleCollections')
-            d['network_rule_collections'] = item.get('properties').get('networkRuleCollections')
-            d['application_rule_collections'] = item.get('properties').get('applicationRuleCollections')
-            d['ip_configurations'] = item.get('properties').get('ipConfigurations')
-            d['provisioning_state'] = item.get('properties').get('provisioningState')
-        return d
+    def firewall_to_dict(self, firewall):
+        result = firewall.as_dict()
+        rg = None
+        if firewall.id:
+            # ARM ID: /subscriptions/<sub>/resourceGroups/<rg>/providers/...
+            parts = firewall.id.split('/')
+            if len(parts) > 4 and parts[3].lower() == 'resourcegroups':
+                rg = parts[4]
+        result['resource_group'] = self.resource_group or rg
+        return result
 
 
 def main():
