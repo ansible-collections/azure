@@ -442,6 +442,7 @@ state:
             type: str
 '''
 
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import format_resource_id
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 try:
@@ -878,7 +879,18 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
     def build_ip_configuration(self, item):
         models = self.network_models
         subnet_id = self.resolve_subnet_id(item.get('subnet'))
-        pip_id = self.resolve_public_ip_id(item.get('public_ip_address'))
+        pip = item.get('public_ip_address')
+        pip_id = None
+        if isinstance(pip, str):
+            pip_id = format_resource_id(pip, self.subscription_id, 'Microsoft.Network', 'publicIPAddresses', self.resource_group)
+        elif isinstance(pip, dict):
+            if pip.get('id'):
+                pip_id = pip['id']
+            elif pip.get('name'):
+                pip_id = format_resource_id(pip['name'], self.subscription_id, 'Microsoft.Network', 'publicIPAddresses',
+                                            pip.get('resource_group') or self.resource_group)
+            else:
+                self.fail("The ip_configuration's public_ip_address dict must contain 'id' or 'name'")
         return models.AzureFirewallIPConfiguration(
             name=item.get('name'),
             subnet=models.SubResource(id=subnet_id) if subnet_id else None,
@@ -929,33 +941,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     child_name_1=val['name'],
                 )
         self.fail("The ip_configuration's subnet config error")
-
-    def resolve_public_ip_id(self, val):
-        if val is None:
-            return None
-        if isinstance(val, str):
-            if is_valid_resource_id(val):
-                return val
-            # Documented: a bare string is treated as a name in the current resource group.
-            return resource_id(
-                subscription=self.subscription_id,
-                resource_group=self.resource_group,
-                namespace='Microsoft.Network',
-                type='publicIPAddresses',
-                name=val,
-            )
-        if isinstance(val, dict):
-            if val.get('id'):
-                return val['id']
-            if val.get('name'):
-                return resource_id(
-                    subscription=self.subscription_id,
-                    resource_group=val.get('resource_group') or self.resource_group,
-                    namespace='Microsoft.Network',
-                    type='publicIPAddresses',
-                    name=val['name'],
-                )
-        self.fail("The ip_configuration's public ip address config error")
 
 
 def main():
