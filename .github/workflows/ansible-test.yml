@@ -93,7 +93,7 @@ jobs:
           testing-type: units
           # OPTIONAL If your unit tests require code
           # from other collections, install them like this
-          #test-deps: >-
+          # test-deps: >-
           #  ansible.netcommon
           #  ansible.utils
           #  vmware.vmware

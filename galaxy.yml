@@ -66,6 +66,7 @@ issues: https://github.com/ansible-collections/azure/issues
 build_ignore:
   - '*.tar.gz'
   - '*venv*'
+  - '.github'
   - '.vscode'
   - 'ansible_collections'
   - 'ansible.cfg'
