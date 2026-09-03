@@ -27,6 +27,29 @@ DOCUMENTATION = r'''
         - By default, sets C(ansible_host) to the first public IP address found (preferring the primary NIC). If no
           public IPs are found, the first private IP (also preferring the primary NIC). The default may be overridden
           via C(hostvar_expressions); see examples.
+        - Flexible-orchestration virtual machine scale set instances are enumerated through
+          O(include_vm_resource_groups), not O(include_vmss_resource_groups), because Flexible instances are
+          standalone V(Microsoft.Compute/virtualMachines) resources without a parent scale set child list.
+          Uniform-orchestration instances traverse the O(include_vmss_resource_groups) path.
+    notes:
+        - The assigned Azure identity (managed identity, service principal, or user) must have
+          V(Microsoft.Compute/virtualMachines/*/read), V(Microsoft.Network/networkInterfaces/read), and
+          V(Microsoft.Network/publicIPAddresses/read) whenever O(include_vm_resource_groups) is set (the default is
+          V(['*'])). These cover the Microsoft.Compute V(2024-07-01) and Microsoft.Network V(2024-05-01) API
+          versions used by the plugin.
+        - Add V(Microsoft.Compute/virtualMachineScaleSets/*/read) when O(include_vmss_resource_groups) is set. The
+          wildcard covers the V(2024-07-01) top-level list, per-instance list, and V(2025-04-01)
+          Uniform-orchestration instance network interface reads.
+        - Add V(Microsoft.HybridCompute/machines/*/read) when either O(include_arc_resource_groups) or
+          O(include_hcivm_resource_groups) is set. Both options list the same Arc endpoint at API version
+          V(2024-05-20-preview).
+        - Add V(Microsoft.AzureStackHCI/*/read) when O(include_hcivm_resource_groups) is set and the target
+          resource groups contain Azure Stack HCI virtual machines. The wildcard covers
+          V(Microsoft.AzureStackHCI/virtualMachineInstances/read) and
+          V(Microsoft.AzureStackHCI/networkInterfaces/read) at API version V(2024-01-01).
+        - Subnet, network security group, and MAC address host variables are derived from the network interface
+          response and do not require separate reads on V(Microsoft.Network/networkSecurityGroups/read) or
+          V(Microsoft.Network/virtualNetworks/subnets/read).
 '''
 
 EXAMPLES = '''
