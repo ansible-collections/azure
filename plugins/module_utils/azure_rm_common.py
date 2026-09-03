@@ -14,6 +14,9 @@ import copy
 import inspect
 import traceback
 import json
+import logging
+import logging.handlers
+import uuid
 
 from os.path import expanduser
 import configparser
@@ -45,7 +48,7 @@ AZURE_COMMON_ARGS = dict(
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
     api_profile=dict(type='str', default='latest'),
     adfs_authority_url=dict(type='str', default=None),
-    log_mode=dict(type='str', no_log=True),
+    log_mode=dict(type='str', choices=['normal', 'file', 'debug'], default='normal', no_log=True),
     log_path=dict(type='str', no_log=True),
     x509_certificate_path=dict(type='path', no_log=True),
     thumbprint=dict(type='str', no_log=True),
@@ -76,6 +79,34 @@ AZURE_CREDENTIAL_ENV_MAPPING = dict(
 AZURE_CREDENTIAL_ENV_MAPPING_FALLBACK = dict(
     tenant='AZURE_TENANT_ID',
 )
+
+# Named logger per azure-sdk-for-python design guidelines.
+AZCOLLECTION_LOGGER_NAME = 'azure.azcollection'
+
+# Response headers redacted from fail_azure payloads and pipeline traces.
+SENSITIVE_RESPONSE_HEADERS = frozenset({
+    'authorization', 'cookie', 'set-cookie',
+    'x-ms-encryption-key', 'x-ms-encryption-key-sha256',
+    'x-ms-copy-source-authorization',
+    'x-ms-authorization-auxiliary',
+})
+
+
+class _AzcollectionCorrelationFilter(logging.Filter):
+    def __init__(self, correlation_id):
+        super().__init__()
+        self.correlation_id = correlation_id
+
+    def filter(self, record):
+        record.correlation_id = self.correlation_id
+        return True
+
+
+class SecureRotatingFileHandler(logging.handlers.RotatingFileHandler):
+    # Creates the log file with 0o600 permissions (owner read/write only).
+    def _open(self):
+        fd = os.open(self.baseFilename, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        return os.fdopen(fd, self.mode, encoding=self.encoding)
 
 
 class SDKProfile(object):  # pylint: disable=too-few-public-methods
@@ -385,6 +416,9 @@ class AzureRMModuleBase(object):
                                     required_if=merged_required_if,
                                     required_by=required_by)
 
+        self.correlation_id = str(uuid.uuid4())
+        self._configure_azure_logging()
+
         if AZURE_IMPORT_ERROR:
             missing_mod = _extract_missing_module(AZURE_IMPORT_ERROR)
 
@@ -484,14 +518,132 @@ class AzureRMModuleBase(object):
         '''
         self.module.fail_json(msg=msg, **kwargs)
 
+    def fail_azure(self, exception, msg=None, **kwargs):
+        '''
+        Fail with structured azure-core exception detail.
+
+        Surfaces status_code, x-ms-request-id, x-ms-correlation-request-id,
+        redacted response headers, and ODataV4 error fields (code, message,
+        target, details, innererror).
+        Binds to azure.core.exceptions.HttpResponseError public shape.
+        '''
+        try:
+            from azure.core.exceptions import HttpResponseError, AzureError
+        except ImportError:
+            self.module.fail_json(msg=str(msg or exception), exception=traceback.format_exc())
+            return
+
+        last_traceback = traceback.format_exc()
+        except_msg = str(getattr(exception, 'message', None) or exception)
+        message = "{0}: {1}".format(msg, except_msg) if msg else except_msg
+
+        failure = dict(msg=message, exception=last_traceback,
+                       correlation_id=getattr(self, 'correlation_id', None))
+        failure.update(kwargs)
+
+        if isinstance(exception, HttpResponseError):
+            response = getattr(exception, 'response', None)
+            headers = dict(getattr(response, 'headers', {}) or {}) if response else {}
+            failure['response_metadata'] = {
+                'status_code': getattr(exception, 'status_code', None),
+                'reason': getattr(exception, 'reason', None),
+                'request_id': headers.get('x-ms-request-id'),
+                'correlation_request_id': headers.get('x-ms-correlation-request-id'),
+                'http_headers': {k: ('[REDACTED]' if k.lower() in SENSITIVE_RESPONSE_HEADERS else v)
+                                 for k, v in headers.items()},
+            }
+            odata = getattr(exception, 'error', None)
+            if odata is not None:
+                failure['error'] = {
+                    'code': getattr(odata, 'code', None),
+                    'message': getattr(odata, 'message', None),
+                    'target': getattr(odata, 'target', None),
+                    'details': [
+                        {'code': d.code, 'message': d.message, 'target': d.target}
+                        for d in (getattr(odata, 'details', None) or [])
+                    ],
+                    'innererror': getattr(odata, 'innererror', None) or {},
+                }
+            ct = getattr(exception, 'continuation_token', None)
+            if ct:
+                failure['continuation_token'] = ct
+        elif isinstance(exception, AzureError):
+            failure['transport_error'] = True
+
+        logging.getLogger(AZCOLLECTION_LOGGER_NAME).warning('azcollection failure: %s', message)
+        self.module.fail_json(**failure)
+
+    def _configure_azure_logging(self):
+        '''
+        Configure the ``azure.azcollection`` named logger for this module invocation.
+
+        Effective level derives from (highest priority first):
+          1. ``AZURE_LOG_LEVEL`` env var
+          2. ``log_mode: debug`` module argument
+          3. Ansible verbosity (-vvv+ -> DEBUG, -v/-vv -> INFO, else WARNING)
+        When ``log_mode: file`` is set with ``log_path``, an additional rotating
+        DEBUG-level file handler (mode 0o600, 10 MB x 5 backups) is attached.
+        '''
+        logger = logging.getLogger(AZCOLLECTION_LOGGER_NAME)
+        for h in list(logger.handlers):
+            if getattr(h, '_azcollection_managed', False):
+                logger.removeHandler(h)
+                try:
+                    h.close()
+                except Exception:
+                    pass
+
+        log_mode = self.module.params.get('log_mode') or 'normal'
+        log_path = self.module.params.get('log_path')
+        verbosity = getattr(self.module, '_verbosity', 0) or 0
+        env_level = (os.environ.get('AZURE_LOG_LEVEL') or '').upper()
+
+        if env_level in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'):
+            level = getattr(logging, env_level)
+        elif log_mode == 'debug' or verbosity >= 3:
+            level = logging.DEBUG
+        elif verbosity >= 1:
+            level = logging.INFO
+        else:
+            level = logging.WARNING
+
+        # File logging always wants DEBUG regardless of console verbosity; the
+        # logger's own gate would otherwise drop records before the file handler.
+        if log_mode == 'file' and log_path:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(level)
+        logger.propagate = False
+
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(name)s [correlation_id=%(correlation_id)s]: %(message)s',
+            datefmt='%Y-%m-%dT%H:%M:%S',
+        )
+        correlation_filter = _AzcollectionCorrelationFilter(self.correlation_id)
+
+        if log_mode == 'file' and log_path:
+            try:
+                file_handler = SecureRotatingFileHandler(
+                    expanduser(log_path), maxBytes=10 * 1024 * 1024, backupCount=5,
+                )
+                file_handler.setLevel(logging.DEBUG)
+                file_handler.setFormatter(formatter)
+                file_handler.addFilter(correlation_filter)
+                file_handler._azcollection_managed = True
+                logger.addHandler(file_handler)
+            except (OSError, PermissionError) as exc:
+                self.module.warn("Unable to open azcollection log file '{0}': {1}".format(log_path, str(exc)))
+
+        logger.info('module invocation correlation_id=%s', self.correlation_id)
+
     def deprecate(self, msg, version=None, collection_name='azure.azcollection'):
         self.module.deprecate(msg, version, collection_name=collection_name)
 
     def log(self, msg, pretty_print=False):
         if pretty_print:
-            self.module.debug(json.dumps(msg, indent=4, sort_keys=True))
-        else:
-            self.module.debug(msg)
+            msg = json.dumps(msg, indent=4, sort_keys=True)
+        self.module.debug(msg)
+        logging.getLogger(AZCOLLECTION_LOGGER_NAME).debug(msg)
 
     def validate_tags(self, tags):
         '''
@@ -1997,11 +2149,6 @@ class AzureRMAuth(object):
         return next(cloud for cloud in _knownClouds if cloud.endpoints.resource_manager.lower().rstrip('/') == metadata_endpoint.lower().rstrip('/'))
 
     def log(self, msg, pretty_print=False):
-        pass
-        # Use only during module development
-        # if self.debug:
-        #     log_file = open('azure_rm.log', 'a')
-        #     if pretty_print:
-        #         log_file.write(json.dumps(msg, indent=4, sort_keys=True))
-        #     else:
-        #         log_file.write(msg + u'\n')
+        if pretty_print:
+            msg = json.dumps(msg, indent=4, sort_keys=True)
+        logging.getLogger(AZCOLLECTION_LOGGER_NAME + '.auth').debug(msg)
