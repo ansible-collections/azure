@@ -46,6 +46,7 @@ azure-mgmt-privatedns==1.2.0
 azure-mgmt-recoveryservices==3.0.0
 azure-mgmt-recoveryservicesbackup==9.1.0
 azure-mgmt-redis==14.4.0
+azure-mgmt-redhatopenshift==3.0.0
 azure-mgmt-resource==23.2.0
 azure-mgmt-resourcegraph==8.1.0b3
 azure-mgmt-resourcehealth==1.0.0b6
