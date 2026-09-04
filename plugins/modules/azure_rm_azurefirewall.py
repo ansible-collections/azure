@@ -357,6 +357,15 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
+id:
+    description:
+        - The Azure Firewall resource ID. Preserved as a top-level field for
+          backward compatibility with pre-v4.x playbooks; the same value is
+          also available at I(state.id).
+    returned: success
+    type: str
+    sample: >-
+        /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myAzureFirewall
 state:
     description:
         - Current state of the Azure Firewall.
@@ -706,8 +715,6 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                 if update_tags:
                     changed = True
                     desired.tags = new_tags
-                elif self.tags is None:
-                    desired.tags = existing.tags
 
                 new_dict = desired.as_dict()
                 old_dict = existing.as_dict()
@@ -727,6 +734,8 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
 
         self.results['changed'] = changed
         self.results['state'] = existing.as_dict() if existing else {}
+        # Preserve the `id` alongside the new `state` envelope
+        self.results['id'] = existing.id if existing else None
         return self.results
 
     def get_firewall(self):

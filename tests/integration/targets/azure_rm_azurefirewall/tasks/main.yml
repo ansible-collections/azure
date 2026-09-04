@@ -329,22 +329,21 @@
       ansible.builtin.assert:
         that:
           - output is not changed
-          - output.firewalls | length == 1
-          - output.firewalls[0]['id'] | length > 0
-          - output.firewalls[0]['name'] == azure_firewall_name
-          - output.firewalls[0]['resource_group'] == resource_group ~ '-azurefirewall'
-          - output.firewalls[0]['location'] != None
-          - output.firewalls[0]['etag'] != None
-          - output.firewalls[0]['application_rule_collections'] | length == 1
-          - output.firewalls[0]['nat_rule_collections'] | length == 1
-          - output.firewalls[0]['network_rule_collections'] | length == 1
-          - output.firewalls[0]['ip_configurations'] | length == 1
-          - output.firewalls[0]['provisioning_state'] == 'Succeeded'
-          - output.firewalls[0].additional_properties['Network.DNS.EnableProxy'] == 'true'
-          - output.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.4,10.0.0.5'
-          - output.firewalls[0].sku is defined
-          - output.firewalls[0].sku.name is defined
-          - output.firewalls[0].threat_intel_mode is defined
+          - output.firewalls['id'] | length > 0
+          - output.firewalls['name'] == azure_firewall_name
+          - output.firewalls['resource_group'] == resource_group ~ '-azurefirewall'
+          - output.firewalls['location'] != None
+          - output.firewalls['etag'] != None
+          - output.firewalls['application_rule_collections'] | length == 1
+          - output.firewalls['nat_rule_collections'] | length == 1
+          - output.firewalls['network_rule_collections'] | length == 1
+          - output.firewalls['ip_configurations'] | length == 1
+          - output.firewalls['provisioning_state'] == 'Succeeded'
+          - output.firewalls.additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - output.firewalls.additional_properties['Network.DNS.Servers'] == '10.0.0.4,10.0.0.5'
+          - output.firewalls.sku is defined
+          - output.firewalls.sku.name is defined
+          - output.firewalls.threat_intel_mode is defined
 
     - name: List Azure Firewalls in resource group
       azure.azcollection.azure_rm_azurefirewall_info:
@@ -468,9 +467,8 @@
     - name: Assert DNS server change is reflected via info
       ansible.builtin.assert:
         that:
-          - dns_change_info.firewalls | length == 1
-          - dns_change_info.firewalls[0].additional_properties['Network.DNS.EnableProxy'] == 'true'
-          - dns_change_info.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.6'
+          - dns_change_info.firewalls.additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - dns_change_info.firewalls.additional_properties['Network.DNS.Servers'] == '10.0.0.6'
 
     - name: Re-apply the same DNS server change -- idempotent
       azure.azcollection.azure_rm_azurefirewall:
@@ -515,9 +513,8 @@
     - name: Assert DNS server value survived the drift merge
       ansible.builtin.assert:
         that:
-          - dns_drift_info.firewalls | length == 1
-          - dns_drift_info.firewalls[0].additional_properties['Network.DNS.EnableProxy'] == 'true'
-          - dns_drift_info.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.6'
+          - dns_drift_info.firewalls.additional_properties['Network.DNS.EnableProxy'] == 'true'
+          - dns_drift_info.firewalls.additional_properties['Network.DNS.Servers'] == '10.0.0.6'
 
     - name: Re-apply full body with network rules in reversed order
       azure.azcollection.azure_rm_azurefirewall:
@@ -595,15 +592,14 @@
     - name: Assert info confirms every top-level collection survived the partial update
       ansible.builtin.assert:
         that:
-          - partial_apply_info.firewalls | length == 1
-          - partial_apply_info.firewalls[0].additional_properties['Network.DNS.Servers'] == '10.0.0.7'
-          - partial_apply_info.firewalls[0].application_rule_collections | length == 1
-          - partial_apply_info.firewalls[0].nat_rule_collections | length == 1
-          - partial_apply_info.firewalls[0].network_rule_collections | length == 1
-          - partial_apply_info.firewalls[0].network_rule_collections[0].rules | length == 2
-          - partial_apply_info.firewalls[0].ip_configurations | length == 1
-          - partial_apply_info.firewalls[0].sku.name == 'AZFW_VNet'
-          - partial_apply_info.firewalls[0].threat_intel_mode == 'Alert'
+          - partial_apply_info.firewalls.additional_properties['Network.DNS.Servers'] == '10.0.0.7'
+          - partial_apply_info.firewalls.application_rule_collections | length == 1
+          - partial_apply_info.firewalls.nat_rule_collections | length == 1
+          - partial_apply_info.firewalls.network_rule_collections | length == 1
+          - partial_apply_info.firewalls.network_rule_collections[0].properties.rules | length == 2
+          - partial_apply_info.firewalls.ip_configurations | length == 1
+          - partial_apply_info.firewalls.sku.name == 'AZFW_VNet'
+          - partial_apply_info.firewalls.threat_intel_mode == 'Alert'
 
     - name: Re-apply the same partial DNS body -- idempotent
       azure.azcollection.azure_rm_azurefirewall:

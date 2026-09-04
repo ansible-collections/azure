@@ -51,10 +51,10 @@ EXAMPLES = '''
 RETURN = '''
 firewalls:
     description:
-        - A list of Azure Firewalls matching the query.
+        - When I(name) is set, a single dict of the firewall's facts (matches the pre-v4.x shape).
+        - When I(name) is not set, a list of such dicts.
     returned: always
-    type: list
-    elements: dict
+    type: complex
     contains:
         id:
             description:
@@ -85,18 +85,26 @@ firewalls:
         application_rule_collections:
             description:
                 - Collection of application rule collections used by the firewall.
+                - Each entry is wrapped in C(id), C(name), C(etag), C(type) and C(properties),
+                  where I(properties) contains I(priority), I(action), I(provisioningState) and I(rules)
+                  (ARM-style; matches the pre-v4.x shape).
             type: list
         nat_rule_collections:
             description:
                 - Collection of NAT rule collections used by the firewall.
+                - Wrapped in the same ARM-style shape as I(application_rule_collections).
             type: list
         network_rule_collections:
             description:
                 - Collection of network rule collections used by the firewall.
+                - Wrapped in the same ARM-style shape as I(application_rule_collections).
             type: list
         ip_configurations:
             description:
                 - IP configuration of the firewall.
+                - Each entry is wrapped in C(id), C(name), C(etag), C(type) and C(properties),
+                  where I(properties) contains I(privateIPAllocationMethod), I(provisioningState),
+                  I(publicIPAddress) and I(subnet).
             type: list
         additional_properties:
             description:
@@ -164,23 +172,24 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
         if self.name is not None:
             if self.resource_group is None:
                 self.fail("Parameter error: resource_group is required when name is provided.")
-            results = self.get_item()
+            item = self.get_item()
+            self.results['firewalls'] = self.firewall_to_dict(item) if item else {}
         elif self.resource_group is not None:
-            results = self.list_resource_group()
+            items = self.list_resource_group()
+            self.results['firewalls'] = [self.firewall_to_dict(i) for i in items]
         else:
-            results = self.list_all()
-
-        self.results['firewalls'] = [self.firewall_to_dict(item) for item in results]
+            items = self.list_all()
+            self.results['firewalls'] = [self.firewall_to_dict(i) for i in items]
         return self.results
 
     def get_item(self):
         try:
             item = self.network_client.azure_firewalls.get(self.resource_group, self.name)
         except ResourceNotFoundError:
-            return []
+            return None
         if self.has_tags(item.tags, self.tags):
-            return [item]
-        return []
+            return item
+        return None
 
     def list_resource_group(self):
         try:
@@ -197,15 +206,107 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
         return [item for item in response if self.has_tags(item.tags, self.tags)]
 
     def firewall_to_dict(self, firewall):
-        result = firewall.as_dict()
         rg = None
         if firewall.id:
-            # ARM ID: /subscriptions/<sub>/resourceGroups/<rg>/providers/...
             parts = firewall.id.split('/')
             if len(parts) > 4 and parts[3].lower() == 'resourcegroups':
                 rg = parts[4]
-        result['resource_group'] = self.resource_group or rg
+        result = {
+            'id': firewall.id,
+            'name': firewall.name,
+            'location': firewall.location,
+            'etag': firewall.etag,
+            'tags': firewall.tags,
+            'type': firewall.type,
+            'provisioning_state': firewall.provisioning_state,
+            'resource_group': self.resource_group or rg,
+            'nat_rule_collections': [
+                self._rule_collection_to_arm(c, 'natRuleCollections')
+                for c in (firewall.nat_rule_collections or [])
+            ],
+            'network_rule_collections': [
+                self._rule_collection_to_arm(c, 'networkRuleCollections')
+                for c in (firewall.network_rule_collections or [])
+            ],
+            'application_rule_collections': [
+                self._rule_collection_to_arm(c, 'applicationRuleCollections')
+                for c in (firewall.application_rule_collections or [])
+            ],
+            'ip_configurations': [
+                self._ip_configuration_to_arm(c)
+                for c in (firewall.ip_configurations or [])
+            ],
+        }
+        if getattr(firewall, 'additional_properties', None):
+            result['additional_properties'] = firewall.additional_properties
+        if getattr(firewall, 'sku', None):
+            result['sku'] = {'name': firewall.sku.name, 'tier': firewall.sku.tier}
+        if getattr(firewall, 'threat_intel_mode', None):
+            result['threat_intel_mode'] = firewall.threat_intel_mode
         return result
+
+    def _rule_collection_to_arm(self, coll, type_name):
+        return {
+            'id': coll.id,
+            'name': coll.name,
+            'etag': getattr(coll, 'etag', None),
+            'type': 'Microsoft.Network/azureFirewalls/' + type_name,
+            'properties': {
+                'priority': coll.priority,
+                'provisioningState': coll.provisioning_state,
+                'action': {'type': coll.action.type} if coll.action else None,
+                'rules': [self._rule_to_arm(r, type_name) for r in (coll.rules or [])],
+            },
+        }
+
+    def _rule_to_arm(self, rule, type_name):
+        if type_name == 'applicationRuleCollections':
+            return {
+                'name': rule.name,
+                'description': rule.description,
+                'sourceAddresses': rule.source_addresses,
+                'targetFqdns': rule.target_fqdns,
+                'fqdnTags': rule.fqdn_tags,
+                'protocols': [
+                    {'protocolType': p.protocol_type, 'port': p.port}
+                    for p in (rule.protocols or [])
+                ] if rule.protocols is not None else None,
+            }
+        if type_name == 'natRuleCollections':
+            return {
+                'name': rule.name,
+                'description': rule.description,
+                'sourceAddresses': rule.source_addresses,
+                'destinationAddresses': rule.destination_addresses,
+                'destinationPorts': rule.destination_ports,
+                'protocols': rule.protocols,
+                'translatedAddress': rule.translated_address,
+                'translatedPort': rule.translated_port,
+            }
+        # networkRuleCollections
+        return {
+            'name': rule.name,
+            'description': rule.description,
+            'sourceAddresses': rule.source_addresses,
+            'destinationAddresses': rule.destination_addresses,
+            'destinationFqdns': rule.destination_fqdns,
+            'destinationPorts': rule.destination_ports,
+            'protocols': rule.protocols,
+        }
+
+    def _ip_configuration_to_arm(self, cfg):
+        return {
+            'id': cfg.id,
+            'name': cfg.name,
+            'etag': getattr(cfg, 'etag', None),
+            'type': 'Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations',
+            'properties': {
+                'privateIPAllocationMethod': 'Dynamic',
+                'provisioningState': cfg.provisioning_state,
+                'publicIPAddress': {'id': cfg.public_ip_address.id} if cfg.public_ip_address else None,
+                'subnet': {'id': cfg.subnet.id} if cfg.subnet else None,
+            },
+        }
 
 
 def main():
