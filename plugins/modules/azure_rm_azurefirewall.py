@@ -244,6 +244,16 @@ options:
                     - Name of the resource that is unique within a resource group.
                     - This name can be used to access the resource.
                 type: str
+    dns_servers:
+        description:
+            - List of custom DNS server IP addresses used by the firewall.
+        type: list
+        elements: str
+    dns_proxy_enabled:
+        description:
+            - Whether DNS proxy is enabled on the firewall.
+            - When C(true), the firewall listens on port 53 and forwards DNS queries to the addresses in I(dns_servers).
+        type: bool
     state:
         description:
             - Assert the state of the AzureFirewall.
@@ -349,20 +359,108 @@ EXAMPLES = '''
 RETURN = '''
 id:
     description:
-        - Resource ID.
-    returned: always
+        - The Azure Firewall resource ID. Preserved as a top-level field for
+          backward compatibility with pre-v4.x playbooks; the same value is
+          also available at I(state.id).
+    returned: success
     type: str
-    sample: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myAzureFirewall
+    sample: >-
+        /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myAzureFirewall
+state:
+    description:
+        - Current state of the Azure Firewall.
+    returned: always
+    type: complex
+    contains:
+        id:
+            description:
+                - The Azure Firewall resource ID.
+            returned: always
+            type: str
+            sample: >-
+                /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Network/azureFirewalls/myAzureFirewall
+        name:
+            description:
+                - The Azure Firewall name.
+            returned: always
+            type: str
+            sample: myAzureFirewall
+        location:
+            description:
+                - The Azure region where the firewall lives.
+            returned: always
+            type: str
+            sample: eastus
+        provisioning_state:
+            description:
+                - The provisioning state of the resource.
+            returned: always
+            type: str
+            sample: Succeeded
+        application_rule_collections:
+            description:
+                - Collection of application rule collections used by the firewall.
+            returned: always
+            type: list
+        nat_rule_collections:
+            description:
+                - Collection of NAT rule collections used by the firewall.
+            returned: always
+            type: list
+        network_rule_collections:
+            description:
+                - Collection of network rule collections used by the firewall.
+            returned: always
+            type: list
+        ip_configurations:
+            description:
+                - IP configuration of the firewall.
+            returned: always
+            type: list
+        additional_properties:
+            description:
+                - Additional properties used to further configure the firewall (for example DNS proxy settings).
+            returned: always
+            type: dict
+        sku:
+            description:
+                - The SKU of the Azure Firewall (for example C(AZFW_VNet) / C(Standard)).
+            returned: always
+            type: dict
+        threat_intel_mode:
+            description:
+                - Operation mode for threat intelligence.
+            returned: always
+            type: str
+            sample: Alert
+        tags:
+            description:
+                - Resource tags.
+            returned: always
+            type: dict
+        type:
+            description:
+                - The Azure resource type.
+            returned: always
+            type: str
+            sample: Microsoft.Network/azureFirewalls
+        etag:
+            description:
+                - A unique read-only string that changes whenever the resource is updated.
+            returned: always
+            type: str
 '''
 
-import time
-import json
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import format_resource_id
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
 
-
-class Actions:
-    NoAction, Create, Update, Delete = range(4)
+try:
+    from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.polling import LROPoller
+    from azure.mgmt.core.tools import is_valid_resource_id, resource_id
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 
 
 class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
@@ -548,6 +646,13 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
                     )
                 )
             ),
+            dns_servers=dict(
+                type='list',
+                elements='str',
+            ),
+            dns_proxy_enabled=dict(
+                type='bool',
+            ),
             state=dict(
                 type='str',
                 default='present',
@@ -557,20 +662,17 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
 
         self.resource_group = None
         self.name = None
-        self.body = {}
-        self.body['properties'] = {}
-
-        self.results = dict(changed=False)
-        self.mgmt_client = None
+        self.location = None
+        self.application_rule_collections = None
+        self.nat_rule_collections = None
+        self.network_rule_collections = None
+        self.ip_configurations = None
+        self.dns_servers = None
+        self.dns_proxy_enabled = None
         self.state = None
-        self.url = None
-        self.status_code = [200, 201, 202]
-        self.to_do = Actions.NoAction
+        self.tags = None
 
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = '2024-01-01'
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
+        self.results = dict(changed=False, state=dict())
 
         super(AzureRMAzureFirewalls, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                     supports_check_mode=True,
@@ -578,319 +680,276 @@ class AzureRMAzureFirewalls(AzureRMModuleBaseExt):
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
-            elif kwargs[key] is not None:
-                if key == 'application_rule_collections':
-                    self.body['properties']['applicationRuleCollections'] = []
-                    for item in kwargs[key]:
-                        app_rule = dict(properties={})
-                        if item.get('priority') is not None:
-                            app_rule['properties']['priority'] = item['priority']
-                        if item.get('action') is not None:
-                            app_rule['properties']['action'] = dict(type=item['action'])
-                        if item.get('name') is not None:
-                            app_rule['name'] = item['name']
-                        if item.get('rules') is not None:
-                            app_rule['properties']['rules'] = []
-                            for value in item['rules']:
-                                rule_value = {}
-                                if value.get('name') is not None:
-                                    rule_value['name'] = value['name']
-                                if value.get('description') is not None:
-                                    rule_value['description'] = value['description']
-                                if value.get('source_addresses') is not None:
-                                    rule_value['sourceAddresses'] = value.get('source_addresses')
-                                if value.get('target_fqdns') is not None:
-                                    rule_value['targetFqdns'] = value.get('target_fqdns')
-                                if value.get('fqdn_tags') is not None:
-                                    rule_value['fqdnTags'] = value.get('fqdn_tags')
-                                if value.get('protocols') is not None:
-                                    rule_value['protocols'] = []
-                                    for pp in value['protocols']:
-                                        pro = {}
-                                        if pp.get('type') is not None:
-                                            pro['protocolType'] = pp.get('type')
-                                        if pp.get('port') is not None:
-                                            pro['port'] = pp.get('port')
-                                        rule_value['protocols'].append(pro)
-                                app_rule['properties']['rules'].append(rule_value)
-                        self.body['properties']['applicationRuleCollections'].append(app_rule)
-                elif key == 'nat_rule_collections':
-                    self.body['properties']['natRuleCollections'] = []
-                    for item in kwargs[key]:
-                        nat_rule = dict(properties={})
-                        if item.get('priority') is not None:
-                            nat_rule['properties']['priority'] = item['priority']
-                        if item.get('action') is not None:
-                            nat_rule['properties']['action'] = dict(type=item['action'])
-                        if item.get('name') is not None:
-                            nat_rule['name'] = item['name']
-                        if item.get('rules') is not None:
-                            nat_rule['properties']['rules'] = []
-                            for value in item['rules']:
-                                nat_value = {}
-                                if value.get('name') is not None:
-                                    nat_value['name'] = value.get('name')
-                                if value.get('description') is not None:
-                                    nat_value['description'] = value.get('description')
-                                if value.get('source_addresses') is not None:
-                                    nat_value['sourceAddresses'] = value.get('source_addresses')
-                                if value.get('destination_addresses') is not None:
-                                    nat_value['destinationAddresses'] = value.get('destination_addresses')
-                                if value.get('destination_ports') is not None:
-                                    nat_value['destinationPorts'] = value.get('destination_ports')
-                                if value.get('protocols') is not None:
-                                    nat_value['protocols'] = value.get('protocols')
-                                if value.get('translated_address') is not None:
-                                    nat_value['translatedAddress'] = value.get('translated_address')
-                                if value.get('translated_port') is not None:
-                                    nat_value['translatedPort'] = value.get('translated_port')
-                                nat_rule['properties']['rules'].append(nat_value)
-                        self.body['properties']['natRuleCollections'].append(nat_rule)
-                elif key == 'network_rule_collections':
-                    self.body['properties']['networkRuleCollections'] = []
-                    for item in kwargs[key]:
-                        network_rule = dict(properties={})
-                        if item.get('priority') is not None:
-                            network_rule['properties']['priority'] = item['priority']
-                        if item.get('action') is not None:
-                            network_rule['properties']['action'] = dict(type=item['action'])
-                        if item.get('name') is not None:
-                            network_rule['name'] = item['name']
-                        if item.get('rules') is not None:
-                            network_rule['properties']['rules'] = []
-                            for value in item['rules']:
-                                net_value = {}
-                                if value.get('name') is not None:
-                                    net_value['name'] = value.get('name')
-                                if value.get('description') is not None:
-                                    net_value['description'] = value.get('description')
-                                if value.get('source_addresses') is not None:
-                                    net_value['sourceAddresses'] = value.get('source_addresses')
-                                if value.get('destination_addresses') is not None:
-                                    net_value['destinationAddresses'] = value.get('destination_addresses')
-                                if value.get('destination_fqdns') is not None:
-                                    net_value['destinationFqdns'] = value.get('destination_fqdns')
-                                if value.get('destination_ports') is not None:
-                                    net_value['destinationPorts'] = value.get('destination_ports')
-                                if value.get('protocols') is not None:
-                                    net_value['protocols'] = value.get('protocols')
-                                network_rule['properties']['rules'].append(net_value)
-                        self.body['properties']['networkRuleCollections'].append(network_rule)
-                elif key == 'ip_configurations':
-                    self.body['properties']['ipConfigurations'] = []
-                    for item in kwargs[key]:
-                        ipconfig = dict(properties={})
-                        if item.get('subnet') is not None:
-                            ipconfig['properties']['subnet'] = {}
-                            if isinstance(item['subnet'], str):
-                                ipconfig['properties']['subnet']['id'] = item['subnet']
-                            elif isinstance(item['subnet'], dict):
-                                if item['subnet'].get('id') is not None:
-                                    ipconfig['properties']['subnet']['id'] = item['subnet'].get('id')
-                                elif (item['subnet'].get('resource_group') is not None and item['subnet'].get('name') is not None and
-                                      item['subnet'].get('virtual_network_name') is not None):
-                                    ipconfig['properties']['subnet']['id'] = ('/subscriptions/' +
-                                                                              self.subscription_id +
-                                                                              '/resourceGroups/' +
-                                                                              item['subnet'].get('resource_group') +
-                                                                              '/providers/Microsoft.Network/virtualNetworks/' +
-                                                                              item['subnet'].get('virtual_network_name') +
-                                                                              '/subnets/' +
-                                                                              item['subnet'].get('name'))
-                                elif item['subnet'].get('name') is not None and item['subnet'].get('virtual_network_name') is not None:
-                                    ipconfig['properties']['subnet']['id'] = ('/subscriptions/' +
-                                                                              self.subscription_id +
-                                                                              '/resourceGroups/' +
-                                                                              self.resource_group +
-                                                                              '/providers/Microsoft.Network/virtualNetworks/' +
-                                                                              item['subnet'].get('virtual_network_name') +
-                                                                              '/subnets/' +
-                                                                              item['subnet'].get('name'))
-                                else:
-                                    self.fail("The ip_configuration's subnet config error")
-                            else:
-                                self.fail("The ip_configuration's subnet config error")
-                        if item.get('public_ip_address') is not None:
-                            ipconfig['properties']['publicIPAddress'] = {}
-                            if isinstance(item.get('public_ip_address'), str):
-                                ipconfig['properties']['publicIPAddress']['id'] = item.get('public_ip_address')
-                            elif isinstance(item.get('public_ip_address'), dict):
-                                if item['public_ip_address'].get('id') is not None:
-                                    ipconfig['properties']['publicIPAddress']['id'] = item['public_ip_address'].get('id')
-                                elif item['public_ip_address'].get('resource_group') is not None and item['public_ip_address'].get('name') is not None:
-                                    ipconfig['properties']['publicIPAddress']['id'] = ('/subscriptions/' +
-                                                                                       self.subscription_id +
-                                                                                       '/resourceGroups/' +
-                                                                                       item['public_ip_address'].get('resource_group') +
-                                                                                       '/providers/Microsoft.Network/publicIPAddresses/' +
-                                                                                       item['public_ip_address'].get('name'))
-                                elif item['public_ip_address'].get('name') is not None:
-                                    ipconfig['properties']['publicIPAddress']['id'] = ('/subscriptions/' +
-                                                                                       self.subscription_id +
-                                                                                       '/resourceGroups/' +
-                                                                                       self.resource_group +
-                                                                                       '/providers/Microsoft.Network/publicIPAddresses/' +
-                                                                                       item['public_ip_address'].get('name'))
-                                else:
-                                    self.fail("The ip_configuration's public ip address config error")
-                            else:
-                                self.fail("The ip_configuration's public ip address config error")
+            setattr(self, key, kwargs[key])
 
-                        if item.get('name') is not None:
-                            ipconfig['name'] = item['name']
-                        self.body['properties']['ipConfigurations'].append(ipconfig)
-                else:
-                    self.body[key] = kwargs[key]
+        if self.state == 'present':
+            resource_group = self.get_resource_group(self.resource_group)
+            if not self.location:
+                self.location = resource_group.location
 
-        old_response = None
-        response = None
+        existing = self.get_firewall()
+        changed = False
 
-        self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
-
-        resource_group = self.get_resource_group(self.resource_group)
-
-        if 'location' not in self.body:
-            self.body['location'] = resource_group.location
-
-        self.url = ('/subscriptions' +
-                    '/' + self.subscription_id +
-                    '/resourceGroups' +
-                    '/' + self.resource_group +
-                    '/providers' +
-                    '/Microsoft.Network' +
-                    '/azureFirewalls' +
-                    '/' + self.name)
-
-        old_response = self.get_resource()
-
-        if not old_response:
-            self.log("AzureFirewall instance doesn't exist")
-
-            if self.state == 'absent':
-                self.log("Old instance didn't exist")
+        if self.state == 'present':
+            desired = self.build_firewall_model()
+            if existing is None:
+                changed = True
             else:
-                self.to_do = Actions.Create
-        else:
-            self.log('AzureFirewall instance already exists')
+                existing_addl = getattr(existing, 'additional_properties', None) or {}
+                desired_addl = desired.additional_properties or {}
+                if existing_addl or desired_addl:
+                    merged = dict(existing_addl)
+                    merged.update(desired_addl)
+                    desired.additional_properties = merged
 
-            if self.state == 'absent':
-                self.to_do = Actions.Delete
-            else:
-                update_tags, new_tags = self.update_tags(old_response.get('tags'))
+                # Back-fill every top-level SDK field
+                for field in ('application_rule_collections', 'nat_rule_collections',
+                              'network_rule_collections', 'ip_configurations',
+                              'sku', 'firewall_policy', 'threat_intel_mode',
+                              'virtual_hub', 'zones', 'hub_ip_addresses',
+                              'management_ip_configuration', 'autoscale_configuration'):
+                    if getattr(desired, field, None) is None:
+                        setattr(desired, field, getattr(existing, field, None))
+
+                update_tags, new_tags = self.update_tags(existing.tags or {})
                 if update_tags:
-                    self.to_do = Actions.Update
-                    self.body['tags'] = new_tags
+                    changed = True
+                    desired.tags = new_tags
 
-                if not self.default_compare({}, self.body, old_response, '', dict(compare=[])):
-                    self.to_do = Actions.Update
+                new_dict = desired.as_dict()
+                old_dict = existing.as_dict()
+                self._sort_firewall_dict(new_dict)
+                self._sort_firewall_dict(old_dict)
+                if not self.default_compare({}, new_dict, old_dict, '', dict(compare=[])):
+                    changed = True
 
-        if (self.to_do == Actions.Create) or (self.to_do == Actions.Update):
-            self.log('Need to Create / Update the AzureFirewall instance')
-
-            if self.check_mode:
-                self.results['changed'] = True
-                return self.results
-
-            response = self.create_update_resource()
-
-            # if not old_response:
-            self.results['changed'] = True
-            # else:
-            #     self.results['changed'] = old_response.__ne__(response)
-            self.log('Creation / Update done')
-        elif self.to_do == Actions.Delete:
-            self.log('AzureFirewall instance deleted')
-            self.results['changed'] = True
-
-            if self.check_mode:
-                return self.results
-
-            self.delete_resource()
-
-            # make sure instance is actually deleted, for some Azure resources, instance is hanging around
-            # for some time after deletion -- this should be really fixed in Azure
-            while self.get_resource():
-                time.sleep(20)
+            if changed and not self.check_mode:
+                existing = self.create_or_update_firewall(desired)
         else:
-            self.log('AzureFirewall instance unchanged')
-            self.results['changed'] = False
-            response = old_response
+            if existing is not None:
+                changed = True
+                if not self.check_mode:
+                    self.delete_firewall()
+                    existing = None
 
-        if response:
-            self.results["id"] = response["id"]
-            while response['properties']['provisioningState'] == 'Updating':
-                time.sleep(30)
-                response = self.get_resource()
-
+        self.results['changed'] = changed
+        self.results['state'] = existing.as_dict() if existing else {}
+        # Preserve the `id` alongside the new `state` envelope
+        self.results['id'] = existing.id if existing else None
         return self.results
 
-    def create_update_resource(self):
-        # self.log('Creating / Updating the AzureFirewall instance {0}'.format(self.))
-
+    def get_firewall(self):
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'PUT',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              self.body,
-                                              self.status_code,
-                                              600,
-                                              30)
-        except Exception as exc:
-            self.log('Error attempting to create the AzureFirewall instance.')
-            self.fail('Error creating the AzureFirewall instance: {0}'.format(str(exc)))
+            return self.network_client.azure_firewalls.get(self.resource_group, self.name)
+        except ResourceNotFoundError:
+            return None
 
-        if hasattr(response, 'body'):
-            response = json.loads(response.body())
-        elif hasattr(response, 'context'):
-            response = response.context['deserialized_data']
-        else:
-            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
-
-        return response
-
-    def delete_resource(self):
-        # self.log('Deleting the AzureFirewall instance {0}'.format(self.))
+    def create_or_update_firewall(self, model):
         try:
-            response = self.mgmt_client.query(self.url,
-                                              'DELETE',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-        except Exception as e:
-            self.log('Error attempting to delete the AzureFirewall instance.')
-            self.fail('Error deleting the AzureFirewall instance: {0}'.format(str(e)))
-
-        return True
-
-    def get_resource(self):
-        # self.log('Checking if the AzureFirewall instance {0} is present'.format(self.))
-        found = False
-        try:
-            response = self.mgmt_client.query(self.url,
-                                              'GET',
-                                              self.query_parameters,
-                                              self.header_parameters,
-                                              None,
-                                              self.status_code,
-                                              600,
-                                              30)
-            response = json.loads(response.body())
-            found = True
-            self.log("Response : {0}".format(response))
-            # self.log("AzureFirewall instance : {0} found".format(response.name))
-        except Exception as e:
-            self.log('Did not find the AzureFirewall instance.')
-        if found is True:
+            response = self.network_client.azure_firewalls.begin_create_or_update(
+                resource_group_name=self.resource_group,
+                azure_firewall_name=self.name,
+                parameters=model,
+            )
+            if isinstance(response, LROPoller):
+                response = self.get_poller_result(response)
             return response
+        except Exception as exc:
+            self.fail("Error creating or updating Azure Firewall {0}: {1}".format(self.name, str(exc)))
 
-        return False
+    def delete_firewall(self):
+        try:
+            response = self.network_client.azure_firewalls.begin_delete(
+                resource_group_name=self.resource_group,
+                azure_firewall_name=self.name,
+            )
+            if isinstance(response, LROPoller):
+                self.get_poller_result(response)
+        except Exception as exc:
+            self.fail("Error deleting Azure Firewall {0}: {1}".format(self.name, str(exc)))
+
+    def build_firewall_model(self):
+        models = self.network_models
+
+        params = dict(location=self.location)
+        if self.tags is not None:
+            params['tags'] = self.tags
+
+        if self.application_rule_collections is not None:
+            params['application_rule_collections'] = [
+                self.build_application_rule_collection(item)
+                for item in self.application_rule_collections
+            ]
+        if self.nat_rule_collections is not None:
+            params['nat_rule_collections'] = [
+                self.build_nat_rule_collection(item)
+                for item in self.nat_rule_collections
+            ]
+        if self.network_rule_collections is not None:
+            params['network_rule_collections'] = [
+                self.build_network_rule_collection(item)
+                for item in self.network_rule_collections
+            ]
+        if self.ip_configurations is not None:
+            params['ip_configurations'] = [
+                self.build_ip_configuration(item)
+                for item in self.ip_configurations
+            ]
+
+        additional = {}
+        if self.dns_servers is not None:
+            additional['Network.DNS.Servers'] = ','.join(self.dns_servers)
+        if self.dns_proxy_enabled is not None:
+            additional['Network.DNS.EnableProxy'] = 'true' if self.dns_proxy_enabled else 'false'
+        if additional:
+            params['additional_properties'] = additional
+
+        return models.AzureFirewall(**params)
+
+    def build_application_rule_collection(self, item):
+        models = self.network_models
+        # Arg-spec accepts lowercase enums; SDK expects title-case (application) or upper-case (network).
+        action = models.AzureFirewallRCAction(type=str(item['action']).title()) if item.get('action') else None
+        rules = None
+        if item.get('rules') is not None:
+            rules = [
+                models.AzureFirewallApplicationRule(
+                    name=r.get('name'),
+                    description=r.get('description'),
+                    source_addresses=r.get('source_addresses'),
+                    target_fqdns=r.get('target_fqdns'),
+                    fqdn_tags=r.get('fqdn_tags'),
+                    protocols=[
+                        models.AzureFirewallApplicationRuleProtocol(
+                            protocol_type=str(p['type']).title() if p.get('type') is not None else None,
+                            port=int(p['port']) if p.get('port') is not None else None,
+                        )
+                        for p in (r.get('protocols') or [])
+                    ] if r.get('protocols') is not None else None,
+                )
+                for r in item['rules']
+            ]
+        return models.AzureFirewallApplicationRuleCollection(
+            name=item.get('name'),
+            priority=item.get('priority'),
+            action=action,
+            rules=rules,
+        )
+
+    def build_nat_rule_collection(self, item):
+        models = self.network_models
+        action = models.AzureFirewallNatRCAction(type=str(item['action']).title()) if item.get('action') else None
+        rules = None
+        if item.get('rules') is not None:
+            rules = [
+                models.AzureFirewallNatRule(
+                    name=r.get('name'),
+                    description=r.get('description'),
+                    source_addresses=r.get('source_addresses'),
+                    destination_addresses=r.get('destination_addresses'),
+                    destination_ports=r.get('destination_ports'),
+                    protocols=[self.normalize_network_protocol(p) for p in r['protocols']] if r.get('protocols') is not None else None,
+                    translated_address=r.get('translated_address'),
+                    translated_port=r.get('translated_port'),
+                )
+                for r in item['rules']
+            ]
+        return models.AzureFirewallNatRuleCollection(
+            name=item.get('name'),
+            priority=item.get('priority'),
+            action=action,
+            rules=rules,
+        )
+
+    def build_network_rule_collection(self, item):
+        models = self.network_models
+        action = models.AzureFirewallRCAction(type=str(item['action']).title()) if item.get('action') else None
+        rules = None
+        if item.get('rules') is not None:
+            rules = [
+                models.AzureFirewallNetworkRule(
+                    name=r.get('name'),
+                    description=r.get('description'),
+                    source_addresses=r.get('source_addresses'),
+                    destination_addresses=r.get('destination_addresses'),
+                    destination_ports=r.get('destination_ports'),
+                    destination_fqdns=r.get('destination_fqdns'),
+                    protocols=[self.normalize_network_protocol(p) for p in r['protocols']] if r.get('protocols') is not None else None,
+                )
+                for r in item['rules']
+            ]
+        return models.AzureFirewallNetworkRuleCollection(
+            name=item.get('name'),
+            priority=item.get('priority'),
+            action=action,
+            rules=rules,
+        )
+
+    def build_ip_configuration(self, item):
+        models = self.network_models
+        subnet_id = self.resolve_subnet_id(item.get('subnet'))
+        pip = item.get('public_ip_address')
+        pip_id = None
+        if isinstance(pip, str):
+            pip_id = format_resource_id(pip, self.subscription_id, 'Microsoft.Network', 'publicIPAddresses', self.resource_group)
+        elif isinstance(pip, dict):
+            if pip.get('id'):
+                pip_id = pip['id']
+            elif pip.get('name'):
+                pip_id = format_resource_id(pip['name'], self.subscription_id, 'Microsoft.Network', 'publicIPAddresses',
+                                            pip.get('resource_group') or self.resource_group)
+            else:
+                self.fail("The ip_configuration's public_ip_address dict must contain 'id' or 'name'")
+        return models.AzureFirewallIPConfiguration(
+            name=item.get('name'),
+            subnet=models.SubResource(id=subnet_id) if subnet_id else None,
+            public_ip_address=models.SubResource(id=pip_id) if pip_id else None,
+        )
+
+    def normalize_network_protocol(self, proto):
+        # SDK enum values: 'TCP', 'UDP', 'ICMP', 'Any'.
+        if not isinstance(proto, str):
+            return proto
+        lower = proto.lower()
+        if lower == 'any':
+            return 'Any'
+        return lower.upper()
+
+    def _sort_firewall_dict(self, fw):
+        for col_key in ('application_rule_collections', 'nat_rule_collections',
+                        'network_rule_collections'):
+            cols = fw.get(col_key)
+            if cols:
+                cols.sort(key=lambda c: c.get('name') or '')
+                for c in cols:
+                    rules = c.get('rules')
+                    if rules:
+                        rules.sort(key=lambda r: r.get('name') or '')
+        ip = fw.get('ip_configurations')
+        if ip:
+            ip.sort(key=lambda x: x.get('name') or '')
+
+    def resolve_subnet_id(self, val):
+        if val is None:
+            return None
+        if isinstance(val, str):
+            if is_valid_resource_id(val):
+                return val
+            self.fail("The ip_configuration's subnet must be a full ARM resource ID or a dict with virtual_network_name and name; got: '{0}'".format(val))
+        if isinstance(val, dict):
+            if val.get('id'):
+                return val['id']
+            if val.get('virtual_network_name') and val.get('name'):
+                return resource_id(
+                    subscription=self.subscription_id,
+                    resource_group=val.get('resource_group') or self.resource_group,
+                    namespace='Microsoft.Network',
+                    type='virtualNetworks',
+                    name=val['virtual_network_name'],
+                    child_type_1='subnets',
+                    child_name_1=val['name'],
+                )
+        self.fail("The ip_configuration's subnet config error")
 
 
 def main():
