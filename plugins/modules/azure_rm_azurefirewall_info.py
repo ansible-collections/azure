@@ -103,7 +103,7 @@ firewalls:
             description:
                 - IP configuration of the firewall.
                 - Each entry is wrapped in C(id), C(name), C(etag), C(type) and C(properties),
-                  where I(properties) contains I(privateIPAllocationMethod), I(provisioningState),
+                  where I(properties) contains I(privateIPAddress), I(provisioningState),
                   I(publicIPAddress) and I(subnet).
             type: list
         additional_properties:
@@ -271,6 +271,7 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
                     {'protocolType': p.protocol_type, 'port': p.port}
                     for p in (rule.protocols or [])
                 ] if rule.protocols is not None else None,
+                'sourceIpGroups': rule.source_ip_groups,
             }
         if type_name == 'natRuleCollections':
             return {
@@ -282,6 +283,8 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
                 'protocols': rule.protocols,
                 'translatedAddress': rule.translated_address,
                 'translatedPort': rule.translated_port,
+                'translatedFqdn': rule.translated_fqdn,
+                'sourceIpGroups': rule.source_ip_groups,
             }
         # networkRuleCollections
         return {
@@ -292,6 +295,8 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
             'destinationFqdns': rule.destination_fqdns,
             'destinationPorts': rule.destination_ports,
             'protocols': rule.protocols,
+            'sourceIpGroups': rule.source_ip_groups,
+            'destinationIpGroups': rule.destination_ip_groups,
         }
 
     def _ip_configuration_to_arm(self, cfg):
@@ -301,7 +306,7 @@ class AzureRMAzureFirewallsInfo(AzureRMModuleBase):
             'etag': getattr(cfg, 'etag', None),
             'type': 'Microsoft.Network/azureFirewalls/azureFirewallIpConfigurations',
             'properties': {
-                'privateIPAllocationMethod': 'Dynamic',
+                'privateIPAddress': cfg.private_ip_address,
                 'provisioningState': cfg.provisioning_state,
                 'publicIPAddress': {'id': cfg.public_ip_address.id} if cfg.public_ip_address else None,
                 'subnet': {'id': cfg.subnet.id} if cfg.subnet else None,
