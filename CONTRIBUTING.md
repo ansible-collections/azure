@@ -51,6 +51,7 @@ Additional `ansible-test` resources:
 
 1. Please provide integration tests showing the changed behavior/functionality under `tests/integration/targets/<relevant-module>/tasks`.
 1. Think about updating the documentation and examples for the changed module.
+1. If you added a new module, register it in `action_groups.all` in [meta/runtime.yml](meta/runtime.yml), keeping the list alphabetically sorted and free of duplicates.
 1. Please run a sanity check. Install prerequisites `pip install -r sanity-requirements.txt`, run with `ansible-test sanity --color -v --junit`. Read more at https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html.
 1. There is a script `tests/utils/ado/ado.sh` for running tests inside an Azure DevOps pipeline. Unfortunately the pipeline and results are not visible for the public. You can perhaps adapt the parts of the script or use a small playbook to run the task list of the integration tests mentioned above.
 
