@@ -310,6 +310,8 @@ action_groups:
     - azure.azcollection.azure_rm_trafficmanagerendpoint_info
     - azure.azcollection.azure_rm_trafficmanagerprofile
     - azure.azcollection.azure_rm_trafficmanagerprofile_info
+    - azure.azcollection.azure_rm_userassignedidentity
+    - azure.azcollection.azure_rm_userassignedidentity_info
     - azure.azcollection.azure_rm_virtualhub
     - azure.azcollection.azure_rm_virtualhub_info
     - azure.azcollection.azure_rm_virtualhubconnection

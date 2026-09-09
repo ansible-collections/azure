@@ -1,0 +1,267 @@
+- name: Create a new resource group for user-assigned identity test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-userassignedidentity"
+    location: eastus2
+
+- name: For user-assigned identity test
+  block:
+    - name: Create user-assigned identity name
+      ansible.builtin.set_fact:
+        identity_name: "id{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+
+    - name: Create instance -- check mode
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        state: present
+      check_mode: true
+      register: results
+
+    - name: Assert the identity would be created
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Create a user-assigned identity
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        state: present
+      register: results
+
+    - name: Assert that the identity is created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.principal_id is defined
+          - results.state.client_id is defined
+          - results.state.tenant_id is defined
+          - results.state.type == "Microsoft.ManagedIdentity/userAssignedIdentities"
+
+    - name: Create a user-assigned identity again (idempotent)
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        state: present
+      register: results
+
+    - name: Assert idempotent create
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Update the user-assigned identity's tags
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        tags:
+          env: production
+        state: present
+      register: results
+
+    - name: Assert the identity is updated
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Update the user-assigned identity's tags again (idempotent)
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        tags:
+          env: production
+        state: present
+      register: results
+
+    - name: Assert idempotent update
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Update the user-assigned identity's tags -- check mode
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        tags:
+          env: production
+          temp: shouldnotpersist
+        state: present
+      check_mode: true
+      register: results
+
+    - name: Assert the tag update would change
+      ansible.builtin.assert:
+        that:
+          - results is changed
+
+    - name: Get facts by name after check-mode tag update
+      azure.azcollection.azure_rm_userassignedidentity_info:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+      register: check_mode_facts
+
+    - name: Assert the check-mode tag update did not actually persist
+      ansible.builtin.assert:
+        that:
+          - "'temp' not in check_mode_facts.userassignedidentities[0].tags"
+
+    - name: Set isolation_scope to Regional
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        isolation_scope: Regional
+        state: present
+      register: results
+
+    - name: Assert isolation_scope is updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.isolation_scope == "Regional"
+
+    - name: Set isolation_scope to Regional again (idempotent)
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        isolation_scope: Regional
+        state: present
+      register: results
+
+    - name: Assert idempotent isolation_scope update
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Update tags only, without specifying isolation_scope
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        tags:
+          env: production
+          team: azure
+        state: present
+      register: results
+
+    - name: Assert isolation_scope is preserved across a tags-only update
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.isolation_scope == "Regional"
+          - results.state.tags.team == "azure"
+
+    - name: Reset isolation_scope to None
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        location: eastus2
+        isolation_scope: None
+        state: present
+      register: results
+
+    - name: Assert isolation_scope is reset
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.isolation_scope == "None"
+
+    - name: Get facts by name
+      azure.azcollection.azure_rm_userassignedidentity_info:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+      register: results
+
+    - name: Assert the info facts
+      ansible.builtin.assert:
+        that:
+          - results.userassignedidentities | length == 1
+          - results.userassignedidentities[0].name == identity_name
+          - results.userassignedidentities[0].tags.env == "production"
+
+    - name: Get facts for all identities in the resource group
+      azure.azcollection.azure_rm_userassignedidentity_info:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+      register: results
+
+    - name: Assert the info facts contain the identity
+      ansible.builtin.assert:
+        that:
+          - results.userassignedidentities | length == 1
+
+    - name: Get facts for all identities in the subscription
+      azure.azcollection.azure_rm_userassignedidentity_info:
+      register: results
+
+    - name: Assert list_by_subscription returned at least our test identity
+      ansible.builtin.assert:
+        that:
+          - results.userassignedidentities | length >= 1
+
+    - name: Get facts filtered by tags
+      azure.azcollection.azure_rm_userassignedidentity_info:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        tags:
+          - team:azure
+      register: results
+
+    - name: Assert the tag filter matched the identity
+      ansible.builtin.assert:
+        that:
+          - results.userassignedidentities | length == 1
+          - results.userassignedidentities[0].name == identity_name
+
+    - name: Get facts by name for a non-existent identity
+      azure.azcollection.azure_rm_userassignedidentity_info:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "doesnotexist{{ identity_name }}"
+      register: results
+
+    - name: Assert no facts are returned for a non-existent identity
+      ansible.builtin.assert:
+        that:
+          - results.userassignedidentities | length == 0
+
+    - name: Delete the user-assigned identity -- check mode
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        state: absent
+      check_mode: true
+      register: results
+
+    - name: Assert the identity would be deleted but was not
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.name == identity_name
+
+    - name: Delete the user-assigned identity
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the identity is deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete the user-assigned identity again (idempotent)
+      azure.azcollection.azure_rm_userassignedidentity:
+        resource_group: "{{ resource_group }}-userassignedidentity"
+        name: "{{ identity_name }}"
+        state: absent
+      register: results
+
+    - name: Assert idempotent delete
+      ansible.builtin.assert:
+        that: results is not changed
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-userassignedidentity"
+        force_delete_nonempty: true
+        state: absent
