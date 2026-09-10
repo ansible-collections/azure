@@ -1,0 +1,319 @@
+- name: Create a new resource group for servicebusrule test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-servicebusrule"
+    location: eastus
+
+- name: For servicebus rule test
+  block:
+    - name: Prepare random number
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Create a Service Bus namespace
+      azure.azcollection.azure_rm_servicebus:
+        name: "sbns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebusrule"
+        sku: standard
+
+    - name: Create a Service Bus topic
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "sbtopic{{ rpfx }}"
+        namespace: "sbns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebusrule"
+
+    - name: Create a Service Bus subscription
+      azure.azcollection.azure_rm_servicebustopicsubscription:
+        name: "sbsub{{ rpfx }}"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebusrule"
+
+    - name: Create a rule with a SQL filter -- check mode
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='ABC'"
+      check_mode: true
+      register: output
+    - name: Assert the rule would be created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a rule with a SQL filter
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='ABC'"
+      register: output
+    - name: Assert the rule was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a rule with a SQL filter (idempotent)
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='ABC'"
+      register: output
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the rule's SQL filter
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='XYZ'"
+      register: output
+    - name: Assert updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update the rule's SQL filter (idempotent)
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='XYZ'"
+      register: output
+    - name: Assert idempotent update
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Add an action to the SQL rule
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='XYZ'"
+        action: "SET sys.label = 'X'"
+      register: output
+    - name: Assert action was added
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Add an action to the SQL rule (idempotent)
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: sql_filter
+        sql_filter: "myproperty='XYZ'"
+        action: "SET sys.label = 'X'"
+      register: output
+    - name: Assert idempotent action
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Switch the rule from a SQL filter to a correlation filter
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: correlation_filter
+        correlation_filter:
+          label: red
+          content_type: application/text
+        action: "SET sys.label = 'X'"
+      register: output
+    - name: Assert filter_type switch is changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Switch the rule from a SQL filter to a correlation filter (idempotent)
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        filter_type: correlation_filter
+        correlation_filter:
+          label: red
+          content_type: application/text
+        action: "SET sys.label = 'X'"
+      register: output
+    - name: Assert idempotent filter_type switch
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Create a dedicated rule with a correlation filter
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "correlationrule{{ rpfx }}"
+        filter_type: correlation_filter
+        correlation_filter:
+          label: blue
+          session_id: "session1"
+          properties:
+            priority: high
+      register: output
+    - name: Assert the correlation rule was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a dedicated rule with a correlation filter (idempotent)
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "correlationrule{{ rpfx }}"
+        filter_type: correlation_filter
+        correlation_filter:
+          label: blue
+          session_id: "session1"
+          properties:
+            priority: high
+      register: output
+    - name: Assert idempotent correlation rule
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update the correlation filter's label
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "correlationrule{{ rpfx }}"
+        filter_type: correlation_filter
+        correlation_filter:
+          label: green
+          session_id: "session1"
+          properties:
+            priority: high
+      register: output
+    - name: Assert correlation filter update is changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Query a single rule via info module
+      azure.azcollection.azure_rm_servicebusrule_info:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "correlationrule{{ rpfx }}"
+      register: output
+    - name: Assert info returned the correlation rule
+      ansible.builtin.assert:
+        that:
+          - output.rules | length == 1
+          - output.rules[0].name == "correlationrule" ~ rpfx
+          - output.rules[0].correlation_filter.label == "green"
+
+    - name: Query a rule that does not exist via info module
+      azure.azcollection.azure_rm_servicebusrule_info:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "doesnotexist{{ rpfx }}"
+      register: output
+    - name: Assert info returns no rule
+      ansible.builtin.assert:
+        that:
+          - output.rules | length == 0
+
+    - name: Query all rules in the subscription via info module
+      azure.azcollection.azure_rm_servicebusrule_info:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+      register: output
+    - name: Assert info lists both rules
+      ansible.builtin.assert:
+        that:
+          - output.rules | length == 2
+
+    - name: Delete the SQL/correlation-switched rule
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        state: absent
+      register: output
+    - name: Assert deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the SQL/correlation-switched rule (idempotent)
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "sqlrule{{ rpfx }}"
+        state: absent
+      register: output
+    - name: Assert idempotent delete
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete the dedicated correlation rule
+      azure.azcollection.azure_rm_servicebusrule:
+        resource_group: "{{ resource_group }}-servicebusrule"
+        namespace: "sbns{{ rpfx }}"
+        topic: "sbtopic{{ rpfx }}"
+        subscription: "sbsub{{ rpfx }}"
+        name: "correlationrule{{ rpfx }}"
+        state: absent
+      register: output
+    - name: Assert correlation rule deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+  always:
+    - name: Force-delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-servicebusrule"
+        state: absent
+        force_delete_nonempty: true

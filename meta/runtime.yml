@@ -267,6 +267,8 @@ action_groups:
     - azure.azcollection.azure_rm_servicebus
     - azure.azcollection.azure_rm_servicebus_info
     - azure.azcollection.azure_rm_servicebusqueue
+    - azure.azcollection.azure_rm_servicebusrule
+    - azure.azcollection.azure_rm_servicebusrule_info
     - azure.azcollection.azure_rm_servicebussaspolicy
     - azure.azcollection.azure_rm_servicebustopic
     - azure.azcollection.azure_rm_servicebustopicsubscription
