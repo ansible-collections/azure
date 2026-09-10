@@ -142,6 +142,7 @@ parameters:
       - "azure_rm_cognitivesearch"
       - "azure_rm_securitygroup"
       - "azure_rm_servicebus"
+      - "azure_rm_servicebusrule"
       - "azure_rm_sqlserver"
       - "azure_rm_storageaccount"
       - "azure_rm_storageaccountmanagementpolicy"
