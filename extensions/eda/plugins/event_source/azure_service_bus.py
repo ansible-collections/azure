@@ -213,7 +213,7 @@ def _create_service_bus_client(args: dict[str, Any]) -> ServiceBusClient:
     logging_enable = bool(args.get("logging_enable", True))
 
     # Option 1: Connection string authentication (backward compatible)
-    if "conn_str" in args:
+    if args.get("conn_str"):
         return ServiceBusClient.from_connection_string(
             conn_str=args["conn_str"],
             logging_enable=logging_enable,
@@ -327,13 +327,8 @@ async def _process_message(
             logger.debug("Message %s completed successfully", msg.message_id)
         except asyncio.TimeoutError:
             logger.exception(
-                "Timed out waiting for feedback for message %s - dead lettering",
+                "Timed out waiting for feedback for message %s",
                 msg.message_id,
-            )
-            await receiver.dead_letter_message(
-                msg,
-                reason="FeedbackTimeout",
-                error_description=f"No acknowledgment received within {feedback.timeout}s",
             )
             raise
     else:
