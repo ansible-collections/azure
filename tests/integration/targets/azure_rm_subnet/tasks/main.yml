@@ -273,6 +273,34 @@
       ansible.builtin.assert:
         that: output is not changed
 
+    - name: Update the subnet with DNS resolver delegation
+      azure.azcollection.azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        delegations:
+          - name: 'Microsoft.Network/dnsResolvers'
+            serviceName: 'Microsoft.Network/dnsResolvers'
+      register: output
+
+    - name: Assert the subnet updated with DNS resolver delegation
+      ansible.builtin.assert:
+        that: output is changed
+
+    - name: The subnet with DNS resolver delegation should be idempotent
+      azure.azcollection.azure_rm_subnet:
+        name: foobar01
+        virtual_network_name: My_Virtual_Network
+        resource_group: "{{ resource_group }}-sub01"
+        delegations:
+          - name: 'Microsoft.Network/dnsResolvers'
+            serviceName: 'Microsoft.Network/dnsResolvers'
+      register: output
+
+    - name: Assert idempotent
+      ansible.builtin.assert:
+        that: output is not changed
+
     - name: Get subnet facts
       azure.azcollection.azure_rm_subnet_info:
         name: foobar01
