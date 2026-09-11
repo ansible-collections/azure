@@ -154,6 +154,7 @@ options:
                     - Microsoft.ApiManagement/service
                     - Microsoft.Synapse/workspaces
                     - Microsoft.PowerPlatform/vnetaccesslinks
+                    - Microsoft.Network/dnsResolvers
                     - Microsoft.Network/managedResolvers
                     - Microsoft.Kusto/clusters
                     - Microsoft.App/environments
@@ -242,6 +243,16 @@ EXAMPLES = '''
     delegations:
       - name: 'mydeleg'
         serviceName: 'Microsoft.ContainerInstance/containerGroups'
+
+- name: Create a subnet with DNS resolver delegation
+  azure_rm_subnet:
+    resource_group: myResourceGroup
+    virtual_network_name: myVirtualNetwork
+    name: myDnsResolverSubnet
+    address_prefix_cidr: "10.1.1.0/28"
+    delegations:
+      - name: 'Microsoft.Network/dnsResolvers'
+        serviceName: 'Microsoft.Network/dnsResolvers'
 
 - name: Create a subnet with an associated NAT Gateway
   azure_rm_subnet:
@@ -397,8 +408,8 @@ delegations_spec = dict(
                  'Microsoft.DBforPostgreSQL/serversv2', 'Microsoft.AzureCosmosDB/clusters', 'Microsoft.MachineLearningServices/workspaces',
                  'Microsoft.DBforPostgreSQL/singleServers', 'Microsoft.DBforPostgreSQL/flexibleServers', 'Microsoft.DBforMySQL/serversv2',
                  'Microsoft.DBforMySQL/flexibleServers', 'Microsoft.ApiManagement/service', 'Microsoft.Synapse/workspaces',
-                 'Microsoft.PowerPlatform/vnetaccesslinks', 'Microsoft.Network/managedResolvers', 'Microsoft.Kusto/clusters',
-                 'Microsoft.ContainerService/managedClusters', 'Microsoft.App/environments',
+                 'Microsoft.PowerPlatform/vnetaccesslinks', 'Microsoft.Network/dnsResolvers', 'Microsoft.Network/managedResolvers',
+                 'Microsoft.Kusto/clusters', 'Microsoft.ContainerService/managedClusters', 'Microsoft.App/environments',
                  'Microsoft.Network/applicationGateways',
                  'Microsoft.ServiceNetworking/trafficControllers']
     ),
