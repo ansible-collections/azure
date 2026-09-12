@@ -1,4 +1,35 @@
 ---
+# Indirect node counting query for the azure.azcollection collection.
+#
+# This jq runs inside the Automation Platform controller
+# (awx/main/tasks/host_indirect.py) against each module's result, and its output
+# feeds subscription node counting. Nothing in this repository executes it, so
+# tests/unit/audit/test_event_query_contract.py asserts the contract the
+# controller imposes on the output.
+#
+# THREE THINGS THAT ARE EASY TO GET WRONG HERE
+# --------------------------------------------
+# 1. canonical_facts is the ONLY key the controller deduplicates on
+#    (`results[hashable_facts]`), and `facts` and `name` are taken from the
+#    first record seen. So it must hold identity and nothing else. A resource's
+#    ARM id is that identity on its own; anything else in canonical_facts can
+#    only split one resource into several rows. `name` used to be in here with
+#    an "UNKNOWN" fallback, so the same NIC reported once through
+#    azure_rm_networkinterface (name present) and once as a nested reference in
+#    another resource's result (name absent) produced two audit rows.
+#
+# 2. canonical_facts cannot contain null at any depth. get_hashable_form()
+#    accepts int/float/str/bool/dict/list/tuple and raises UnhashableFacts on
+#    anything else; the caller catches it and skips the record, logging once
+#    per job at INFO with the job still green. So every value below must be
+#    provably non-null, which is why the captures end in `// "unknown"`.
+#
+# 3. `capture(...)?` yields the EMPTY STREAM on no match, not null -- and an
+#    empty stream bound with `as` produces no record at all. That is why a
+#    resource group id, which has no /providers/Microsoft.X/ segment, silently
+#    emitted nothing. The filter is now explicit: only ARM resource ids are
+#    reported, and resource groups and subscriptions (which are containers,
+#    not nodes) are excluded on purpose rather than by accident.
 azure.azcollection.*:
   query: >-
     (
@@ -178,26 +209,28 @@ azure.azcollection.*:
               else empty end
        end
        ) as $data |
+        select(($data.id | type) == "string") |
+        ($data.id | ascii_downcase) as $arm_id |
+        select($arm_id | test("/providers/microsoft\\.")) |
         (
-          ($data.id | capture("/providers/[Mm]icrosoft.(?<resourcetype>[^/]+)/")? | .resourcetype)
-            | ascii_downcase
+          ($arm_id | capture("/providers/microsoft\\.(?<resourcetype>[^/]+)/")? | .resourcetype)
+          // "unknown"
         ) as $node_type |
         (
-          ($data.id | capture("/providers/[Mm]icrosoft.[^/]+/(?<subtype>[^/]+)/")? | .subtype)
-            | ascii_downcase
+          ($arm_id | capture("/providers/microsoft\\.[^/]+/(?<subtype>[^/]+)/")? | .subtype)
+          // "unknown"
         ) as $sub_node_type |
-        select($data.id != null) |
         {
-          name: $data.id,
+          name: ($data.name // $data.id),
           canonical_facts: {
-            name: ($data.name // "UNKNOWN"),
             id: $data.id,
             node_type: $node_type
           },
           facts: {
             infra_type: "public_cloud",
             infra_bucket: ($mapping[$node_type] // "unknown"),
-            device_type: ($device_type_mapping[$sub_node_type] // $sub_node_type)
+            device_type: ($device_type_mapping[$sub_node_type] // $sub_node_type),
+            name: ($data.name // "unknown")
           }
         }
     )
