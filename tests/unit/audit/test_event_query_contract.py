@@ -71,12 +71,17 @@ VOLATILE_KEYS = frozenset([
     "firmware",
 ])
 
-# Stable identifiers. A display `name` alongside one of these is redundant and
+# Stable identifiers. A display name alongside one of these is redundant and
 # mutable -- renaming the object produces a second audit row for one node.
 IDENTITY_KEYS = frozenset([
     "id", "moid", "serial", "serial_number", "object_guid", "guid", "uuid",
     "ansible_product_serial", "instance_id", "arn",
 ])
+
+# Human-facing labels. Not volatile enough to reject on their own -- for some
+# resources a name is the only identity there is -- but redundant and harmful
+# next to a stable identifier.
+DISPLAY_NAME_KEYS = frozenset(["name", "host_name", "hostname", "display_name"])
 
 
 def load_queries():
@@ -214,15 +219,39 @@ def sub_object(expression):
     return dict(split_pairs(block)) if block else {}
 
 
-def emitted_literals(expression):
-    """String literals the expression can emit.
+READERS = re.compile(r"\b(?:test|match|capture|contains|split|startswith"
+                     r"|endswith|ltrimstr|rtrimstr|sub|gsub|inside)\s*\(")
 
-    Excludes arguments to test()/match()/split() and friends -- those are
-    patterns being read, not taxonomy values being written.
+
+def strip_reader_calls(expression):
+    """Blank out the arguments of test()/gsub()/match() and friends.
+
+    Those are patterns being read, not taxonomy values being written. The
+    arguments are found by matching parens rather than by a regex, because a
+    jq regex routinely contains its own -- ``gsub("(?<c>[A-Z])"; "_" + (.c |
+    ascii_downcase))`` would otherwise be cut short at the first ``)`` and
+    leave ``"(?<c>[A-Z])"`` looking like an emitted literal.
     """
-    readers = (r"\b(test|match|contains|split|startswith|endswith|ltrimstr"
-               r"|rtrimstr|sub|gsub|inside)\s*\([^()]*\)")
-    return re.findall(r'"([^"\\]*)"', re.sub(readers, " ", expression or ""))
+    text = expression or ""
+    while True:
+        found = READERS.search(text)
+        if not found:
+            return text
+        depth, index = 0, found.end() - 1
+        while index < len(text):
+            if text[index] == "(":
+                depth += 1
+            elif text[index] == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            index += 1
+        text = text[:found.start()] + " " + text[index + 1:]
+
+
+def emitted_literals(expression):
+    """String literals the expression can emit."""
+    return re.findall(r'"([^"\\]*)"', strip_reader_calls(expression))
 
 
 PATH = re.compile(
@@ -555,11 +584,12 @@ def test_canonical_facts_holds_identity_only(module):
     )
 
     identifiers = sorted(lowered & IDENTITY_KEYS)
-    assert not ("name" in lowered and identifiers), (
-        "%s: canonical_facts contains both `name` and the stable identifier(s) "
-        "%s. `name` is mutable, so renaming the object counts it as a second "
-        "node. Keep the identifier, move `name` to `facts`."
-        % (module, ", ".join(identifiers))
+    labels = sorted(lowered & DISPLAY_NAME_KEYS)
+    assert not (labels and identifiers), (
+        "%s: canonical_facts contains both the label(s) %s and the stable "
+        "identifier(s) %s. A label is mutable, so renaming the object counts it "
+        "as a second node. Keep the identifier, move the label to `facts`."
+        % (module, ", ".join(labels), ", ".join(identifiers))
     )
 
     module_name = module.split(".")[-1]
