@@ -1,0 +1,153 @@
+---
+- name: Set instance name for test
+  ansible.builtin.set_fact:
+    ci_instance_name: "ci-test-{{ resource_group | hash('md5') | truncate(12, True, '') }}"
+
+- name: Test Customer Insights instance lifecycle
+  block:
+    # --- Info module: list all (may be empty) ---
+    - name: List all Customer Insights instances
+      azure.azcollection.azure_powerplatform_customerinsights_info:
+        subscription_key: "{{ ci_subscription_key }}"
+      register: ci_list_all
+
+    - name: Assert info module returns a list
+      ansible.builtin.assert:
+        that:
+          - ci_list_all.instances is defined
+          - ci_list_all.instances is iterable
+
+    # --- CRUD: Create instance ---
+    - name: Create Customer Insights instance
+      azure.azcollection.azure_powerplatform_customerinsights:
+        name: "{{ ci_instance_name }}"
+        region: unitedstates
+        instance_type: trial
+        bap_provisioning_type: create
+        subscription_key: "{{ ci_subscription_key }}"
+        state: present
+      register: ci_create
+
+    - name: Assert instance was created
+      ansible.builtin.assert:
+        that:
+          - ci_create.changed
+          - ci_create.instance is defined
+          - ci_create.instance.name == ci_instance_name
+          - ci_create.instance.instance_id | length > 0
+
+    - name: Store instance ID for later use
+      ansible.builtin.set_fact:
+        ci_instance_id: "{{ ci_create.instance.instance_id }}"
+
+    # --- CRUD: Idempotency check ---
+    - name: Create same instance again (idempotency)
+      azure.azcollection.azure_powerplatform_customerinsights:
+        name: "{{ ci_instance_name }}"
+        region: unitedstates
+        instance_type: trial
+        subscription_key: "{{ ci_subscription_key }}"
+        state: present
+      register: ci_create_again
+
+    - name: Assert idempotent create is not changed
+      ansible.builtin.assert:
+        that:
+          - not ci_create_again.changed
+
+    # --- Info module: get by name ---
+    - name: Get instance info by name
+      azure.azcollection.azure_powerplatform_customerinsights_info:
+        name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
+      register: ci_info_name
+
+    - name: Assert info returns the instance
+      ansible.builtin.assert:
+        that:
+          - ci_info_name.instances | length == 1
+          - ci_info_name.instances[0].name == ci_instance_name
+
+    # --- Info module: get by ID ---
+    - name: Get instance info by ID
+      azure.azcollection.azure_powerplatform_customerinsights_info:
+        instance_id: "{{ ci_instance_id }}"
+        subscription_key: "{{ ci_subscription_key }}"
+      register: ci_info_id
+
+    - name: Assert info by ID returns the instance
+      ansible.builtin.assert:
+        that:
+          - ci_info_id.instances | length == 1
+          - ci_info_id.instances[0].instance_id == ci_instance_id
+
+    # --- Info module: nonexistent instance ---
+    - name: Get info for nonexistent instance
+      azure.azcollection.azure_powerplatform_customerinsights_info:
+        name: "nonexistent-ci-instance-{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        subscription_key: "{{ ci_subscription_key }}"
+      register: ci_info_missing
+
+    - name: Assert empty result for nonexistent instance
+      ansible.builtin.assert:
+        that:
+          - ci_info_missing.instances | length == 0
+
+    # --- CRUD: Check mode for delete ---
+    - name: Delete instance in check mode
+      azure.azcollection.azure_powerplatform_customerinsights:
+        name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
+        state: absent
+      check_mode: true
+      register: ci_delete_check
+
+    - name: Assert check mode reports changed
+      ansible.builtin.assert:
+        that:
+          - ci_delete_check.changed
+
+    - name: Verify instance still exists after check mode
+      azure.azcollection.azure_powerplatform_customerinsights_info:
+        instance_id: "{{ ci_instance_id }}"
+        subscription_key: "{{ ci_subscription_key }}"
+      register: ci_verify_exists
+
+    - name: Assert instance still exists
+      ansible.builtin.assert:
+        that:
+          - ci_verify_exists.instances | length == 1
+
+    # --- CRUD: Actual delete ---
+    - name: Delete Customer Insights instance
+      azure.azcollection.azure_powerplatform_customerinsights:
+        name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
+        state: absent
+      register: ci_delete
+
+    - name: Assert instance was deleted
+      ansible.builtin.assert:
+        that:
+          - ci_delete.changed
+
+    # --- CRUD: Delete idempotency ---
+    - name: Delete instance again (idempotency)
+      azure.azcollection.azure_powerplatform_customerinsights:
+        name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
+        state: absent
+      register: ci_delete_again
+
+    - name: Assert idempotent delete is not changed
+      ansible.builtin.assert:
+        that:
+          - not ci_delete_again.changed
+
+  always:
+    - name: Cleanup - ensure test instance is deleted
+      azure.azcollection.azure_powerplatform_customerinsights:
+        name: "{{ ci_instance_name }}"
+        subscription_key: "{{ ci_subscription_key }}"
+        state: absent
+      ignore_errors: true
