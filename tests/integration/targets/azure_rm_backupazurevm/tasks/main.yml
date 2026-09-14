@@ -1,86 +1,217 @@
 - name: Create a new resource group for backup azure VM test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-backupazurevm"
-    location: eastus
+    location: eastus2
 
 - name: For backup azure VM test
   block:
-    - name: Fix resource prefix
+    - name: Set facts
       ansible.builtin.set_fact:
-        resource_group: 'MyResourceGroup'
-        recovery_vault_name: 'MyRecoveryVault'
-        resource_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/MyVM"
-        backup_policy_id: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/DefaultPolicy"
+        rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
+        location: "eastus2"
+        recovery_vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        policy_name: "bp-daily-{{ resource_group | hash('md5') | truncate(16, True, '') }}"
+        vm_name: "bkvm{{ resource_group | hash('md5') | truncate(10, True, '') }}"
 
-    - name: Enabling/Updating protection for the Azure VM
+    - name: Create virtual network
+      azure.azcollection.azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        name: "vnet-{{ rpfx }}"
+        address_prefixes: "10.0.0.0/16"
+
+    - name: Add subnet
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        name: "subnet-{{ rpfx }}"
+        address_prefix: "10.0.1.0/24"
+        virtual_network: "vnet-{{ rpfx }}"
+
+    - name: Create network interface
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        name: "nic-{{ rpfx }}"
+        virtual_network: "vnet-{{ rpfx }}"
+        subnet: "subnet-{{ rpfx }}"
+        create_with_security_group: false
+        ip_configurations:
+          - name: default
+            primary: true
+
+    - name: Create the VM to be protected
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        name: "{{ vm_name }}"
+        vm_size: Standard_D2s_v3
+        admin_username: azureuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/azureuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+        network_interfaces: "nic-{{ rpfx }}"
+        managed_disk_type: StandardSSD_LRS
+        os_disk_caching: ReadWrite
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: canonical
+          sku: 20_04-lts-gen2
+          version: latest
+      register: vm_out
+
+    - name: Create Recovery Services vault
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        name: "{{ recovery_vault_name }}"
+        location: "{{ location }}"
+        state: present
+
+    - name: Create daily VM backup policy
+      azure.azcollection.azure_rm_backuppolicy:
+        vault_name: "{{ recovery_vault_name }}"
+        name: "{{ policy_name }}"
+        resource_group: "{{ resource_group }}-backupazurevm"
+        state: present
+        backup_management_type: "AzureIaasVM"
+        schedule_run_frequency: "Daily"
+        instant_recovery_snapshot_retention: 2
+        daily_retention_count: 7
+        time_zone: "UTC"
+        schedule_run_time: 14
+      register: policy_out
+
+    - name: Enable protection for the Azure VM
       azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
-        resource_id: "{{ resource_id }}"
-        backup_policy_id: "{{ backup_policy_id }}"
-        state: "create"
-      register: output
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+        backup_policy_id: "{{ policy_out.id }}"
+        state: create
+      register: enable_out
 
-    - name: Assert that output has changed
+    - name: Assert protection enable succeeded
       ansible.builtin.assert:
         that:
-          - output is changed
+          - enable_out is changed
+          - enable_out.response.id is defined
 
-    - name: Trigger an on-demand backup for a protected Azure VM
-      azure.azcollection.azure_rm_backupazurevm:
+    - name: Get protected item info
+      azure.azcollection.azure_rm_backupazurevm_info:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
-        resource_id: "{{ resource_id }}"
-        backup_policy_id: "{{ backup_policy_id }}"
-        recovery_point_expiry_time: "2025-02-03T05:00:00Z"
-        state: "backup"
-      register: output
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+      register: protected_info
 
-    - name: Assert that output has changed
+    - name: Assert protected item is returned
       ansible.builtin.assert:
         that:
-          - output is changed
+          - protected_info.response.id is defined
+          - protected_info.response.name is defined
+
+    # Skipped on purpose: triggering an on-demand backup creates a recovery
+    # point that Azure's secure-by-default policy retains under 14-day soft
+    # delete (BMSUserErrorDisablingSoftDeleteStateNotAllowed prevents
+    # opt-out), which blocks vault + RG teardown and leaves the RG billable
+    # for 14 days per run. The ConfigureBackup job emitted by `state: create`
+    # above is sufficient to exercise azure_rm_backupjob_info.
+    # - name: Trigger on-demand backup
+    #   azure.azcollection.azure_rm_backupazurevm:
+    #     resource_group: "{{ resource_group }}-backupazurevm"
+    #     recovery_vault_name: "{{ recovery_vault_name }}"
+    #     resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+    #     backup_policy_id: "{{ policy_out.id }}"
+    #     recovery_point_expiry_time: "2026-12-31T00:00:00Z"
+    #     state: backup
+    #   register: backup_trigger
+    #
+    # - name: Assert backup was triggered
+    #   ansible.builtin.assert:
+    #     that:
+    #       - backup_trigger is changed
+
+    - name: List backup jobs on the vault until a ConfigureBackup job appears
+      azure.azcollection.azure_rm_backupjob_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+      register: all_jobs
+      until: all_jobs.jobs | selectattr('properties.operation', 'equalto', 'ConfigureBackup') | list | length > 0
+      retries: 60
+      delay: 20
+
+    - name: Assert list returned at least one job
+      ansible.builtin.assert:
+        that:
+          - all_jobs.jobs | length > 0
+
+    - name: List only in-progress jobs (filter smoke test)
+      azure.azcollection.azure_rm_backupjob_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        filter: "status eq 'InProgress'"
+      register: filtered_jobs
+
+    - name: Assert filter did not error and returned a list
+      ansible.builtin.assert:
+        that:
+          - filtered_jobs.jobs is iterable
+
+    - name: Pick the ConfigureBackup job from the enrollment above
+      ansible.builtin.set_fact:
+        target_job: "{{ all_jobs.jobs | selectattr('properties.operation', 'equalto', 'ConfigureBackup') | list | first }}"
+
+    - name: Get details for a specific job by name
+      azure.azcollection.azure_rm_backupjob_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        name: "{{ target_job.name }}"
+      register: job_detail
+
+    - name: Assert single-element job detail and known status
+      ansible.builtin.assert:
+        that:
+          - job_detail.jobs | length == 1
+          - job_detail.jobs[0].name == target_job.name
+          - job_detail.jobs[0].properties.operation == 'ConfigureBackup'
+          - job_detail.jobs[0].properties.status in ['InProgress', 'Completed', 'CompletedWithWarnings', 'Failed', 'Cancelling', 'Cancelled']
+
+    - name: Get details for a non-existent job (typed 404 handling)
+      azure.azcollection.azure_rm_backupjob_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        name: "00000000-0000-0000-0000-000000000000"
+      register: missing_job
+
+    - name: Assert missing job returns empty list
+      ansible.builtin.assert:
+        that:
+          - missing_job.jobs == []
 
     - name: Stop protection but retain existing data
       azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
-        resource_id: "{{ resource_id }}"
-        backup_policy_id: "{{ backup_policy_id }}"
-        state: "stop"
-      register: output
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+        backup_policy_id: "{{ policy_out.id }}"
+        state: stop
+      register: stop_out
 
-    - name: Assert that output has changed
+    - name: Assert stop succeeded
       ansible.builtin.assert:
         that:
-          - output is changed
+          - stop_out is changed
 
-    - name: Get backup azure vm info
-      azure.azcollection.azure_rm_backupazurevm_info:
-        resource_group: "{{ resource_group }}-backupazurevm"
-        recovery_vault_name: "{{ recovery_vault_name }}"
-        resource_id: "{{ resource_id }}"
-      register: output
-
-    - name: Assert that output has changed
-      ansible.builtin.assert:
-        that:
-          - output.response.id != None
-          - output.response.name != None
-
-    - name: Stop protection and delete data
+    - name: Stop protection and delete backup data
       azure.azcollection.azure_rm_backupazurevm:
         resource_group: "{{ resource_group }}-backupazurevm"
         recovery_vault_name: "{{ recovery_vault_name }}"
-        resource_id: "{{ resource_id }}"
-        backup_policy_id: "{{ backup_policy_id }}"
-        state: "delete"
-      register: output
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+        backup_policy_id: "{{ policy_out.id }}"
+        state: delete
+      register: delete_out
 
-    - name: Assert that output has changed
+    - name: Assert delete succeeded
       ansible.builtin.assert:
         that:
-          - output is changed
+          - delete_out is changed
+
   always:
     - name: Force delete the resource group
       azure.azcollection.azure_rm_resourcegroup:
