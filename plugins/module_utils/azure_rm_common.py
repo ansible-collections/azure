@@ -259,6 +259,7 @@ try:
     from azure.storage.blob import BlobServiceClient
     from azure.storage.fileshare import ShareDirectoryClient, ShareClient, ShareFileClient
     from azure.mgmt.authorization import AuthorizationManagementClient
+    from azure.mgmt.msi import ManagedServiceIdentityClient
     from azure.mgmt.sql import SqlManagementClient
     from azure.mgmt.servicebus import ServiceBusManagementClient
     from azure.mgmt.postgresqlflexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
@@ -403,6 +404,7 @@ class AzureRMModuleBase(object):
             self.fail(msg=msg, exception=AZURE_IMPORT_ERROR)
 
         self._authorization_client = None
+        self._msi_client = None
         self._network_client = None
         self._storage_client = None
         self._subscription_client = None
@@ -1088,6 +1090,15 @@ class AzureRMModuleBase(object):
     @property
     def authorization_models(self):
         return AuthorizationManagementClient.models('2020-04-01-preview')
+
+    @property
+    def msi_client(self):
+        self.log('Getting Managed Service Identity client...')
+        if not self._msi_client:
+            self._msi_client = self.get_mgmt_svc_client(ManagedServiceIdentityClient,
+                                                        base_url=self._cloud_environment.endpoints.resource_manager,
+                                                        api_version='2024-11-30')
+        return self._msi_client
 
     @property
     def subscription_client(self):

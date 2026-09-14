@@ -22,24 +22,17 @@
   when: managed_identity_action == 'create'
 
 - name: Create the user managed identity - {{ identity_name }}
-  azure.azcollection.azure_rm_resource:
+  azure.azcollection.azure_rm_userassignedidentity:
     resource_group: "{{ mi_rg }}"
-    provider: ManagedIdentity
-    resource_type: userAssignedIdentities
-    resource_name: "{{ identity_name }}"
-    api_version: "2023-01-31"
-    body:
-      location: "{{ managed_identity_location }}"
+    name: "{{ identity_name }}"
+    location: "{{ managed_identity_location }}"
     state: present
   when: managed_identity_action == 'create'
 
 - name: Lookup service principal object id for identity {{ identity_name }}
-  azure.azcollection.azure_rm_resource_info:
-    api_version: "2023-01-31"
+  azure.azcollection.azure_rm_userassignedidentity_info:
     resource_group: "{{ mi_rg }}"
-    provider: ManagedIdentity
-    resource_type: userAssignedIdentities
-    resource_name: "{{ identity_name }}"
+    name: "{{ identity_name }}"
   register: output
   when:
     - access_policies_object_ids is defined
@@ -47,17 +40,14 @@
 
 - name: Set object ID for identity {{ identity_name }}
   ansible.builtin.set_fact:
-    access_policies_object_ids: "{{ access_policies_object_ids + [output.response[0].properties.principalId] }}"
+    access_policies_object_ids: "{{ access_policies_object_ids + [output.userassignedidentities[0].principal_id] }}"
   when:
     - access_policies_object_ids is defined
     - managed_identity_action == 'create'
 
 - name: Destroy the user managed identity - {{ identity_name }}
-  azure.azcollection.azure_rm_resource:
+  azure.azcollection.azure_rm_userassignedidentity:
     resource_group: "{{ mi_rg }}"
-    provider: ManagedIdentity
-    resource_type: userAssignedIdentities
-    resource_name: "{{ identity_name }}"
-    api_version: "2023-01-31"
+    name: "{{ identity_name }}"
     state: absent
   when: managed_identity_action == 'delete'
