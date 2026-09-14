@@ -246,6 +246,12 @@ class AzureRMServiceBusRule(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        # validate none strings in correlation_filter properties
+        if self.correlation_filter and self.correlation_filter.get('properties'):
+            for key, value in self.correlation_filter['properties'].items():
+                if not isinstance(value, str):
+                    self.fail("correlation_filter.properties values must be strings. Found {0}:{1}".format(str(key), str(value)))
+
         changed = False
         original = self.get()
 
