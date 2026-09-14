@@ -71,7 +71,6 @@ options:
               Bearer token.
         type: str
         required: true
-        no_log: true
     state:
         description:
             - State of the Customer Insights instance.

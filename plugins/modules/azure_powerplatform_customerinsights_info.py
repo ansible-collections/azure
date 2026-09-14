@@ -39,7 +39,6 @@ options:
               Bearer token.
         type: str
         required: true
-        no_log: true
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
