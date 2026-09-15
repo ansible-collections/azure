@@ -1,0 +1,230 @@
+- name: Create a new resource group for federated identity credential test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-federatedidentitycredential"
+    location: eastus2
+
+- name: For federated identity credential test
+  block:
+    - name: Prepare test facts
+      ansible.builtin.set_fact:
+        credential_name: "cred{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+        location: eastus2
+        managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-federatedidentitycredential"
+
+    - name: Create the parent user-assigned identity via shared common task
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'federatedidentitycredential'
+        managed_identity_unique: '1'
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+
+    - name: Create instance -- check mode
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        issuer: https://token.actions.githubusercontent.com
+        subject: "repo:example/repo:environment:production"
+        audiences:
+          - api://AzureADTokenExchange
+        state: present
+      check_mode: true
+      register: results
+
+    - name: Assert the credential would be created
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Create a federated identity credential
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        issuer: https://token.actions.githubusercontent.com
+        subject: "repo:example/repo:environment:production"
+        audiences:
+          - api://AzureADTokenExchange
+        state: present
+      register: results
+
+    - name: Assert that the credential is created
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.issuer == "https://token.actions.githubusercontent.com"
+          - results.state.subject == "repo:example/repo:environment:production"
+          - results.state.audiences == ["api://AzureADTokenExchange"]
+          - results.state.type == "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials"
+
+    - name: Create a federated identity credential again (idempotent)
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        issuer: https://token.actions.githubusercontent.com
+        subject: "repo:example/repo:environment:production"
+        audiences:
+          - api://AzureADTokenExchange
+        state: present
+      register: results
+
+    - name: Assert idempotent create
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Update the federated identity credential's subject -- check mode
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        issuer: https://token.actions.githubusercontent.com
+        subject: "repo:example/repo:environment:staging"
+        audiences:
+          - api://AzureADTokenExchange
+        state: present
+      check_mode: true
+      register: results
+
+    - name: Assert the subject update would change
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Get facts by name after check-mode update
+      azure.azcollection.azure_rm_federatedidentitycredential_info:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+      register: check_mode_facts
+
+    - name: Assert the check-mode update did not actually persist
+      ansible.builtin.assert:
+        that:
+          - check_mode_facts.federatedidentitycredentials[0].subject == "repo:example/repo:environment:production"
+
+    - name: Update the federated identity credential's subject
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        issuer: https://token.actions.githubusercontent.com
+        subject: "repo:example/repo:environment:staging"
+        audiences:
+          - api://AzureADTokenExchange
+        state: present
+      register: results
+
+    - name: Assert the credential is updated
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.subject == "repo:example/repo:environment:staging"
+
+    - name: Update the federated identity credential's subject again (idempotent)
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        issuer: https://token.actions.githubusercontent.com
+        subject: "repo:example/repo:environment:staging"
+        audiences:
+          - api://AzureADTokenExchange
+        state: present
+      register: results
+
+    - name: Assert idempotent update
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Get facts by name
+      azure.azcollection.azure_rm_federatedidentitycredential_info:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+      register: results
+
+    - name: Assert the info facts
+      ansible.builtin.assert:
+        that:
+          - results.federatedidentitycredentials | length == 1
+          - results.federatedidentitycredentials[0].name == credential_name
+
+    - name: Get facts for all federated identity credentials on the identity
+      azure.azcollection.azure_rm_federatedidentitycredential_info:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+      register: results
+
+    - name: Assert the info facts contain the credential
+      ansible.builtin.assert:
+        that:
+          - results.federatedidentitycredentials | length == 1
+
+    - name: Get facts by name for a non-existent credential
+      azure.azcollection.azure_rm_federatedidentitycredential_info:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "doesnotexist{{ credential_name }}"
+      register: results
+
+    - name: Assert no facts are returned for a non-existent credential
+      ansible.builtin.assert:
+        that:
+          - results.federatedidentitycredentials | length == 0
+
+    - name: Delete the federated identity credential -- check mode
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        state: absent
+      check_mode: true
+      register: results
+
+    - name: Assert the credential would be deleted but was not
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.name == credential_name
+
+    - name: Delete the federated identity credential
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        state: absent
+      register: results
+
+    - name: Assert the credential is deleted
+      ansible.builtin.assert:
+        that: results is changed
+
+    - name: Delete the federated identity credential again (idempotent)
+      azure.azcollection.azure_rm_federatedidentitycredential:
+        resource_group: "{{ new_resource_group }}"
+        identity_name: "{{ identity_name }}"
+        name: "{{ credential_name }}"
+        state: absent
+      register: results
+
+    - name: Assert idempotent delete
+      ansible.builtin.assert:
+        that: results is not changed
+
+    - name: Delete the parent user-assigned identity via shared common task
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'federatedidentitycredential'
+        managed_identity_unique: '1'
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-federatedidentitycredential"
+        force_delete_nonempty: true
+        state: absent
