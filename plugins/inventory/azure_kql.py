@@ -19,8 +19,11 @@ DOCUMENTATION = r'''
           for how to craft your own query.  The one requirement is that you need to provide inventory_hostname.
         - Requires a YAML configuration file whose name ends with 'azure_kql.(yml|yaml)'
         - Be aware that currently Azure Resource Graph may not be consistent with the actual state of your
-          resources.  It can take up to 30 minutes for updates to propagate.  This applies both for resources
+          resources.  It can take up to 30 hours for updates to propagate.  This applies both for resources
           to appear and to dissapear.
+          Microsoft also makes no guarantees that the information contained is accurate. It happens that
+          attributes (such as the PowerState) or entire VMs simply have an incorrect state, disappear and/or
+          reappear in different queries.
 '''
 
 EXAMPLES = '''
