@@ -1,0 +1,4 @@
+cloud/azure
+shippable/azure/group12
+destructive
+needs/file/tests/integration_common_tasks/managed_identity.yml
