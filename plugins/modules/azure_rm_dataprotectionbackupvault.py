@@ -438,6 +438,7 @@ class AzureRMDataProtectionBackupVault(AzureRMModuleBaseExt):
                             infrastructure_encryption=dict(type='str', choices=['Enabled', 'Disabled']),
                             key_vault_properties=dict(
                                 type='dict',
+                                no_log=False,
                                 options=dict(
                                     key_uri=dict(type='str', no_log=True),
                                 ),
@@ -632,8 +633,8 @@ class AzureRMDataProtectionBackupVault(AzureRMModuleBaseExt):
         return self.results
 
     def create_update_backupvault(self, identity, datastore_type, redundancy, security_settings, feature_settings,
-                                   monitoring_settings, cost_management_settings,
-                                   resource_guard_operation_requests, replicated_regions):
+                                  monitoring_settings, cost_management_settings,
+                                  resource_guard_operation_requests, replicated_regions):
         self.log("Creating / Updating the Backup vault {0}".format(self.name))
         backup_vault_kwargs = dict(
             storage_settings=[StorageSetting(datastore_type=datastore_type, type=redundancy)],

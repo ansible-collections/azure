@@ -1530,7 +1530,7 @@ class AzureRMModuleBase(object):
         self.log('Getting data protection client')
         if not self._dataprotection_client:
             self._dataprotection_client = self.get_mgmt_svc_client(DataProtectionMgmtClient,
-                                                                    base_url=self._cloud_environment.endpoints.resource_manager)
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
         return self._dataprotection_client
 
     @property
