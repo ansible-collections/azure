@@ -133,6 +133,7 @@ AZURE_API_PROFILES = {
         'AutomationClient': 'latest',
         'IotHubClient': 'latest',
         'RecoveryServicesBackupClient': 'latest',
+        'DataProtectionMgmtClient': 'latest',
         'DataFactoryManagementClient': 'latest',
         'KeyVaultManagementClient': '2026-02-01',
         'HDInsightManagementClient': 'latest',
@@ -294,6 +295,7 @@ try:
     from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
     from azure.mgmt.databricks import AzureDatabricksManagementClient
     import azure.mgmt.databricks.models as DatabricksModels
+    from azure.mgmt.dataprotection import DataProtectionMgmtClient
 
 except ImportError as exc:
     AZURE_IMPORT_ERROR = traceback.format_exc()
@@ -456,6 +458,7 @@ class AzureRMModuleBase(object):
         self._hybrid_compute_management_client = None
         self._cognitive_services_management_client = None
         self._databricks_client = None
+        self._dataprotection_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1521,6 +1524,14 @@ class AzureRMModuleBase(object):
             self._recovery_services_backup_client = self.get_mgmt_svc_client(RecoveryServicesBackupClient,
                                                                              base_url=self._cloud_environment.endpoints.resource_manager)
         return self._recovery_services_backup_client
+
+    @property
+    def dataprotection_client(self):
+        self.log('Getting data protection client')
+        if not self._dataprotection_client:
+            self._dataprotection_client = self.get_mgmt_svc_client(DataProtectionMgmtClient,
+                                                                    base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._dataprotection_client
 
     @property
     def recovery_services_backup_models(self):

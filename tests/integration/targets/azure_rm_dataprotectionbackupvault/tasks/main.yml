@@ -1,0 +1,629 @@
+- name: Create a new resource group for data protection backup vault test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-dataprotectionbackupvault"
+    location: eastus
+
+- name: For data protection backup vault test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-dataprotectionbackupvault"
+      register: __rg_info
+
+    - name: Fix resource prefix and location
+      ansible.builtin.set_fact:
+        name_rpfx: "dpbv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+
+    - name: Create identities array
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
+        new_resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        tenant_id: "{{ azure_tenant }}"
+
+    - name: Lookup service principal object id
+      ansible.builtin.set_fact:
+        object_id: "{{ lookup('azure.azcollection.azure_service_principal_attribute',
+                       azure_client_id=azure_client_id,
+                       azure_secret=azure_secret,
+                       azure_tenant=tenant_id) }}"
+      register: object_id_facts
+
+    - name: Create key vault access policy object ids array
+      ansible.builtin.set_fact:
+        access_policies_object_ids: ["{{ object_id }}"]
+        key_vault_name: "dpbvkv{{ resource_group | hash('md5') | truncate(15, True, '') }}{{ 1000 | random }}"
+
+    - name: Create user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'dpbackupvault'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
+
+    - name: Create a key vault for CMK (encryption_settings) testing
+      azure.azcollection.azure_rm_keyvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        vault_name: "{{ key_vault_name }}"
+        vault_tenant: "{{ tenant_id }}"
+        sku:
+          name: standard
+          family: A
+        enable_rbac_authorization: false
+        access_policies:
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ access_policies_object_ids[0] }}"
+            keys: [get, list, wrapkey, unwrapkey, create, update, import, delete, backup, restore, recover, purge]
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ access_policies_object_ids[1] }}"
+            keys: [get, list, wrapkey, unwrapkey, create, update, import, delete, backup, restore, recover, purge]
+          - tenant_id: "{{ tenant_id }}"
+            object_id: "{{ access_policies_object_ids[2] }}"
+            keys: [get, list, wrapkey, unwrapkey, create, update, import, delete, backup, restore, recover, purge]
+        enable_purge_protection: true
+
+    - name: Create a key in the key vault for CMK testing
+      azure.azcollection.azure_rm_keyvaultkey:
+        key_name: dpbvtestkey
+        keyvault_uri: "https://{{ key_vault_name }}.vault.azure.net"
+
+    - name: Get latest version of the CMK key
+      azure.azcollection.azure_rm_keyvaultkey_info:
+        vault_uri: "https://{{ key_vault_name }}.vault.azure.net"
+        name: dpbvtestkey
+      register: __key_info
+
+    - name: Set CMK key url fact
+      ansible.builtin.set_fact:
+        key_url: "{{ __key_info['keys'][0]['kid'] }}"
+
+    - name: Create a Backup vault (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: SystemAssigned
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      check_mode: true
+      register: output
+
+    - name: Assert that check mode reports changed and did not create the vault
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Backup vault by name (should not exist after check mode)
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that the vault was not actually created
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults | length == 0
+
+    - name: Create a Backup vault
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: SystemAssigned
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id != None
+
+    - name: Create a Backup vault (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: SystemAssigned
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Backup vault by name
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert vault facts are populated correctly
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults | length == 1
+          - output.backupvaults[0].id != None
+          - output.backupvaults[0].name == name_rpfx
+          - output.backupvaults[0].location == location
+          - output.backupvaults[0].datastore_type == 'VaultStore'
+          - output.backupvaults[0].redundancy == 'LocallyRedundant'
+          - output.backupvaults[0].provisioning_state == 'Succeeded'
+          - output.backupvaults[0].identity.type == 'SystemAssigned'
+          - output.backupvaults[0].tags.dpbackupvaulttest == name_rpfx
+
+    - name: List Backup vaults in the resource group
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+      register: output
+
+    - name: Assert the vault is present in the resource group listing
+      ansible.builtin.assert:
+        that:
+          - name_rpfx in (output.backupvaults | map(attribute='name') | list)
+
+    - name: List Backup vaults in current subscription filtered by tag
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        tags:
+          - "dpbackupvaulttest:{{ name_rpfx }}"
+      register: output
+
+    - name: Assert the vault is present in the subscription-wide listing
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults | length == 1
+          - output.backupvaults[0].name == name_rpfx
+
+    - name: Update Backup vault identity to UserAssigned
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update Backup vault identity to UserAssigned (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update Backup vault identity to UserAssigned X2
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update Backup vault identity to UserAssigned X2 (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Attempt to change immutable datastore_type and redundancy
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        datastore_type: ArchiveStore
+        redundancy: GeoRedundant
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+              - "{{ managed_identity_ids[1] }}"
+        tags:
+          dpbackupvaulttest: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert immutable properties are ignored and not reported changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Backup vault by name after immutable-property no-op
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert datastore_type and redundancy were not changed
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults[0].datastore_type == 'VaultStore'
+          - output.backupvaults[0].redundancy == 'LocallyRedundant'
+
+    - name: Update soft delete, immutability, encryption, monitoring and cost management settings
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          soft_delete_settings:
+            retention_duration_in_days: 30
+          immutability_settings:
+            state: Unlocked
+          encryption_settings:
+            state: Enabled
+            infrastructure_encryption: Disabled
+            key_vault_properties:
+              key_uri: "{{ key_url }}"
+            kek_identity:
+              identity_type: UserAssigned
+              identity_id: "{{ managed_identity_ids[0] }}"
+        feature_settings:
+          cross_subscription_restore_settings:
+            state: Enabled
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Enabled
+        cost_management_settings:
+          granularity_level: VaultLevel
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update soft delete, immutability, encryption, monitoring and cost management settings (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          soft_delete_settings:
+            retention_duration_in_days: 30
+          immutability_settings:
+            state: Unlocked
+          encryption_settings:
+            state: Enabled
+            infrastructure_encryption: Disabled
+            key_vault_properties:
+              key_uri: "{{ key_url }}"
+            kek_identity:
+              identity_type: UserAssigned
+              identity_id: "{{ managed_identity_ids[0] }}"
+        feature_settings:
+          cross_subscription_restore_settings:
+            state: Enabled
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Enabled
+        cost_management_settings:
+          granularity_level: VaultLevel
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Backup vault by name to verify every settings block is present
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert every property surfaced in the info dict
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults[0].security_settings.soft_delete_settings.state == 'AlwaysOn'
+          - output.backupvaults[0].security_settings.soft_delete_settings.retention_duration_in_days == 30
+          - output.backupvaults[0].security_settings.immutability_settings.state == 'Unlocked'
+          - output.backupvaults[0].security_settings.encryption_settings.state == 'Enabled'
+          - output.backupvaults[0].security_settings.encryption_settings.infrastructure_encryption == 'Disabled'
+          - output.backupvaults[0].security_settings.encryption_settings.key_vault_properties.key_uri == key_url
+          - output.backupvaults[0].security_settings.encryption_settings.kek_identity.identity_type == 'UserAssigned'
+          - output.backupvaults[0].feature_settings.cross_subscription_restore_settings.state == 'Enabled'
+          - output.backupvaults[0].monitoring_settings.azure_monitor_alert_settings.alerts_for_all_job_failures == 'Enabled'
+          - output.backupvaults[0].cost_management_settings.granularity_level == 'VaultLevel'
+          - output.backupvaults[0].storage_settings is defined
+          - output.backupvaults[0].type == 'Microsoft.DataProtection/backupVaults'
+          - output.backupvaults[0].system_data is defined
+          - output.backupvaults[0].secure_score is defined
+          - output.backupvaults[0].bcdr_security_level is defined
+          - output.backupvaults[0].is_vault_protected_by_resource_guard is defined
+
+    - name: Partial update should preserve unspecified settings via deep merge
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          soft_delete_settings:
+            retention_duration_in_days: 60
+      register: output
+
+    - name: Assert partial update reports changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Backup vault by name after partial update
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert only retention was updated, sibling fields preserved
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults[0].security_settings.soft_delete_settings.retention_duration_in_days == 60
+          - output.backupvaults[0].security_settings.soft_delete_settings.state == 'AlwaysOn'
+          - output.backupvaults[0].security_settings.immutability_settings.state == 'Unlocked'
+          - output.backupvaults[0].security_settings.encryption_settings.state == 'Enabled'
+          - output.backupvaults[0].security_settings.encryption_settings.key_vault_properties.key_uri == key_url
+          - output.backupvaults[0].feature_settings.cross_subscription_restore_settings.state == 'Enabled'
+          - output.backupvaults[0].monitoring_settings.azure_monitor_alert_settings.alerts_for_all_job_failures == 'Enabled'
+          - output.backupvaults[0].cost_management_settings.granularity_level == 'VaultLevel'
+
+    - name: Update tags on Backup vault (append=false)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        append_tags: false
+        tags:
+          TestTag1: TestValue1
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Check tags on Backup vault (append=false)
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert only TestTag1 remains
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults[0].tags.TestTag1 is defined
+          - output.backupvaults[0].tags.TestTag1 == 'TestValue1'
+          - output.backupvaults[0].tags.dpbackupvaulttest is not defined
+
+    - name: Update tags on Backup vault (append=true)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        append_tags: true
+        tags:
+          TestTag2: TestValue2
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Check tags on Backup vault (append=true)
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert both tags are present
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults[0].tags.TestTag1 is defined
+          - output.backupvaults[0].tags.TestTag1 == 'TestValue1'
+          - output.backupvaults[0].tags.TestTag2 is defined
+          - output.backupvaults[0].tags.TestTag2 == 'TestValue2'
+
+    - name: Create a GeoRedundant Backup vault with cross region restore enabled
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}geo"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: GeoRedundant
+        feature_settings:
+          cross_region_restore_settings:
+            state: Enabled
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create a GeoRedundant Backup vault with cross region restore enabled (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}geo"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: GeoRedundant
+        feature_settings:
+          cross_region_restore_settings:
+            state: Enabled
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get GeoRedundant Backup vault facts
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}geo"
+      register: output
+
+    - name: Assert cross region restore state and replicated_regions are surfaced
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults[0].redundancy == 'GeoRedundant'
+          - output.backupvaults[0].feature_settings.cross_region_restore_settings.state == 'Enabled'
+          - output.backupvaults[0].replicated_regions is defined
+
+    - name: Delete the GeoRedundant Backup vault
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}geo"
+        state: absent
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete Backup vault (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert check mode reports changed but did not delete
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Backup vault by name (should still exist after check mode delete)
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert the vault still exists
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults | length == 1
+
+    - name: Delete Backup vault
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete Backup vault (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Backup vault by name after deletion
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ resource_group }}-dataprotectionbackupvault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert the vault no longer exists
+      ansible.builtin.assert:
+        that:
+          - output.backupvaults | length == 0
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'dpbackupvault'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "{{ location }}"
+        resource_group: "{{ new_resource_group }}"
+      with_items:
+        - '1'
+        - '2'
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-dataprotectionbackupvault"
+        force_delete_nonempty: true
+        state: absent
