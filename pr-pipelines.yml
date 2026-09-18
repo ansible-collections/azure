@@ -61,6 +61,7 @@ parameters:
       - "azure_rm_containerregistrytag"
       - "azure_rm_cosmosdbaccount"
       - "azure_rm_databricks"
+      - "azure_rm_dataprotectionbackupvault"
       - "azure_rm_ddosprotectionplan"
       - "azure_rm_deployment"
       - "azure_rm_diskencryptionset"
