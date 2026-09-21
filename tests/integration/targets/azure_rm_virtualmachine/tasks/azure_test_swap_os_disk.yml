@@ -1,0 +1,158 @@
+- name: Set variables
+  ansible.builtin.include_tasks: setup.yml
+
+# Phase 1: Build a reusable managed OS disk by creating a source VM, capturing its OS disk id, then deleting the VM while keeping the disk.
+- name: Create source VM (to produce a reusable managed OS disk)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    admin_username: testuser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/testuser/.ssh/authorized_keys
+        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    managed_disk_type: StandardSSD_LRS
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: source_vm
+
+- name: Get source VM info
+  azure.azcollection.azure_rm_virtualmachine_info:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+  register: src_info
+
+- name: Record source OS disk id and name
+  ansible.builtin.set_fact:
+    src_os_disk_id: "{{ src_info.vms[0].storage_profile.os_disk.managed_disk.id }}"
+    src_os_disk_name: "{{ src_info.vms[0].storage_profile.os_disk.name }}"
+
+- name: Deallocate source VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    started: false
+    allocated: false
+
+- name: Delete source VM but retain OS disk
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-src"
+    state: absent
+    remove_on_absent:
+      - network_interfaces
+      - public_ips
+
+# Negative guard - image + swap_os_disk cannot be combined on create
+- name: Attempt attach with image also set (expect failure)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    os_type: Linux
+    swap_os_disk:
+      os_disk_id: "{{ src_os_disk_id }}"
+    image:
+      offer: 0001-com-ubuntu-server-focal
+      publisher: Canonical
+      sku: 20_04-lts
+      version: latest
+  register: neg_image
+  failed_when: >
+    neg_image is not failed
+    or "cannot be combined with 'swap_os_disk'" not in (neg_image.msg | default(''))
+
+# Negative guard - os_type required when swap_os_disk is set on create
+- name: Attempt attach without os_type (expect failure)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    swap_os_disk:
+      os_disk_id: "{{ src_os_disk_id }}"
+  register: neg_os_type
+  failed_when: >
+    neg_os_type is not failed
+    or "'os_type' is required" not in (neg_os_type.msg | default(''))
+
+# attach existing OS disk by id, no image, no admin_username
+- name: Create VM by attaching existing managed OS disk (os_disk_id)
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    os_type: Linux
+    swap_os_disk:
+      os_disk_id: "{{ src_os_disk_id }}"
+  register: attach_vm
+
+- name: Assert VM created with createOption=Attach and no osProfile
+  ansible.builtin.assert:
+    that:
+      - attach_vm.changed
+      - attach_vm.ansible_facts.azure_vm.properties.storageProfile.osDisk.createOption == 'Attach'
+      - attach_vm.ansible_facts.azure_vm.properties.osProfile is not defined
+
+- name: Idempotence - re-run attach create
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    os_type: Linux
+    swap_os_disk:
+      os_disk_id: "{{ src_os_disk_id }}"
+  register: attach_vm_idem
+
+- name: Assert idempotent
+  ansible.builtin.assert:
+    that:
+      - not attach_vm_idem.changed
+
+# os_disk_name only (no id, no os_disk_resource_group) must resolve in the current resource group
+- name: Delete attach VM but retain OS disk
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach"
+    state: absent
+    remove_on_absent:
+      - network_interfaces
+      - public_ips
+
+- name: Create VM by attaching OS disk using os_disk_name only
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach2"
+    vm_size: Standard_D2s_v3
+    virtual_network: "{{ network_name }}"
+    os_type: Linux
+    swap_os_disk:
+      os_disk_name: "{{ src_os_disk_name }}"
+  register: attach_vm2
+
+- name: Assert name-only attach VM created
+  ansible.builtin.assert:
+    that:
+      - attach_vm2.changed
+      - attach_vm2.ansible_facts.azure_vm.properties.storageProfile.osDisk.createOption == 'Attach'
+
+# Cleanup
+- name: Delete attach2 VM
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ vm_name }}-attach2"
+    state: absent
+
+- name: Delete retained source OS disk
+  azure.azcollection.azure_rm_manageddisk:
+    resource_group: "{{ resource_group }}-vm01"
+    name: "{{ src_os_disk_name }}"
+    state: absent
