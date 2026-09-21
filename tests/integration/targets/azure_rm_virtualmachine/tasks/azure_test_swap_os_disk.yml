@@ -29,8 +29,8 @@
 
 - name: Record source OS disk id and name
   ansible.builtin.set_fact:
-    src_os_disk_id: "{{ src_info.vms[0].storage_profile.os_disk.managed_disk.id }}"
-    src_os_disk_name: "{{ src_info.vms[0].storage_profile.os_disk.name }}"
+    src_os_disk_id: "{{ src_info.vms[0]['storage_profile']['os_disk']['managed_disk']['id'] }}"
+    src_os_disk_name: "{{ src_info.vms[0]['storage_profile']['os_disk']['name'] }}"
 
 - name: Deallocate source VM
   azure.azcollection.azure_rm_virtualmachine:
@@ -66,7 +66,7 @@
   register: neg_image
   failed_when: >
     neg_image is not failed
-    or "cannot be combined with 'swap_os_disk'" not in (neg_image.msg | default(''))
+    or "cannot be combined with 'swap_os_disk'" not in (neg_image['msg'] | default(''))
 
 # Negative guard - os_type required when swap_os_disk is set on create
 - name: Attempt attach without os_type (expect failure)
@@ -80,7 +80,7 @@
   register: neg_os_type
   failed_when: >
     neg_os_type is not failed
-    or "'os_type' is required" not in (neg_os_type.msg | default(''))
+    or "'os_type' is required" not in (neg_os_type['msg'] | default(''))
 
 # attach existing OS disk by id, no image, no admin_username
 - name: Create VM by attaching existing managed OS disk (os_disk_id)
@@ -98,8 +98,8 @@
   ansible.builtin.assert:
     that:
       - attach_vm.changed
-      - attach_vm.ansible_facts.azure_vm.properties.storageProfile.osDisk.createOption == 'Attach'
-      - attach_vm.ansible_facts.azure_vm.properties.osProfile is not defined
+      - attach_vm['ansible_facts']['azure_vm']['properties']['storageProfile']['osDisk']['createOption'] == 'Attach'
+      - "'osProfile' not in attach_vm['ansible_facts']['azure_vm']['properties']"
 
 - name: Idempotence - re-run attach create
   azure.azcollection.azure_rm_virtualmachine:
@@ -142,7 +142,7 @@
   ansible.builtin.assert:
     that:
       - attach_vm2.changed
-      - attach_vm2.ansible_facts.azure_vm.properties.storageProfile.osDisk.createOption == 'Attach'
+      - attach_vm2['ansible_facts']['azure_vm']['properties']['storageProfile']['osDisk']['createOption'] == 'Attach'
 
 # Cleanup
 - name: Delete attach2 VM
