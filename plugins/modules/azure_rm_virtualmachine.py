@@ -854,7 +854,9 @@ EXAMPLES = '''
     vm_size: Standard_B2s
     os_type: Linux
     swap_os_disk:
-      os_disk_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/{{ resource_group }}/providers/Microsoft.Compute/disks/my-existing-os-disk"
+      os_disk_id: >-
+        /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/{{ resource_group
+        }}/providers/Microsoft.Compute/disks/my-existing-os-disk
 
 - name: Create VM with cummunity gallery image ID
   azure_rm_virtualmachine:
