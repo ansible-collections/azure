@@ -607,7 +607,7 @@ options:
             - On VM create, this is the equivalent of C(az vm create --attach-os-disk); the disk provides the OS, so
               I(image), I(admin_username), I(admin_password), and I(ssh_public_keys) are not required and I(image) must
               not be provided together with I(swap_os_disk).
-            - I(os_type) must be specified when creating a VM with I(swap_os_disk).
+            - Set I(os_type) to C(Windows) when attaching a Windows OS disk; the module defaults I(os_type) to C(Linux).
             - On an existing VM, this parameter replaces the current OS disk with the referenced one.
         type: dict
         suboptions:
@@ -1921,8 +1921,6 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if self.swap_os_disk is not None:
                         if self.image:
                             self.fail("Parameter error: 'image' cannot be combined with 'swap_os_disk' on VM create; the attached OS disk provides the OS.")
-                        if not self.os_type:
-                            self.fail("Parameter error: 'os_type' is required when creating a VM with 'swap_os_disk'.")
 
                     if self.os_type == 'Linux' or self.os_type == 'linux':
                         if disable_ssh_password and not self.ssh_public_keys and not self.swap_os_disk and not self.specialized_image:

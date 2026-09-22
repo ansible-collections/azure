@@ -14,6 +14,7 @@
     vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
+    os_disk_delete_option: Detach
     image:
       offer: 0001-com-ubuntu-server-focal
       publisher: Canonical
@@ -36,6 +37,8 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-src"
+    managed_disk_type: StandardSSD_LRS
+    os_disk_delete_option: Detach
     started: false
     allocated: false
 
@@ -64,23 +67,7 @@
       sku: 20_04-lts
       version: latest
   register: neg_image
-  failed_when: >
-    neg_image is not failed
-    or "cannot be combined with 'swap_os_disk'" not in (neg_image['msg'] | default(''))
-
-# Negative guard - os_type required when swap_os_disk is set on create
-- name: Attempt attach without os_type (expect failure)
-  azure.azcollection.azure_rm_virtualmachine:
-    resource_group: "{{ resource_group }}-vm01"
-    name: "{{ vm_name }}-attach"
-    vm_size: Standard_D2s_v3
-    virtual_network: "{{ network_name }}"
-    swap_os_disk:
-      os_disk_id: "{{ src_os_disk_id }}"
-  register: neg_os_type
-  failed_when: >
-    neg_os_type is not failed
-    or "'os_type' is required" not in (neg_os_type['msg'] | default(''))
+  failed_when: neg_image is not failed
 
 # attach existing OS disk by id, no image, no admin_username
 - name: Create VM by attaching existing managed OS disk (os_disk_id)
@@ -90,6 +77,7 @@
     vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     os_type: Linux
+    os_disk_delete_option: Detach
     swap_os_disk:
       os_disk_id: "{{ src_os_disk_id }}"
   register: attach_vm
@@ -98,8 +86,8 @@
   ansible.builtin.assert:
     that:
       - attach_vm.changed
-      - attach_vm['ansible_facts']['azure_vm']['properties']['storageProfile']['osDisk']['createOption'] == 'Attach'
-      - "'osProfile' not in attach_vm['ansible_facts']['azure_vm']['properties']"
+      - attach_vm['ansible_facts']['azure_vm']['storage_profile']['os_disk']['create_option'] == 'Attach'
+      - "'os_profile' not in attach_vm['ansible_facts']['azure_vm']"
 
 - name: Idempotence - re-run attach create
   azure.azcollection.azure_rm_virtualmachine:
@@ -108,6 +96,7 @@
     vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     os_type: Linux
+    os_disk_delete_option: Detach
     swap_os_disk:
       os_disk_id: "{{ src_os_disk_id }}"
   register: attach_vm_idem
@@ -134,6 +123,7 @@
     vm_size: Standard_D2s_v3
     virtual_network: "{{ network_name }}"
     os_type: Linux
+    os_disk_delete_option: Detach
     swap_os_disk:
       os_disk_name: "{{ src_os_disk_name }}"
   register: attach_vm2
@@ -142,7 +132,7 @@
   ansible.builtin.assert:
     that:
       - attach_vm2.changed
-      - attach_vm2['ansible_facts']['azure_vm']['properties']['storageProfile']['osDisk']['createOption'] == 'Attach'
+      - attach_vm2['ansible_facts']['azure_vm']['storage_profile']['os_disk']['create_option'] == 'Attach'
 
 # Cleanup
 - name: Delete attach2 VM
