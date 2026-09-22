@@ -29,8 +29,8 @@
 
 - name: Record source OS disk id and name
   ansible.builtin.set_fact:
-    src_os_disk_id: "{{ src_info.vms[0]['storage_profile']['os_disk']['managed_disk']['id'] }}"
-    src_os_disk_name: "{{ src_info.vms[0]['storage_profile']['os_disk']['name'] }}"
+    src_os_disk_id: "{{ src_info.vms[0]['os_disk']['managed_disk']['id'] }}"
+    src_os_disk_name: "{{ src_info.vms[0]['os_disk']['name'] }}"
 
 - name: Deallocate source VM
   azure.azcollection.azure_rm_virtualmachine:
