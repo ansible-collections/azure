@@ -3063,7 +3063,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             return account
         sku = self.storage_models.Sku(name=self.storage_models.SkuName.standard_lrs)
         sku.tier = self.storage_models.SkuTier.standard
-        kind = self.storage_models.Kind.storage
+        kind = self.storage_models.Kind.storage_v2
         # pylint: disable=missing-kwoa
         parameters = self.storage_models.StorageAccountCreateParameters(sku=sku, kind=kind, location=self.location)
         self.log("Creating storage account {0} in location {1}".format(storage_account_name, self.location))
