@@ -603,7 +603,12 @@ options:
                         type: bool
     swap_os_disk:
         description:
-            - The swap OS disk parameters.
+            - Attach an existing managed OS disk to the virtual machine.
+            - On VM create, this is the equivalent of C(az vm create --attach-os-disk); the disk provides the OS, so
+              I(image), I(admin_username), I(admin_password), and I(ssh_public_keys) are not required and I(image) must
+              not be provided together with I(swap_os_disk).
+            - Set I(os_type) to C(Windows) when attaching a Windows OS disk; the module defaults I(os_type) to C(Linux).
+            - On an existing VM, this parameter replaces the current OS disk with the referenced one.
         type: dict
         suboptions:
             os_disk_id:
@@ -841,6 +846,17 @@ EXAMPLES = '''
       publisher: Canonical
       sku: 20_04-lts
       version: latest
+
+- name: Create VM by attaching an existing managed OS disk (equivalent to 'az vm create --attach-os-disk')
+  azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: attach-osdisk-vm
+    vm_size: Standard_B2s
+    os_type: Linux
+    swap_os_disk:
+      os_disk_id: >-
+        /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/{{ resource_group
+        }}/providers/Microsoft.Compute/disks/my-existing-os-disk
 
 - name: Create VM with cummunity gallery image ID
   azure_rm_virtualmachine:
@@ -1902,6 +1918,10 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
                     if not self.admin_username and not self.swap_os_disk and not self.specialized_image:
                         self.fail("Parameter error: admin_username required when creating a virtual machine.")
 
+                    if self.swap_os_disk is not None:
+                        if self.image:
+                            self.fail("Parameter error: 'image' cannot be combined with 'swap_os_disk' on VM create; the attached OS disk provides the OS.")
+
                     if self.os_type == 'Linux' or self.os_type == 'linux':
                         if disable_ssh_password and not self.ssh_public_keys and not self.swap_os_disk and not self.specialized_image:
                             self.fail("Parameter error: ssh_public_keys required when disabling SSH password.")
@@ -2600,7 +2620,7 @@ class AzureRMVirtualMachine(AzureRMModuleBase):
             os_disk_name = os_disk.get('os_disk_name')
             resource_group_name = os_disk.get('os_disk_resource_group')
         elif os_disk.get('os_disk_name') is not None:
-            os_disk_name = os_disk.get('name')
+            os_disk_name = os_disk.get('os_disk_name')
             resource_group_name = self.resource_group
         else:
             self.fail("The swap_os_disk must contain one of 'os_disk_name' and 'os_disk_id'")
