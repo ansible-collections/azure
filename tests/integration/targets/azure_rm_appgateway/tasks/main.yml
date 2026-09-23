@@ -75,6 +75,7 @@
         resource_group: "{{ resource_group }}-appgateway"
         sku: "standard"
         allocation_method: "static"
+        zones: ["1", "2", "3"]
 
     - name: Try to create v2 instance of Application Gateway with rewrite rules
       azure.azcollection.azure_rm_appgateway:
@@ -84,6 +85,7 @@
           name: standard_v2
           tier: standard_v2
           capacity: 2
+        zones: ["1", "2", "3"]
         ssl_policy:
           policy_type: "predefined"
           policy_name: "ssl_policy20170401_s"
@@ -233,6 +235,21 @@
       ansible.builtin.assert:
         that:
           - output is changed
+          - output.zones == ["1", "2", "3"]
+
+    - name: Attempt to modify zones on existing v2 gateway (must fail; zones are immutable)
+      azure.azcollection.azure_rm_appgateway:
+        resource_group: "{{ resource_group }}-appgateway"
+        name: "appgateway-v2-{{ rpfx }}"
+        zones: ["1"]
+      register: zone_update
+      ignore_errors: true
+
+    - name: Assert zones immutability guard fired before any ARM call
+      ansible.builtin.assert:
+        that:
+          - zone_update is failed
+          - "'ResourceAvailabilityZonesCannotBeModified' in zone_update.msg"
 
     - name: Gather full ID of the v2 AppGW Public IP (same RG)
       azure.azcollection.azure_rm_publicipaddress_info:

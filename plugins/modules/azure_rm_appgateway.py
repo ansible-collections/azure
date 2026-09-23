@@ -803,6 +803,14 @@ options:
             - Whether HTTP2 is enabled on the application gateway resource.
         type: bool
         default: False
+    zones:
+        version_added: "4.1.0"
+        description:
+            - A list of availability zones denoting where the application gateway resource needs to come from.
+            - The zones can be assigned only during creation.
+        type: list
+        elements: str
+        choices: ['1', '2', '3']
     web_application_firewall_configuration:
         version_added: "1.15.0"
         description:
@@ -1535,6 +1543,13 @@ provisioning_state:
     returned: always
     type: str
     sample: Succeeded
+zones:
+    description:
+        - A list of availability zones the application gateway is deployed to.
+        - Only populated for zone-redundant deployments (Standard_v2 / WAF_v2 SKUs).
+    returned: always
+    type: list
+    sample: ["1", "2", "3"]
 '''
 
 import time
@@ -1917,6 +1932,11 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
             enable_http2=dict(
                 type='bool',
                 default=False
+            ),
+            zones=dict(
+                type='list',
+                elements='str',
+                choices=['1', '2', '3'],
             ),
             identity=dict(
                 type='dict',
@@ -2330,6 +2350,8 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
                     self._apply_firewall_policy(dict(kwargs[key]), kwargs['resource_group'])
                 elif key == "enable_http2":
                     self.parameters["enable_http2"] = kwargs[key]
+                elif key == "zones":
+                    self.parameters["zones"] = kwargs[key]
                 elif key == "tags":
                     self.parameters["tags"] = kwargs[key]
 
@@ -2374,6 +2396,9 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
             identity = None
 
         if (self.to_do == Actions.Update):
+            if self.parameters.get("zones") and self.parameters.get("zones") != (old_response.get("zones") or []):
+                self.fail("ResourceAvailabilityZonesCannotBeModified: defined is {0}, existing is {1}".format(
+                    self.parameters["zones"], old_response.get("zones") or []))
             if (old_response['operational_state'] == 'Stopped' and self.gateway_state == 'started'):
                 self.to_do = Actions.Start
             elif (old_response['operational_state'] == 'Running' and self.gateway_state == 'stopped'):
@@ -2542,6 +2567,7 @@ class AzureRMApplicationGateways(AzureRMModuleBaseExt):
             "location": appgw_dict.get("location"),
             "operational_state": appgw_dict.get("operational_state"),
             "provisioning_state": appgw_dict.get("provisioning_state"),
+            "zones": appgw_dict.get("zones", []),
         }
         return d
 
