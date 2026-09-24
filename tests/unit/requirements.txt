@@ -1,5 +1,6 @@
 azure-servicebus
 azure-eventhub
+azure-eventhub-checkpointstoreblob-aio
 aiohttp
 pytest-asyncio
 azure-identity==1.25.2
