@@ -282,8 +282,10 @@ class AzureRMDataProtectionBackupVaultInfo(AzureRMModuleBase):
             for item in response:
                 if self.has_tags(item.tags, self.tags):
                     results.append(backupvault_to_dict(item))
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log("Did not find Backup vaults in resource group {0}: {1}".format(self.resource_group, str(e)))
+        except Exception as e:
+            self.fail("Error listing Backup vaults in resource group {0}: {1}".format(self.resource_group, str(e)))
         return results
 
     def list_by_subscription(self):
@@ -294,8 +296,10 @@ class AzureRMDataProtectionBackupVaultInfo(AzureRMModuleBase):
             for item in response:
                 if self.has_tags(item.tags, self.tags):
                     results.append(backupvault_to_dict(item))
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log("Did not find Backup vaults in current subscription: {0}".format(str(e)))
+        except Exception as e:
+            self.fail("Error listing Backup vaults in current subscription: {0}".format(str(e)))
         return results
 
 

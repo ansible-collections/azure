@@ -533,12 +533,15 @@ class AzureRMDataProtectionBackupVault(AzureRMModuleBaseExt):
             if hasattr(self, key):
                 setattr(self, key, kwargs[key])
 
-        resource_group = self.get_resource_group(self.resource_group)
-        if not self.location:
-            self.location = resource_group.location
-
         old_response = self.get_instance()
         old_props = (old_response or {}).get('properties') or {}
+
+        if not self.location:
+            if old_response:
+                self.location = old_response.get('location')
+            else:
+                resource_group = self.get_resource_group(self.resource_group)
+                self.location = resource_group.location
 
         curr_identity = old_response.get('identity') if old_response else None
         if self.identity:
@@ -550,6 +553,14 @@ class AzureRMDataProtectionBackupVault(AzureRMModuleBaseExt):
                 user_assigned_identities=dict(id=list((curr_identity or {}).get('user_assigned_identities', {}) or {})),
             )
         update_identity, identity_result = self.update_managed_identity(new_identity=new_identity, curr_identity=curr_identity)
+
+        if self.identity:
+            append = (self.identity.get('user_assigned_identities') or {}).get('append', True)
+            if not append:
+                curr_ids = set((curr_identity or {}).get('user_assigned_identities', {}) or {})
+                new_ids = set((self.identity.get('user_assigned_identities') or {}).get('id') or [])
+                if curr_ids - new_ids:
+                    update_identity = True
 
         merged_security = _deep_merge(old_props.get('security_settings'), self.security_settings)
         merged_feature = _deep_merge(old_props.get('feature_settings'), self.feature_settings)
