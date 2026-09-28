@@ -1,4 +1,33 @@
 # Change Log
+## v4.1.0 (2026-09-29)
+
+### NEW MODULES
+  - azure_rm_backupjob_info:([#2343](https://github.com/ansible-collections/azure/pull/2343))
+  - azure_rm_userassignedidentity:([#2361](https://github.com/ansible-collections/azure/pull/2361))
+  - azure_rm_userassignedidentity_info:([#2361](https://github.com/ansible-collections/azure/pull/2361))
+  - azure_rm_servicebusrule: ([#2363](https://github.com/ansible-collections/azure/pull/2363))
+  - azure_rm_servicebusrule_info: ([#2363](https://github.com/ansible-collections/azure/pull/2363))
+  - azure_rm_federatedidentitycredential: ([#2368](https://github.com/ansible-collections/azure/pull/2368))
+  - azure_rm_federatedidentitycredential_info: ([#2368](https://github.com/ansible-collections/azure/pull/2368))
+  - azure_rm_dataprotectionbackupvault: ([#2369](https://github.com/ansible-collections/azure/pull/2369))
+  - azure_rm_dataprotectionbackupvault_info: ([#2369](https://github.com/ansible-collections/azure/pull/2369))
+
+### FEATURE ENHANCEMENT
+  - meta/runtime.yml: Register all modules in meta/runtime.yml ([#2362](https://github.com/ansible-collections/azure/pull/2362))
+  - CONTRIBUTING.md: Add contribution guide when developing new module ([#2362](https://github.com/ansible-collections/azure/pull/2362))
+  - plugins/modules/azure_rm_azurefirewall.py: SDK refactor and DNS proxy support ([#2358](https://github.com/ansible-collections/azure/pull/2358))
+  - plugins/modules/azure_rm_azurefirewall_info.py: SDK refactor and DNS proxy support ([#2358](https://github.com/ansible-collections/azure/pull/2358))
+  - plugins/modules/azure_rm_appgateway.py: Add zones parameter to azure_rm_appgateway ([#2367](https://github.com/ansible-collections/azure/pull/2367))
+  - plugins/modules/azure_rm_subnet.py: Add support for Microsoft.Network/dnsResolvers subnet delegation ([#2364](https://github.com/ansible-collections/azure/pull/2364))
+
+### BUG FIXING
+  - README.md: Address automation hub v4.0.0 certification review items ([#2356](https://github.com/ansible-collections/azure/pull/2356))
+  - galaxy.yml: Address automation hub v4.0.0 certification review items ([#2356](https://github.com/ansible-collections/azure/pull/2356))
+  - .github/workflows/ansible-test.yml: Address automation hub v4.0.0 certification review items ([#2356](https://github.com/ansible-collections/azure/pull/2356))
+  - plugins/modules/azure_rm_virtualmachine.py: Use StorageV2 kind for auto-created VM storage account ([#2372](https://github.com/ansible-collections/azure/pull/2372))
+  - plugins/modules/azure_rm_virtualmachine.py: Document swap_os_disk as attach-os-disk and add create guards ([#2370](https://github.com/ansible-collections/azure/pull/2370))
+
+
 ## v4.0.0 (2026-08-31)
 
 ### NEW MODULES
