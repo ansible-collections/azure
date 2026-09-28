@@ -114,6 +114,8 @@ action_groups:
     - azure.azcollection.azure_rm_databricksworkspace_info
     - azure.azcollection.azure_rm_datafactory
     - azure.azcollection.azure_rm_datafactory_info
+    - azure.azcollection.azure_rm_dataprotectionbackupvault
+    - azure.azcollection.azure_rm_dataprotectionbackupvault_info
     - azure.azcollection.azure_rm_ddosprotectionplan
     - azure.azcollection.azure_rm_ddosprotectionplan_info
     - azure.azcollection.azure_rm_dedicatedhost
