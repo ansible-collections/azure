@@ -107,7 +107,7 @@ class AzureRMOpenShiftManagedClustersKubeconfigInfo(AzureRMModuleBaseExt):
         self.status_code = [200]
 
         self.query_parameters = {}
-        self.query_parameters['api-version'] = '2021-09-01-preview'
+        self.query_parameters['api-version'] = '2023-09-04'
         self.header_parameters = {}
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
@@ -154,7 +154,7 @@ class AzureRMOpenShiftManagedClustersKubeconfigInfo(AzureRMModuleBaseExt):
                                               30)
             results = json.loads(response.body())
         except Exception as e:
-            self.log('Could not get info for @(Model.ModuleOperationNameUpper).')
+            self.fail('Could not get admin kubeconfig for cluster {0}: {1}'.format(self.name, str(e)))
         return self.format_item(results)
 
     def format_item(self, item):
