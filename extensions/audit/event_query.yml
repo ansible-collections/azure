@@ -28,6 +28,13 @@
 #    azure_rm_networkinterface (name present) and once as a nested reference in
 #    another resource's result (name absent) produced two audit rows.
 #
+#    `node_type` has moved out for the same reason, and because keeping it
+#    made the key compound without making it any more discriminating: it is
+#    parsed out of the ARM id itself, so the id already determines it. A
+#    compound key that one of its own parts fully determines leaves `name`
+#    (the id alone) looking less unique than the key, which is the thing
+#    point 0 is about. node_type is still reported, in `facts.node_type`.
+#
 # 2. canonical_facts cannot contain null at any depth. get_hashable_form()
 #    accepts int/float/str/bool/dict/list/tuple and raises UnhashableFacts on
 #    anything else; the caller catches it and skips the record, logging once
@@ -241,11 +248,11 @@ azure.azcollection.*:
         {
           name: $data.id,
           canonical_facts: {
-            id: $data.id,
-            node_type: $node_type
+            id: $data.id
           },
           facts: {
             infra_type: "public_cloud",
+            node_type: $node_type,
             infra_bucket: ($mapping[$node_type] // "unknown"),
             device_type: ($device_type_mapping[$sub_node_type] // $sub_node_type),
             name: ($data.name // ($data.id | split("/") | last))
