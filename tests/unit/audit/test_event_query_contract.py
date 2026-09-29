@@ -528,6 +528,40 @@ def test_emits_a_name_that_cannot_be_null(module):
 
 
 @pytest.mark.parametrize("module", MODULES)
+def test_name_is_unique_within_a_job(module):
+    """`name` must be an identity expression, not a display name.
+
+    IndirectManagedNodeAudit declares unique_together = [('name', 'job')] and
+    the controller bulk_create()s every record for a job in one transaction.
+    Two resources that dedup apart on canonical_facts but share a `name` --
+    two NICs both called "web" in different resource groups -- raise
+    IntegrityError, which rolls back the whole transaction and loses every
+    audit record for that job, not just the colliding pair. The rollback takes
+    `event_queries_processed` with it, so the fallback task re-picks the job
+    and fails again until it ages out.
+
+    The check: the `name` expression must be one of the canonical_facts value
+    expressions. Those are the values the controller already relies on to tell
+    two nodes apart, so reusing one is exactly the uniqueness `name` needs.
+    """
+    pairs = dict(split_pairs(emitted_record(QUERIES[module])))
+    identity = sub_object(pairs.get("canonical_facts", ""))
+
+    def normalize(expression):
+        return " ".join(expression.split())
+
+    name = normalize(pairs["name"])
+    candidates = [normalize(value) for value in identity.values()]
+
+    assert name in candidates, (
+        "%s: `name` is %s, which is not one of the canonical_facts values "
+        "(%s). name must be unique per job -- a display name is not. Emit an "
+        "identifier as `name` and report the friendly name in `facts.name`."
+        % (module, pairs["name"], ", ".join(candidates) or "none")
+    )
+
+
+@pytest.mark.parametrize("module", MODULES)
 def test_canonical_facts_is_present_and_non_empty(module):
     pairs = dict(split_pairs(emitted_record(QUERIES[module])))
     assert "canonical_facts" in pairs, (
