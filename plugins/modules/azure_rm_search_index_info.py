@@ -31,7 +31,15 @@ options:
         type: str
     admin_key:
         description:
-            - Admin API key. If omitted, RBAC authentication is used.
+            - Admin API key for the search service, used to authenticate data-plane
+              requests via the C(api-key) header.
+            - This is supplementary to the standard Azure credentials. The module
+              always requires standard Azure authentication parameters and a
+              subscription ID (see the I(azure.azcollection.azure) documentation
+              fragment) to run, regardless of whether this is set.
+            - If omitted, data-plane requests are authenticated with an RBAC bearer
+              token (managed identity / service principal) using the data-plane
+              scope C(https://search.azure.com/.default).
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure

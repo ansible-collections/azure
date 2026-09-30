@@ -20,7 +20,7 @@ class AzureRMSearchDataPlaneMixin(object):
     """Mixin for Azure AI Search data-plane (search.windows.net) REST access.
 
     Must be combined with AzureRMModuleBaseExt, which provides azure_auth,
-    subscription_id, _cloud_environment, fail_json and default_compare.
+    subscription_id, _cloud_environment, fail and default_compare.
     """
 
     SEARCH_API_VERSION = "2024-07-01"
@@ -67,7 +67,7 @@ class AzureRMSearchDataPlaneMixin(object):
                 body, codes, 0, 0,
             )
         except SendRequestException as exc:
-            self.fail_json(msg="Azure AI Search request failed ({0} {1}): {2}".format(
+            self.fail(msg="Azure AI Search request failed ({0} {1}): {2}".format(
                 method, path, exc.response), status_code=getattr(exc, "status_code", None))
         status = getattr(response, "status_code", None)
         if status == 404:

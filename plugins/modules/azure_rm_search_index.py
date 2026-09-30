@@ -32,9 +32,15 @@ options:
         type: str
     admin_key:
         description:
-            - Admin API key for the search service.
-            - If omitted, RBAC authentication (managed identity / service principal) is used
-              with the data-plane scope C(https://search.azure.com/.default).
+            - Admin API key for the search service, used to authenticate data-plane
+              requests via the C(api-key) header.
+            - This is supplementary to the standard Azure credentials. The module
+              always requires standard Azure authentication parameters and a
+              subscription ID (see the I(azure.azcollection.azure) documentation
+              fragment) to run, regardless of whether this is set.
+            - If omitted, data-plane requests are authenticated with an RBAC bearer
+              token (managed identity / service principal) using the data-plane
+              scope C(https://search.azure.com/.default).
         type: str
     fields:
         description:
@@ -215,7 +221,7 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
 
         if self.state == 'present':
             if self.fields is None and existing is None:
-                self.fail_json(msg="fields is required to create an index")
+                self.fail(msg="fields is required to create an index")
             desired = self._build_body()
             if existing is None:
                 self.results['changed'] = True
