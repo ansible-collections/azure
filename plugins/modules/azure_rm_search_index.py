@@ -169,6 +169,8 @@ state:
     sample: {"name": "rag-index", "fields": [{"name": "id", "type": "Edm.String", "key": true}]}
 '''
 
+import copy
+
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_search_common import AzureRMSearchDataPlaneMixin
 
@@ -206,8 +208,86 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-        # body/idempotency/dispatch added in Task 4
+
+        existing = self.search_query(
+            self.search_service_name, "/indexes/{0}".format(self.name),
+            "GET", admin_key=self.admin_key, expected_status_codes=[200])
+
+        if self.state == 'present':
+            if self.fields is None and existing is None:
+                self.fail_json(msg="fields is required to create an index")
+            desired = self._build_body()
+            if existing is None:
+                self.results['changed'] = True
+                if not self.check_mode:
+                    self.results['state'] = self._create_or_update(desired)
+                else:
+                    self.results['state'] = desired
+            else:
+                if not self._is_current(desired, existing):
+                    self.results['changed'] = True
+                    if not self.check_mode:
+                        self.results['state'] = self._create_or_update(desired)
+                    else:
+                        self.results['state'] = desired
+                else:
+                    self.results['state'] = existing
+        else:  # absent
+            if existing is not None:
+                self.results['changed'] = True
+                if not self.check_mode:
+                    self.search_query(
+                        self.search_service_name, "/indexes/{0}".format(self.name),
+                        "DELETE", admin_key=self.admin_key,
+                        expected_status_codes=[204, 200])
         return self.results
+
+    def _build_body(self):
+        body = {"name": self.name}
+        if self.fields is not None:
+            body["fields"] = [self._map_field(f) for f in self.fields]
+        # pass-through blocks map verbatim (REST uses camelCase keys already)
+        if self.vector_search is not None:
+            body["vectorSearch"] = self.vector_search
+        if self.semantic is not None:
+            body["semantic"] = self.semantic
+        if self.scoring_profiles is not None:
+            body["scoringProfiles"] = self.scoring_profiles
+        if self.default_scoring_profile is not None:
+            body["defaultScoringProfile"] = self.default_scoring_profile
+        if self.suggesters is not None:
+            body["suggesters"] = self.suggesters
+        if self.analyzers is not None:
+            body["analyzers"] = self.analyzers
+        if self.cors_options is not None:
+            body["corsOptions"] = self.cors_options
+        return body
+
+    def _map_field(self, f):
+        key_map = {
+            "vector_search_profile": "vectorSearchProfile",
+        }
+        out = {}
+        for k, v in f.items():
+            if v is None:
+                continue
+            out[key_map.get(k, k)] = v
+        return out
+
+    def _create_or_update(self, body):
+        return self.search_query(
+            self.search_service_name, "/indexes/{0}".format(self.name),
+            "PUT", body=body, admin_key=self.admin_key,
+            expected_status_codes=[200, 201])
+
+    def _is_current(self, desired, existing):
+        # Compare the REST-shaped desired body against the existing resource.
+        # default_compare walks the union of keys, so keys present only in
+        # `existing` (server defaults, @odata.etag) are ignored; it returns
+        # True when existing already satisfies desired. Deep-copy desired so
+        # the comparison cannot mutate the body we would PUT.
+        result = dict(compare=[])
+        return self.default_compare({}, copy.deepcopy(desired), existing, '', result)
 
 
 def main():
