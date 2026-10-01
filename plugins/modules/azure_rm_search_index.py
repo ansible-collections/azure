@@ -281,10 +281,18 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         return out
 
     def _create_or_update(self, body):
-        return self.search_query(
+        # Azure returns 201 on create and 204 (No Content) on update, so a
+        # successful PUT may carry no body. Fall back to a GET to return the
+        # current index state in that case.
+        result = self.search_query(
             self.search_service_name, "/indexes/{0}".format(self.name),
             "PUT", body=body, admin_key=self.admin_key,
-            expected_status_codes=[200, 201])
+            expected_status_codes=[200, 201, 204])
+        if result is None:
+            result = self.search_query(
+                self.search_service_name, "/indexes/{0}".format(self.name),
+                "GET", admin_key=self.admin_key, expected_status_codes=[200])
+        return result
 
     def _is_current(self, desired, existing):
         # Compare the REST-shaped desired body against the existing resource.
