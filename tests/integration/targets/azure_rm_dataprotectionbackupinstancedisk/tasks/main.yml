@@ -1,0 +1,402 @@
+- name: Create a new resource group for data protection backup instance (disk) test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-dataprotectionbackupinstancedisk"
+    location: eastus
+
+- name: For data protection backup instance (disk) test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-dataprotectionbackupinstancedisk"
+      register: __rg_info
+
+    - name: Fix resource prefix and location
+      ansible.builtin.set_fact:
+        name_rpfx: "dpbi{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-dataprotectionbackupinstancedisk"
+
+    - name: Create a managed disk to protect
+      azure.azcollection.azure_rm_manageddisk:
+        resource_group: "{{ new_resource_group }}"
+        name: "{{ name_rpfx }}disk"
+        storage_account_type: Standard_LRS
+        disk_size_gb: 1
+      register: __disk
+
+    - name: Create a Backup vault with a system-assigned managed identity
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ new_resource_group }}"
+        name: "{{ name_rpfx }}vault"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+        identity:
+          type: SystemAssigned
+        security_settings:
+          soft_delete_settings:
+            state: "Off"
+      register: __vault
+
+    - name: Get the Backup vault's managed identity principal ID
+      azure.azcollection.azure_rm_dataprotectionbackupvault_info:
+        resource_group: "{{ new_resource_group }}"
+        name: "{{ name_rpfx }}vault"
+      register: __vault_info
+
+    - name: Set the vault identity principal ID fact
+      ansible.builtin.set_fact:
+        vault_principal_id: "{{ __vault_info.backupvaults[0].identity.principal_id }}"
+
+    # Automated CI cannot grant RBAC role assignments, so the
+    # two roles the module's DOCUMENTATION requires must be assigned manually in the
+    # Azure portal before continuing
+    # - name: Print the vault identity principal ID and the resources needing RBAC
+    #   ansible.builtin.debug:
+    #     msg:
+    #       - "Vault managed identity (principalId): {{ vault_principal_id }}"
+    #       - "Resource group needing 'Disk Snapshot Contributor': {{ new_resource_group }}"
+    #       - "Disk needing 'Disk Backup Reader': {{ __disk.state.id }}"
+    #       - "Waiting 6 minutes for manual RBAC assignment in the Azure portal..."
+
+    # - name: Wait for manual RBAC assignment in the Azure portal
+    #   ansible.builtin.wait_for:
+    #     timeout: 360
+
+    - name: Create a Disk Backup policy (raw ARM call; azure_rm_dataprotectionbackuppolicydisk is out of scope for this test)
+      azure.azcollection.azure_rm_resource:
+        resource_group: "{{ new_resource_group }}"
+        provider: DataProtection
+        resource_type: backupVaults
+        resource_name: "{{ name_rpfx }}vault"
+        subresource:
+          - type: backupPolicies
+            name: "{{ name_rpfx }}policy"
+        api_version: "2026-06-01"
+        body:
+          properties:
+            datasourceTypes:
+              - Microsoft.Compute/disks
+            objectType: BackupPolicy
+            policyRules:
+              - name: BackupIntervals
+                objectType: AzureBackupRule
+                backupParameters:
+                  backupType: Incremental
+                  objectType: AzureBackupParams
+                dataStore:
+                  dataStoreType: OperationalStore
+                  objectType: DataStoreInfoBase
+                trigger:
+                  objectType: ScheduleBasedTriggerContext
+                  schedule:
+                    repeatingTimeIntervals:
+                      - "R/2024-01-01T00:00:00+00:00/P1D"
+                    timeZone: UTC
+                  taggingCriteria:
+                    - isDefault: true
+                      taggingPriority: 99
+                      tagInfo:
+                        tagName: Default
+              - name: Default
+                objectType: AzureRetentionRule
+                isDefault: true
+                lifecycles:
+                  - deleteAfter:
+                      objectType: AbsoluteDeleteOption
+                      duration: P7D
+                    sourceDataStore:
+                      dataStoreType: OperationalStore
+                      objectType: DataStoreInfoBase
+        state: present
+      register: __policy
+
+    - name: Set the backup policy ID fact
+      ansible.builtin.set_fact:
+        backup_policy_id: "{{ __policy.response.id }}"
+
+    - name: Create a second Disk Backup policy (used later to exercise the update path)
+      azure.azcollection.azure_rm_resource:
+        resource_group: "{{ new_resource_group }}"
+        provider: DataProtection
+        resource_type: backupVaults
+        resource_name: "{{ name_rpfx }}vault"
+        subresource:
+          - type: backupPolicies
+            name: "{{ name_rpfx }}policy2"
+        api_version: "2026-06-01"
+        body:
+          properties:
+            datasourceTypes:
+              - Microsoft.Compute/disks
+            objectType: BackupPolicy
+            policyRules:
+              - name: BackupIntervals
+                objectType: AzureBackupRule
+                backupParameters:
+                  backupType: Incremental
+                  objectType: AzureBackupParams
+                dataStore:
+                  dataStoreType: OperationalStore
+                  objectType: DataStoreInfoBase
+                trigger:
+                  objectType: ScheduleBasedTriggerContext
+                  schedule:
+                    repeatingTimeIntervals:
+                      - "R/2024-01-01T00:00:00+00:00/P1D"
+                    timeZone: UTC
+                  taggingCriteria:
+                    - isDefault: true
+                      taggingPriority: 99
+                      tagInfo:
+                        tagName: Default
+              - name: Default
+                objectType: AzureRetentionRule
+                isDefault: true
+                lifecycles:
+                  - deleteAfter:
+                      objectType: AbsoluteDeleteOption
+                      duration: P14D
+                    sourceDataStore:
+                      dataStoreType: OperationalStore
+                      objectType: DataStoreInfoBase
+        state: present
+      register: __policy2
+
+    - name: Set the second backup policy ID fact
+      ansible.builtin.set_fact:
+        backup_policy_id_2: "{{ __policy2.response.id }}"
+
+    - name: Create a Disk Backup instance (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        location: "{{ location }}"
+        disk_id: "{{ __disk.state.id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+      check_mode: true
+      register: output
+
+    - name: Assert that check mode reports changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Disk Backup instance by name (should not exist after check mode)
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+      register: output
+
+    - name: Assert that the backup instance was not actually created
+      ansible.builtin.assert:
+        that:
+          - output.backupinstances | length == 0
+
+    - name: Create a Disk Backup instance
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        location: "{{ location }}"
+        disk_id: "{{ __disk.state.id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+      register: output
+
+    - name: Assert that output has changed and an id is returned
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id is defined
+
+    - name: Create a Disk Backup instance (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        location: "{{ location }}"
+        disk_id: "{{ __disk.state.id }}"
+        backup_policy_id: "{{ backup_policy_id }}"
+      register: output
+
+    - name: Assert that output has not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Disk Backup instance by name
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+      register: output
+
+    - name: Assert the backup instance fields are correct
+      ansible.builtin.assert:
+        that:
+          - output.backupinstances | length == 1
+          - output.backupinstances[0].disk_id == __disk.state.id
+          - output.backupinstances[0].backup_policy_id == backup_policy_id
+
+    - name: List Disk Backup instances in the vault
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+      register: output
+
+    - name: Assert the backup instance appears in the vault listing
+      ansible.builtin.assert:
+        that:
+          - output.backupinstances | length == 1
+          - output.backupinstances[0].name == name_rpfx ~ 'instance'
+
+    - name: Update the Disk Backup instance to use the second backup policy
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        location: "{{ location }}"
+        disk_id: "{{ __disk.state.id }}"
+        backup_policy_id: "{{ backup_policy_id_2 }}"
+      register: output
+      # The Backup service can still be finishing the initial protection
+      # configuration asynchronously even after the create call's LRO reports
+      # done; retry on the transient "already in progress" conflict.
+      until: output is succeeded
+      retries: 6
+      delay: 30
+
+    - name: Assert that output has changed after switching policies
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Disk Backup instance by name after policy update
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+      register: output
+
+    - name: Assert the backup instance now references the second policy
+      ansible.builtin.assert:
+        that:
+          - output.backupinstances[0].backup_policy_id == backup_policy_id_2
+
+    - name: Delete Disk Backup instance (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert check mode reports changed but did not delete
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Disk Backup instance by name (should still exist after check mode delete)
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+      register: output
+
+    - name: Assert the backup instance still exists
+      ansible.builtin.assert:
+        that:
+          - output.backupinstances | length == 1
+
+    - name: Delete Disk Backup instance
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        state: absent
+      register: output
+      until: output is succeeded
+      retries: 6
+      delay: 30
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete Disk Backup instance (idempotent)
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+        state: absent
+      register: output
+
+    - name: Assert that output has not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Disk Backup instance by name after deletion
+      azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}instance"
+      register: output
+
+    - name: Assert the backup instance no longer exists
+      ansible.builtin.assert:
+        that:
+          - output.backupinstances | length == 0
+
+    - name: Delete the second Disk Backup policy
+      azure.azcollection.azure_rm_resource:
+        resource_group: "{{ new_resource_group }}"
+        provider: DataProtection
+        resource_type: backupVaults
+        resource_name: "{{ name_rpfx }}vault"
+        subresource:
+          - type: backupPolicies
+            name: "{{ name_rpfx }}policy2"
+        api_version: "2026-06-01"
+        state: absent
+
+    - name: Delete the first Disk Backup policy
+      azure.azcollection.azure_rm_resource:
+        resource_group: "{{ new_resource_group }}"
+        provider: DataProtection
+        resource_type: backupVaults
+        resource_name: "{{ name_rpfx }}vault"
+        subresource:
+          - type: backupPolicies
+            name: "{{ name_rpfx }}policy"
+        api_version: "2026-06-01"
+        state: absent
+
+    - name: Delete the Backup vault
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ new_resource_group }}"
+        name: "{{ name_rpfx }}vault"
+        state: absent
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the managed disk
+      azure.azcollection.azure_rm_manageddisk:
+        resource_group: "{{ new_resource_group }}"
+        name: "{{ name_rpfx }}disk"
+        managed_by: ''
+        state: absent
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-dataprotectionbackupinstancedisk"
+        force_delete_nonempty: true
+        state: absent
