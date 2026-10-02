@@ -162,8 +162,10 @@ class AzureRMDataProtectionBackupInstanceDiskInfo(AzureRMModuleBase):
                 resource_group_name=self.resource_group, vault_name=self.vault_name))
             for item in response:
                 results.append(backupinstance_to_dict(item))
-        except Exception as e:
+        except ResourceNotFoundError as e:
             self.log("Did not find Backup instances in vault {0}: {1}".format(self.vault_name, str(e)))
+        except Exception as e:
+            self.fail("Error listing Backup instances in vault {0}: {1}".format(self.vault_name, str(e)))
         return results
 
 

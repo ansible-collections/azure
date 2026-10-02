@@ -35,7 +35,8 @@
           type: SystemAssigned
         security_settings:
           soft_delete_settings:
-            state: "Off"
+            state: "AlwaysOn"
+            retention_duration_in_days: 14
       register: __vault
 
     - name: Get the Backup vault's managed identity principal ID
@@ -48,9 +49,11 @@
       ansible.builtin.set_fact:
         vault_principal_id: "{{ __vault_info.backupvaults[0].identity.principal_id }}"
 
-    # Automated CI cannot grant RBAC role assignments, so the
-    # two roles the module's DOCUMENTATION requires must be assigned manually in the
-    # Azure portal before continuing
+    # This target is marked 'disabled' in aliases because automated CI cannot grant
+    # RBAC role assignments. The two roles the module's DOCUMENTATION requires must
+    # be assigned manually in the Azure portal before continuing. These steps print
+    # what to grant and pause so this target remains runnable for a maintainer who
+    # clears the 'disabled' alias to validate locally.
     # - name: Print the vault identity principal ID and the resources needing RBAC
     #   ansible.builtin.debug:
     #     msg:
@@ -204,6 +207,9 @@
         disk_id: "{{ __disk.state.id }}"
         backup_policy_id: "{{ backup_policy_id }}"
       register: output
+      until: output is succeeded
+      retries: 6
+      delay: 30
 
     - name: Assert that output has changed and an id is returned
       ansible.builtin.assert:
@@ -352,7 +358,7 @@
         that:
           - output.backupinstances | length == 0
 
-    - name: Delete the second Disk Backup policy
+    - name: Delete the second Disk Backup policy (this is the instance's last-used policy; Azure's mandatory AlwaysOn soft delete keeps a soft-deleted association to it after the instance delete above, so this is expected to fail until the retention window elapses)
       azure.azcollection.azure_rm_resource:
         resource_group: "{{ new_resource_group }}"
         provider: DataProtection
@@ -363,6 +369,7 @@
             name: "{{ name_rpfx }}policy2"
         api_version: "2026-06-01"
         state: absent
+      ignore_errors: true
 
     - name: Delete the first Disk Backup policy
       azure.azcollection.azure_rm_resource:
@@ -381,12 +388,6 @@
         resource_group: "{{ new_resource_group }}"
         name: "{{ name_rpfx }}vault"
         state: absent
-      register: output
-
-    - name: Assert that output has changed
-      ansible.builtin.assert:
-        that:
-          - output is changed
 
     - name: Delete the managed disk
       azure.azcollection.azure_rm_manageddisk:

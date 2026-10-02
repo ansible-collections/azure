@@ -107,6 +107,7 @@ try:
     from azure.core.polling import LROPoller
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.serialization import as_attribute_dict
+    from azure.mgmt.core.tools import parse_resource_id
     from azure.mgmt.dataprotection.models import (
         BackupInstanceResource, BackupInstance, Datasource, PolicyInfo, PolicyParameters,
         AzureOperationalStoreParameters, DataStoreTypes,
@@ -176,10 +177,7 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
                 self.to_do = Actions.Delete
             elif self.state == 'present':
                 properties = old_response.get('properties', {}) or {}
-                data_source_info = properties.get('data_source_info', {}) or {}
-                policy_info = properties.get('policy_info', {}) or {}
-                if (data_source_info.get('resource_id') != self.disk_id or
-                        policy_info.get('policy_id') != self.backup_policy_id):
+                if not self.default_compare({}, self._desired_properties(), properties, '', dict(compare=[])):
                     self.to_do = Actions.Create
 
         response = old_response
@@ -200,6 +198,29 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
 
         return self.results
 
+    def _disk_identity(self):
+        parsed = parse_resource_id(self.disk_id)
+        return parsed.get('resource_group'), parsed.get('name')
+
+    def _snapshot_resource_group_id(self):
+        disk_resource_group, _ = self._disk_identity()
+        resource_group = self.snapshot_resource_group or disk_resource_group
+        return "/subscriptions/{0}/resourceGroups/{1}".format(self.subscription_id, resource_group)
+
+    def _desired_properties(self):
+        return dict(
+            friendly_name=self.friendly_name,
+            data_source_info=dict(resource_id=self.disk_id),
+            policy_info=dict(
+                policy_id=self.backup_policy_id,
+                policy_parameters=dict(
+                    data_store_parameters_list=[
+                        dict(resource_group_id=self._snapshot_resource_group_id())
+                    ]
+                ),
+            ),
+        )
+
     def get_backupinstancedisk(self):
         try:
             response = self.dataprotection_client.backup_instances.get(
@@ -212,10 +233,8 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
 
     def create_update_backupinstancedisk(self):
         self.log("Configuring the Backup instance {0}".format(self.name))
-        disk_resource_group = self.snapshot_resource_group or self.disk_id.split('/')[4]
-        snapshot_resource_group_id = "/subscriptions/{0}/resourceGroups/{1}".format(
-            self.subscription_id, disk_resource_group)
-        disk_name = self.disk_id.split('/')[-1]
+        _, disk_name = self._disk_identity()
+        snapshot_resource_group_id = self._snapshot_resource_group_id()
 
         parameters = BackupInstanceResource(
             properties=BackupInstance(
