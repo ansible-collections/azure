@@ -369,7 +369,9 @@ class AzureRMVirtualNetwork(AzureRMModuleBase):
                     if len(missing_prefixes) > 0:
                         self.log('CHANGED: there are missing address_prefixes')
                         changed = True
-                        if not self.purge_address_prefixes:
+                        if self.purge_address_prefixes:
+                            results['address_prefixes'] = self.address_prefixes_cidr
+                        else:
                             # add the missing prefixes
                             for prefix in missing_prefixes:
                                 results['address_prefixes'].append(prefix)
