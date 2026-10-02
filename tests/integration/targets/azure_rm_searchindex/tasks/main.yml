@@ -1,0 +1,199 @@
+- name: Create a resource group for the search index test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-search"
+    location: eastus
+
+- name: Run search index tests
+  block:
+    - name: Build a unique search service name
+      ansible.builtin.set_fact:
+        svc_name: "search{{ resource_group | hash('md5') | truncate(16, True, '') }}"
+
+    - name: Create AI Search service
+      azure.azcollection.azure_rm_cognitivesearch:
+        resource_group: "{{ resource_group }}-search"
+        name: "{{ svc_name }}"
+        sku: basic
+      register: svc
+
+    # Data-plane RBAC is off by default on a new search service (API-key only),
+    # so enable AAD auth and grant the test principal a data-plane role. This
+    # is what exercises the https://search.azure.com/.default token path.
+    - name: Enable AAD (RBAC) data-plane auth on the search service
+      azure.azcollection.azure_rm_resource:
+        api_version: '2023-11-01'
+        resource_group: "{{ resource_group }}-search"
+        provider: search
+        resource_type: searchservices
+        resource_name: "{{ svc_name }}"
+        method: PATCH
+        body:
+          properties:
+            authOptions:
+              aadOrApiKey:
+                aadAuthFailureMode: http403
+
+    - name: Resolve the test service principal object id
+      azure.azcollection.azure_rm_adserviceprincipal_info:
+        app_id: "{{ azure_client_id }}"
+      register: sp_info
+
+    - name: Grant Search Index Data Contributor to the test principal
+      azure.azcollection.azure_rm_roleassignment:
+        scope: "{{ svc.state.id }}"
+        assignee_object_id: "{{ sp_info.service_principals[0].object_id }}"
+        # Search Index Data Contributor (well-known built-in role)
+        role_definition_id: "/subscriptions/{{ azure_subscription_id }}/providers/Microsoft.Authorization/roleDefinitions/8ebe5a00-799e-43f5-93ac-243d3dce84a7"
+        state: present
+
+    - name: Create index (check mode)
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+      check_mode: true
+      register: idx_check
+      # Absorb AAD auth-option and role-assignment propagation (can take minutes).
+      retries: 20
+      delay: 15
+      until: idx_check is not failed
+
+    - name: Assert check mode reports change without creating
+      ansible.builtin.assert:
+        that:
+          - idx_check.changed
+
+    - name: Create index
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+      register: idx_create
+
+    - name: Assert created (RBAC data-plane scope worked)
+      ansible.builtin.assert:
+        that:
+          - idx_create.changed
+          - idx_create.state.name == 'it-index'
+
+    - name: Create index again (idempotent)
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+      register: idx_idem
+
+    - name: Assert no change on second run
+      ansible.builtin.assert:
+        that:
+          - not idx_idem.changed
+
+    - name: Get index via info
+      azure.azcollection.azure_rm_searchindex_info:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+      register: idx_info
+
+    - name: Assert info returns the index
+      ansible.builtin.assert:
+        that:
+          - idx_info.indexes | length == 1
+          - idx_info.indexes[0].name == 'it-index'
+
+    - name: Add a searchable field (update)
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+          - name: title
+            type: Edm.String
+            searchable: true
+      register: idx_update
+
+    - name: Assert update changed
+      ansible.builtin.assert:
+        that:
+          - idx_update.changed
+
+    - name: Info for a non-existent index returns empty
+      azure.azcollection.azure_rm_searchindex_info:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: does-not-exist
+      register: idx_missing
+
+    - name: Assert empty list, not failure
+      ansible.builtin.assert:
+        that:
+          - idx_missing.indexes | length == 0
+
+    - name: Delete index
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        state: absent
+      register: idx_delete
+
+    - name: Assert deleted
+      ansible.builtin.assert:
+        that:
+          - idx_delete.changed
+
+    - name: Delete index again (idempotent absent)
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-search"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        state: absent
+      register: idx_delete_idem
+
+    - name: Assert no change on second delete
+      ansible.builtin.assert:
+        that:
+          - not idx_delete_idem.changed
+
+  always:
+    - name: Clean up search service
+      azure.azcollection.azure_rm_cognitivesearch:
+        resource_group: "{{ resource_group }}-search"
+        name: "{{ svc_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-search"
+        location: eastus
+        state: absent
+        force_delete_nonempty: true
+      ignore_errors: true
