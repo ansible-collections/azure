@@ -198,12 +198,8 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
 
         return self.results
 
-    def _disk_identity(self):
-        parsed = parse_resource_id(self.disk_id)
-        return parsed.get('resource_group'), parsed.get('name')
-
     def _snapshot_resource_group_id(self):
-        disk_resource_group, _ = self._disk_identity()
+        disk_resource_group = parse_resource_id(self.disk_id).get('resource_group')
         resource_group = self.snapshot_resource_group or disk_resource_group
         return "/subscriptions/{0}/resourceGroups/{1}".format(self.subscription_id, resource_group)
 
@@ -233,7 +229,7 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
 
     def create_update_backupinstancedisk(self):
         self.log("Configuring the Backup instance {0}".format(self.name))
-        _, disk_name = self._disk_identity()
+        disk_name = parse_resource_id(self.disk_id).get('name')
         snapshot_resource_group_id = self._snapshot_resource_group_id()
 
         parameters = BackupInstanceResource(
