@@ -204,7 +204,7 @@ parameters:
       - "azure_rm_afdrules"
       - "azure_rm_tags"
       - "azure_rm_dedicatedhost"
-      - "azure_rm_search_index"
+      - "azure_rm_searchindex"
       - "inventory_azure"
       - "setup_azure"
 

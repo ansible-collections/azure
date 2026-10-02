@@ -9,7 +9,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_search_index_info
+module: azure_rm_searchindex_info
 version_added: "4.2.0"
 short_description: Get information about Azure AI Search indexes
 description:
@@ -49,12 +49,12 @@ author:
 
 EXAMPLES = '''
 - name: List all indexes
-  azure.azcollection.azure_rm_search_index_info:
+  azure.azcollection.azure_rm_searchindex_info:
     resource_group: myResourceGroup
     search_service_name: mysearchsvc
 
 - name: Get one index
-  azure.azcollection.azure_rm_search_index_info:
+  azure.azcollection.azure_rm_searchindex_info:
     resource_group: myResourceGroup
     search_service_name: mysearchsvc
     name: rag-index
@@ -71,7 +71,10 @@ indexes:
 '''
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_search_common import AzureRMSearchDataPlaneMixin
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_search_common import (
+    AzureRMSearchDataPlaneMixin,
+    ResourceNotFoundError,
+)
 
 
 class AzureRMSearchIndexInfo(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
@@ -98,16 +101,16 @@ class AzureRMSearchIndexInfo(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
+        client = self.get_search_index_client(
+            self.search_service_name, admin_key=self.admin_key)
         if self.name:
-            result = self.search_query(
-                self.search_service_name, "/indexes/{0}".format(self.name),
-                "GET", admin_key=self.admin_key, expected_status_codes=[200])
-            self.results['indexes'] = [result] if result else []
+            try:
+                index = client.get_index(self.name)
+                self.results['indexes'] = [index.as_dict()]
+            except ResourceNotFoundError:
+                self.results['indexes'] = []
         else:
-            result = self.search_query(
-                self.search_service_name, "/indexes", "GET",
-                admin_key=self.admin_key, expected_status_codes=[200])
-            self.results['indexes'] = (result or {}).get('value', []) if result else []
+            self.results['indexes'] = [ix.as_dict() for ix in client.list_indexes()]
         return self.results
 
 

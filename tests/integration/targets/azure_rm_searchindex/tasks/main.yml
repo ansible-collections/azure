@@ -47,7 +47,7 @@
         state: present
 
     - name: Create index (check mode)
-      azure.azcollection.azure_rm_search_index:
+      azure.azcollection.azure_rm_searchindex:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index
@@ -71,7 +71,7 @@
           - idx_check.changed
 
     - name: Create index
-      azure.azcollection.azure_rm_search_index:
+      azure.azcollection.azure_rm_searchindex:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index
@@ -91,7 +91,7 @@
           - idx_create.state.name == 'it-index'
 
     - name: Create index again (idempotent)
-      azure.azcollection.azure_rm_search_index:
+      azure.azcollection.azure_rm_searchindex:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index
@@ -110,7 +110,7 @@
           - not idx_idem.changed
 
     - name: Get index via info
-      azure.azcollection.azure_rm_search_index_info:
+      azure.azcollection.azure_rm_searchindex_info:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index
@@ -123,7 +123,7 @@
           - idx_info.indexes[0].name == 'it-index'
 
     - name: Add a searchable field (update)
-      azure.azcollection.azure_rm_search_index:
+      azure.azcollection.azure_rm_searchindex:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index
@@ -145,7 +145,7 @@
           - idx_update.changed
 
     - name: Info for a non-existent index returns empty
-      azure.azcollection.azure_rm_search_index_info:
+      azure.azcollection.azure_rm_searchindex_info:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: does-not-exist
@@ -157,7 +157,7 @@
           - idx_missing.indexes | length == 0
 
     - name: Delete index
-      azure.azcollection.azure_rm_search_index:
+      azure.azcollection.azure_rm_searchindex:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index
@@ -170,7 +170,7 @@
           - idx_delete.changed
 
     - name: Delete index again (idempotent absent)
-      azure.azcollection.azure_rm_search_index:
+      azure.azcollection.azure_rm_searchindex:
         resource_group: "{{ resource_group }}-search"
         search_service_name: "{{ svc_name }}"
         name: it-index

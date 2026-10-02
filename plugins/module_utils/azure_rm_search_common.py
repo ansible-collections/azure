@@ -5,25 +5,32 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import json
-
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import (
-        GenericRestClient, SendRequestException,
-    )
-except ImportError:
-    # handled by AzureRMModuleBase import checks in the consuming module
-    pass
+    from azure.core.credentials import AzureKeyCredential
+    from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
+    from azure.search.documents.indexes import SearchIndexClient, SearchIndexerClient
+    HAS_SEARCH_SDK = True
+    SEARCH_SDK_IMPORT_ERROR = None
+except ImportError as exc:  # pragma: no cover - exercised only without the SDK
+    HAS_SEARCH_SDK = False
+    SEARCH_SDK_IMPORT_ERROR = exc
+    # Define placeholders so module-level references resolve; the mixin guards
+    # on HAS_SEARCH_SDK before using any of these.
+    ResourceNotFoundError = Exception
+    HttpResponseError = Exception
+
+# ResourceNotFoundError and HttpResponseError are re-exported here so the search
+# modules import their SDK exceptions from one place; declare them exported.
+__all__ = ['AzureRMSearchDataPlaneMixin', 'ResourceNotFoundError', 'HttpResponseError']
 
 
 class AzureRMSearchDataPlaneMixin(object):
-    """Mixin for Azure AI Search data-plane (search.windows.net) REST access.
+    """Mixin for Azure AI Search data-plane (search.windows.net) access.
 
-    Must be combined with AzureRMModuleBaseExt, which provides azure_auth,
-    subscription_id, _cloud_environment, fail and default_compare.
+    Uses the ``azure-search-documents`` SDK (``SearchIndexClient`` and
+    ``SearchIndexerClient``). Must be combined with AzureRMModuleBaseExt, which
+    provides azure_auth, _cloud_environment, fail and default_compare.
     """
-
-    SEARCH_API_VERSION = "2024-07-01"
 
     def search_endpoint(self, service_name):
         # Default public cloud suffix; sovereign clouds override via the
@@ -37,49 +44,30 @@ class AzureRMSearchDataPlaneMixin(object):
             pass
         return "https://{0}.{1}".format(service_name, suffix)
 
-    def get_search_client(self, service_name, admin_key=None):
-        base_url = self.search_endpoint(service_name)
-        self._search_headers = {"Content-Type": "application/json; charset=utf-8"}
+    def _search_credential(self, admin_key):
+        # Admin-key auth uses an AzureKeyCredential (api-key header); otherwise
+        # authenticate with the standard Azure (RBAC) token credential. The SDK
+        # requests the https://search.azure.com/.default data-plane scope.
         if admin_key:
-            # Admin-key auth: still need a credential object for the client,
-            # but requests authenticate via the api-key header.
-            self._search_headers["api-key"] = admin_key
-        client = GenericRestClient(
-            credential=self.azure_auth.azure_credential_track2,
-            subscription_id=self.subscription_id,
-            base_url=base_url,
-            credential_scopes=["https://search.azure.com/.default"],
-        )
-        return client
+            return AzureKeyCredential(admin_key)
+        return self.azure_auth.azure_credential_track2
 
-    def search_query(self, service_name, path, method, body=None,
-                     admin_key=None, expected_status_codes=None):
-        client = self.get_search_client(service_name, admin_key=admin_key)
-        url = "{0}{1}".format(self.search_endpoint(service_name), path)
-        query_parameters = {"api-version": self.SEARCH_API_VERSION}
-        if expected_status_codes is None:
-            expected_status_codes = [200, 201, 204]
-        # Treat 404 as "absent" for callers that opt in.
-        codes = list(expected_status_codes) + [404]
-        try:
-            response = client.query(
-                url, method, query_parameters, self._search_headers,
-                body, codes, 0, 0,
-            )
-        except SendRequestException as exc:
-            self.fail(msg="Azure AI Search request failed ({0} {1}): {2}".format(
-                method, path, exc.response), status_code=getattr(exc, "status_code", None))
-        status = getattr(response, "status_code", None)
-        if status == 404:
-            return None
-        if method == "DELETE":
-            return True
-        if hasattr(response, "body"):
-            text = response.body()
-        elif hasattr(response, "text"):
-            text = response.text()
-        else:
-            return None
-        if not text:
-            return None
-        return json.loads(text)
+    def _require_search_sdk(self):
+        if not HAS_SEARCH_SDK:
+            self.fail(msg="The azure-search-documents package is required for Azure AI "
+                          "Search data-plane modules. Install it with "
+                          "'pip install azure-search-documents'.")
+
+    def get_search_index_client(self, service_name, admin_key=None):
+        """Return a SearchIndexClient for index and synonym-map operations."""
+        self._require_search_sdk()
+        return SearchIndexClient(
+            endpoint=self.search_endpoint(service_name),
+            credential=self._search_credential(admin_key))
+
+    def get_search_indexer_client(self, service_name, admin_key=None):
+        """Return a SearchIndexerClient for data source, skillset and indexer ops."""
+        self._require_search_sdk()
+        return SearchIndexerClient(
+            endpoint=self.search_endpoint(service_name),
+            credential=self._search_credential(admin_key))

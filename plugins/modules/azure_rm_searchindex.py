@@ -9,7 +9,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_search_index
+module: azure_rm_searchindex
 version_added: "4.2.0"
 short_description: Manage an index in an Azure AI Search service
 description:
@@ -88,7 +88,7 @@ options:
     vector_search:
         description:
             - Vector search configuration (algorithms, profiles, vectorizers).
-            - Passed through to the REST API; see the Azure AI Search REST reference for structure.
+            - Passed through to the Azure AI Search API using camelCase keys; see the Azure AI Search reference for structure.
         type: dict
     semantic:
         description:
@@ -133,7 +133,7 @@ author:
 
 EXAMPLES = '''
 - name: Create a vector-enabled RAG index
-  azure.azcollection.azure_rm_search_index:
+  azure.azcollection.azure_rm_searchindex:
     resource_group: myResourceGroup
     search_service_name: mysearchsvc
     name: rag-index
@@ -159,7 +159,7 @@ EXAMPLES = '''
     state: present
 
 - name: Delete an index
-  azure.azcollection.azure_rm_search_index:
+  azure.azcollection.azure_rm_searchindex:
     resource_group: myResourceGroup
     search_service_name: mysearchsvc
     name: rag-index
@@ -178,7 +178,10 @@ state:
 import copy
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_search_common import AzureRMSearchDataPlaneMixin
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_search_common import (
+    AzureRMSearchDataPlaneMixin,
+    ResourceNotFoundError,
+)
 
 
 class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
@@ -215,9 +218,10 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        existing = self.search_query(
-            self.search_service_name, "/indexes/{0}".format(self.name),
-            "GET", admin_key=self.admin_key, expected_status_codes=[200])
+        self.client = self.get_search_index_client(
+            self.search_service_name, admin_key=self.admin_key)
+
+        existing = self._get_existing()
 
         if self.state == 'present':
             if self.fields is None and existing is None:
@@ -242,11 +246,17 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             if existing is not None:
                 self.results['changed'] = True
                 if not self.check_mode:
-                    self.search_query(
-                        self.search_service_name, "/indexes/{0}".format(self.name),
-                        "DELETE", admin_key=self.admin_key,
-                        expected_status_codes=[204, 200])
+                    self.client.delete_index(self.name)
         return self.results
+
+    def _get_existing(self):
+        # The SDK raises ResourceNotFoundError when the index does not exist;
+        # translate that to None. Successful lookups return a model; .as_dict()
+        # yields the camelCase wire shape the comparison and RETURN expect.
+        try:
+            return self.client.get_index(self.name).as_dict()
+        except ResourceNotFoundError:
+            return None
 
     def _build_body(self):
         body = {"name": self.name}
@@ -281,18 +291,9 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         return out
 
     def _create_or_update(self, body):
-        # Azure returns 201 on create and 204 (No Content) on update, so a
-        # successful PUT may carry no body. Fall back to a GET to return the
-        # current index state in that case.
-        result = self.search_query(
-            self.search_service_name, "/indexes/{0}".format(self.name),
-            "PUT", body=body, admin_key=self.admin_key,
-            expected_status_codes=[200, 201, 204])
-        if result is None:
-            result = self.search_query(
-                self.search_service_name, "/indexes/{0}".format(self.name),
-                "GET", admin_key=self.admin_key, expected_status_codes=[200])
-        return result
+        # create_or_update_index accepts a plain camelCase dict and always
+        # returns the full index model; .as_dict() yields the wire shape.
+        return self.client.create_or_update_index(body).as_dict()
 
     def _is_current(self, desired, existing):
         # Compare the REST-shaped desired body against the existing resource.
