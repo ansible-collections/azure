@@ -56,7 +56,31 @@ options:
         description:
             - The name of the resource group where disk snapshots are stored.
             - Defaults to the disk's own resource group when not specified.
+            - Must be in the same subscription as I(disk_id); cross-subscription snapshot storage is not
+              supported by the Azure Backup service.
         type: str
+    identity:
+        description:
+            - Identity used by this backup instance to perform data operations. This identity must
+              already be assigned to the Backup vault, and must be granted
+              C(Disk Snapshot Contributor) on the snapshot resource group and C(Disk Backup Reader) on
+              the disk.
+        type: dict
+        suboptions:
+            type:
+                description:
+                    - Type of the managed identity to use.
+                    - When not specified, the current identity is left unchanged (or Azure's own
+                      system-assigned default applies on first creation).
+                choices:
+                    - SystemAssigned
+                    - UserAssigned
+                type: str
+            user_assigned_identity:
+                description:
+                    - The resource ID of the user-assigned managed identity to use.
+                    - Required when I(identity.type=UserAssigned).
+                type: str
     state:
         description:
             - Use C(present) to create or update and C(absent) to delete.
@@ -84,6 +108,20 @@ EXAMPLES = '''
     backup_policy_id: >-
         /subscriptions/xxxx-xxxx/resourceGroups/myResourceGroup/providers/Microsoft.DataProtection/backupVaults/mybackupvault/backupPolicies/mydiskbackuppolicy
 
+- name: Configure backup for a managed disk using a user-assigned identity
+  azure_rm_dataprotectionbackupinstancedisk:
+    resource_group: myResourceGroup
+    vault_name: mybackupvault
+    name: mydiskbackupinstance
+    location: eastus
+    disk_id: /subscriptions/xxxx-xxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/mydisk
+    backup_policy_id: >-
+        /subscriptions/xxxx-xxxx/resourceGroups/myResourceGroup/providers/Microsoft.DataProtection/backupVaults/mybackupvault/backupPolicies/mydiskbackuppolicy
+    identity:
+      type: UserAssigned
+      user_assigned_identity: >-
+          /subscriptions/xxxx-xxxx/resourceGroups/myResourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/myuai
+
 - name: Remove backup protection for a managed disk
   azure_rm_dataprotectionbackupinstancedisk:
     resource_group: myResourceGroup
@@ -110,7 +148,7 @@ try:
     from azure.mgmt.core.tools import parse_resource_id
     from azure.mgmt.dataprotection.models import (
         BackupInstanceResource, BackupInstance, Datasource, PolicyInfo, PolicyParameters,
-        AzureOperationalStoreParameters, DataStoreTypes,
+        AzureOperationalStoreParameters, DataStoreTypes, IdentityDetails,
     )
 except ImportError:
     # handled in azure_rm_common
@@ -134,6 +172,13 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
             disk_id=dict(type='str'),
             backup_policy_id=dict(type='str'),
             snapshot_resource_group=dict(type='str'),
+            identity=dict(
+                type='dict',
+                options=dict(
+                    type=dict(type='str', choices=['SystemAssigned', 'UserAssigned']),
+                    user_assigned_identity=dict(type='str'),
+                ),
+            ),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
 
@@ -145,6 +190,7 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
         self.disk_id = None
         self.backup_policy_id = None
         self.snapshot_resource_group = None
+        self.identity = None
         self.state = None
 
         self.results = dict(changed=False)
@@ -177,7 +223,8 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
                 self.to_do = Actions.Delete
             elif self.state == 'present':
                 properties = old_response.get('properties', {}) or {}
-                if not self.default_compare({}, self._desired_properties(), properties, '', dict(compare=[])):
+                properties_match = self.default_compare({}, self._desired_properties(), properties, '', dict(compare=[]))
+                if not properties_match or not self._identity_matches(properties.get('identity_details')):
                     self.to_do = Actions.Create
 
         response = old_response
@@ -185,7 +232,8 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
             self.results['changed'] = True
             if self.check_mode:
                 return self.results
-            response = self.create_update_backupinstancedisk()
+            current_identity_details = ((old_response or {}).get('properties', {}) or {}).get('identity_details')
+            response = self.create_update_backupinstancedisk(current_identity_details)
         elif self.to_do == Actions.Delete:
             self.results['changed'] = True
             if self.check_mode:
@@ -199,12 +247,36 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
         return self.results
 
     def _snapshot_resource_group_id(self):
-        disk_resource_group = parse_resource_id(self.disk_id).get('resource_group')
-        resource_group = self.snapshot_resource_group or disk_resource_group
-        return "/subscriptions/{0}/resourceGroups/{1}".format(self.subscription_id, resource_group)
+        disk_identity = parse_resource_id(self.disk_id)
+        subscription_id = disk_identity.get('subscription')
+        resource_group = self.snapshot_resource_group or disk_identity.get('resource_group')
+        return "/subscriptions/{0}/resourceGroups/{1}".format(subscription_id, resource_group)
+
+    def _identity_details(self, current_identity_details=None):
+        if self.identity is None:
+            return current_identity_details
+        if self.identity.get('type') != 'UserAssigned':
+            return dict(use_system_assigned_identity=True, user_assigned_identity_arm_url=None)
+        user_assigned_identity = self.identity.get('user_assigned_identity')
+        if not user_assigned_identity:
+            self.fail('identity.user_assigned_identity is required when identity.type is UserAssigned')
+        return dict(
+            use_system_assigned_identity=False,
+            user_assigned_identity_arm_url=user_assigned_identity,
+        )
+
+    def _identity_matches(self, actual_identity_details):
+        if self.identity is None:
+            return True
+        actual = actual_identity_details or {}
+        desired = self._identity_details()
+        if desired.get('use_system_assigned_identity'):
+            return not actual.get('user_assigned_identity_arm_url')
+        return (actual.get('use_system_assigned_identity') is False
+                and actual.get('user_assigned_identity_arm_url') == desired['user_assigned_identity_arm_url'])
 
     def _desired_properties(self):
-        return dict(
+        properties = dict(
             friendly_name=self.friendly_name,
             data_source_info=dict(resource_id=self.disk_id),
             policy_info=dict(
@@ -216,6 +288,7 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
                 ),
             ),
         )
+        return properties
 
     def get_backupinstancedisk(self):
         try:
@@ -227,15 +300,19 @@ class AzureRMBackupInstance(AzureRMModuleBaseExt):
         except ResourceNotFoundError:
             return None
 
-    def create_update_backupinstancedisk(self):
+    def create_update_backupinstancedisk(self, current_identity_details=None):
         self.log("Configuring the Backup instance {0}".format(self.name))
         disk_name = parse_resource_id(self.disk_id).get('name')
         snapshot_resource_group_id = self._snapshot_resource_group_id()
+        identity_details = self._identity_details(current_identity_details)
+        if identity_details is not None:
+            identity_details = IdentityDetails(**identity_details)
 
         parameters = BackupInstanceResource(
             properties=BackupInstance(
                 object_type='BackupInstance',
                 friendly_name=self.friendly_name,
+                identity_details=identity_details,
                 data_source_info=Datasource(
                     object_type='Datasource',
                     datasource_type=DISK_DATASOURCE_TYPE,
