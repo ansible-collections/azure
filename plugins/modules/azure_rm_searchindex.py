@@ -237,7 +237,8 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
 
         if self.state == 'present':
             if self.fields is None and existing is None:
-                self.fail(msg="fields is required to create an index")
+                self.fail(msg="fields is required to create index '%s'; "
+                              "it does not exist yet" % self.name)
             desired = self._build_body()
             if existing is None:
                 self.results['changed'] = True
