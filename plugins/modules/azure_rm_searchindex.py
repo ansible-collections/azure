@@ -44,7 +44,7 @@ options:
         type: str
     fields:
         description:
-            - The field definitions of the index. Required when I(state=present).
+            - The field definitions of the index. Required when creating an index.
         type: list
         elements: dict
         suboptions:
@@ -192,7 +192,19 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             search_service_name=dict(type='str', required=True),
             name=dict(type='str', required=True),
             admin_key=dict(type='str', no_log=True),
-            fields=dict(type='list', elements='dict'),
+            fields=dict(type='list', elements='dict', options=dict(
+                name=dict(type='str', required=True),
+                type=dict(type='str', required=True),
+                key=dict(type='bool'),
+                searchable=dict(type='bool'),
+                filterable=dict(type='bool'),
+                retrievable=dict(type='bool'),
+                sortable=dict(type='bool'),
+                facetable=dict(type='bool'),
+                analyzer=dict(type='str'),
+                dimensions=dict(type='int'),
+                vector_search_profile=dict(type='str'),
+            )),
             vector_search=dict(type='dict'),
             semantic=dict(type='dict'),
             scoring_profiles=dict(type='list', elements='dict'),
@@ -235,11 +247,15 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                     self.results['state'] = desired
             else:
                 if not self._is_current(desired, existing):
+                    # create_or_update_index issues a PUT, which replaces the
+                    # whole definition. Merge the user-supplied keys onto the
+                    # existing index so settings not resupplied are preserved.
+                    body = self._merge_existing(desired, existing)
                     self.results['changed'] = True
                     if not self.check_mode:
-                        self.results['state'] = self._create_or_update(desired)
+                        self.results['state'] = self._create_or_update(body)
                     else:
-                        self.results['state'] = desired
+                        self.results['state'] = body
                 else:
                     self.results['state'] = existing
         else:  # absent
@@ -289,6 +305,16 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                 continue
             out[key_map.get(k, k)] = v
         return out
+
+    def _merge_existing(self, desired, existing):
+        # Overlay the user-supplied (desired) keys onto a copy of the existing
+        # index so a PUT update does not drop settings the user did not
+        # resupply (e.g. vectorSearch, semantic, scoringProfiles). Response-only
+        # @odata.* annotations must not be echoed back, so strip them.
+        merged = {k: v for k, v in copy.deepcopy(existing).items()
+                  if not k.startswith('@odata.')}
+        merged.update(desired)
+        return merged
 
     def _create_or_update(self, body):
         # create_or_update_index accepts a plain camelCase dict and always

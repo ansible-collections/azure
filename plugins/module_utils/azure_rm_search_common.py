@@ -5,15 +5,21 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import traceback
+
+from ansible.module_utils.basic import missing_required_lib
+
 try:
     from azure.core.credentials import AzureKeyCredential
     from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
     from azure.search.documents.indexes import SearchIndexClient, SearchIndexerClient
     HAS_SEARCH_SDK = True
     SEARCH_SDK_IMPORT_ERROR = None
-except ImportError as exc:  # pragma: no cover - exercised only without the SDK
+except ImportError:  # pragma: no cover - exercised only without the SDK
     HAS_SEARCH_SDK = False
-    SEARCH_SDK_IMPORT_ERROR = exc
+    # Capture the full traceback so a dependency incompatibility (an installed
+    # but broken package) is distinguishable from a simply-missing package.
+    SEARCH_SDK_IMPORT_ERROR = traceback.format_exc()
     # Define placeholders so module-level references resolve; the mixin guards
     # on HAS_SEARCH_SDK before using any of these.
     ResourceNotFoundError = Exception
@@ -54,9 +60,8 @@ class AzureRMSearchDataPlaneMixin(object):
 
     def _require_search_sdk(self):
         if not HAS_SEARCH_SDK:
-            self.fail(msg="The azure-search-documents package is required for Azure AI "
-                          "Search data-plane modules. Install it with "
-                          "'pip install azure-search-documents'.")
+            self.fail(msg=missing_required_lib('azure-search-documents'),
+                      exception=SEARCH_SDK_IMPORT_ERROR)
 
     def get_search_index_client(self, service_name, admin_key=None):
         """Return a SearchIndexClient for index and synonym-map operations."""
