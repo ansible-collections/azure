@@ -82,6 +82,25 @@
           - name: backendaddrp1
         sku: Standard
 
+    - name: Create public IP address 2
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vmss01"
+        allocation_method: Static
+        name: testPublicIP2
+        sku: Standard
+
+    - name: Create load balancer 2 with multiple backend pools
+      azure.azcollection.azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testLB2
+        frontend_ip_configurations:
+          - name: frontendipconf0
+            public_ip_address: testPublicIP2
+        backend_address_pools:
+          - name: backendaddrp2a
+          - name: backendaddrp2b
+        sku: Standard
+
     - name: Create network security group within same resource group of VMSS.
       azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}-vmss01"
@@ -588,6 +607,73 @@
     - name: Assert that nothing was changed
       ansible.builtin.assert:
         that: results is not changed
+
+    - name: Test selecting a backend pool of a load balancer
+      module_defaults:
+        azure.azcollection.azure_rm_virtualmachinescaleset:
+          resource_group: "{{ resource_group }}-vmss01"
+          name: testVMSS{{ rpfx }}
+          vm_size: Standard_D2s_v3
+          admin_username: testuser
+          ssh_password_enabled: false
+          ssh_public_keys:
+            - path: /home/testuser/.ssh/authorized_keys
+              key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
+          capacity: 1
+          virtual_network_name: VMSStestVnet
+          subnet_name: VMSStestSubnet
+          upgrade_policy: Manual
+          tier: Standard
+          managed_disk_type: Standard_LRS
+          os_disk_caching: ReadWrite
+          custom_data: "#cloud-config-updated"
+          single_placement_group: true
+          orchestration_mode: Uniform
+          image:
+            offer: 0001-com-ubuntu-server-focal
+            publisher: Canonical
+            sku: 20_04-lts
+            version: latest
+          data_disks:
+            - lun: 0
+              disk_size_gb: 64
+              caching: ReadWrite
+              managed_disk_type: Standard_LRS
+      block:
+        - name: Update VMSS -- attach to a specific backend pool
+          azure.azcollection.azure_rm_virtualmachinescaleset:
+            load_balancer: testLB2
+            load_balancer_backend_pool_name: backendaddrp2b
+          register: results
+
+        - name: Assert that VMSS was updated
+          ansible.builtin.assert:
+            that: results is changed
+
+        - name: Retrieve scaleset facts
+          azure.azcollection.azure_rm_virtualmachinescaleset_info:
+            resource_group: "{{ resource_group }}-vmss01"
+            name: testVMSS{{ rpfx }}
+            format: raw
+          register: output_lb_scaleset
+
+        - name: Assert the VMSS is attached only to the selected backend pool
+          ansible.builtin.assert:
+            that:
+              - ip_config.load_balancer_backend_address_pools | length == 1
+              - ip_config.load_balancer_backend_address_pools[0].id is search('(?i)/loadBalancers/testLB2/backendAddressPools/backendaddrp2b$')
+          vars:
+            ip_config: "{{ output_lb_scaleset.vmss[0].virtual_machine_profile.network_profile.network_interface_configurations[0].ip_configurations[0] }}"
+
+        - name: Update VMSS -- same backend pool (idempotence)
+          azure.azcollection.azure_rm_virtualmachinescaleset:
+            load_balancer: testLB2
+            load_balancer_backend_pool_name: backendaddrp2b
+          register: results
+
+        - name: Assert that nothing was changed
+          ansible.builtin.assert:
+            that: results is not changed
 
     - name: Install VMSS Extension
       azure.azcollection.azure_rm_virtualmachinescalesetextension:
@@ -1759,6 +1845,18 @@
       azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}-vmss01"
         name: testPublicIP1
+        state: absent
+
+    - name: Delete load balancer 2
+      azure.azcollection.azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testLB2
+        state: absent
+
+    - name: Delete the public IP address 2
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}-vmss01"
+        name: testPublicIP2
         state: absent
   always:
     - name: Force delete the resource group
