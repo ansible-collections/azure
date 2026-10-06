@@ -92,6 +92,8 @@ options:
     idempotency:
         description:
             - If enabled, idempotency check will be done by using I(method=GET) first and then comparing with I(body).
+            - Dictionary fields omitted from I(body) are ignored, including fields inside list items.
+            - Lists are compared in order and must have the same number of items.
         default: false
         type: bool
     polling_timeout:
@@ -401,9 +403,12 @@ class AzureRMResource(AzureRMModuleBase):
             else:
                 try:
                     response = json.loads(original.body())
+                except (TypeError, ValueError) as exc:
+                    self.fail("Failed to parse response for idempotency check: {0}".format(str(exc)))
+                if isinstance(self.body, dict):
+                    needs_update = not self._body_matches(self.body, response)
+                else:
                     needs_update = (dict_merge(response, self.body) != response)
-                except Exception:
-                    pass
 
         if needs_update:
             response = self.mgmt_client.query(self.url,
@@ -431,6 +436,26 @@ class AzureRMResource(AzureRMModuleBase):
         self.results['changed'] = needs_update
 
         return self.results
+
+    def _body_matches(self, desired, actual):
+        # True when every value in desired is present in actual. Extra dict keys in actual
+        # (server-generated fields such as etag or provisioningState) are ignored at any depth,
+        # including inside list items; lists must match in length and order.
+        if isinstance(desired, dict):
+            if not isinstance(actual, dict):
+                return False
+            return all(
+                key in actual and self._body_matches(value, actual[key])
+                for key, value in desired.items()
+            )
+        if isinstance(desired, list):
+            if not isinstance(actual, list) or len(desired) != len(actual):
+                return False
+            return all(
+                self._body_matches(desired_item, actual_item)
+                for desired_item, actual_item in zip(desired, actual)
+            )
+        return desired == actual
 
 
 def main():
