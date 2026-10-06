@@ -1,8 +1,0 @@
----
-minor_changes:
-  - event_query - the contract test now compiles every expression with ``jq``.
-    Every other check in that file reads the query as text, so all of them pass
-    on an expression that cannot run. The controller compiles the expression
-    outside the error handling that guards evaluation, so a query that does not
-    compile discards every indirect node audit record for the whole job -
-    including the records of every other collection in it.
