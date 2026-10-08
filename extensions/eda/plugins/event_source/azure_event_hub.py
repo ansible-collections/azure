@@ -15,6 +15,7 @@ from typing import Any
 
 from azure.eventhub import EventData
 from azure.eventhub.aio import EventHubConsumerClient, PartitionContext
+from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 from azure.identity.aio import ClientSecretCredential
 
 DOCUMENTATION = r"""
@@ -60,14 +61,39 @@ options:
     required: true
   azure_starting_position:
     description:
-      - The starting position
+      - The starting position valid values are -1, @latest, integer position
+        or datetime. https://azuresdkdocs.z19.web.core.windows.net/python/azure-eventhub/latest/azure.eventhub.html
     type: str
-    default: "-1"
+    default: "@latest"
+
   azure_consumer_group:
     description:
       - The name of the consumer group
     type: str
     default: "$Default"
+  azure_storage_account_name:
+    description:
+      - The Azure Storage Account name for persisting checkpoints
+      - Uses the same service principal credentials as Event Hub
+      - If not provided, checkpoints will only be stored in-memory
+      - Example "mystorageaccount" (not the full URL)
+    type: str
+    required: false
+  azure_checkpoint_container_name:
+    description:
+      - The name of the blob container to store checkpoints
+      - Required if azure_storage_account_name is provided
+    type: str
+    required: false
+  azure_max_wait_time:
+    description:
+      - Maximum time in seconds to wait for events before checking for partition rebalancing
+      - Lower values (10-30) = faster failover detection but more Azure API calls
+      - Higher values (60-120) = slower failover but fewer API calls and lower costs
+      - Only relevant when using load balancing (multiple consumers with same consumer group)
+    type: int
+    default: 60
+    required: false
   feedback:
     type: bool
     default: false
@@ -101,7 +127,10 @@ EXAMPLES = r"""
     "azure_client_secret": "your_client_secret"
     "azure_namespace": "example.servicebus.windows.net"
     "azure_event_hub_name": "your_hub_name"
-    "azure_starting_position": "-1"
+    "azure_consumer_group": "$Default"
+    "azure_starting_position": "@latest"
+    "azure_storage_account_name": "mystorageaccount"
+    "azure_checkpoint_container_name": "eventhub-checkpoints"
 """
 
 logger = logging.getLogger()
@@ -117,9 +146,10 @@ def is_valid_uuid(value: str) -> bool:
     """
     try:
         uuid.UUID(value)
-        return True  # noqa: TRY300
     except (ValueError, AttributeError, TypeError):
         return False
+    else:
+        return True
 
 
 def _normalize_amqp_id(value: str | bytes | uuid.UUID | int | None) -> str | None:
@@ -200,16 +230,36 @@ class AzureHubConsumer:
         self.event_hub_name = args.get("azure_event_hub_name")
 
         self.consumer_group = args.get("azure_consumer_group", "$Default")
-        self.starting_position = int(args.get("azure_starting_position", "-1"))
-        self.feedback_timeout = int(args.get("feedback_timeout", DEFAULT_FEEDBACK_TIMEOUT))
+        raw_position = args.get("azure_starting_position", "@latest")
+        try:
+            self.starting_position = int(raw_position)
+        except (ValueError, TypeError):
+            self.starting_position = raw_position
+        self.feedback_timeout = int(
+            args.get("feedback_timeout", DEFAULT_FEEDBACK_TIMEOUT),
+        )
         self.feedback = args.get("feedback", False)
         self.eda_feedback_queue = args.get("eda_feedback_queue")
+
+        # Load balancing configuration - lower values = faster failover
+        self.max_wait_time = int(args.get("azure_max_wait_time", 60))
+
+        # Blob Storage for checkpoint persistence
+        self.storage_account_name = args.get("azure_storage_account_name")
+        self.checkpoint_container_name = args.get("azure_checkpoint_container_name")
 
         if self.feedback and self.eda_feedback_queue is None:
             msg = (
                 "feedback: true was set but no feedback queue was provided. "
                 "This requires a compatible version of ansible-rulebook that "
                 "supports the feedback mechanism."
+            )
+            raise ValueError(msg)
+
+        if self.storage_account_name and not self.checkpoint_container_name:
+            msg = (
+                "azure_checkpoint_container_name is required when "
+                "azure_storage_account_name is provided"
             )
             raise ValueError(msg)
 
@@ -220,7 +270,9 @@ class AzureHubConsumer:
         )
 
     async def on_event(
-        self, partition_context: PartitionContext, event: EventData,
+        self,
+        partition_context: PartitionContext,
+        event: EventData,
     ) -> None:
         """Receiving event data."""
         if event:
@@ -267,14 +319,70 @@ class AzureHubConsumer:
 
     async def start_receiving(self) -> None:
         """Start receiving data."""
+        # Create checkpoint store if blob storage is configured
+        checkpoint_store = None
+        if self.storage_account_name and self.checkpoint_container_name:
+            # Use service principal credentials for blob storage
+            blob_account_url = (
+                f"https://{self.storage_account_name}.blob.core.windows.net"
+            )
+            checkpoint_store = BlobCheckpointStore(
+                blob_account_url=blob_account_url,
+                container_name=self.checkpoint_container_name,
+                credential=self.credential,
+            )
+            logger.info(
+                "Using persistent checkpoint store with container: %s in account: %s",
+                self.checkpoint_container_name,
+                self.storage_account_name,
+            )
+        else:
+            logger.warning(
+                "No checkpoint store configured. Checkpoints will be in-memory only. "
+                "Consumer will restart from '%s' position on each restart.",
+                self.starting_position,
+            )
+
+        logger.info(
+            "Starting Azure Event Hub consumer - Namespace: '%s', Event Hub: '%s', "
+            "Consumer Group: '%s', Starting Position: '%s'",
+            self.event_hub_namespace,
+            self.event_hub_name,
+            self.consumer_group,
+            (
+                self.starting_position
+                if checkpoint_store is None
+                else "from checkpoint or earliest"
+            ),
+        )
+
         client = EventHubConsumerClient(
             fully_qualified_namespace=self.event_hub_namespace,
             eventhub_name=self.event_hub_name,
             consumer_group=self.consumer_group,
             credential=self.credential,
+            checkpoint_store=checkpoint_store,
         )
+
+        # Configure receive arguments
+        receiver_args = {
+            "on_event": self.on_event,
+            "max_wait_time": self.max_wait_time,  # Controls load balancing interval
+        }
+
+        # IMPORTANT: Only pass starting_position when checkpoint_store is None
+        # The Azure SDK has known issues with parameter precedence (see GitHub issue #17297)
+        # where passing starting_position alongside checkpoint_store can cause the SDK to
+        # prioritize starting_position over existing checkpoints, contrary to documented behavior.
+        # By NOT passing starting_position when checkpoint_store exists, the SDK correctly:
+        # - Resumes from checkpoint if one exists
+        # - Uses SDK default (earliest) if no checkpoint exists
+        # We only pass starting_position for in-memory checkpoint mode (no checkpoint_store).
+        if checkpoint_store is None:
+            receiver_args["starting_position"] = self.starting_position
+
         async with client:
-            await client.receive(self.on_event)
+            await client.receive(**receiver_args)
 
 
 # Usage
@@ -307,7 +415,10 @@ if __name__ == "__main__":
         "azure_client_secret": "your_client_secret",
         "azure_namespace": "example.servicebus.windows.net",
         "azure_event_hub_name": "your_hub_name",
-        "azure_starting_position": "-1",
+        "azure_consumer_group": "$Default",
+        "azure_starting_position": "@latest",
+        "azure_storage_account_name": "mystorageaccount",
+        "azure_checkpoint_container_name": "eventhub-checkpoints",
     }
 
     asyncio.run(
