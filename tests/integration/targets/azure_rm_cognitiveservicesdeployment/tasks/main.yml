@@ -1,0 +1,188 @@
+---
+- name: Create resource group for OpenAI deployment tests
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-aoai"
+    location: eastus
+
+- name: Azure OpenAI deployment tests
+  block:
+    - name: Build a unique account name
+      ansible.builtin.set_fact:
+        account_name: "aoai{{ resource_group | hash('md5') | truncate(16, True, '') }}"
+        deployment_name: "text-embedding-3-small"
+
+    # An Azure OpenAI account is a Cognitive Services account with kind=OpenAI.
+    # A custom subdomain is required for OpenAI accounts.
+    - name: Create Azure OpenAI account
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-aoai"
+        name: "{{ account_name }}"
+        kind: OpenAI
+        location: eastus
+        sku: S0
+        custom_domain_name: "{{ account_name }}"
+      register: account
+
+    - name: Create deployment (check mode)
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        model:
+          name: text-embedding-3-small
+          version: "1"
+        sku:
+          name: Standard
+          capacity: 1
+        version_upgrade_option: NoAutoUpgrade
+      check_mode: true
+      register: dep_check
+
+    - name: Assert check mode reports change without creating
+      ansible.builtin.assert:
+        that:
+          - dep_check.changed
+
+    - name: Create deployment
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        model:
+          name: text-embedding-3-small
+          version: "1"
+        sku:
+          name: Standard
+          capacity: 1
+        version_upgrade_option: NoAutoUpgrade
+      register: dep_create
+
+    - name: Assert deployment created
+      ansible.builtin.assert:
+        that:
+          - dep_create.changed
+          - dep_create.state.name == deployment_name
+          - dep_create.state.properties.model.name == 'text-embedding-3-small'
+
+    - name: Create deployment again (idempotent)
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        model:
+          name: text-embedding-3-small
+          version: "1"
+        sku:
+          name: Standard
+          capacity: 1
+        version_upgrade_option: NoAutoUpgrade
+      register: dep_idem
+
+    - name: Assert no change on second run
+      ansible.builtin.assert:
+        that:
+          - not dep_idem.changed
+
+    - name: Get deployment via info
+      azure.azcollection.azure_rm_cognitiveservicesdeployment_info:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+      register: dep_info
+
+    - name: Assert info returns the deployment
+      ansible.builtin.assert:
+        that:
+          - dep_info.deployments | length == 1
+          - dep_info.deployments[0].name == deployment_name
+
+    - name: List all deployments via info
+      azure.azcollection.azure_rm_cognitiveservicesdeployment_info:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+      register: dep_list
+
+    - name: Assert list returns at least the created deployment
+      ansible.builtin.assert:
+        that:
+          - dep_list.deployments | length >= 1
+          - deployment_name in (dep_list.deployments | map(attribute='name') | list)
+
+    # Change only the capacity, omitting model and version_upgrade_option. Since
+    # create_or_update is a full-replace PUT, this verifies the module carries
+    # forward the writable properties the user did not resupply.
+    - name: Scale the deployment capacity (update, capacity only)
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        sku:
+          name: Standard
+          capacity: 2
+      register: dep_update
+
+    - name: Assert update changed and preserved other writable properties
+      ansible.builtin.assert:
+        that:
+          - dep_update.changed
+          - dep_update.state.sku.capacity == 2
+          # model and the non-default version_upgrade_option must survive the PUT
+          - dep_update.state.properties.model.name == 'text-embedding-3-small'
+          - dep_update.state.properties.model.version == '1'
+          - dep_update.state.properties.version_upgrade_option == 'NoAutoUpgrade'
+
+    - name: Info for a non-existent deployment returns empty
+      azure.azcollection.azure_rm_cognitiveservicesdeployment_info:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: does-not-exist
+      register: dep_missing
+
+    - name: Assert empty list, not failure
+      ansible.builtin.assert:
+        that:
+          - dep_missing.deployments | length == 0
+
+    - name: Delete deployment
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        state: absent
+      register: dep_delete
+
+    - name: Assert deleted
+      ansible.builtin.assert:
+        that:
+          - dep_delete.changed
+
+    - name: Delete deployment again (idempotent absent)
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        state: absent
+      register: dep_delete_idem
+
+    - name: Assert no change on second delete
+      ansible.builtin.assert:
+        that:
+          - not dep_delete_idem.changed
+
+  always:
+    - name: Clean up OpenAI account
+      azure.azcollection.azure_rm_cognitiveservicesaccount:
+        resource_group: "{{ resource_group }}-aoai"
+        name: "{{ account_name }}"
+        kind: OpenAI
+        state: absent
+        purge: true
+      ignore_errors: true
+
+    - name: Clean up resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-aoai"
+        location: eastus
+        state: absent
+        force_delete_nonempty: true
+      ignore_errors: true
