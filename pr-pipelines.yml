@@ -206,6 +206,7 @@ parameters:
       - "azure_rm_tags"
       - "azure_rm_dedicatedhost"
       - "azure_rm_searchindex"
+      - "azure_rm_searchindexer"
       - "inventory_azure"
       - "setup_azure"
 
