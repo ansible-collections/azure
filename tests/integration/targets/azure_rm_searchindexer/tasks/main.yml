@@ -1,0 +1,317 @@
+- name: Create a resource group for the search indexer test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-searchix"
+    location: eastus
+
+- name: Run search indexer tests
+  block:
+    - name: Build unique names
+      ansible.builtin.set_fact:
+        svc_name: "searchix{{ resource_group | hash('md5') | truncate(14, True, '') }}"
+        sa_name: "saix{{ resource_group | hash('md5') | truncate(20, True, '') }}"
+
+    - name: Create AI Search service
+      azure.azcollection.azure_rm_cognitivesearch:
+        resource_group: "{{ resource_group }}-searchix"
+        name: "{{ svc_name }}"
+        sku: basic
+      register: svc
+
+    # Data-plane RBAC is off by default on a new search service (API-key only),
+    # so enable AAD auth and grant the test principal a data-plane role. This
+    # is what exercises the https://search.azure.com/.default token path.
+    - name: Enable AAD (RBAC) data-plane auth on the search service
+      azure.azcollection.azure_rm_resource:
+        api_version: '2023-11-01'
+        resource_group: "{{ resource_group }}-searchix"
+        provider: search
+        resource_type: searchservices
+        resource_name: "{{ svc_name }}"
+        method: PATCH
+        body:
+          properties:
+            authOptions:
+              aadOrApiKey:
+                aadAuthFailureMode: http403
+
+    - name: Resolve the test service principal object id
+      azure.azcollection.azure_rm_adserviceprincipal_info:
+        app_id: "{{ azure_client_id }}"
+      register: sp_info
+
+    - name: Grant Search Service Contributor to the test principal
+      azure.azcollection.azure_rm_roleassignment:
+        scope: "{{ svc.state.id }}"
+        assignee_object_id: "{{ sp_info.service_principals[0].object_id }}"
+        # Search Service Contributor: manage data-plane object definitions
+        # (indexes, data sources, indexers, skillsets).
+        # https://learn.microsoft.com/en-us/azure/search/search-security-rbac
+        role_definition_id: "/subscriptions/{{ azure_subscription_id }}/providers/Microsoft.Authorization/roleDefinitions/7ca78c08-252a-4471-8644-bb5ff32d4ba0"
+        state: present
+
+    # An indexer needs a real data source and a target index. Stand up a blob
+    # data source (empty container is fine; a run against it just indexes zero
+    # documents) and an index to receive documents.
+    - name: Create storage account for the data source
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ resource_group }}-searchix"
+        name: "{{ sa_name }}"
+        account_type: Standard_LRS
+        kind: StorageV2
+
+    - name: Create a blob container
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}-searchix"
+        account_name: "{{ sa_name }}"
+        container_name: documents
+
+    - name: Get the storage account connection string
+      azure.azcollection.azure_rm_storageaccount_info:
+        resource_group: "{{ resource_group }}-searchix"
+        name: "{{ sa_name }}"
+        show_connection_string: true
+      register: sa_info
+
+    - name: Set connection string fact
+      ansible.builtin.set_fact:
+        ds_connection_string: "{{ sa_info.storageaccounts[0].primary_endpoints.blob.connectionstring }}"
+
+    - name: Create data source (absorbs RBAC propagation)
+      azure.azcollection.azure_rm_searchdatasource:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-ds
+        type: azureblob
+        connection_string: "{{ ds_connection_string }}"
+        container:
+          name: documents
+      register: ds_create
+      # Absorb AAD auth-option and role-assignment propagation (can take minutes).
+      retries: 20
+      delay: 15
+      until: ds_create is not failed
+
+    - name: Create target index
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+
+    - name: Create indexer (check mode)
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        target_index_name: it-index
+        data_source_name: it-ds
+        schedule:
+          interval: PT1H
+        field_mappings:
+          - sourceFieldName: metadata_storage_path
+            targetFieldName: id
+            mappingFunction:
+              name: base64Encode
+      check_mode: true
+      register: ix_check
+
+    - name: Assert check mode reports change without creating
+      ansible.builtin.assert:
+        that:
+          - ix_check.changed
+
+    - name: Create indexer
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        target_index_name: it-index
+        data_source_name: it-ds
+        schedule:
+          interval: PT1H
+        field_mappings:
+          - sourceFieldName: metadata_storage_path
+            targetFieldName: id
+            mappingFunction:
+              name: base64Encode
+      register: ix_create
+
+    - name: Assert created (RBAC data-plane scope worked)
+      ansible.builtin.assert:
+        that:
+          - ix_create.changed
+          - ix_create.state.name == 'it-indexer'
+          - ix_create.state.targetIndexName == 'it-index'
+          - ix_create.state.dataSourceName == 'it-ds'
+
+    - name: Create indexer again (idempotent)
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        target_index_name: it-index
+        data_source_name: it-ds
+        schedule:
+          interval: PT1H
+        field_mappings:
+          - sourceFieldName: metadata_storage_path
+            targetFieldName: id
+            mappingFunction:
+              name: base64Encode
+      register: ix_idem
+
+    - name: Assert no change on second run (server-assigned schedule.startTime ignored)
+      ansible.builtin.assert:
+        that:
+          - not ix_idem.changed
+
+    - name: Get indexer via info (with execution status)
+      azure.azcollection.azure_rm_searchindexer_info:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        include_status: true
+      register: ix_info
+
+    - name: Assert info returns the indexer and its status
+      ansible.builtin.assert:
+        that:
+          - ix_info.indexers | length == 1
+          - ix_info.indexers[0].name == 'it-indexer'
+          - ix_info.status is defined
+          - ix_info.status.status is defined
+
+    - name: Update the indexer (change schedule interval)
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        target_index_name: it-index
+        data_source_name: it-ds
+        schedule:
+          interval: PT2H
+        field_mappings:
+          - sourceFieldName: metadata_storage_path
+            targetFieldName: id
+            mappingFunction:
+              name: base64Encode
+      register: ix_update
+
+    - name: Assert update changed
+      ansible.builtin.assert:
+        that:
+          - ix_update.changed
+
+    # Change ONLY the description, omitting target/dataSource/schedule/mappings.
+    # create_or_update is a full-replace PUT, so this verifies the module carries
+    # forward the other settings instead of dropping them.
+    - name: Update the indexer (description only)
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        description: Blob ingestion indexer
+      register: ix_desc
+
+    - name: Assert description update preserved the other settings
+      ansible.builtin.assert:
+        that:
+          - ix_desc.changed
+          - ix_desc.state.description == 'Blob ingestion indexer'
+          - ix_desc.state.targetIndexName == 'it-index'
+          - ix_desc.state.dataSourceName == 'it-ds'
+          - ix_desc.state.schedule.interval == 'PT2H'
+          - ix_desc.state.fieldMappings | length == 1
+
+    - name: Reset the indexer (clear tracking state)
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        state: reset
+      register: ix_reset
+      # A run may be in progress from creation/update; absorb transient 409s.
+      retries: 10
+      delay: 15
+      until: ix_reset is not failed
+
+    - name: Assert reset reports changed
+      ansible.builtin.assert:
+        that:
+          - ix_reset.changed
+
+    - name: Run the indexer on demand
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        state: run
+      register: ix_run
+      retries: 10
+      delay: 15
+      until: ix_run is not failed
+
+    - name: Assert run reports changed
+      ansible.builtin.assert:
+        that:
+          - ix_run.changed
+
+    - name: Info for a non-existent indexer returns empty
+      azure.azcollection.azure_rm_searchindexer_info:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: does-not-exist
+      register: ix_missing
+
+    - name: Assert empty list, not failure
+      ansible.builtin.assert:
+        that:
+          - ix_missing.indexers | length == 0
+
+    - name: Delete indexer
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        state: absent
+      register: ix_delete
+
+    - name: Assert deleted
+      ansible.builtin.assert:
+        that:
+          - ix_delete.changed
+
+    - name: Delete indexer again (idempotent absent)
+      azure.azcollection.azure_rm_searchindexer:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+        name: it-indexer
+        state: absent
+      register: ix_delete_idem
+
+    - name: Assert no change on second delete
+      ansible.builtin.assert:
+        that:
+          - not ix_delete_idem.changed
+
+  always:
+    - name: Clean up search service
+      azure.azcollection.azure_rm_cognitivesearch:
+        resource_group: "{{ resource_group }}-searchix"
+        name: "{{ svc_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-searchix"
+        location: eastus
+        state: absent
+        force_delete_nonempty: true
+      ignore_errors: true
