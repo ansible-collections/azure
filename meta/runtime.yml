@@ -343,6 +343,8 @@ action_groups:
     - azure.azcollection.azure_rm_routetable_info
     - azure.azcollection.azure_rm_searchindex
     - azure.azcollection.azure_rm_searchindex_info
+    - azure.azcollection.azure_rm_searchsynonymmap
+    - azure.azcollection.azure_rm_searchsynonymmap_info
     - azure.azcollection.azure_rm_securitygroup
     - azure.azcollection.azure_rm_securitygroup_info
     - azure.azcollection.azure_rm_servicebus
