@@ -249,6 +249,13 @@ options:
         description:
             - Load balancer name.
         type: str
+    load_balancer_backend_pool_name:
+        description:
+            - Name of the backend address pool of I(load_balancer) to attach the scale set to.
+            - When not set, a new scale set is attached to every backend address pool of I(load_balancer).
+            - Requires I(load_balancer).
+        type: str
+        version_added: "4.2.0"
     application_gateway:
         description:
             - Application gateway name.
@@ -566,6 +573,22 @@ EXAMPLES = '''
     managed_disk_type: Standard_LRS
     image: customimage001
 
+- name: Create a VMSS attached to a specific backend pool of a load balancer
+  azure_rm_virtualmachinescaleset:
+    resource_group: myResourceGroup
+    name: testvmss
+    vm_size: Standard_DS1_v2
+    capacity: 2
+    virtual_network_name: testvnet
+    upgrade_policy: Manual
+    subnet_name: testsubnet
+    admin_username: "{{ username }}"
+    admin_password: "{{ password }}"
+    managed_disk_type: Standard_LRS
+    image: customimage001
+    load_balancer: testLB
+    load_balancer_backend_pool_name: backend-pool-2
+
 - name: Create VMSS with security group
   azure_rm_virtualmachinescaleset:
     resource_group: "{{ resource_group }}"
@@ -816,6 +839,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
             subnet_name=dict(type='str', aliases=['subnet']),
             public_ip_per_vm=dict(type='bool', default=False),
             load_balancer=dict(type='str'),
+            load_balancer_backend_pool_name=dict(type='str'),
             application_gateway=dict(type='str'),
             virtual_network_resource_group=dict(type='str'),
             virtual_network_name=dict(type='str', aliases=['virtual_network']),
@@ -892,6 +916,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.tags = None
         self.differences = None
         self.load_balancer = None
+        self.load_balancer_backend_pool_name = None
         self.application_gateway = None
         self.enable_accelerated_networking = None
         self.security_group = None
@@ -912,6 +937,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         self.private_ip_address_version = None
 
         mutually_exclusive = [('load_balancer', 'application_gateway')]
+        required_by = dict(load_balancer_backend_pool_name=['load_balancer'])
         self.results = dict(
             changed=False,
             actions=[],
@@ -921,7 +947,8 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
         super(AzureRMVirtualMachineScaleSet, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
-            mutually_exclusive=mutually_exclusive)
+            mutually_exclusive=mutually_exclusive,
+            required_by=required_by)
 
     @property
     def managed_identity(self):
@@ -1033,9 +1060,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
 
             if self.load_balancer:
                 load_balancer = self.get_load_balancer(self.load_balancer)
-                load_balancer_backend_address_pools = ([self.compute_models.SubResource(id=resource.id)
-                                                        for resource in load_balancer.backend_address_pools]
-                                                       if load_balancer.backend_address_pools else None)
+                backend_pools = load_balancer.backend_address_pools or []
+                if self.load_balancer_backend_pool_name:
+                    backend_pools = [pool for pool in backend_pools if (pool.name or '').lower() == self.load_balancer_backend_pool_name.lower()]
+                    if not backend_pools:
+                        self.fail("Backend address pool {0} was not found in load balancer {1}".format(
+                            self.load_balancer_backend_pool_name, self.load_balancer))
+                load_balancer_backend_address_pools = ([self.compute_models.SubResource(id=resource.id) for resource in backend_pools]
+                                                       if backend_pools else None)
                 load_balancer_inbound_nat_pools = ([self.compute_models.SubResource(id=resource.id)
                                                     for resource in load_balancer.inbound_nat_pools]
                                                    if load_balancer.inbound_nat_pools else None)
@@ -1173,7 +1205,14 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                 backend_address_pool = nicConfigs[0]['ip_configurations'][0].get('load_balancer_backend_address_pools', [])
                 backend_address_pool += nicConfigs[0]['ip_configurations'][0].get('application_gateway_backend_address_pools', [])
                 lb_or_ag_id = None
-                if (len(nicConfigs) != 1 or len(backend_address_pool) != 1):
+                if load_balancer and len(nicConfigs) == 1 and self.load_balancer_backend_pool_name:
+                    existing_backend_ids = {pool['id'].lower()
+                                            for pool in nicConfigs[0]['ip_configurations'][0].get('load_balancer_backend_address_pools') or []}
+                    desired_backend_ids = {pool.id.lower() for pool in load_balancer_backend_address_pools or []}
+                    if existing_backend_ids != desired_backend_ids:
+                        differences.append('load_balancer')
+                        changed = True
+                elif (len(nicConfigs) != 1 or len(backend_address_pool) != 1):
                     support_lb_change = False  # Currently not support for the vmss contains more than one loadbalancer
                     self.module.warn('Updating more than one load balancer on VMSS is currently not supported')
                 else:
@@ -1471,7 +1510,7 @@ class AzureRMVirtualMachineScaleSet(AzureRMModuleBaseExt):
                     if self.custom_data and vmss_resource.virtual_machine_profile.os_profile is not None:
                         vmss_resource.virtual_machine_profile.os_profile.custom_data = self.custom_data
 
-                    if support_lb_change:
+                    if support_lb_change and 'load_balancer' in self.differences:
                         if self.load_balancer:
                             vmss_resource.virtual_machine_profile.network_profile.network_interface_configurations[0] \
                                 .ip_configurations[0].load_balancer_backend_address_pools = load_balancer_backend_address_pools
