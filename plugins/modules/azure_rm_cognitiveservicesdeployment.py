@@ -305,25 +305,45 @@ class AzureRMCognitiveServicesDeployment(AzureRMModuleBaseExt):
 
         return changed
 
+    # Deployment properties the service populates and rejects on write.
+    # Everything else under "properties" is writable and must survive a PUT.
+    READ_ONLY_PROPERTIES = frozenset([
+        'provisioning_state',
+        'capabilities',
+        'call_rate_limit',
+        'rate_limits',
+        'dynamic_throttling_enabled',
+        'current_capacity',
+    ])
+
     def _merge_for_update(self, existing, params):
-        """Build the PUT body, carrying forward existing model/sku when the
-        user did not resupply them (begin_create_or_update is a full replace)."""
+        """Build the PUT body for an update.
+
+        begin_create_or_update issues a PUT (full replace), so every writable
+        property the user did not resupply must be carried forward from the
+        existing deployment, or it would be reset. Read-only, service-populated
+        fields must NOT be echoed back.
+        """
         body = copy.deepcopy(params)
+
+        # Carry forward sku / tags when the user did not supply them.
+        if 'sku' not in body and existing.get('sku') is not None:
+            existing_sku = {k: v for k, v in existing['sku'].items()
+                            if v is not None}
+            if existing_sku:
+                body['sku'] = existing_sku
+        if 'tags' not in body and existing.get('tags'):
+            body['tags'] = existing['tags']
+
+        # Carry forward every writable property the user did not supply.
         existing_props = existing.get('properties') or {}
         props = body.setdefault('properties', {})
-        if 'model' not in props and existing_props.get('model') is not None:
-            existing_model = existing_props['model']
-            props['model'] = {k: existing_model[k]
-                              for k in ('format', 'name', 'version')
-                              if existing_model.get(k) is not None}
+        for key, value in existing_props.items():
+            if key in self.READ_ONLY_PROPERTIES or value is None:
+                continue
+            props.setdefault(key, value)
         if not props:
             body.pop('properties', None)
-        if 'sku' not in body and existing.get('sku') is not None:
-            existing_sku = existing['sku']
-            sku = {k: existing_sku[k] for k in ('name', 'capacity')
-                   if existing_sku.get(k) is not None}
-            if sku:
-                body['sku'] = sku
         return body
 
     def create_or_update_deployment(self, params):
