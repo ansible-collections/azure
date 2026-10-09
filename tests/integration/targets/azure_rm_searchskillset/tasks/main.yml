@@ -1,0 +1,225 @@
+- name: Create a resource group for the search skillset test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-searchss"
+    location: eastus
+
+- name: Run search skillset tests
+  block:
+    - name: Build a unique search service name
+      ansible.builtin.set_fact:
+        svc_name: "searchss{{ resource_group | hash('md5') | truncate(14, True, '') }}"
+
+    - name: Create AI Search service
+      azure.azcollection.azure_rm_cognitivesearch:
+        resource_group: "{{ resource_group }}-searchss"
+        name: "{{ svc_name }}"
+        sku: basic
+      register: svc
+
+    # Data-plane RBAC is off by default on a new search service (API-key only),
+    # so enable AAD auth and grant the test principal a data-plane role. This
+    # is what exercises the https://search.azure.com/.default token path.
+    - name: Enable AAD (RBAC) data-plane auth on the search service
+      azure.azcollection.azure_rm_resource:
+        api_version: '2023-11-01'
+        resource_group: "{{ resource_group }}-searchss"
+        provider: search
+        resource_type: searchservices
+        resource_name: "{{ svc_name }}"
+        method: PATCH
+        body:
+          properties:
+            authOptions:
+              aadOrApiKey:
+                aadAuthFailureMode: http403
+
+    - name: Resolve the test service principal object id
+      azure.azcollection.azure_rm_adserviceprincipal_info:
+        app_id: "{{ azure_client_id }}"
+      register: sp_info
+
+    - name: Grant Search Service Contributor to the test principal
+      azure.azcollection.azure_rm_roleassignment:
+        scope: "{{ svc.state.id }}"
+        assignee_object_id: "{{ sp_info.service_principals[0].object_id }}"
+        # Search Service Contributor: manage data-plane object definitions
+        # (indexes, data sources, indexers, skillsets).
+        # https://learn.microsoft.com/en-us/azure/search/search-security-rbac
+        role_definition_id: "/subscriptions/{{ azure_subscription_id }}/providers/Microsoft.Authorization/roleDefinitions/7ca78c08-252a-4471-8644-bb5ff32d4ba0"
+        state: present
+
+    # A text-split skill needs no Azure AI Services account, so the skillset is
+    # self-contained (no secrets, clean idempotency).
+    - name: Create skillset (check mode)
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        skills:
+          - "@odata.type": "#Microsoft.Skills.Text.SplitSkill"
+            context: /document
+            textSplitMode: pages
+            maximumPageLength: 1000
+            inputs:
+              - name: text
+                source: /document/content
+            outputs:
+              - name: textItems
+                targetName: pages
+      check_mode: true
+      register: ss_check
+      # Absorb AAD auth-option and role-assignment propagation (can take minutes).
+      retries: 20
+      delay: 15
+      until: ss_check is not failed
+
+    - name: Assert check mode reports change without creating
+      ansible.builtin.assert:
+        that:
+          - ss_check.changed
+
+    - name: Create skillset
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        skills:
+          - "@odata.type": "#Microsoft.Skills.Text.SplitSkill"
+            context: /document
+            textSplitMode: pages
+            maximumPageLength: 1000
+            inputs:
+              - name: text
+                source: /document/content
+            outputs:
+              - name: textItems
+                targetName: pages
+      register: ss_create
+
+    - name: Assert created (RBAC data-plane scope worked)
+      ansible.builtin.assert:
+        that:
+          - ss_create.changed
+          - ss_create.state.name == 'it-skillset'
+          - ss_create.state.skills | length == 1
+
+    - name: Create skillset again (idempotent)
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        skills:
+          - "@odata.type": "#Microsoft.Skills.Text.SplitSkill"
+            context: /document
+            textSplitMode: pages
+            maximumPageLength: 1000
+            inputs:
+              - name: text
+                source: /document/content
+            outputs:
+              - name: textItems
+                targetName: pages
+      register: ss_idem
+
+    - name: Assert no change on second run
+      ansible.builtin.assert:
+        that:
+          - not ss_idem.changed
+
+    - name: Get skillset via info
+      azure.azcollection.azure_rm_searchskillset_info:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+      register: ss_info
+
+    - name: Assert info returns the skillset
+      ansible.builtin.assert:
+        that:
+          - ss_info.skillsets | length == 1
+          - ss_info.skillsets[0].name == 'it-skillset'
+
+    # Change ONLY the description, omitting skills. create_or_update is a full-
+    # replace PUT, so this verifies the module carries forward the existing
+    # skills instead of dropping them.
+    - name: Update the skillset (description only)
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        description: Document chunking skillset
+      register: ss_update
+
+    - name: Assert update changed and preserved skills
+      ansible.builtin.assert:
+        that:
+          - ss_update.changed
+          - ss_update.state.description == 'Document chunking skillset'
+          - ss_update.state.skills | length == 1
+
+    - name: Update the skillset again (idempotent)
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        description: Document chunking skillset
+      register: ss_update_idem
+
+    - name: Assert no change on repeated description-only update
+      ansible.builtin.assert:
+        that:
+          - not ss_update_idem.changed
+
+    - name: Info for a non-existent skillset returns empty
+      azure.azcollection.azure_rm_searchskillset_info:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: does-not-exist
+      register: ss_missing
+
+    - name: Assert empty list, not failure
+      ansible.builtin.assert:
+        that:
+          - ss_missing.skillsets | length == 0
+
+    - name: Delete skillset
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        state: absent
+      register: ss_delete
+
+    - name: Assert deleted
+      ansible.builtin.assert:
+        that:
+          - ss_delete.changed
+
+    - name: Delete skillset again (idempotent absent)
+      azure.azcollection.azure_rm_searchskillset:
+        resource_group: "{{ resource_group }}-searchss"
+        search_service_name: "{{ svc_name }}"
+        name: it-skillset
+        state: absent
+      register: ss_delete_idem
+
+    - name: Assert no change on second delete
+      ansible.builtin.assert:
+        that:
+          - not ss_delete_idem.changed
+
+  always:
+    - name: Clean up search service
+      azure.azcollection.azure_rm_cognitivesearch:
+        resource_group: "{{ resource_group }}-searchss"
+        name: "{{ svc_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Clean up resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-searchss"
+        location: eastus
+        state: absent
+        force_delete_nonempty: true
+      ignore_errors: true
