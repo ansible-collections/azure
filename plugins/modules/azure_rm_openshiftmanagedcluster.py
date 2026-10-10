@@ -63,18 +63,35 @@ options:
                 default: Enabled
     service_principal_profile:
         description:
-            - service principal.
+            - Service principal for the cluster.
+            - Required when not using managed identity.
+            - Mutually exclusive with I(identity).
         type: dict
         suboptions:
             client_id:
                 description:
                     - Client ID of the service principal (immutable).
-                required: true
                 type: str
             client_secret:
                 description:
                     - Client secret of the service principal (immutable).
-                required: true
+                type: str
+    platform_workload_identity_profile:
+        description:
+            - The workload identity profile for the cluster.
+            - Required when using managed identity (I(identity)).
+            - Maps ARO operator names to user-assigned managed identity resource IDs.
+        type: dict
+        suboptions:
+            platform_workload_identities:
+                description:
+                    - Dictionary of operator names to identity configurations.
+                    - Each key is an operator name (e.g., C(image-registry), C(disk-csi-driver), C(ingress)).
+                    - Each value is a dictionary with a C(resource_id) key pointing to the user-assigned managed identity.
+                type: dict
+            upgradeable_to:
+                description:
+                    - The OpenShift version that the workload identity cluster can be upgraded to.
                 type: str
     network_profile:
         description:
@@ -234,6 +251,7 @@ options:
 extends_documentation_fragment:
     - azure.azcollection.azure
     - azure.azcollection.azure_tags
+    - azure.azcollection.azure_identity_multiple
 author:
     - Haiyuan Zhang (@haiyuazhang)
 '''
@@ -296,6 +314,48 @@ EXAMPLES = '''
     name: myCluster
     location: eastus
     state: absent
+
+- name: Create openshift cluster with managed identity
+  azure_rm_openshiftmanagedcluster:
+    resource_group: "myResourceGroup"
+    name: "myCluster"
+    location: "eastus"
+    identity:
+      type: UserAssigned
+      user_assigned_identities:
+        id:
+          - "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-cluster-identity"
+    cluster_profile:
+      cluster_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/clusterResourceGroup"
+      domain: "mydomain"
+    platform_workload_identity_profile:
+      platform_workload_identities:
+        ClusterOperator.OpenShift.IO/cloud-controller-manager:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-ccm"
+        ClusterOperator.OpenShift.IO/ingress:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-ingress"
+        ClusterOperator.OpenShift.IO/image-registry:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-registry"
+        ClusterOperator.OpenShift.IO/machine-api:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-machine"
+        ClusterOperator.OpenShift.IO/cloud-network-config:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-network"
+        CloudControllerManager.ARO.OpenShift.IO:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-cloud"
+        ServiceOperator.ARO.OpenShift.IO:
+          resource_id: "/subscriptions/xx-xx/resourceGroups/myRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aro-service"
+    network_profile:
+      pod_cidr: "10.128.0.0/14"
+      service_cidr: "172.30.0.0/16"
+    worker_profiles:
+      - name: worker
+        vm_size: "Standard_D4s_v3"
+        subnet_id: "/subscriptions/xx-xx/resourceGroups/myResourceGroup/Microsoft.Network/virtualNetworks/myVnet/subnets/worker"
+        disk_size: 128
+        count: 3
+    master_profile:
+      vm_size: "Standard_D8s_v3"
+      subnet_id: "/subscriptions/xx-xx/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/master"
 '''
 
 RETURN = '''
@@ -323,6 +383,22 @@ location:
     returned: always
     type: str
     sample: eatus
+identity:
+    description:
+        - The managed service identities assigned to the cluster.
+    returned: when configured
+    type: complex
+    contains:
+        type:
+            description:
+                - Type of managed service identity.
+            type: str
+            sample: UserAssigned
+        userAssignedIdentities:
+            description:
+                - The set of user assigned identities associated with the resource.
+            type: dict
+            sample: {"/subscriptions/xx/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id": {}}
 properties:
     description:
         - Properties of a OpenShift managed cluster.
@@ -370,13 +446,29 @@ properties:
             description:
                 - Service principal.
             type: complex
-            returned: always
+            returned: when configured
             contains:
                 clientId:
                     description: Client ID of the service principal.
                     returned: always
                     type: str
                     sample: xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx
+        platformWorkloadIdentityProfile:
+            description:
+                - The workload identity profile.
+            type: complex
+            returned: when configured
+            contains:
+                platformWorkloadIdentities:
+                    description:
+                        - Dictionary of operator names to workload identity configurations.
+                    type: dict
+                    returned: always
+                upgradeableTo:
+                    description:
+                        - The OpenShift version the cluster can be upgraded to.
+                    type: str
+                    returned: when available
         networkProfile:
             description:
                 - Configuration for OpenShift networking.
@@ -504,8 +596,14 @@ properties:
 import time
 import json
 import random
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+
+try:
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+    from azure.mgmt.redhatopenshift.models import (ManagedServiceIdentity, UserAssignedIdentity)
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
 
 
 class Actions:
@@ -556,12 +654,29 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                 options=dict(
                     client_id=dict(
                         type='str',
-                        required=True
                     ),
                     client_secret=dict(
                         type='str',
                         no_log=True,
-                        required=True
+                    )
+                )
+            ),
+            identity=dict(
+                type='dict',
+                options=self.managed_identity_multiple_spec,
+                required_if=[
+                    ('type', 'UserAssigned', ['user_assigned_identities']),
+                    ('type', 'SystemAssigned, UserAssigned', ['user_assigned_identities']),
+                ]
+            ),
+            platform_workload_identity_profile=dict(
+                type='dict',
+                options=dict(
+                    platform_workload_identities=dict(
+                        type='dict',
+                    ),
+                    upgradeable_to=dict(
+                        type='str',
                     )
                 )
             ),
@@ -688,6 +803,7 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
 
         self.resource_group = None
         self.name = None
+        self.identity = None
 
         self.results = dict(changed=False)
         self.mgmt_client = None
@@ -700,13 +816,33 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.body['properties'] = {}
         self.query_parameters = {}
         self.header_parameters = {}
+        self._managed_identity = None
 
-        self.query_parameters['api-version'] = '2023-09-04'
+        self.query_parameters['api-version'] = '2025-07-25'
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(AzureRMOpenShiftManagedClusters, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                               supports_check_mode=True,
                                                               supports_tags=True)
+
+    @property
+    def managed_identity(self):
+        if not self._managed_identity:
+            self._managed_identity = {"identity": ManagedServiceIdentity,
+                                      "user_assigned": UserAssignedIdentity}
+        return self._managed_identity
+
+    def format_for_body(self, identity):
+        if identity:
+            identity = identity.as_dict()
+            if identity.get("user_assigned_identities"):
+                identity["userAssignedIdentities"] = identity.pop("user_assigned_identities")
+        return identity
+
+    def format_for_helper(self, identity):
+        if identity and identity.get("userAssignedIdentities"):
+            identity["user_assigned_identities"] = identity.pop("userAssignedIdentities")
+        return identity
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()) + ['tags']:
@@ -729,29 +865,48 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                         elif item == 'fips_validated_modules':
                             self.body['properties']['clusterProfile']['fipsValidatedModules'] = kwargs[key].get(item)
                 elif key == 'service_principal_profile':
-                    self.body['properties']['servicePrincipalProfile'] = {}
-                    self.body['properties']['servicePrincipalProfile']['ClientId'] = kwargs[key].get('client_id')
-                    self.body['properties']['servicePrincipalProfile']['clientSecret'] = kwargs[key].get('client_secret')
+                    sp = kwargs[key]
+                    if sp.get('client_id') and sp.get('client_secret'):
+                        self.body['properties']['servicePrincipalProfile'] = {}
+                        self.body['properties']['servicePrincipalProfile']['clientId'] = sp.get('client_id')
+                        self.body['properties']['servicePrincipalProfile']['clientSecret'] = sp.get('client_secret')
+                elif key == 'platform_workload_identity_profile':
+                    pwi_profile = {}
+                    pwi = kwargs[key].get('platform_workload_identities')
+                    if pwi:
+                        pwi_body = {}
+                        for operator_name, identity_config in pwi.items():
+                            pwi_body[operator_name] = {}
+                            if isinstance(identity_config, dict) and identity_config.get('resource_id'):
+                                pwi_body[operator_name]['resourceId'] = identity_config['resource_id']
+                        pwi_profile['platformWorkloadIdentities'] = pwi_body
+                    if kwargs[key].get('upgradeable_to'):
+                        pwi_profile['upgradeableTo'] = kwargs[key]['upgradeable_to']
+                    self.body['properties']['platformWorkloadIdentityProfile'] = pwi_profile
                 elif key == 'network_profile':
                     self.body['properties']['networkProfile'] = {}
                     for item in kwargs[key].keys():
+                        value = kwargs[key].get(item)
+                        if value is None:
+                            continue
                         if item == 'pod_cidr':
-                            self.body['properties']['networkProfile']['podCidr'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['podCidr'] = value
                         elif item == 'service_cidr':
-                            self.body['properties']['networkProfile']['serviceCidr'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['serviceCidr'] = value
                         elif item == 'outbound_type':
-                            self.body['properties']['networkProfile']['outboundType'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['outboundType'] = value
                         elif item == 'preconfigured_nsg':
-                            self.body['properties']['networkProfile']['preconfiguredNSG'] = kwargs[key].get(item)
+                            self.body['properties']['networkProfile']['preconfiguredNSG'] = value
                 elif key == 'master_profile':
                     self.body['properties']['masterProfile'] = {}
-                    if 'subnet_id' in kwargs[key].keys():
+                    if kwargs[key].get('subnet_id') is not None:
                         self.body['properties']['masterProfile']['subnetId'] = kwargs[key].get('subnet_id')
-                    if 'disk_encryption_set_id' in kwargs[key].keys():
-                        self.body['properties']['masterProfile']['encryptionAtHost'] = kwargs[key].get('disk_encryption_set_id')
-                    if 'encryption_at_host' in kwargs[key].keys():
+                    if kwargs[key].get('disk_encryption_set_id') is not None:
+                        self.body['properties']['masterProfile']['diskEncryptionSetId'] = kwargs[key].get('disk_encryption_set_id')
+                    if kwargs[key].get('encryption_at_host') is not None:
                         self.body['properties']['masterProfile']['encryptionAtHost'] = kwargs[key].get('encryption_at_host')
-                    self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
+                    if kwargs[key].get('vm_size') is not None:
+                        self.body['properties']['masterProfile']['vmSize'] = kwargs[key].get('vm_size')
                 elif key == 'worker_profiles':
                     self.body['properties']['workerProfiles'] = []
                     for item in kwargs[key]:
@@ -760,11 +915,16 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
                             worker_profile['name'] = item['name']
                         if item.get('subnet_id') is not None:
                             worker_profile['subnetId'] = item['subnet_id']
-                        worker_profile['count'] = item.get('count')
-                        worker_profile['vmSize'] = item.get('vm_size')
-                        worker_profile['diskSizeGB'] = item.get('disk_size')
-                        worker_profile['encryptionAtHost'] = item.get('encryption_at_host')
-                        worker_profile['DiskEncryptionSetId'] = item.get('disk_encryption_set_id')
+                        if item.get('count') is not None:
+                            worker_profile['count'] = item['count']
+                        if item.get('vm_size') is not None:
+                            worker_profile['vmSize'] = item['vm_size']
+                        if item.get('disk_size') is not None:
+                            worker_profile['diskSizeGB'] = item['disk_size']
+                        if item.get('encryption_at_host') is not None:
+                            worker_profile['encryptionAtHost'] = item['encryption_at_host']
+                        if item.get('disk_encryption_set_id') is not None:
+                            worker_profile['diskEncryptionSetId'] = item['disk_encryption_set_id']
 
                         self.body['properties']['workerProfiles'].append(worker_profile)
                 elif key == 'api_server_profile':
@@ -794,6 +954,14 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
         self.url = self.url.replace('{{ open_shift_managed_cluster_name }}', self.name)
 
         old_response = self.get_resource()
+
+        # Handle managed identity
+        if self.identity:
+            old_identity = self.format_for_helper((old_response or {}).get('identity') or {})
+            update_identity, identity = self.update_managed_identity(
+                new_identity=self.identity,
+                curr_identity=old_identity)
+            self.body['identity'] = self.format_for_body(identity)
 
         if not old_response:
             self.log("OpenShiftManagedCluster instance doesn't exist")
@@ -853,20 +1021,41 @@ class AzureRMOpenShiftManagedClusters(AzureRMModuleBaseExt):
             self.results["type"] = response["type"]
             self.results["location"] = response["location"]
             self.results["properties"] = response["properties"]
+            if response.get("identity"):
+                self.results["identity"] = response["identity"]
 
         return self.results
 
     def create_update_resource(self):
 
         if self.to_do == Actions.Create:
-            required_profile_for_creation = ["workerProfiles", "clusterProfile", "servicePrincipalProfile", "masterProfile"]
+            required_profile_for_creation = ["workerProfiles", "clusterProfile", "masterProfile"]
 
             if 'properties' not in self.body:
                 self.fail('{0} are required for creating a openshift cluster'.format(
-                    '[worker_profile, cluster_profile, service_principal_profile, master_profile]'))
+                    '[worker_profile, cluster_profile, master_profile]'))
             for profile in required_profile_for_creation:
                 if profile not in self.body['properties']:
                     self.fail('{0} is required for creating a openshift cluster'.format(profile))
+
+            # Validate authentication: require either service_principal_profile or identity (not both)
+            has_sp = 'servicePrincipalProfile' in self.body['properties']
+            has_identity = 'identity' in self.body
+            if has_sp and has_identity:
+                self.fail('service_principal_profile and identity are mutually exclusive. '
+                          'Provide either service_principal_profile or identity, not both.')
+            if not has_sp and not has_identity:
+                self.fail('Either service_principal_profile or identity is required for creating a openshift cluster.')
+            if has_identity:
+                pwi_profile = self.body['properties'].get('platformWorkloadIdentityProfile', {})
+                pwi = pwi_profile.get('platformWorkloadIdentities', {})
+                if not pwi_profile or not pwi:
+                    self.fail('platform_workload_identity_profile with at least one platform_workload_identities entry '
+                              'is required when using managed identity.')
+                for operator_name, identity_config in pwi.items():
+                    if not identity_config.get('resourceId'):
+                        self.fail("platform_workload_identities entry '{0}' is missing required field 'resource_id'.".format(
+                            operator_name))
 
             self.set_default()
 
