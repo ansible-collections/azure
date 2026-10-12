@@ -251,7 +251,7 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                     # create_or_update_index issues a PUT, which replaces the
                     # whole definition. Merge the user-supplied keys onto the
                     # existing index so settings not resupplied are preserved.
-                    body = self._merge_existing(desired, existing)
+                    body = self.merge_search_update(existing, desired)
                     self.results['changed'] = True
                     if not self.check_mode:
                         self.results['state'] = self._create_or_update(body)
@@ -306,14 +306,6 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                 continue
             out[key_map.get(k, k)] = v
         return out
-
-    def _merge_existing(self, desired, existing):
-        # Overlay the user-supplied (desired) keys onto a copy of the existing
-        # index so a PUT update does not drop settings the user did not resupply
-        # (e.g. vectorSearch, semantic, scoringProfiles). Uses the shared mixin
-        # helper, which strips response-only @odata.* annotations and the
-        # unmanaged (redacted) encryptionKey.
-        return self.merge_search_update(existing, desired)
 
     def _create_or_update(self, body):
         # create_or_update_index accepts a plain camelCase dict and always
