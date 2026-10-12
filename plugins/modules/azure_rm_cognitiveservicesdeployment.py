@@ -292,15 +292,20 @@ class AzureRMCognitiveServicesDeployment(AzureRMModuleBaseExt):
         """Return True when the existing deployment differs from the desired params."""
         changed = False
 
-        update_tags, newtags = self.update_tags(existing.get('tags'))
-        if newtags:
-            params['tags'] = newtags
+        # Apply the update_tags result unconditionally (mirrors
+        # azure_rm_cognitiveservicesaccount) so clearing all tags is honoured;
+        # gating on a truthy value would silently keep removed tags.
+        update_tags, params['tags'] = self.update_tags(existing.get('tags'))
         if update_tags:
             changed = True
 
-        # default_compare mutates the "new" dict it is given (it fills unset
-        # keys from "old"), so compare against a copy to keep params clean.
-        if not self.default_compare({}, copy.deepcopy(params), existing, '', self.results):
+        # Tag drift is decided by update_tags above, so exclude tags from the
+        # structural comparison: a deployment with no tags omits the key, and an
+        # empty {} vs an absent key would otherwise be mistaken for drift.
+        # default_compare also mutates the "new" dict, so compare against a copy.
+        compare_body = copy.deepcopy(params)
+        compare_body.pop('tags', None)
+        if not self.default_compare({}, compare_body, existing, '', self.results):
             changed = True
 
         return changed
@@ -325,25 +330,37 @@ class AzureRMCognitiveServicesDeployment(AzureRMModuleBaseExt):
         fields must NOT be echoed back.
         """
         body = copy.deepcopy(params)
+        # tags are resolved in check_update_needed via update_tags and are left
+        # as-is here (so an intentional removal to {} is preserved).
 
-        # Carry forward sku / tags when the user did not supply them.
-        if 'sku' not in body and existing.get('sku') is not None:
-            existing_sku = {k: v for k, v in existing['sku'].items()
-                            if v is not None}
-            if existing_sku:
-                body['sku'] = existing_sku
-        if 'tags' not in body and existing.get('tags'):
-            body['tags'] = existing['tags']
-
-        # Carry forward every writable property the user did not supply.
         existing_props = existing.get('properties') or {}
         props = body.setdefault('properties', {})
+        # Deep-merge the model so a partial model (e.g. name without version,
+        # which the docs allow) keeps the existing subkeys the user did not
+        # resupply, rather than dropping them from the PUT.
+        if props.get('model') and existing_props.get('model'):
+            for sub_key, sub_value in existing_props['model'].items():
+                if sub_value is not None:
+                    props['model'].setdefault(sub_key, sub_value)
+        # Carry forward every other writable property the user did not supply.
         for key, value in existing_props.items():
             if key in self.READ_ONLY_PROPERTIES or value is None:
                 continue
             props.setdefault(key, value)
         if not props:
             body.pop('properties', None)
+
+        # Merge the sku: carry it forward wholesale when omitted, and deep-merge
+        # its subkeys otherwise (the API requires sku.name whenever sku is sent,
+        # so a capacity-only update must keep the existing name).
+        existing_sku = {k: v for k, v in (existing.get('sku') or {}).items()
+                        if v is not None}
+        if existing_sku:
+            if 'sku' in body:
+                for sub_key, sub_value in existing_sku.items():
+                    body['sku'].setdefault(sub_key, sub_value)
+            else:
+                body['sku'] = existing_sku
         return body
 
     def create_or_update_deployment(self, params):
