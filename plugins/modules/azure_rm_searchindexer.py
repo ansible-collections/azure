@@ -101,6 +101,11 @@ options:
               and a C(configuration) block (for example C(parsingMode) and
               C(excludedFileNameExtensions)).
         type: dict
+    disabled:
+        description:
+            - Whether the indexer is disabled. A disabled indexer does not run on
+              its schedule and cannot be run on demand until re-enabled.
+        type: bool
     state:
         description:
             - Assert the state of the indexer.
@@ -183,6 +188,14 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_search_common import (
     AzureRMSearchDataPlaneMixin,
     ResourceNotFoundError,
+    HttpResponseError,
+)
+
+# Declarative options that describe the indexer definition; ignored by the
+# run/reset actions, so warn when they are supplied alongside those.
+_DEFINITION_OPTIONS = (
+    'target_index_name', 'data_source_name', 'skillset_name', 'description',
+    'schedule', 'field_mappings', 'output_field_mappings', 'parameters', 'disabled',
 )
 
 
@@ -205,6 +218,7 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             field_mappings=dict(type='list', elements='dict'),
             output_field_mappings=dict(type='list', elements='dict'),
             parameters=dict(type='dict'),
+            disabled=dict(type='bool'),
             state=dict(type='str', default='present', choices=['present', 'absent', 'run', 'reset']),
         )
         self.resource_group = None
@@ -219,6 +233,7 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         self.field_mappings = None
         self.output_field_mappings = None
         self.parameters = None
+        self.disabled = None
         self.state = None
         self.results = dict(changed=False)
         super(AzureRMSearchIndexer, self).__init__(
@@ -269,12 +284,24 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         # apply to an existing indexer and always report changed.
         if existing is None:
             self.fail(msg="indexer '%s' does not exist" % self.name)
+        # Definition options are ignored by run/reset; warn so they are not
+        # silently dropped (e.g. a user expecting an update + run in one call).
+        if any(getattr(self, opt) is not None for opt in _DEFINITION_OPTIONS):
+            self.module.warn(
+                "state=%s runs the action only; indexer definition options "
+                "(target_index_name, schedule, ...) are ignored. Use state=present "
+                "to update the indexer." % self.state)
         self.results['changed'] = True
         if not self.check_mode:
-            if self.state == 'run':
-                self.client.run_indexer(self.name)
-            else:
-                self.client.reset_indexer(self.name)
+            try:
+                if self.state == 'run':
+                    self.client.run_indexer(self.name)
+                else:
+                    self.client.reset_indexer(self.name)
+            except HttpResponseError as exc:
+                # e.g. 409 when the indexer is already running.
+                self.fail(msg="Failed to %s indexer '%s': %s"
+                              % (self.state, self.name, getattr(exc, 'message', None) or str(exc)))
 
     def _get_existing(self):
         # The SDK raises ResourceNotFoundError when the indexer does not exist;
@@ -302,6 +329,8 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             body["outputFieldMappings"] = self.output_field_mappings
         if self.parameters is not None:
             body["parameters"] = self.parameters
+        if self.disabled is not None:
+            body["disabled"] = self.disabled
         return body
 
     def _map_schedule(self, schedule):
@@ -314,9 +343,11 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         # Overlay the user-supplied keys onto a copy of the existing indexer so a
         # PUT update does not drop settings the user did not resupply
         # (targetIndexName, dataSourceName, skillsetName, schedule, mappings,
-        # parameters). Strip response-only @odata.* annotations.
+        # parameters). Strip response-only @odata.* annotations, and the unmanaged
+        # encryptionKey (its credentials are redacted on read) so it is not echoed
+        # back - consistent with the other Search modules.
         merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.')}
+                  if not k.startswith('@odata.') and k != 'encryptionKey'}
         merged.update(desired)
         return merged
 

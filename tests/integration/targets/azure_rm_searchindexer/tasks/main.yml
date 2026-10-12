@@ -187,6 +187,18 @@
           - ix_info.status is defined
           - ix_info.status.status is defined
 
+    - name: List all indexers via info (no name)
+      azure.azcollection.azure_rm_searchindexer_info:
+        resource_group: "{{ resource_group }}-searchix"
+        search_service_name: "{{ svc_name }}"
+      register: ix_list
+
+    - name: Assert list returns at least the created indexer
+      ansible.builtin.assert:
+        that:
+          - ix_list.indexers | length >= 1
+          - "'it-indexer' in (ix_list.indexers | map(attribute='name') | list)"
+
     - name: Update the indexer (change schedule interval)
       azure.azcollection.azure_rm_searchindexer:
         resource_group: "{{ resource_group }}-searchix"
