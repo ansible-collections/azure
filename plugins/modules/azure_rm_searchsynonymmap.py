@@ -162,7 +162,7 @@ class AzureRMSearchSynonymMap(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
                     # create_or_update is a full-replace PUT; merge the user-
                     # supplied keys onto the existing synonym map so unsupplied
                     # settings (synonyms, format) are preserved.
-                    body = self._merge_existing(desired, existing)
+                    body = self.merge_search_update(existing, desired)
                     self.results['changed'] = True
                     if not self.check_mode:
                         self.results['state'] = self._create_or_update(body)
@@ -191,17 +191,6 @@ class AzureRMSearchSynonymMap(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
         if self.synonyms is not None:
             body["synonyms"] = self.synonyms
         return body
-
-    def _merge_existing(self, desired, existing):
-        # Overlay the user-supplied keys onto a copy of the existing synonym map
-        # so a PUT update does not drop settings the user did not resupply.
-        # Strip response-only @odata.* annotations. encryptionKey is not managed
-        # by this module and its credentials are redacted on read, so never echo
-        # it back.
-        merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.') and k != 'encryptionKey'}
-        merged.update(desired)
-        return merged
 
     def _create_or_update(self, body):
         # create_or_update_synonym_map accepts a plain dict and returns the full
