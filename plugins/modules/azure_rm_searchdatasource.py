@@ -54,6 +54,9 @@ options:
             - azuresql
             - cosmosdb
             - adlsgen2
+            - mysql
+            - onelake
+            - sharepoint
     connection_string:
         description:
             - Connection string for the data source. Required when creating a data source.
@@ -90,6 +93,16 @@ options:
         description:
             - Free-text description of the data source.
         type: str
+    identity:
+        description:
+            - Explicit managed identity the data source uses to connect (as an
+              alternative to a key in the connection string).
+            - Passed through to the Azure AI Search API as C(identity) using
+              camelCase keys; set its C(@odata.type) to
+              C(#Microsoft.Azure.Search.DataNoneIdentity) (system-assigned or none)
+              or C(#Microsoft.Azure.Search.DataUserAssignedIdentity) with a
+              C(userAssignedIdentity) resource ID. See the Azure AI Search reference.
+        type: dict
     state:
         description:
             - Assert the state of the data source. Use C(present) to create/update, C(absent) to delete.
@@ -155,7 +168,8 @@ class AzureRMSearchDataSource(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
             search_service_name=dict(type='str', required=True),
             name=dict(type='str', required=True),
             admin_key=dict(type='str', no_log=True),
-            type=dict(type='str', choices=['azureblob', 'azuretable', 'azuresql', 'cosmosdb', 'adlsgen2']),
+            type=dict(type='str', choices=['azureblob', 'azuretable', 'azuresql', 'cosmosdb',
+                                           'adlsgen2', 'mysql', 'onelake', 'sharepoint']),
             connection_string=dict(type='str', no_log=True),
             container=dict(type='dict', options=dict(
                 name=dict(type='str', required=True),
@@ -164,6 +178,7 @@ class AzureRMSearchDataSource(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
             data_change_detection_policy=dict(type='dict'),
             data_deletion_detection_policy=dict(type='dict'),
             description=dict(type='str'),
+            identity=dict(type='dict'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
         self.resource_group = None
@@ -176,6 +191,7 @@ class AzureRMSearchDataSource(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
         self.data_change_detection_policy = None
         self.data_deletion_detection_policy = None
         self.description = None
+        self.identity = None
         self.state = None
         self.results = dict(changed=False)
         super(AzureRMSearchDataSource, self).__init__(
@@ -257,14 +273,18 @@ class AzureRMSearchDataSource(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
             body["dataDeletionDetectionPolicy"] = self.data_deletion_detection_policy
         if self.description is not None:
             body["description"] = self.description
+        if self.identity is not None:
+            body["identity"] = self.identity
         return body
 
     def _merge_existing(self, desired, existing):
         # Overlay the user-supplied keys onto a copy of the existing data source
         # so a PUT update does not drop settings the user did not resupply.
-        # Response-only @odata.* annotations must not be echoed back.
+        # Response-only @odata.* annotations must not be echoed back, and the
+        # unmanaged encryptionKey (whose credentials are redacted on read) must
+        # not be echoed either.
         merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.')}
+                  if not k.startswith('@odata.') and k != 'encryptionKey'}
         merged.update(desired)
         # Azure redacts the connection string on read, so the value carried in
         # `existing` is not usable. If the user did not supply a new connection

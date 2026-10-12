@@ -143,6 +143,18 @@
           - ds_info.datasources | length == 1
           - ds_info.datasources[0].name == 'it-ds'
 
+    - name: List all data sources via info (no name)
+      azure.azcollection.azure_rm_searchdatasource_info:
+        resource_group: "{{ resource_group }}-searchds"
+        search_service_name: "{{ svc_name }}"
+      register: ds_list
+
+    - name: Assert list returns at least the created data source
+      ansible.builtin.assert:
+        that:
+          - ds_list.datasources | length >= 1
+          - "'it-ds' in (ds_list.datasources | map(attribute='name') | list)"
+
     # Change ONLY the description, omitting type, connection_string and
     # container. create_or_update is a full-replace PUT, so this verifies the
     # module carries forward the container (and preserves the connection string
