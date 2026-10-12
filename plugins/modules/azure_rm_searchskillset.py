@@ -52,6 +52,12 @@ options:
               keyed by its C(@odata.type) (for example
               C(#Microsoft.Skills.Text.SplitSkill)). See the Azure AI Search
               reference for each skill's inputs, outputs, and parameters.
+            - Custom Web API skills (C(#Microsoft.Skills.Custom.WebApiSkill)) may
+              embed secrets in C(httpHeaders) and in the C(?code=) query of C(uri).
+              Azure redacts these on read, so a skillset containing such skills may
+              report C(changed) on every run, and you should always supply the full
+              I(skills) list on update - an update that omits I(skills) carries the
+              redacted values forward and would overwrite the real secrets.
         type: list
         elements: dict
     description:
@@ -62,22 +68,24 @@ options:
         description:
             - Reference to an Azure AI (Cognitive) Services account used to bill
               the billable skills in the skillset.
-            - Sent to Azure as C(cognitiveServices) using the by-key resource
-              reference. Azure redacts the key on read, so changes to the key
-              alone are not detected as drift.
-            - On update, this must be resupplied to retain a key-based binding;
-              if omitted, it is not re-sent and the skillset reverts to the
-              default (free) cognitive services allocation.
+            - Passed through to the Azure AI Search API as C(cognitiveServices)
+              verbatim (camelCase keys), keyed by its C(@odata.type). Supported
+              bindings include C(#Microsoft.Azure.Search.CognitiveServicesByKey)
+              (C(key)), C(#Microsoft.Azure.Search.AIServicesByKey) (C(key) plus
+              C(subdomainUrl)), the keyless C(#Microsoft.Azure.Search.AIServicesByIdentity)
+              (C(subdomainUrl) plus an C(identity)), and
+              C(#Microsoft.Azure.Search.DefaultCognitiveServices).
+            - For key-based bindings Azure redacts the key on read, so changes to
+              the key alone are not detected as drift, and on update a key-based
+              binding must be resupplied to be retained (it is not echoed back).
+              Keyless bindings hold no secret and are preserved across updates.
         type: dict
-        suboptions:
-            key:
-                description: API key of the Azure AI (Cognitive) Services account.
-                type: str
-                required: true
     knowledge_store:
         description:
             - Knowledge store definition (projections to Azure Storage).
             - Passed through to the Azure AI Search API using camelCase keys; see the Azure AI Search reference for structure.
+            - Contains C(storageConnectionString) (a storage account key), so the
+              whole value is treated as sensitive.
         type: dict
     state:
         description:
@@ -110,6 +118,28 @@ EXAMPLES = '''
         outputs:
           - name: textItems
             targetName: pages
+    state: present
+
+- name: Skillset billed to an Azure AI Services account via managed identity (keyless)
+  azure.azcollection.azure_rm_searchskillset:
+    resource_group: myResourceGroup
+    search_service_name: mysearchsvc
+    name: enrichment-skillset
+    skills:
+      - "@odata.type": "#Microsoft.Skills.Text.V3.EntityRecognitionSkill"
+        context: /document
+        inputs:
+          - name: text
+            source: /document/content
+        outputs:
+          - name: persons
+            targetName: people
+    cognitive_services:
+      "@odata.type": "#Microsoft.Azure.Search.AIServicesByIdentity"
+      subdomainUrl: https://myaiservices.cognitiveservices.azure.com/
+      identity:
+        "@odata.type": "#Microsoft.Azure.Search.DataUserAssignedIdentity"
+        userAssignedIdentity: "/subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi"
     state: present
 
 - name: Delete a skillset
@@ -149,10 +179,8 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             admin_key=dict(type='str', no_log=True),
             skills=dict(type='list', elements='dict'),
             description=dict(type='str'),
-            cognitive_services=dict(type='dict', options=dict(
-                key=dict(type='str', required=True, no_log=True),
-            )),
-            knowledge_store=dict(type='dict'),
+            cognitive_services=dict(type='dict', no_log=True),
+            knowledge_store=dict(type='dict', no_log=True),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
         self.resource_group = None
@@ -225,25 +253,36 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             body["skills"] = self.skills
         if self.description is not None:
             body["description"] = self.description
-        if self.cognitive_services is not None and self.cognitive_services.get("key") is not None:
-            body["cognitiveServices"] = {
-                "@odata.type": "#Microsoft.Azure.Search.CognitiveServicesByKey",
-                "key": self.cognitive_services["key"],
-            }
+        if self.cognitive_services is not None:
+            # Pass through verbatim; the user supplies @odata.type and the fields
+            # for their chosen binding (ByKey / AIServicesByKey / ByIdentity / Default).
+            body["cognitiveServices"] = self.cognitive_services
         if self.knowledge_store is not None:
             body["knowledgeStore"] = self.knowledge_store
         return body
+
+    @staticmethod
+    def _binding_has_secret(binding):
+        # A cognitiveServices binding carries a secret (redacted on read) when it
+        # has a 'key' field or its @odata.type is a *ByKey variant.
+        if not isinstance(binding, dict):
+            return False
+        if binding.get('key') is not None:
+            return True
+        return str(binding.get('@odata.type', '')).endswith('ByKey')
 
     def _merge_existing(self, desired, existing):
         # Overlay the user-supplied keys onto a copy of the existing skillset so
         # a PUT update does not drop settings the user did not resupply (skills,
         # description, knowledgeStore). Strip response-only @odata.* annotations.
-        # Azure redacts cognitiveServices.key on read and there is no "keep"
-        # sentinel, so never echo the existing cognitiveServices; it is re-sent
-        # only when the user supplies a key in `desired`.
         merged = {k: v for k, v in copy.deepcopy(existing).items()
                   if not k.startswith('@odata.')}
-        merged.pop('cognitiveServices', None)
+        # cognitiveServices: a key-based binding is redacted on read, so never
+        # echo it (it must be resupplied to be retained). A keyless binding
+        # (identity / default) holds no secret, so preserve it across updates.
+        existing_cs = merged.pop('cognitiveServices', None)
+        if existing_cs is not None and not self._binding_has_secret(existing_cs):
+            merged['cognitiveServices'] = existing_cs
         merged.update(desired)
         return merged
 
