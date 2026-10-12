@@ -115,6 +115,49 @@
           - sm_info.synonymmaps | length == 1
           - sm_info.synonymmaps[0].name == 'it-synonyms'
 
+    - name: List all synonym maps via info (no name)
+      azure.azcollection.azure_rm_searchsynonymmap_info:
+        resource_group: "{{ resource_group }}-searchsm"
+        search_service_name: "{{ svc_name }}"
+      register: sm_list
+
+    - name: Assert list returns at least the created synonym map
+      ansible.builtin.assert:
+        that:
+          - sm_list.synonymmaps | length >= 1
+          - "'it-synonyms' in (sm_list.synonymmaps | map(attribute='name') | list)"
+
+    # End-to-end: attach the synonym map to a searchable index field via the
+    # searchindex `synonym_maps` field option (added for this feature).
+    - name: Create an index whose field references the synonym map
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-searchsm"
+        search_service_name: "{{ svc_name }}"
+        name: it-sm-index
+        fields:
+          - name: id
+            type: Edm.String
+            key: true
+          - name: content
+            type: Edm.String
+            searchable: true
+            synonym_maps:
+              - it-synonyms
+      register: sm_index
+
+    - name: Assert the field is bound to the synonym map
+      ansible.builtin.assert:
+        that:
+          - sm_index.changed
+          - "'it-synonyms' in (sm_index.state.fields | selectattr('name', 'equalto', 'content') | map(attribute='synonymMaps') | first)"
+
+    - name: Delete the index
+      azure.azcollection.azure_rm_searchindex:
+        resource_group: "{{ resource_group }}-searchsm"
+        search_service_name: "{{ svc_name }}"
+        name: it-sm-index
+        state: absent
+
     - name: Update the synonym map (add a rule)
       azure.azcollection.azure_rm_searchsynonymmap:
         resource_group: "{{ resource_group }}-searchsm"
