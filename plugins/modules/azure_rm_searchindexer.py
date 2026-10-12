@@ -273,7 +273,7 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         elif not self._is_current(desired, existing):
             # create_or_update is a full-replace PUT; merge the user-supplied keys
             # onto the existing indexer so unsupplied settings are preserved.
-            body = self._merge_existing(desired, existing)
+            body = self.merge_search_update(existing, desired)
             self.results['changed'] = True
             self.results['state'] = body if self.check_mode else self._create_or_update(body)
         else:
@@ -338,18 +338,6 @@ class AzureRMSearchIndexer(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         if schedule.get("start_time") is not None:
             out["startTime"] = schedule["start_time"]
         return out
-
-    def _merge_existing(self, desired, existing):
-        # Overlay the user-supplied keys onto a copy of the existing indexer so a
-        # PUT update does not drop settings the user did not resupply
-        # (targetIndexName, dataSourceName, skillsetName, schedule, mappings,
-        # parameters). Strip response-only @odata.* annotations, and the unmanaged
-        # encryptionKey (its credentials are redacted on read) so it is not echoed
-        # back - consistent with the other Search modules.
-        merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.') and k != 'encryptionKey'}
-        merged.update(desired)
-        return merged
 
     def _create_or_update(self, body):
         # create_or_update_indexer accepts a plain camelCase dict and returns the
