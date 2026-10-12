@@ -272,18 +272,16 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         return str(binding.get('@odata.type', '')).endswith('ByKey')
 
     def _merge_existing(self, desired, existing):
-        # Overlay the user-supplied keys onto a copy of the existing skillset so
-        # a PUT update does not drop settings the user did not resupply (skills,
-        # description, knowledgeStore). Strip response-only @odata.* annotations.
-        merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.')}
-        # cognitiveServices: a key-based binding is redacted on read, so never
-        # echo it (it must be resupplied to be retained). A keyless binding
-        # (identity / default) holds no secret, so preserve it across updates.
-        existing_cs = merged.pop('cognitiveServices', None)
-        if existing_cs is not None and not self._binding_has_secret(existing_cs):
+        # Shared mixin helper does the common merge (strips @odata.* and the
+        # unmanaged encryptionKey). cognitiveServices is dropped and handled here:
+        # a key-based binding is redacted on read, so it must be resupplied to be
+        # retained; a keyless binding (identity / default) holds no secret, so it
+        # is preserved across updates when the user did not resupply one.
+        merged = self.merge_search_update(existing, desired, drop_keys=('cognitiveServices',))
+        existing_cs = (existing or {}).get('cognitiveServices')
+        if (existing_cs is not None and not self._binding_has_secret(existing_cs)
+                and 'cognitiveServices' not in desired):
             merged['cognitiveServices'] = existing_cs
-        merged.update(desired)
         return merged
 
     def _create_or_update(self, body):
