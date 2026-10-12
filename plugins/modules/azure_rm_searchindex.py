@@ -309,13 +309,11 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
 
     def _merge_existing(self, desired, existing):
         # Overlay the user-supplied (desired) keys onto a copy of the existing
-        # index so a PUT update does not drop settings the user did not
-        # resupply (e.g. vectorSearch, semantic, scoringProfiles). Response-only
-        # @odata.* annotations must not be echoed back, so strip them.
-        merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.')}
-        merged.update(desired)
-        return merged
+        # index so a PUT update does not drop settings the user did not resupply
+        # (e.g. vectorSearch, semantic, scoringProfiles). Uses the shared mixin
+        # helper, which strips response-only @odata.* annotations and the
+        # unmanaged (redacted) encryptionKey.
+        return self.merge_search_update(existing, desired)
 
     def _create_or_update(self, body):
         # create_or_update_index accepts a plain camelCase dict and always
