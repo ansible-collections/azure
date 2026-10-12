@@ -278,17 +278,12 @@ class AzureRMSearchDataSource(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt)
         return body
 
     def _merge_existing(self, desired, existing):
-        # Overlay the user-supplied keys onto a copy of the existing data source
-        # so a PUT update does not drop settings the user did not resupply.
-        # Response-only @odata.* annotations must not be echoed back, and the
-        # unmanaged encryptionKey (whose credentials are redacted on read) must
-        # not be echoed either.
-        merged = {k: v for k, v in copy.deepcopy(existing).items()
-                  if not k.startswith('@odata.') and k != 'encryptionKey'}
-        merged.update(desired)
-        # Azure redacts the connection string on read, so the value carried in
-        # `existing` is not usable. If the user did not supply a new connection
-        # string, send the <unchanged> sentinel to preserve the current one.
+        # Shared mixin helper does the common merge (strips @odata.* and the
+        # unmanaged encryptionKey); also drop credentials, since Azure redacts the
+        # connection string on read so the existing value is not usable.
+        merged = self.merge_search_update(existing, desired, drop_keys=('credentials',))
+        # If the user did not supply a new connection string, send the <unchanged>
+        # sentinel to preserve the current one.
         if 'credentials' not in desired:
             merged['credentials'] = {"connectionString": UNCHANGED_CONNECTION_STRING}
         return merged
