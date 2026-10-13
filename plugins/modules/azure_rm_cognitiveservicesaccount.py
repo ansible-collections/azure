@@ -183,6 +183,20 @@ EXAMPLES = '''
       type: SystemAssigned
     disable_local_auth: true
 
+- name: Create an Azure OpenAI account
+  azure.azcollection.azure_rm_cognitiveservicesaccount:
+    resource_group: myResourceGroup
+    name: myopenaiaccount
+    kind: OpenAI
+    location: eastus
+    sku: S0
+    # A custom subdomain is required for Azure OpenAI data-plane / token auth.
+    custom_domain_name: myopenaiaccount
+    tags:
+      purpose: generative-ai
+  # Deploy models into this account with
+  # azure.azcollection.azure_rm_cognitiveservicesdeployment.
+
 - name: Update tags on existing account
   azure.azcollection.azure_rm_cognitiveservicesaccount:
     resource_group: myResourceGroup
