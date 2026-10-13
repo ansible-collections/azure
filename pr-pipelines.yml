@@ -53,6 +53,7 @@ parameters:
       - "azure_rm_cdnprofile"
       - "azure_rm_cognitiveservices"
       - "azure_rm_cognitiveservicesaccount"
+      - "azure_rm_cognitiveservicesdeployment"
       - "azure_rm_containerapp"
       - "azure_rm_containerinstance"
       - "azure_rm_containerregistry"
@@ -207,6 +208,7 @@ parameters:
       - "azure_rm_dedicatedhost"
       - "azure_rm_searchindex"
       - "azure_rm_searchskillset"
+      - "azure_rm_searchdatasource"
       - "inventory_azure"
       - "setup_azure"
 
