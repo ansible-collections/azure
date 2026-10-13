@@ -54,10 +54,12 @@ options:
               reference for each skill's inputs, outputs, and parameters.
             - Custom Web API skills (C(#Microsoft.Skills.Custom.WebApiSkill)) may
               embed secrets in C(httpHeaders) and in the C(?code=) query of C(uri).
-              Azure redacts these on read, so a skillset containing such skills may
-              report C(changed) on every run, and you should always supply the full
-              I(skills) list on update - an update that omits I(skills) carries the
-              redacted values forward and would overwrite the real secrets.
+              Azure redacts these on read (as C(<redacted>)). When an update omits
+              I(skills), the module carries the existing skills forward and replaces
+              those C(<redacted>) placeholders with the C(<unchanged>) sentinel so
+              the real secrets are preserved. Because the redacted values cannot be
+              compared, a skillset with such skills may still report C(changed) when
+              you do supply I(skills) with the real secret values.
         type: list
         elements: dict
     description:
@@ -68,25 +70,53 @@ options:
         description:
             - Reference to an Azure AI (Cognitive) Services account used to bill
               the billable skills in the skillset.
-            - Passed through to the Azure AI Search API as C(cognitiveServices)
-              verbatim (camelCase keys), keyed by its C(@odata.type). Supported
-              bindings include C(#Microsoft.Azure.Search.CognitiveServicesByKey)
-              (C(key)), C(#Microsoft.Azure.Search.AIServicesByKey) (C(key) plus
-              C(subdomainUrl)), the keyless C(#Microsoft.Azure.Search.AIServicesByIdentity)
-              (C(subdomainUrl) plus an C(identity)), and
-              C(#Microsoft.Azure.Search.DefaultCognitiveServices).
             - For key-based bindings Azure redacts the key on read, so changes to
               the key alone are not detected as drift, and on update a key-based
               binding must be resupplied to be retained (it is not echoed back).
               Keyless bindings hold no secret and are preserved across updates.
         type: dict
+        suboptions:
+            type:
+                description:
+                    - The binding C(@odata.type), for example
+                      C(#Microsoft.Azure.Search.CognitiveServicesByKey),
+                      C(#Microsoft.Azure.Search.AIServicesByKey),
+                      C(#Microsoft.Azure.Search.AIServicesByIdentity) (keyless), or
+                      C(#Microsoft.Azure.Search.DefaultCognitiveServices).
+                type: str
+                required: true
+            key:
+                description: API key, for the C(*ByKey) bindings.
+                type: str
+            subdomain_url:
+                description: Custom subdomain URL, for the C(AIServices*) bindings.
+                type: str
+            identity:
+                description:
+                    - Managed identity, for C(AIServicesByIdentity). Pass-through dict
+                      with its own C(@odata.type) (for example
+                      C(#Microsoft.Azure.Search.DataUserAssignedIdentity) with a
+                      C(userAssignedIdentity) resource ID).
+                type: dict
     knowledge_store:
         description:
             - Knowledge store definition (projections to Azure Storage).
-            - Passed through to the Azure AI Search API using camelCase keys; see the Azure AI Search reference for structure.
-            - Contains C(storageConnectionString) (a storage account key), so the
-              whole value is treated as sensitive.
         type: dict
+        suboptions:
+            storage_connection_string:
+                description: Connection string for the Azure Storage account the projections are written to.
+                type: str
+            projections:
+                description:
+                    - List of projection definitions (tables, objects, files).
+                    - Passed through to the Azure AI Search API using camelCase keys.
+                type: list
+                elements: dict
+            identity:
+                description:
+                    - Managed identity used to access the storage account.
+                    - Passed through using camelCase keys.
+                type: dict
     state:
         description:
             - Assert the state of the skillset. Use C(present) to create/update, C(absent) to delete.
@@ -135,8 +165,8 @@ EXAMPLES = '''
           - name: persons
             targetName: people
     cognitive_services:
-      "@odata.type": "#Microsoft.Azure.Search.AIServicesByIdentity"
-      subdomainUrl: https://myaiservices.cognitiveservices.azure.com/
+      type: "#Microsoft.Azure.Search.AIServicesByIdentity"
+      subdomain_url: https://myaiservices.cognitiveservices.azure.com/
       identity:
         "@odata.type": "#Microsoft.Azure.Search.DataUserAssignedIdentity"
         userAssignedIdentity: "/subscriptions/xxx/resourceGroups/myResourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi"
@@ -179,8 +209,17 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             admin_key=dict(type='str', no_log=True),
             skills=dict(type='list', elements='dict'),
             description=dict(type='str'),
-            cognitive_services=dict(type='dict', no_log=True),
-            knowledge_store=dict(type='dict', no_log=True),
+            cognitive_services=dict(type='dict', options=dict(
+                type=dict(type='str', required=True),
+                key=dict(type='str', no_log=True),
+                subdomain_url=dict(type='str'),
+                identity=dict(type='dict'),
+            )),
+            knowledge_store=dict(type='dict', options=dict(
+                storage_connection_string=dict(type='str', no_log=True),
+                projections=dict(type='list', elements='dict'),
+                identity=dict(type='dict'),
+            )),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
         self.resource_group = None
@@ -254,11 +293,23 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         if self.description is not None:
             body["description"] = self.description
         if self.cognitive_services is not None:
-            # Pass through verbatim; the user supplies @odata.type and the fields
-            # for their chosen binding (ByKey / AIServicesByKey / ByIdentity / Default).
-            body["cognitiveServices"] = self.cognitive_services
+            cs = {"@odata.type": self.cognitive_services["type"]}
+            if self.cognitive_services.get("key") is not None:
+                cs["key"] = self.cognitive_services["key"]
+            if self.cognitive_services.get("subdomain_url") is not None:
+                cs["subdomainUrl"] = self.cognitive_services["subdomain_url"]
+            if self.cognitive_services.get("identity") is not None:
+                cs["identity"] = self.cognitive_services["identity"]
+            body["cognitiveServices"] = cs
         if self.knowledge_store is not None:
-            body["knowledgeStore"] = self.knowledge_store
+            ks = {}
+            if self.knowledge_store.get("storage_connection_string") is not None:
+                ks["storageConnectionString"] = self.knowledge_store["storage_connection_string"]
+            if self.knowledge_store.get("projections") is not None:
+                ks["projections"] = self.knowledge_store["projections"]
+            if self.knowledge_store.get("identity") is not None:
+                ks["identity"] = self.knowledge_store["identity"]
+            body["knowledgeStore"] = ks
         return body
 
     @staticmethod
@@ -282,7 +333,27 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         if (existing_cs is not None and not self._binding_has_secret(existing_cs)
                 and 'cognitiveServices' not in desired):
             merged['cognitiveServices'] = existing_cs
+        # When skills are carried forward from the existing skillset (the user did
+        # not resupply them), replace Azure's <redacted> secret placeholders with
+        # the <unchanged> sentinel so the PUT keeps the real secrets (e.g. custom
+        # Web API skill httpHeaders / uri) instead of overwriting them.
+        if 'skills' not in desired and isinstance(merged.get('skills'), list):
+            merged['skills'] = self._mask_redacted(merged['skills'])
         return merged
+
+    @classmethod
+    def _mask_redacted(cls, obj):
+        # Azure redacts skill secrets on read as the literal "<redacted>" - either
+        # as a whole value (httpHeaders values) or embedded in a string (the
+        # ?code= query of a Web API skill uri). Replace any string that contains
+        # it with the "<unchanged>" sentinel, which the service keeps as-is.
+        if isinstance(obj, dict):
+            return {k: cls._mask_redacted(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [cls._mask_redacted(v) for v in obj]
+        if isinstance(obj, str) and '<redacted>' in obj:
+            return '<unchanged>'
+        return obj
 
     def _create_or_update(self, body):
         # create_or_update_skillset accepts a plain camelCase dict and returns
@@ -290,13 +361,16 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         return self.client.create_or_update_skillset(body).as_dict()
 
     def _is_current(self, desired, existing):
-        # Azure redacts cognitiveServices.key on read, so it can never match
-        # what we would PUT. Drop cognitiveServices from the comparison; every
-        # other field is compared via default_compare (union-of-keys walk, so
-        # server defaults present only in `existing` are ignored). Deep-copy so
-        # the comparison cannot mutate the body we would PUT.
+        # Azure redacts only cognitiveServices.key on read, so compare the rest of
+        # the binding (its @odata.type, subdomainUrl, identity) and drop just the
+        # key - this detects a binding-type switch while ignoring the redacted key.
+        # Everything else is compared via default_compare (union-of-keys walk, so
+        # server defaults present only in `existing` are ignored). Deep-copy so the
+        # comparison cannot mutate the body we would PUT.
         compare_body = copy.deepcopy(desired)
-        compare_body.pop("cognitiveServices", None)
+        cs = compare_body.get("cognitiveServices")
+        if isinstance(cs, dict):
+            cs.pop("key", None)
         result = dict(compare=[])
         return self.default_compare({}, compare_body, existing, '', result)
 
