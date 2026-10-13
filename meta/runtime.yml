@@ -88,6 +88,8 @@ action_groups:
     - azure.azcollection.azure_rm_cognitivesearch_info
     - azure.azcollection.azure_rm_cognitiveservicesaccount
     - azure.azcollection.azure_rm_cognitiveservicesaccount_info
+    - azure.azcollection.azure_rm_cognitiveservicesdeployment
+    - azure.azcollection.azure_rm_cognitiveservicesdeployment_info
     - azure.azcollection.azure_rm_cognitiveservicesmodel_info
     - azure.azcollection.azure_rm_containerapp
     - azure.azcollection.azure_rm_containerapp_info
