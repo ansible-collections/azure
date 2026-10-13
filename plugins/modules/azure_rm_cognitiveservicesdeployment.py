@@ -215,6 +215,9 @@ class AzureRMCognitiveServicesDeployment(AzureRMModuleBaseExt):
                     self.module.fail_json(
                         msg="model is required to create deployment '{0}'; "
                             "it does not exist yet".format(self.name))
+                if self.sku is not None and self.sku.get('name') is None:
+                    self.module.fail_json(
+                        msg="sku.name is required when creating deployment '{0}'".format(self.name))
                 params = self.build_deployment_parameters()
                 if self.tags:
                     params['tags'] = self.update_tags(None)[1]
@@ -224,6 +227,7 @@ class AzureRMCognitiveServicesDeployment(AzureRMModuleBaseExt):
                     self.results['state'] = params
                 self.results['changed'] = True
             else:
+                self._check_immutable(existing)
                 params = self.build_deployment_parameters()
                 if self.check_update_needed(existing, params):
                     # begin_create_or_update issues a PUT (full replace), so
@@ -259,6 +263,21 @@ class AzureRMCognitiveServicesDeployment(AzureRMModuleBaseExt):
         except ResourceNotFoundError:
             self.log("Deployment {0} not found".format(self.name))
             return None
+
+    def _check_immutable(self, existing):
+        # model name and format cannot change on an existing deployment (only the
+        # version can be upgraded). Fail with a clear message instead of letting
+        # the service reject the PUT, mirroring azure_rm_cognitiveservicesaccount.
+        if self.model is None:
+            return
+        existing_model = (existing.get('properties') or {}).get('model') or {}
+        for attr in ('name', 'format'):
+            desired = self.model.get(attr)
+            current = existing_model.get(attr)
+            if desired is not None and current is not None and desired != current:
+                self.module.fail_json(
+                    msg="Cannot change model {0} of an existing deployment '{1}' "
+                        "(existing={2}, requested={3})".format(attr, self.name, current, desired))
 
     def build_deployment_parameters(self):
         """Build the deployment body (snake_case keys matching the SDK model)."""

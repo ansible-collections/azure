@@ -185,6 +185,44 @@
           - dep_untag.changed
           - (dep_untag.state.tags | default({})) | length == 0
 
+    # model name/format are immutable on an existing deployment.
+    - name: Attempt to change the model name (immutable) - should fail clearly
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: "{{ deployment_name }}"
+        model:
+          name: gpt-4o-mini
+      register: dep_badmodel
+      ignore_errors: true
+
+    - name: Assert the model-name change was rejected with a clear message
+      ansible.builtin.assert:
+        that:
+          - dep_badmodel is failed
+          - "'Cannot change model name' in dep_badmodel.msg"
+
+    # sku.name is required when creating (a capacity-only sku fails at Azure with
+    # an unclear error otherwise).
+    - name: Attempt to create a deployment with sku missing name - should fail clearly
+      azure.azcollection.azure_rm_cognitiveservicesdeployment:
+        resource_group: "{{ resource_group }}-aoai"
+        account_name: "{{ account_name }}"
+        name: it-badsku
+        model:
+          name: text-embedding-3-small
+          version: "1"
+        sku:
+          capacity: 1
+      register: dep_badsku
+      ignore_errors: true
+
+    - name: Assert the create was rejected for the missing sku.name
+      ansible.builtin.assert:
+        that:
+          - dep_badsku is failed
+          - "'sku.name is required' in dep_badsku.msg"
+
     - name: Info for a non-existent deployment returns empty
       azure.azcollection.azure_rm_cognitiveservicesdeployment_info:
         resource_group: "{{ resource_group }}-aoai"
