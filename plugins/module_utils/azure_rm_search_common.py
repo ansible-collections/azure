@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import copy
 import traceback
 
 from ansible.module_utils.basic import missing_required_lib
@@ -76,3 +77,27 @@ class AzureRMSearchDataPlaneMixin(object):
         return SearchIndexerClient(
             endpoint=self.search_endpoint(service_name),
             credential=self._search_credential(admin_key))
+
+    @staticmethod
+    def merge_search_update(existing, desired, drop_keys=()):
+        """Build a data-plane PUT body for an update.
+
+        The Azure AI Search data-plane create-or-update calls are full-replace
+        PUTs, so every setting the user did not resupply must be carried forward
+        from the existing resource or it would be reset. This overlays the
+        user-supplied ``desired`` keys onto a deep copy of ``existing`` while
+        dropping values that must never be echoed back:
+
+        - response-only ``@odata.*`` annotations;
+        - the unmanaged ``encryptionKey`` (its access credentials are redacted on
+          read, so echoing it would overwrite the real secret);
+        - any additional ``drop_keys`` a module handles itself (for example a
+          data source's ``credentials`` or a skillset's ``cognitiveServices``),
+          which the caller re-adds as appropriate.
+        """
+        merged = {k: v for k, v in copy.deepcopy(existing).items()
+                  if not k.startswith('@odata.')
+                  and k != 'encryptionKey'
+                  and k not in drop_keys}
+        merged.update(desired)
+        return merged
