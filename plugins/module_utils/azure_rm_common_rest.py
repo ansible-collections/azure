@@ -14,6 +14,7 @@ except Exception:
 try:
     from azure.core._pipeline_client import PipelineClient
     from azure.core.polling import LROPoller
+    from azure.core.exceptions import HttpResponseError
     from azure.core.pipeline import PipelineResponse
     from azure.core.pipeline.policies import BearerTokenCredentialPolicy, UserAgentPolicy
     from azure.mgmt.core.polling.arm_polling import ARMPolling
@@ -113,10 +114,4 @@ class GenericRestClient(object):
         error_type = self.error_map.get(response.status_code)
         if error_type:
             raise error_type(response=response)
-        raise SendRequestException(response.text(), response.status_code)
-
-
-class SendRequestException(Exception):
-    def __init__(self, response, status_code):
-        self.response = response
-        self.status_code = status_code
+        raise HttpResponseError(response=response)
