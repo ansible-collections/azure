@@ -1,7 +1,7 @@
 - name: Create a new resource group for openshift cluster test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-{{ item }}"
-    location: eastus
+    location: australiaeast
   loop:
     - openshiftmanagedcluster01
     - openshiftmanagedcluster02
@@ -10,7 +10,7 @@
   block:
     - name: Set variables
       ansible.builtin.set_fact:
-        cluster_name: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        cluster_name: "a{{ resource_group | hash('md5') | truncate(7, True, '') }}"
 
     - name: Get resource group info
       azure.azcollection.azure_rm_resourcegroup_info:
@@ -70,12 +70,14 @@
 
     - name: Get available openshift cluster versions
       azure.azcollection.azure_rm_openshiftmanagedclusterversion_info:
-        location: "eastus"
+        location: "australiaeast"
       register: ocp_cl_vers
 
     - name: Extract the latest available version
       ansible.builtin.set_fact:
-        ocp_version: "{{ ocp_cl_vers.versions | community.general.version_sort | last }}"
+        ocp_version: "{{ item }}"
+      loop: "{{ ocp_cl_vers.versions }}"
+      when: ocp_version is not defined or item is version(ocp_version, '>')
 
     - name: Assert that selected ocp version is not empty
       ansible.builtin.assert:
@@ -85,9 +87,9 @@
       azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
-        location: "eastus"
+        location: "australiaeast"
         cluster_profile:
-          cluster_resource_group_id: "{{ rg_output.resourcegroups[0].id }}"
+          cluster_resource_group_id: "/subscriptions/{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}/resourceGroups/{{ resource_group }}-openshiftmanagedcluster-aro"
           domain: "{{ cluster_name }}"
           version: "{{ ocp_version }}"
         service_principal_profile:
@@ -129,7 +131,7 @@
 
     - name: Assert the cluster facts
       ansible.builtin.assert:
-        that: output['clusters']['name'] == "{{ cluster_name }}"
+        that: output['clusters']['name'] == cluster_name
 
     - name: Get all clusters
       azure.azcollection.azure_rm_openshiftmanagedcluster_info:
@@ -138,6 +140,20 @@
     - name: Assert all cluster
       ansible.builtin.assert:
         that: output['clusters'] | length >= 1
+
+    - name: Wait for cluster provisioning to complete
+      azure.azcollection.azure_rm_openshiftmanagedcluster_info:
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
+        name: "{{ cluster_name }}"
+      register: cluster_wait
+      until: cluster_wait['clusters']['properties']['provisioningState'] in ['Succeeded', 'Failed']
+      retries: 120
+      delay: 60
+
+    - name: Fail if cluster provisioning failed
+      ansible.builtin.fail:
+        msg: "Cluster provisioning failed: {{ cluster_wait['clusters']['properties'] }}"
+      when: cluster_wait['clusters']['properties']['provisioningState'] == 'Failed'
 
     - name: Fetch kubeconfig file to register
       azure.azcollection.azure_rm_openshiftmanagedclusterkubeconfig_info:
@@ -187,19 +203,123 @@
       azure.azcollection.azure_rm_openshiftmanagedcluster:
         resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
         name: "{{ cluster_name }}"
-        location: "eastus"
+        location: "australiaeast"
         state: absent
       register: output
 
     - name: Assert the cluster deleted
       ansible.builtin.assert:
         that: output is changed
+
+    - name: Create identities array for managed identity test
+      ansible.builtin.set_fact:
+        managed_identity_ids: []
+
+    - name: Create user managed identity for ARO cluster
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'arocluster'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "australiaeast"
+        new_resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
+      with_items:
+        - '1'
+
+    - name: Create openshift cluster with managed identity (check mode)
+      azure.azcollection.azure_rm_openshiftmanagedcluster:
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
+        name: "{{ cluster_name }}mi"
+        location: "australiaeast"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        cluster_profile:
+          cluster_resource_group_id: "/subscriptions/{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}/resourceGroups/{{ resource_group }}-openshiftmanagedcluster-aromi"
+          domain: "{{ cluster_name }}mi"
+          version: "{{ ocp_version }}"
+        platform_workload_identity_profile:
+          platform_workload_identities:
+            ServiceOperator.ARO.OpenShift.IO:
+              resource_id: "{{ managed_identity_ids[0] }}"
+        network_profile:
+          pod_cidr: "10.128.0.0/14"
+          service_cidr: "172.30.0.0/16"
+        worker_profiles:
+          - name: worker
+            vm_size: "Standard_D4s_v3"
+            subnet_id: "{{ worker_sub_output.state.id }}"
+            disk_size: 128
+            count: 3
+        master_profile:
+          vm_size: "Standard_D8s_v3"
+          subnet_id: "{{ master_sub_output.state.id }}"
+      check_mode: true
+      register: mi_check_output
+
+    - name: Assert the managed identity cluster check mode returns changed
+      ansible.builtin.assert:
+        that: mi_check_output is changed
+
+    - name: Verify mutual exclusion - should fail with both SP and identity
+      azure.azcollection.azure_rm_openshiftmanagedcluster:
+        resource_group: "{{ resource_group }}-openshiftmanagedcluster01"
+        name: "{{ cluster_name }}mi"
+        location: "australiaeast"
+        identity:
+          type: UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+        service_principal_profile:
+          client_id: "{{ azure_client_id }}"
+          client_secret: "{{ azure_secret }}"
+        cluster_profile:
+          cluster_resource_group_id: "/subscriptions/{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}/resourceGroups/{{ resource_group }}-openshiftmanagedcluster-aromi"
+          domain: "{{ cluster_name }}mi"
+        platform_workload_identity_profile:
+          platform_workload_identities:
+            ServiceOperator.ARO.OpenShift.IO:
+              resource_id: "{{ managed_identity_ids[0] }}"
+        network_profile:
+          pod_cidr: "10.128.0.0/14"
+          service_cidr: "172.30.0.0/16"
+        worker_profiles:
+          - name: worker
+            vm_size: "Standard_D4s_v3"
+            subnet_id: "{{ worker_sub_output.state.id }}"
+            disk_size: 128
+            count: 3
+        master_profile:
+          vm_size: "Standard_D8s_v3"
+          subnet_id: "{{ master_sub_output.state.id }}"
+      register: mutual_excl_output
+      ignore_errors: true
+
+    - name: Assert mutual exclusion fails
+      ansible.builtin.assert:
+        that: mutual_excl_output is failed
+
+    - name: Delete user managed identities
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'arocluster'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: "australiaeast"
+        new_resource_group: "{{ resource_group }}-openshiftmanagedcluster02"
+      with_items:
+        - '1'
   always:
     - name: Force delete the resource group
       azure.azcollection.azure_rm_resourcegroup:
-        name: "{{ resource_group }}-openshiftmanagedcluster01"
+        name: "{{ resource_group }}-{{ item }}"
         force_delete_nonempty: true
         state: absent
       loop:
         - openshiftmanagedcluster01
         - openshiftmanagedcluster02
+        - openshiftmanagedcluster-aro
+        - openshiftmanagedcluster-aromi
