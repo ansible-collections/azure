@@ -27,6 +27,14 @@ DOCUMENTATION = r'''
         - By default, sets C(ansible_host) to the first public IP address found (preferring the primary NIC). If no
           public IPs are found, the first private IP (also preferring the primary NIC). The default may be overridden
           via C(hostvar_expressions); see examples.
+        - Host filters (C(exclude_host_filters), C(include_host_filters), C(default_host_filters)) that only refer to
+          host variables known from the VM list response (for example C(name), C(tags), C(location),
+          C(resource_group), C(os_profile), C(provisioning_state)) are evaluated before the per-VM instance view,
+          network interface and public IP requests are sent, so hosts they exclude cost no further API calls.
+          Filters that refer to C(powerstate), C(computer_name), C(os_name), C(os_version), C(hyper_v_generation) or
+          network-related host variables are evaluated after those requests complete. Early evaluation is skipped
+          when a filter uses lookups, C(vars) or names that are not host variables, and when C(cache) is enabled so
+          that cached results keep every host.
 '''
 
 EXAMPLES = '''
@@ -163,6 +171,7 @@ from ansible.module_utils.common.text.converters import to_native, to_bytes, to_
 from ansible.utils.display import Display
 from itertools import chain
 from os import environ
+from jinja2 import Environment, meta
 try:
     from ansible.template import trust_as_template
 except ImportError:
@@ -236,6 +245,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         self._batch_fetch = False
 
+        self._early_filter_refs = {}
+        self._early_filtering = False
+
     def verify_file(self, path):
         '''
             :param loader: an ansible.parsing.dataloader.DataLoader object
@@ -266,6 +278,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self._filters = self.get_option('exclude_host_filters') + self.get_option('default_host_filters')
 
         self._include_filters = self.get_option('include_host_filters')
+
+        self._early_filtering = not self.get_option('cache')
 
         # Load results from Cache if requested
         cache_key = self.get_cache_key(path)
@@ -484,6 +498,45 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def _filter_include_host(self, inventory_hostname, hostvars):
         return self._filter_host(self._include_filters, inventory_hostname, hostvars)
 
+    def _filter_references(self, condition):
+        conditional = "{{% if {0} %}}true{{% else %}}false{{% endif %}}".format(condition)
+        if conditional not in self._early_filter_refs:
+            self._early_filter_refs[conditional] = meta.find_undeclared_variables(Environment().parse(conditional))
+        return conditional, self._early_filter_refs[conditional]
+
+    # Returns None when the condition refers to a hostvar that is only final after the per-VM detail requests.
+    def _evaluate_early_filter(self, condition, hostvars):
+        conditional, references = self._filter_references(condition)
+        if references & AzureHost.DEFERRED_HOSTVARS:
+            return None
+        self.templar.available_variables = hostvars
+        if trust_as_template:
+            conditional = trust_as_template(conditional)
+        return boolean(self.templar.template(conditional))
+
+    def _early_exclude_host(self, host):
+        try:
+            hostvars = host.early_hostvars
+            # lookups, 'vars' or names that are not hostvars cannot be decided early, so keep the host
+            known = set(hostvars) | AzureHost.DEFERRED_HOSTVARS
+            if any(not self._filter_references(condition)[1] <= known for condition in self._filters + self._include_filters):
+                return False
+            # stop at the first undecidable exclude filter, it is evaluated first in the final pass
+            for condition in self._filters:
+                result = self._evaluate_early_filter(condition, hostvars)
+                if result is None:
+                    break
+                if result:
+                    display.vv(f"azure_rm inventory: host '{host.default_inventory_hostname}' excluded early by exclude_host_filters/default_host_filters")
+                    return True
+            if all(self._evaluate_early_filter(condition, hostvars) is False for condition in self._include_filters):
+                display.vv(f"azure_rm inventory: host '{host.default_inventory_hostname}' excluded early by include_host_filters (no include rule matched)")
+                return True
+        except Exception:
+            # keep the host so the final filter pass handles the error according to fail_on_template_errors
+            pass
+        return False
+
     def _filter_exclude_host(self, inventory_hostname, hostvars):
         return self._filter_host(self._filters, inventory_hostname, hostvars)
 
@@ -537,8 +590,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             for h in response['value']:
                 display.debug("AzureHost raw response:")
                 display.debug(h)
-                # FUTURE: add direct VM filtering by tag here (performance optimization)?
-                self._hosts.append(AzureHost(h, self, vmss=vmss, archcivm=archcivm, legacy_name=self._legacy_hostnames))
+                host = AzureHost(h, self, vmss=vmss, archcivm=archcivm, legacy_name=self._legacy_hostnames)
+                if self._early_filtering and self._early_exclude_host(host):
+                    continue
+                host.enqueue_details()
+                self._hosts.append(host)
 
     def _on_arc_page_response(self, response):
         next_link = response.get('nextLink')
@@ -784,6 +840,14 @@ class ArcHost(object):
 class AzureHost(object):
     _powerstate_regex = re.compile('^PowerState/(?P<powerstate>.+)$')
 
+    # hostvars whose values are only final once the instanceView/NIC/PIP responses have been processed
+    DEFERRED_HOSTVARS = frozenset([
+        'computer_name', 'powerstate', 'os_name', 'os_version', 'hyper_v_generation',
+        'network_interface', 'network_interface_properties', 'mac_address', 'network_interface_id',
+        'security_group_id', 'security_group', 'public_ip_address', 'public_ipv4_address',
+        'public_dns_hostnames', 'private_ipv4_addresses', 'subnet',
+    ])
+
     def __init__(self, vm_model, inventory_client, vmss=None, archcivm=None, legacy_name=False):
         self._inventory_client = inventory_client
         self._vm_model = vm_model
@@ -809,12 +873,15 @@ class AzureHost(object):
         if self._archcivm:
             self._instanceview = self._vm_model
             self._powerstate = self._vm_model['properties'].get('status', {}).get('powerState', '').lower()  # 'Running'
-        else:
-            inventory_client._enqueue_get(url="{0}/instanceView".format(vm_model['id']),
+
+    def enqueue_details(self):
+        inventory_client = self._inventory_client
+        if not self._archcivm:
+            inventory_client._enqueue_get(url="{0}/instanceView".format(self._vm_model['id']),
                                           api_version=self._inventory_client._compute_api_version,
                                           handler=self._on_instanceview_response)
 
-        nic_refs = vm_model['properties'].get('networkProfile', dict()).get('networkInterfaces', [])
+        nic_refs = self._vm_model['properties'].get('networkProfile', dict()).get('networkInterfaces', [])
         for nic in nic_refs:
             # single-nic instances don't set primary, so figure it out...
             is_primary = nic.get('properties', {}).get('primary', len(nic_refs) == 1)
@@ -832,9 +899,15 @@ class AzureHost(object):
 
     @property
     def hostvars(self):
-        if self._hostvars != {}:
-            return self._hostvars
+        if self._hostvars == {}:
+            self._hostvars = self._build_hostvars()
+        return self._hostvars
 
+    @property
+    def early_hostvars(self):
+        return dict((k, v) for k, v in self._build_hostvars().items() if k not in self.DEFERRED_HOSTVARS)
+
+    def _build_hostvars(self):
         system = "unknown"
         if self._archcivm and self._archcivm['properties'].get('osType'):  # osType unavailable with disabled guest agent
             system = self._archcivm['properties']['osType']
@@ -995,8 +1068,7 @@ class AzureHost(object):
                     ) for dataDisk in storageProfile.get('dataDisks', [])
                 ]
 
-        self._hostvars = new_hostvars
-        return self._hostvars
+        return new_hostvars
 
     def _on_instanceview_response(self, vm_instanceview_model):
         self._instanceview = vm_instanceview_model

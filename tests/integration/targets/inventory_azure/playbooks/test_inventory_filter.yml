@@ -12,6 +12,13 @@
         that:
           - vm_name_2 in hostvars
 
+    - name: Test vm_name_2 details are still fetched after early filtering
+      ansible.builtin.assert:
+        that:
+          - hostvars[vm_name_2].powerstate == 'running'
+          - hostvars[vm_name_2].private_ipv4_addresses | length > 0
+          - hostvars[vm_name_2].network_interface | length > 0
+
     - name: Test vm_name not in Inventory
       ansible.builtin.assert:
         that:
