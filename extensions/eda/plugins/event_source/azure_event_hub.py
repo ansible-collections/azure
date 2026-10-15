@@ -367,7 +367,7 @@ class AzureHubConsumer:
         # Configure receive arguments
         receiver_args = {
             "on_event": self.on_event,
-            "max_wait_time": self.max_wait_time,  # Controls load balancing interval
+            "load_balancing_interval": self.max_wait_time,  # Controls partition rebalancing checks
         }
 
         # IMPORTANT: Only pass starting_position when checkpoint_store is None

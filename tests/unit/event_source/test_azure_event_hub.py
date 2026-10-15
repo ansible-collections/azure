@@ -540,7 +540,7 @@ async def test_start_receiving_without_checkpoint_store() -> None:
         await consumer.start_receiving()
 
         assert mock_client.receive_kwargs["starting_position"] == "@latest"
-        assert mock_client.receive_kwargs["max_wait_time"] == 60
+        assert mock_client.receive_kwargs["load_balancing_interval"] == 60
 
 
 @pytest.mark.asyncio
@@ -565,7 +565,7 @@ async def test_start_receiving_with_checkpoint_store() -> None:
         await consumer.start_receiving()
 
         assert "starting_position" not in mock_client.receive_kwargs
-        assert mock_client.receive_kwargs["max_wait_time"] == 60
+        assert mock_client.receive_kwargs["load_balancing_interval"] == 60
         mock_blob_store.assert_called_once_with(
             blob_account_url="https://mystorageaccount.blob.core.windows.net",
             container_name="checkpoints",
