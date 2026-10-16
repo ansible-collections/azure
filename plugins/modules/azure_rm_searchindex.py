@@ -85,6 +85,13 @@ options:
             vector_search_profile:
                 description: Name of the vector search profile bound to a vector field.
                 type: str
+            synonym_maps:
+                description:
+                    - Names of synonym maps to associate with this field (create
+                      them with M(azure.azcollection.azure_rm_searchsynonymmap)).
+                    - Only valid on searchable string fields.
+                type: list
+                elements: str
     vector_search:
         description:
             - Vector search configuration (algorithms, profiles, vectorizers).
@@ -204,6 +211,7 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                 analyzer=dict(type='str'),
                 dimensions=dict(type='int'),
                 vector_search_profile=dict(type='str'),
+                synonym_maps=dict(type='list', elements='str'),
             )),
             vector_search=dict(type='dict'),
             semantic=dict(type='dict'),
@@ -299,6 +307,7 @@ class AzureRMSearchIndex(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
     def _map_field(self, f):
         key_map = {
             "vector_search_profile": "vectorSearchProfile",
+            "synonym_maps": "synonymMaps",
         }
         out = {}
         for k, v in f.items():
