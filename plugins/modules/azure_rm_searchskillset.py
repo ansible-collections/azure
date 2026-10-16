@@ -73,7 +73,10 @@ options:
             - For key-based bindings Azure redacts the key on read, so changes to
               the key alone are not detected as drift, and on update a key-based
               binding must be resupplied to be retained (it is not echoed back).
-              Keyless bindings hold no secret and are preserved across updates.
+              If an update to an existing skillset with a key-based binding omits
+              I(cognitive_services), the module fails rather than silently dropping
+              the binding. Keyless bindings hold no secret and are preserved across
+              updates.
         type: dict
         suboptions:
             type:
@@ -101,22 +104,35 @@ options:
     knowledge_store:
         description:
             - Knowledge store definition (projections to Azure Storage).
+            - Must be supplied in full on every run. The service requires both
+              C(storage_connection_string) and C(projections), the update is a
+              full-replace, and the connection string is redacted on read - so a
+              partial value cannot be merged with the existing store.
         type: dict
         suboptions:
             storage_connection_string:
                 description: Connection string for the Azure Storage account the projections are written to.
                 type: str
+                required: true
             projections:
                 description:
                     - List of projection definitions (tables, objects, files).
                     - Passed through to the Azure AI Search API using camelCase keys.
                 type: list
                 elements: dict
+                required: true
             identity:
                 description:
                     - Managed identity used to access the storage account.
                     - Passed through using camelCase keys.
                 type: dict
+    index_projections:
+        description:
+            - Index projections definition (project enriched content into one or more
+              search indexes), sent as C(indexProjections).
+            - Passed through to the Azure AI Search API using camelCase keys; see the
+              Azure AI Search reference for structure.
+        type: dict
     state:
         description:
             - Assert the state of the skillset. Use C(present) to create/update, C(absent) to delete.
@@ -216,10 +232,11 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                 identity=dict(type='dict'),
             )),
             knowledge_store=dict(type='dict', options=dict(
-                storage_connection_string=dict(type='str', no_log=True),
-                projections=dict(type='list', elements='dict'),
+                storage_connection_string=dict(type='str', required=True, no_log=True),
+                projections=dict(type='list', elements='dict', required=True),
                 identity=dict(type='dict'),
             )),
+            index_projections=dict(type='dict'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
         self.resource_group = None
@@ -230,6 +247,7 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         self.description = None
         self.cognitive_services = None
         self.knowledge_store = None
+        self.index_projections = None
         self.state = None
         self.results = dict(changed=False)
         super(AzureRMSearchSkillset, self).__init__(
@@ -260,6 +278,7 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                     self.results['state'] = desired
             else:
                 if not self._is_current(desired, existing):
+                    self._check_binding_preserved(existing)
                     # create_or_update is a full-replace PUT; merge the user-
                     # supplied keys onto the existing skillset so unsupplied
                     # settings (skills, description, knowledgeStore) are preserved.
@@ -310,7 +329,21 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             if self.knowledge_store.get("identity") is not None:
                 ks["identity"] = self.knowledge_store["identity"]
             body["knowledgeStore"] = ks
+        if self.index_projections is not None:
+            body["indexProjections"] = self.index_projections
         return body
+
+    def _check_binding_preserved(self, existing):
+        # A key-based cognitiveServices binding has its key redacted on read and
+        # cannot be carried forward, so an update that omits cognitive_services
+        # would silently drop the binding (billable skills fall back to the free
+        # tier). Fail clearly instead; the user must resupply cognitive_services.
+        existing_cs = (existing or {}).get('cognitiveServices')
+        if (self.cognitive_services is None and existing_cs is not None
+                and self._binding_has_secret(existing_cs)):
+            self.fail(msg="skillset '%s' has a key-based cognitive_services binding whose key "
+                          "is redacted on read and cannot be preserved; resupply "
+                          "cognitive_services so it is not dropped on update" % self.name)
 
     @staticmethod
     def _binding_has_secret(binding):
