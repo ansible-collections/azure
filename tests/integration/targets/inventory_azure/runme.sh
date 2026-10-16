@@ -24,6 +24,11 @@ ansible-playbook playbooks/empty_inventory_config.yml "$@"
 ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "template=filter.yml"
 ansible-playbook playbooks/test_inventory_filter.yml "$@"
 
+# using include host filters
+ansible-playbook playbooks/empty_inventory_config.yml "$@"
+ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "template=include_filter.yml"
+ansible-playbook playbooks/test_inventory_include_filter.yml "$@"
+
 # using cache
 ansible-playbook playbooks/empty_inventory_config.yml "$@"
 ansible-playbook playbooks/create_inventory_config.yml "$@"  --extra-vars "template=cache.yml"
