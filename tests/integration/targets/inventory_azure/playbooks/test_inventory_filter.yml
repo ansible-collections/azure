@@ -23,3 +23,15 @@
       ansible.builtin.assert:
         that:
           - vm_name not in hostvars
+
+    - name: Rebuild the inventory with -vv to capture early filtering decisions
+      ansible.builtin.command:
+        cmd: "ansible-inventory -i {{ lookup('ansible.builtin.env', 'ANSIBLE_INVENTORY') }} --list -vv"
+        chdir: "{{ playbook_dir }}/.."
+      register: inventory_vv
+      changed_when: false
+
+    - name: Test vm_name was excluded before its details were fetched
+      ansible.builtin.assert:
+        that:
+          - ("host '" ~ vm_name ~ "' excluded early by exclude_host_filters") in (inventory_vv.stdout ~ inventory_vv.stderr)

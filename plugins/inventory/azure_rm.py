@@ -27,14 +27,21 @@ DOCUMENTATION = r'''
         - By default, sets C(ansible_host) to the first public IP address found (preferring the primary NIC). If no
           public IPs are found, the first private IP (also preferring the primary NIC). The default may be overridden
           via C(hostvar_expressions); see examples.
-        - Host filters (C(exclude_host_filters), C(include_host_filters), C(default_host_filters)) that only refer to
+        - Host filters (C(exclude_host_filters), C(default_host_filters), C(include_host_filters)) that only refer to
           host variables known from the VM list response (for example C(name), C(tags), C(location),
-          C(resource_group), C(os_profile), C(provisioning_state)) are evaluated before the per-VM instance view,
+          C(resource_group), C(os_profile), C(provisioning_state)) can be evaluated before the per-VM instance view,
           network interface and public IP requests are sent, so hosts they exclude cost no further API calls.
           Filters that refer to C(powerstate), C(computer_name), C(os_name), C(os_version), C(hyper_v_generation) or
-          network-related host variables are evaluated after those requests complete. Early evaluation is skipped
-          when a filter uses lookups, C(vars) or names that are not host variables, and when C(cache) is enabled so
-          that cached results keep every host.
+          network-related host variables are evaluated after those requests complete.
+        - Exclude filters (C(exclude_host_filters) followed by C(default_host_filters)) are evaluated early in order and
+          early evaluation stops at the first filter that needs data from those requests. With the default
+          C(default_host_filters), the C(provisioning_state) check therefore runs after them. List exclude filters on
+          VM list variables first to benefit from early evaluation.
+        - A host whose C(include_host_filters) all evaluate early to false is excluded without fetching its details,
+          so an exclude filter that needs those details and would fail to evaluate for that host does not raise an
+          error under C(fail_on_template_errors).
+        - Early evaluation is skipped when a filter uses lookups, C(vars) or names that are not host variables, and
+          when C(cache) is enabled so that cached results keep every host.
 '''
 
 EXAMPLES = '''
@@ -481,7 +488,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
         for condition in filter:
             # FUTURE: should warn/fail if conditional doesn't return True or False
-            conditional = "{{% if {0} %}}true{{% else %}}false{{% endif %}}".format(condition)
+            conditional = self._filter_conditional(condition)
             if trust_as_template:
                 conditional = trust_as_template(conditional)
             try:
@@ -498,8 +505,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def _filter_include_host(self, inventory_hostname, hostvars):
         return self._filter_host(self._include_filters, inventory_hostname, hostvars)
 
+    @staticmethod
+    def _filter_conditional(condition):
+        return "{{% if {0} %}}true{{% else %}}false{{% endif %}}".format(condition)
+
     def _filter_references(self, condition):
-        conditional = "{{% if {0} %}}true{{% else %}}false{{% endif %}}".format(condition)
+        conditional = self._filter_conditional(condition)
         if conditional not in self._early_filter_refs:
             self._early_filter_refs[conditional] = meta.find_undeclared_variables(Environment().parse(conditional))
         return conditional, self._early_filter_refs[conditional]
@@ -532,9 +543,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             if all(self._evaluate_early_filter(condition, hostvars) is False for condition in self._include_filters):
                 display.vv(f"azure_rm inventory: host '{host.default_inventory_hostname}' excluded early by include_host_filters (no include rule matched)")
                 return True
-        except Exception:
+        except Exception as e:
             # keep the host so the final filter pass handles the error according to fail_on_template_errors
-            pass
+            display.vvvv(f"azure_rm inventory: early filtering skipped for host '{host.default_inventory_hostname}': {to_native(e)}")
         return False
 
     def _filter_exclude_host(self, inventory_hostname, hostvars):
