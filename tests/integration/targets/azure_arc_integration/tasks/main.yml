@@ -19,6 +19,9 @@
     - name: Test basic Azure Arc functionality
       ansible.builtin.include_tasks: test_basic.yml
 
+    - name: Test Azure Arc agent version convergence
+      ansible.builtin.include_tasks: test_upgrade.yml
+
   always:
     - name: Force delete the entire resource group
       azure.azcollection.azure_rm_resourcegroup:

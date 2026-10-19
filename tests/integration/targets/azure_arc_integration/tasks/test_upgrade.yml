@@ -1,0 +1,134 @@
+---
+# Agent version convergence tests for the azure_arc role (desired_version).
+#
+# test_basic.yml leaves the VM onboarded with the latest agent. These tests:
+#   1. converge the agent to an older pinned version (version drift path),
+#   2. re-run with the same pin to prove the second run is a no-op,
+#   3. converge to a newer pinned version (upgrade path),
+#   4. run without desired_version to prove the agent is not force-upgraded.
+#
+# The pinned versions must remain available in the packages.microsoft.com
+# repository and must be older than the latest agent served by the default
+# download locations.
+
+- name: Set agent versions used by the version convergence tests
+  ansible.builtin.set_fact:
+    azure_arc_test_older_version: "1.60"
+    azure_arc_test_newer_version: "1.63"
+
+- name: Converge the agent to the older pinned version
+  ansible.builtin.import_role:
+    name: azure_arc
+  vars:
+    desired_version: "{{ azure_arc_test_older_version }}"
+  delegate_to: arc_test_vm
+
+- name: Assert the role detected the version drift and kept the host connected
+  ansible.builtin.assert:
+    that:
+      - azure_arc_azcmagent_install_needed
+      - azure_arc_resource_id is defined
+      - azure_arc_resource_id | length > 0
+    success_msg: "Role detected the drift towards {{ azure_arc_test_older_version }} while staying connected"
+    fail_msg: "Role did not detect the version drift towards {{ azure_arc_test_older_version }}"
+
+- name: Read the agent version installed on the VM
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  delegate_to: arc_test_vm
+  changed_when: false
+  register: azure_arc_test_azcmagent_version
+
+- name: Assert the VM runs the older pinned agent version
+  ansible.builtin.assert:
+    that:
+      - (azure_arc_test_azcmagent_version.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}')) is match(azure_arc_test_older_version | regex_escape ~ '([.-]|$)')
+    success_msg: "VM agent version: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+    fail_msg: "VM agent is not at the pinned version {{ azure_arc_test_older_version }}: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+
+- name: Run the role again with the same pinned version
+  ansible.builtin.import_role:
+    name: azure_arc
+  vars:
+    desired_version: "{{ azure_arc_test_older_version }}"
+  delegate_to: arc_test_vm
+
+- name: Assert the pinned version satisfies desired_version without changes
+  ansible.builtin.assert:
+    that:
+      - not azure_arc_azcmagent_install_needed
+      - azure_arc_resource_id is defined
+      - azure_arc_resource_id | length > 0
+    success_msg: "Pinned version {{ azure_arc_test_older_version }} needs no agent change"
+    fail_msg: "Role wanted to reinstall the agent although it is already at the pinned version {{ azure_arc_test_older_version }}"
+
+- name: Read the agent version installed on the VM again
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  delegate_to: arc_test_vm
+  changed_when: false
+  register: azure_arc_test_azcmagent_version
+
+- name: Assert the VM still runs the older pinned agent version
+  ansible.builtin.assert:
+    that:
+      - (azure_arc_test_azcmagent_version.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}')) is match(azure_arc_test_older_version | regex_escape ~ '([.-]|$)')
+    success_msg: "VM agent version unchanged: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+    fail_msg: "VM agent changed although it is already at the pinned version {{ azure_arc_test_older_version }}: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+
+- name: Upgrade the agent to the newer pinned version
+  ansible.builtin.import_role:
+    name: azure_arc
+  vars:
+    desired_version: "{{ azure_arc_test_newer_version }}"
+  delegate_to: arc_test_vm
+
+- name: Assert the role detected the upgrade and kept the host connected
+  ansible.builtin.assert:
+    that:
+      - azure_arc_azcmagent_install_needed
+      - azure_arc_resource_id is defined
+      - azure_arc_resource_id | length > 0
+    success_msg: "Role upgraded the agent towards {{ azure_arc_test_newer_version }} while staying connected"
+    fail_msg: "Role did not detect the upgrade towards {{ azure_arc_test_newer_version }}"
+
+- name: Read the agent version installed on the VM after the upgrade
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  delegate_to: arc_test_vm
+  changed_when: false
+  register: azure_arc_test_azcmagent_version
+
+- name: Assert the VM runs the newer pinned agent version
+  ansible.builtin.assert:
+    that:
+      - (azure_arc_test_azcmagent_version.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}')) is match(azure_arc_test_newer_version | regex_escape ~ '([.-]|$)')
+    success_msg: "VM agent version: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+    fail_msg: "VM agent is not at the pinned version {{ azure_arc_test_newer_version }}: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+
+- name: Run the role without desired_version
+  ansible.builtin.import_role:
+    name: azure_arc
+  delegate_to: arc_test_vm
+
+- name: Assert the agent is not force-upgraded when desired_version is unset
+  ansible.builtin.assert:
+    that:
+      - not azure_arc_azcmagent_install_needed
+      - azure_arc_azcmagent_installed_version is match(azure_arc_test_newer_version | regex_escape ~ '([.-]|$)')
+    success_msg: "Agent left at {{ azure_arc_azcmagent_installed_version }} without desired_version"
+    fail_msg: "Role wanted to change the agent although desired_version is unset"
+
+- name: Read the agent version installed on the VM after the unset run
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  delegate_to: arc_test_vm
+  changed_when: false
+  register: azure_arc_test_azcmagent_version
+
+- name: Assert the VM still runs the newer pinned agent version
+  ansible.builtin.assert:
+    that:
+      - (azure_arc_test_azcmagent_version.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}')) is match(azure_arc_test_newer_version | regex_escape ~ '([.-]|$)')
+    success_msg: "VM agent version unchanged: {{ azure_arc_test_azcmagent_version.stdout | trim }}"
+    fail_msg: "VM agent was force-upgraded although desired_version is unset: {{ azure_arc_test_azcmagent_version.stdout | trim }}"

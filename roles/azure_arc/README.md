@@ -18,6 +18,8 @@ Role Variables
 * **azure_arc_tenant_id**: Azure tenant id.
 * **azure_arc_subscription_id**: Azure subscription id.
 * **azure_arc_tags**: Dictionary of tags to apply to the Arc Host entry in Azure. Default: `{archost: "true"}`
+* **desired_version**: Desired version of the azcmagent. When set and the installed agent version differs, the role upgrades (or downgrades) the agent to this version while keeping the host connected. On Linux this can be a partial version (for example `1.56`) or a full version (for example `1.56.03167.593`). On Windows this must be the major.minor version (for example `1.56`) used by the versioned MSI download links in the Azure Arc agent release notes. When unset, the agent is only installed when absent and is never upgraded.
+* **altdownload**: Alternative download URL for the azcmagent package. Takes precedence over the `desired_version` based download locations.
 * **proxy**: Object used to provide details for proxy setup if needed.  Contains the following:
   - * **hostname**: The hostname of the proxy server.
   - * **port**: The port that the proxy server is listening on.

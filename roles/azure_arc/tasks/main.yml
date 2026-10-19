@@ -23,16 +23,6 @@
   ansible.builtin.set_fact:
     azure_arc_proxy_url: "http://{{ proxy['hostname'] }}:{{ proxy['port'] }}"
 
-- name: Set helper fact for desired_version if needed
-  when: desired_version is defined
-  ansible.builtin.set_fact:
-    azure_arc_desired_version: "{{ desired_version }}"
-
-- name: Set helper fact for altdownload if needed
-  when: altdownload is defined
-  ansible.builtin.set_fact:
-    azure_arc_altdownload: "{{ altdownload }}"
-
 - name: Gather Resource Group info
   azure.azcollection.azure_rm_resourcegroup_info:
     name: "{{ azure_arc_resource_group }}"

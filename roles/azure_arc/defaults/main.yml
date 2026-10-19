@@ -7,6 +7,11 @@ azure_arc_cloud: AzureCloud
 # Default url for arc install script download
 azure_arc_azcmagent_install_script_url: https://aka.ms/azcmagent
 
+# Base url for versioned Azure Connected Machine Agent MSI downloads on Windows.
+# When desired_version is set, the agent MSI is downloaded from
+# <base url>/<desired_version>/AzureConnectedMachineAgent.msi
+azure_arc_azcmagent_msi_download_base_url: https://gbl.his.arc.azure.com/azcmagent
+
 azure_arc_log_enabled: true
 
 # Resource provider namespace reported in emitted signals.

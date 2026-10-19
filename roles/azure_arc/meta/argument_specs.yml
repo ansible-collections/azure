@@ -45,10 +45,20 @@ argument_specs:
       desired_version:
         description:
           - Desired version of the azcmagent to install.
+          - If the agent is already installed at a different version, it is
+            upgraded or downgraded to this version.
+          - On Linux this can be a partial version, for example 1.56, or a full
+            version, for example 1.56.03167.593.
+          - On Windows this must be the major.minor version, for example 1.56,
+            used by the versioned AzureConnectedMachineAgent.msi download links
+            in the Azure Arc agent release notes.
+          - When unset, the agent is only installed when absent and is never
+            upgraded.
         required: false
       altdownload:
         description:
           - Alternative download URL for the azcmagent package.
+          - Takes precedence over the desired_version based download locations.
         required: false
       azure_arc_log_enabled:
         description:

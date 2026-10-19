@@ -5,14 +5,51 @@
   register: azure_arc_azcmagent_version_cmd
   failed_when: false
   changed_when: false
+  # Reading the agent version never changes anything, so run it even in check mode
+  check_mode: false
 
 - name: Set azcmagent installed fact
   ansible.builtin.set_fact:
     azure_arc_azcmagent_installed: "{{ azure_arc_azcmagent_version_cmd.rc == 0 }}"
+    azure_arc_azcmagent_installed_version: ''
+
+- name: Set azcmagent installed version fact
+  when: azure_arc_azcmagent_installed
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_installed_version: "{{ azure_arc_azcmagent_version_cmd.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}') | default('', true) }}"
+
+- name: Validate that desired_version is a major.minor Windows agent version
+  when: desired_version is defined
+  ansible.builtin.assert:
+    that: (desired_version | string).split('.') | length <= 2
+    fail_msg: >-
+      On Windows, desired_version must be the major.minor agent version (for example 1.56)
+      used by the versioned AzureConnectedMachineAgent.msi download links in the Azure Arc
+      agent release notes. Full four-part versions are only supported on Linux.
+
+# Install (or upgrade) whenever the agent is absent or, when desired_version is
+# set, the installed version differs from the desired one. A partial
+# desired_version (for example 1.56) matches any 1.56.x agent version.
+- name: Set azcmagent install needed fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_needed: >-
+      {{ not azure_arc_azcmagent_installed
+         or (desired_version is defined
+             and not (azure_arc_azcmagent_installed_version
+                      is match(desired_version | string | regex_escape ~ '([.-]|$)'))) }}
 
 - name: Install Azure Connected Machine Agent
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   block:
+    - name: Set the agent installer download URL
+      ansible.builtin.set_fact:
+        azure_arc_installer_url: "{{ altdownload | default(azure_arc_azcmagent_versioned_msi_url) }}"
+      vars:
+        azure_arc_azcmagent_versioned_msi_url: >-
+          {{ azure_arc_azcmagent_msi_download_base_url ~ '/' ~ (desired_version | string) ~ '/AzureConnectedMachineAgent.msi'
+             if desired_version is defined
+             else 'https://aka.ms/AzureConnectedMachineAgent' }}
+
     - name: Create temp directory for installer
       ansible.builtin.raw: >-
         (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ('azure_arc_' + [guid]::NewGuid().ToString('N')))).FullName
@@ -28,7 +65,7 @@
       ansible.builtin.raw: >-
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
         $ProgressPreference = 'SilentlyContinue';
-        $url = '{{ azure_arc_altdownload | default('https://aka.ms/AzureConnectedMachineAgent') }}';
+        $url = '{{ azure_arc_installer_url }}';
         $dest = '{{ azure_arc_installer_path }}';
         $retries = 50; $delay = 5; $success = $false;
         for ($i = 1; $i -le $retries; $i++) {
@@ -51,8 +88,11 @@
       when: azure_arc_tmpdir_path is defined
       changed_when: true
 
-    - name: Log successful agent installation
+    - name: Log successful agent installation or upgrade
       vars:
         azure_arc_signal_message_type: info
-        azure_arc_signal_message: "azcmagent installed successfully via Ansible azure_arc role"
+        azure_arc_signal_message: >-
+          {{ 'azcmagent upgraded successfully via Ansible azure_arc role'
+             if azure_arc_azcmagent_installed
+             else 'azcmagent installed successfully via Ansible azure_arc role' }}
       ansible.builtin.include_tasks: "log_signal.yml"
