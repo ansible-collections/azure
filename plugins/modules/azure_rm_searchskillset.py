@@ -279,6 +279,7 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
             else:
                 if not self._is_current(desired, existing):
                     self._check_binding_preserved(existing)
+                    self._check_knowledge_store_preserved(existing)
                     # create_or_update is a full-replace PUT; merge the user-
                     # supplied keys onto the existing skillset so unsupplied
                     # settings (skills, description, knowledgeStore) are preserved.
@@ -345,6 +346,15 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
                           "is redacted on read and cannot be preserved; resupply "
                           "cognitive_services so it is not dropped on update" % self.name)
 
+    def _check_knowledge_store_preserved(self, existing):
+        # knowledgeStore.storageConnectionString is redacted on read and cannot be
+        # carried forward, so an update that omits knowledge_store would drop the
+        # existing store. Fail clearly; the user must resupply knowledge_store.
+        if self.knowledge_store is None and (existing or {}).get('knowledgeStore') is not None:
+            self.fail(msg="skillset '%s' has a knowledge_store whose connection string is "
+                          "redacted on read and cannot be preserved; resupply knowledge_store "
+                          "so it is not dropped on update" % self.name)
+
     @staticmethod
     def _binding_has_secret(binding):
         # A cognitiveServices binding carries a secret (redacted on read) when it
@@ -361,7 +371,11 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         # a key-based binding is redacted on read, so it must be resupplied to be
         # retained; a keyless binding (identity / default) holds no secret, so it
         # is preserved across updates when the user did not resupply one.
-        merged = self.merge_search_update(existing, desired, drop_keys=('cognitiveServices',))
+        # Drop cognitiveServices and knowledgeStore from the carry-forward: both
+        # hold secrets redacted on read (the binding key / storageConnectionString)
+        # so the existing values cannot be echoed back.
+        merged = self.merge_search_update(existing, desired,
+                                          drop_keys=('cognitiveServices', 'knowledgeStore'))
         existing_cs = (existing or {}).get('cognitiveServices')
         if (existing_cs is not None and not self._binding_has_secret(existing_cs)
                 and 'cognitiveServices' not in desired):
@@ -404,6 +418,12 @@ class AzureRMSearchSkillset(AzureRMSearchDataPlaneMixin, AzureRMModuleBaseExt):
         cs = compare_body.get("cognitiveServices")
         if isinstance(cs, dict):
             cs.pop("key", None)
+        # knowledgeStore.storageConnectionString is likewise redacted on read;
+        # drop it so a skillset with a knowledge store is not reported changed
+        # every run (other knowledgeStore fields are still compared).
+        ks = compare_body.get("knowledgeStore")
+        if isinstance(ks, dict):
+            ks.pop("storageConnectionString", None)
         result = dict(compare=[])
         return self.default_compare({}, compare_body, existing, '', result)
 
