@@ -21,6 +21,9 @@
         rgTag:
           type: string
           defaultValue: initial
+        adminSecret:
+          type: securestring
+          defaultValue: ""
       resources:
         - type: Microsoft.Resources/resourceGroups
           apiVersion: "2022-09-01"
@@ -183,6 +186,88 @@
       register: output
 
     - name: Assert the debug setting update is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update tags without debug_setting
+      azure.azcollection.azure_rm_subscription_deployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        tags:
+          testing: testing
+          env: updated
+          stage: carried
+      register: output
+
+    - name: Assert the existing debug setting was kept
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.debug_setting.detail_level | lower is search('requestcontent')
+          - output.state.properties.debug_setting.detail_level | lower is search('responsecontent')
+
+    - name: Redeploy with secure_parameters
+      azure.azcollection.azure_rm_subscription_deployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        secure_parameters:
+          adminSecret:
+            value: "Pw{{ rpfx }}!x"
+        tags:
+          testing: testing
+          env: updated
+          stage: secure
+      register: output
+
+    - name: Assert the secure parameter was deployed and hidden
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.provisioning_state == 'Succeeded'
+          - ('Pw' ~ rpfx ~ '!x') not in (output | to_json)
+          - output.state.properties.parameters.adminSecret.type | lower == 'securestring'
+          - output.state.properties.parameters.adminSecret.value is not defined
+          - output.state.properties.debug_setting.detail_level | lower is search('requestcontent')
+
+    - name: Redeploy with secure_parameters (idempotent)
+      azure.azcollection.azure_rm_subscription_deployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        secure_parameters:
+          adminSecret:
+            value: "Pw{{ rpfx }}!x"
+        tags:
+          testing: testing
+          env: updated
+          stage: secure
+      register: output
+
+    - name: Assert the secure_parameters redeploy is idempotent
       ansible.builtin.assert:
         that:
           - output is not changed
