@@ -37,7 +37,7 @@
           value: "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
   block:
     - name: Create subscription deployment -- check mode
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -57,7 +57,7 @@
           - output is changed
 
     - name: Create subscription deployment
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -78,7 +78,7 @@
           - output.state.properties.outputs.rgId.value.endswith('/resourceGroups/' ~ template_rg_name)
 
     - name: Create subscription deployment (idempotent)
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -97,7 +97,7 @@
           - output is not changed
 
     - name: Update subscription deployment parameters and tags
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -121,7 +121,7 @@
           - output.state.properties.parameters.rgTag.value == 'updated'
 
     - name: Update subscription deployment parameters and tags (idempotent)
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -143,7 +143,7 @@
           - output is not changed
 
     - name: Update subscription deployment debug setting
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -167,7 +167,7 @@
           - output is changed
 
     - name: Update subscription deployment debug setting (idempotent)
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -191,7 +191,7 @@
           - output is not changed
 
     - name: Update tags without debug_setting
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -216,7 +216,7 @@
           - output.state.properties.debug_setting.detail_level | lower is search('responsecontent')
 
     - name: Redeploy with secure_parameters
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -247,7 +247,7 @@
           - output.state.properties.debug_setting.detail_level | lower is search('requestcontent')
 
     - name: Redeploy with secure_parameters (idempotent)
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         location: eastus
         template: "{{ subscription_template }}"
@@ -273,7 +273,7 @@
           - output is not changed
 
     - name: Get subscription deployment by name
-      azure.azcollection.azure_rm_subscription_deployment_info:
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
         name: "subdep{{ rpfx }}"
       register: output
 
@@ -286,7 +286,7 @@
           - output.deployments[0].properties.provisioning_state == 'Succeeded'
 
     - name: Get subscription deployment by name and non-matching tag
-      azure.azcollection.azure_rm_subscription_deployment_info:
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
         name: "subdep{{ rpfx }}"
         tags:
           - env:missing
@@ -298,7 +298,7 @@
           - output.deployments | length == 0
 
     - name: Delete subscription deployment -- check mode
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         state: absent
       check_mode: true
@@ -310,7 +310,7 @@
           - output is changed
 
     - name: Get subscription deployment after check mode delete
-      azure.azcollection.azure_rm_subscription_deployment_info:
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
         name: "subdep{{ rpfx }}"
       register: output
 
@@ -320,7 +320,7 @@
           - output.deployments | length == 1
 
     - name: Delete subscription deployment
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         state: absent
       register: output
@@ -331,7 +331,7 @@
           - output is changed
 
     - name: Delete subscription deployment (idempotent)
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         state: absent
       register: output
@@ -342,7 +342,7 @@
           - output is not changed
 
     - name: Get the deleted subscription deployment
-      azure.azcollection.azure_rm_subscription_deployment_info:
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
         name: "subdep{{ rpfx }}"
       register: output
 
@@ -352,7 +352,7 @@
           - output.deployments | length == 0
 
     - name: Create subscription deployment with template_link
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdeplink{{ rpfx }}"
         location: eastus
         template_link:
@@ -370,7 +370,7 @@
           - output.state.properties.template_link.uri == template_link_uri
 
     - name: Create subscription deployment with template_link (idempotent)
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdeplink{{ rpfx }}"
         location: eastus
         template_link:
@@ -386,7 +386,7 @@
           - output is not changed
 
     - name: Delete subscription deployment with template_link
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdeplink{{ rpfx }}"
         state: absent
       register: output
@@ -398,12 +398,12 @@
 
   always:
     - name: Delete the subscription deployment
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdep{{ rpfx }}"
         state: absent
 
     - name: Delete the template_link subscription deployment
-      azure.azcollection.azure_rm_subscription_deployment:
+      azure.azcollection.azure_rm_subscriptiondeployment:
         name: "subdeplink{{ rpfx }}"
         state: absent
 

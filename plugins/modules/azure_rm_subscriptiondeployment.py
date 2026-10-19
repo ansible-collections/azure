@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_subscription_deployment
+module: azure_rm_subscriptiondeployment
 version_added: "4.2.0"
 short_description: Manage Azure Resource Manager template deployments at subscription scope
 description:
@@ -171,7 +171,7 @@ author:
 
 EXAMPLES = '''
 - name: Deploy a subscription-scope template that creates a resource group
-  azure.azcollection.azure_rm_subscription_deployment:
+  azure.azcollection.azure_rm_subscriptiondeployment:
     name: create-rg-deployment
     location: eastus
     template:
@@ -192,7 +192,7 @@ EXAMPLES = '''
       environment: test
 
 - name: Deploy a linked template with a Key Vault secret reference parameter
-  azure.azcollection.azure_rm_subscription_deployment:
+  azure.azcollection.azure_rm_subscriptiondeployment:
     name: linked-template-deployment
     location: eastus
     template_link:
@@ -205,7 +205,7 @@ EXAMPLES = '''
           secretName: adminPassword
 
 - name: Delete a subscription-scope deployment
-  azure.azcollection.azure_rm_subscription_deployment:
+  azure.azcollection.azure_rm_subscriptiondeployment:
     name: create-rg-deployment
     state: absent
 '''

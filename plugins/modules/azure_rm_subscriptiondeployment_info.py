@@ -10,7 +10,7 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
 ---
-module: azure_rm_subscription_deployment_info
+module: azure_rm_subscriptiondeployment_info
 version_added: "4.2.0"
 short_description: Get Azure Resource Manager template deployment facts at subscription scope
 description:
@@ -38,11 +38,11 @@ author:
 
 EXAMPLES = '''
 - name: Get a subscription-scope deployment
-  azure.azcollection.azure_rm_subscription_deployment_info:
+  azure.azcollection.azure_rm_subscriptiondeployment_info:
     name: create-rg-deployment
 
 - name: List subscription-scope deployments filtered by tag
-  azure.azcollection.azure_rm_subscription_deployment_info:
+  azure.azcollection.azure_rm_subscriptiondeployment_info:
     tags:
       - environment:test
 '''
