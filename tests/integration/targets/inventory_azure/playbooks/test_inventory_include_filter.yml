@@ -1,0 +1,33 @@
+---
+- name: Config hosts
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Set facts
+      ansible.builtin.include_vars: vars.yml
+
+    - name: Test vm_name_2 in Inventory with its details fetched
+      ansible.builtin.assert:
+        that:
+          - vm_name_2 in hostvars
+          - hostvars[vm_name_2].powerstate == 'running'
+          - hostvars[vm_name_2].private_ipv4_addresses | length > 0
+          - hostvars[vm_name_2].network_interface | length > 0
+
+    - name: Test vm_name not in Inventory
+      ansible.builtin.assert:
+        that:
+          - vm_name not in hostvars
+
+    - name: Rebuild the inventory with -vv to capture early filtering decisions
+      ansible.builtin.command:
+        cmd: "ansible-inventory -i {{ lookup('ansible.builtin.env', 'ANSIBLE_INVENTORY') }} --list -vv"
+        chdir: "{{ playbook_dir }}/.."
+      register: inventory_vv
+      changed_when: false
+
+    - name: Test vm_name was excluded early by include_host_filters
+      ansible.builtin.assert:
+        that:
+          - ("host '" ~ vm_name ~ "' excluded early by include_host_filters") in (inventory_vv.stdout ~ inventory_vv.stderr)
