@@ -209,6 +209,7 @@ parameters:
       - "azure_rm_searchindex"
       - "azure_rm_searchindexer"
       - "azure_rm_searchdatasource"
+      - "azure_rm_searchsynonymmap"
       - "inventory_azure"
       - "setup_azure"
 
