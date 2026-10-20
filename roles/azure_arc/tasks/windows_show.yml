@@ -7,3 +7,9 @@
   changed_when: false
   # Always run in execute mode, even when checking
   check_mode: false
+  # The agent service can be restarting right after an agent install or
+  # upgrade. azcmagent show already retries its service connection internally
+  # for a while, so a few additional retries cover service restart backoff.
+  until: azure_arc_show_json.rc == 0
+  retries: 3
+  delay: 60
