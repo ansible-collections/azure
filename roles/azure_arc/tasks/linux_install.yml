@@ -86,15 +86,6 @@
   ansible.builtin.set_fact:
     azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--altdownload', altdownload | string] }}"
 
-# RPM based distributions only replace an already installed package when the
-# install script is also asked to run an upgrade.
-- name: Add force upgrade flag to azcmagent install script argv
-  when:
-    - azure_arc_azcmagent_install_needed
-    - azure_arc_azcmagent_installed
-  ansible.builtin.set_fact:
-    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--forceupgrade'] }}"
-
 - name: Run azcmagent install script
   when: azure_arc_azcmagent_install_needed
   become: true
