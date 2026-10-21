@@ -451,3 +451,13 @@ action_groups:
     - azure.azcollection.azure_rm_webappslot
     - azure.azcollection.azure_rm_webappvnetconnection
     - azure.azcollection.azure_rm_webappvnetconnection_info
+plugin_routing:
+  modules:
+    azure_rm_vmbackuppolicy:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: Use azure.azcollection.azure_rm_backuppolicy instead.
+    azure_rm_vmbackuppolicy_info:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: Use azure.azcollection.azure_rm_backuppolicy_info instead.

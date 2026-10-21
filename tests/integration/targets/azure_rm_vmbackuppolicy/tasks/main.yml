@@ -71,6 +71,57 @@
         that:
           - output is changed
 
+    - name: Create VM Backup Policy with multiple weekdays and weeks
+      azure.azcollection.azure_rm_vmbackuppolicy:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}multi"
+        vault_name: "{{ vault.response.name }}"
+        time: '18:00'
+        weekdays: ['Monday', 'Thursday', 'Friday']
+        weeks: ['First', 'Fourth']
+        months: ['February', 'November']
+        count: 4
+        state: "present"
+      register: output
+
+    - name: Assert the multi-weekday policy is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.response.properties.schedulePolicy.scheduleRunDays == ['Monday', 'Thursday', 'Friday']
+          - output.response.properties.retentionPolicy.weeklySchedule.daysOfTheWeek == ['Monday', 'Thursday', 'Friday']
+
+    - name: Create VM Backup Policy with multiple weekdays and weeks (idempotent)
+      azure.azcollection.azure_rm_vmbackuppolicy:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}multi"
+        vault_name: "{{ vault.response.name }}"
+        time: '18:00'
+        weekdays: ['Monday', 'Thursday', 'Friday']
+        weeks: ['First', 'Fourth']
+        months: ['February', 'November']
+        count: 4
+        state: "present"
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete VM Backup Policy with multiple weekdays and weeks
+      azure.azcollection.azure_rm_vmbackuppolicy:
+        resource_group: "{{ resource_group }}-vmbackuppolicy"
+        name: "{{ name_rpfx }}multi"
+        vault_name: "{{ vault.response.name }}"
+        state: "absent"
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
     - name: Delete Azure Recovery Service vault
       azure.azcollection.azure_rm_recoveryservicesvault:
         resource_group: "{{ resource_group }}-vmbackuppolicy"
