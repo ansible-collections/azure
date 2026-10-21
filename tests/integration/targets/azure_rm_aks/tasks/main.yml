@@ -75,7 +75,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable"}
@@ -116,7 +116,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable"}
@@ -154,7 +154,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         enable_rbac: true
@@ -186,7 +186,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         enable_rbac: true
@@ -231,7 +231,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             node_labels: {"release":"stable", "environment":"dev"}
@@ -290,7 +290,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -323,7 +323,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -359,7 +359,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -394,7 +394,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -436,7 +436,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -480,7 +480,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -519,7 +519,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -568,7 +568,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -619,7 +619,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             max_pods: 42
@@ -665,7 +665,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -706,7 +706,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -743,7 +743,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -754,7 +754,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
         node_resource_group: "node{{ noderpfx }}"
@@ -791,7 +791,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -801,7 +801,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
         node_resource_group: "node{{ noderpfx }}"
@@ -832,7 +832,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
             enable_auto_scaling: true
@@ -843,7 +843,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -880,7 +880,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -890,7 +890,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -929,7 +929,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -939,7 +939,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -980,7 +980,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -990,7 +990,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -1028,7 +1028,7 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             enable_auto_scaling: true
             max_count: 6
@@ -1038,7 +1038,7 @@
               - 1
           - name: default2
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
         node_resource_group: "node{{ noderpfx }}"
@@ -1077,12 +1077,12 @@
         agent_pool_profiles:
           - name: systempool
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
           - name: spotpool
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
             scale_set_priority: Spot
@@ -1114,12 +1114,12 @@
         agent_pool_profiles:
           - name: systempool
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
           - name: spotpool
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
             node_labels: {"environment":"test"}  # trigger update
@@ -1147,12 +1147,12 @@
         agent_pool_profiles:
           - name: systempool
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
           - name: spotpool
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
         network_profile:
