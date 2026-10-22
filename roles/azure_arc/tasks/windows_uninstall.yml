@@ -1,0 +1,26 @@
+---
+- name: Find the Azure Connected Machine Agent product code
+  ansible.builtin.raw: >-
+    Get-ChildItem -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall |
+    Get-ItemProperty |
+    Where-Object {$_.DisplayName -eq "Azure Connected Machine Agent"} |
+    Select-Object -ExpandProperty PsChildName
+  changed_when: false
+  register: azure_arc_windows_product_code
+
+- name: Uninstall the Azure Connected Machine Agent
+  when: azure_arc_windows_product_code.stdout_lines | length > 0
+  ansible.builtin.raw: >-
+    Start-Process msiexec.exe -ArgumentList
+    '/x','{{ azure_arc_windows_product_code.stdout_lines[0] | trim }}','REBOOT=ReallySuppress','/qn'
+    -Wait -NoNewWindow
+  changed_when: true
+
+# The MSI deliberately keeps the agent directory with logs and configuration
+- name: Remove leftover agent files
+  ansible.builtin.raw: >-
+    if (Test-Path "{{ ansible_env['ProgramFiles'] }}\AzureConnectedMachineAgent") {
+    Remove-Item -Recurse -Force "{{ ansible_env['ProgramFiles'] }}\AzureConnectedMachineAgent";
+    Write-Output removed } else { Write-Output clean }
+  register: azure_arc_windows_leftover_cleanup
+  changed_when: "'removed' in azure_arc_windows_leftover_cleanup.stdout"

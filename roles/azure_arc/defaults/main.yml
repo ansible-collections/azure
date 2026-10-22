@@ -4,6 +4,17 @@ azure_arc_tags:
   ArcSQLServerExtensionDeployment: "Disabled"
 azure_arc_cloud: AzureCloud
 
+# Whether the Azure Arc host should be present or absent.
+# present onboards the host (installs and connects the agent), absent
+# offboards it (disconnects from Azure and removes the agent).
+azure_arc_state: present
+
+# Pass --force-local-only to azcmagent disconnect when azure_arc_state is
+# absent, so the local agent is reset without deleting the server resource in
+# Azure. Useful when the Azure Arc-enabled server resource was already deleted
+# in Azure.
+azure_arc_force_local_only: false
+
 # Default url for arc install script download
 azure_arc_azcmagent_install_script_url: https://aka.ms/azcmagent
 

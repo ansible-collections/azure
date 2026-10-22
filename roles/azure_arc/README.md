@@ -4,6 +4,10 @@ azure_arc
 A role to Configure an Azure ARC Machine.  Once the agent is installed and run
 it will register the host in the **azure_arc_resource_group** requested.
 
+Setting **azure_arc_state** to `absent` offboards the host instead: the agent is
+disconnected from Azure (deleting the server resource) and removed from the
+host.
+
 Requirements
 ------------
 
@@ -12,6 +16,7 @@ Requirements
 Role Variables
 --------------
 
+* **azure_arc_state**: Whether the Azure Arc host should be `present` (onboard, default) or `absent` (disconnect and remove the agent). `absent` requires the same Azure credentials as onboarding, with permission to delete the Azure Arc-enabled server resource.
 * **azure_arc_resource_group**: The resource group that the host will be registered in.
 * **azure_arc_cloud**: The Azure cloud to use. Default `AzureCloud`
 * **azure_arc_location**: The location to use. Default `The location of the resource_group`
@@ -23,6 +28,7 @@ Role Variables
 * **proxy**: Object used to provide details for proxy setup if needed.  Contains the following:
   - * **hostname**: The hostname of the proxy server.
   - * **port**: The port that the proxy server is listening on.
+* **azure_arc_force_local_only**: When true and `azure_arc_state` is `absent`, pass `--force-local-only` to `azcmagent disconnect` so the local agent is reset without deleting the server resource in Azure. Useful when the resource was already deleted in Azure. Default `false`
 * **azure_arc_log_enabled**: Log success / failure to Azure for assistance with debugging (true by default, set to false to disable)
 
 Limitations
@@ -44,6 +50,15 @@ Example Playbook
         - name: Configure Arc Hosts
           ansible.builtin.include_role:
             name: azure.azcollection.azure_arc
+
+    - name: Offboard arc agent from arc_hosts
+      hosts: arc_hosts
+      tasks:
+        - name: Remove Arc Hosts
+          ansible.builtin.include_role:
+            name: azure.azcollection.azure_arc
+          vars:
+            azure_arc_state: absent
 
 Example Inventory
 -----------------

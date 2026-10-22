@@ -22,6 +22,9 @@
     - name: Test Azure Arc agent version convergence
       ansible.builtin.include_tasks: test_upgrade.yml
 
+    - name: Test Azure Arc offboarding
+      ansible.builtin.include_tasks: test_offboard.yml
+
   always:
     - name: Force delete the entire resource group
       azure.azcollection.azure_rm_resourcegroup:

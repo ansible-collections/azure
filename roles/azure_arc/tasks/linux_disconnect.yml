@@ -1,0 +1,16 @@
+---
+- name: Use azure arc agent to disconnect from azure
+  become: true
+  ansible.builtin.command:
+    # Note: azcmagent disconnect authenticates with the access token alone,
+    # the tenant is implied by the token. It accepts no --tenant-id or
+    # --correlation-id flags (verified against azcmagent 1.60 - 1.68).
+    argv: "{{ ['azcmagent', 'disconnect',
+                '--access-token', azure_arc_access_token.access_token]
+              + (['--force-local-only'] if azure_arc_force_local_only | bool else [])
+              + ['--json'] }}"
+  no_log: true
+  # If this command is run, it will always change the connection status from connected to disconnected
+  changed_when: true
+  failed_when: false
+  register: azure_arc_azcmagent_disconnect_json

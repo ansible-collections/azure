@@ -7,6 +7,25 @@ argument_specs:
       - A role to Configure an Azure ARC host.
       - This role requires an resource_group, tenant id and subscription_id.
     options:
+      azure_arc_state:
+        description:
+          - Whether the Azure Arc host should be present or absent.
+          - V(present) onboards the host, it installs and connects the agent.
+          - V(absent) offboards the host, it disconnects the agent from Azure
+            and removes it from the host.
+        choices: [present, absent]
+        default: present
+        version_added: 4.2.0
+      azure_arc_force_local_only:
+        description:
+          - Pass --force-local-only to azcmagent disconnect when
+            I(azure_arc_state=absent), so the local agent is reset without
+            deleting the server resource in Azure.
+          - Useful when the Azure Arc-enabled server resource was already
+            deleted in Azure.
+        type: bool
+        default: false
+        version_added: 4.2.0
       azure_arc_cloud:
         description:
           - Which azure cloud to use.
