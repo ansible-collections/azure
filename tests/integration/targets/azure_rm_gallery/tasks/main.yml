@@ -9,7 +9,6 @@
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
         uuid: "{{ (2**128) | random | to_uuid }}"
-        az_role_definition_id: 9980e02c-c2be-4d73-94e8-173b1dc7cf3c
       run_once: true
 
     - name: Get resource group info
@@ -24,14 +23,6 @@
                        azure_secret=azure_secret,
                        azure_tenant=azure_tenant) }}"
       register: object_id_facts
-
-    - name: Create role assignment by id
-      azure.azcollection.azure_rm_roleassignment:
-        scope: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-gallery"
-        assignee_object_id: "{{ object_id }}"
-        role_definition_id: "/providers/Microsoft.Authorization/roleDefinitions/{{ az_role_definition_id }}"
-      register: az_role_assignment_create_by_id
-      ignore_errors: true
 
     - name: Create first key vault
       azure.azcollection.azure_rm_keyvault:
@@ -259,7 +250,7 @@
         ssh_public_keys:
           - path: /home/testuser/.ssh/authorized_keys
             key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-        vm_size: Standard_D2s_v3
+        vm_size: "{{ azure_test_vm_size }}"
         network_interfaces: "vmforimage{{ rpfx }}nic"
         managed_disk_type: Premium_LRS
         data_disks:
@@ -706,12 +697,6 @@
       ansible.builtin.assert:
         that:
           - output is changed
-
-    - name: Delete Role Assignment by id
-      azure.azcollection.azure_rm_roleassignment:
-        id: "{{ az_role_assignment_create_by_id.id }}"
-        state: absent
-      # when: az_role_assignment_create is changed  <- no-handler error by ansible-lint
 
     - name: Delete the public IP address
       azure.azcollection.azure_rm_publicipaddress:

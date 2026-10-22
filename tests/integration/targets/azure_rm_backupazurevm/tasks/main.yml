@@ -1,14 +1,13 @@
 - name: Create a new resource group for backup azure VM test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-backupazurevm"
-    location: eastus2
-
+    location: eastus
 - name: For backup azure VM test
   block:
     - name: Set facts
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(10, True, '') }}"
-        location: "eastus2"
+        location: eastus
         recovery_vault_name: "rsv{{ resource_group | hash('md5') | truncate(22, True, '') }}"
         policy_name: "bp-daily-{{ resource_group | hash('md5') | truncate(16, True, '') }}"
         vm_name: "bkvm{{ resource_group | hash('md5') | truncate(10, True, '') }}"
@@ -41,7 +40,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-backupazurevm"
         name: "{{ vm_name }}"
-        vm_size: Standard_D2s_v3
+        vm_size: "{{ azure_test_vm_size }}"
         admin_username: azureuser
         ssh_password_enabled: false
         ssh_public_keys:

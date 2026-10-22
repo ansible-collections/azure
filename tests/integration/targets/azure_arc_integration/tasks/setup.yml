@@ -3,7 +3,7 @@
   ansible.builtin.set_fact:
     vm_name: "arc-onboarding-vm-{{ 999999999 | random }}"
     location: eastus
-    vm_size: Standard_D2s_v3
+    vm_size: "{{ azure_test_vm_size }}"
     admin_username: arcadmin
 
 - name: Create virtual network

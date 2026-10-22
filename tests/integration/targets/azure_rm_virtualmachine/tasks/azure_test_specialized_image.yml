@@ -11,7 +11,7 @@
     ssh_public_keys:
       - path: /home/testuser/.ssh/authorized_keys
         key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfoYlIV4lTPZTv7hXaVwQQuqBgGs4yeNRX0SPo2+HQt9u4X7IGwrtXc0nEUm6LfaCikMH58bOL8f20NTGz285kxdFHZRcBXtqmnMz2rXwhK9gwq5h1khc+GzHtdcJXsGA4y0xuaNcidcg04jxAlN/06fwb/VYwwWTVbypNC0gpGEpWckCNm8vlDlA55sU5et0SZ+J0RKVvEaweUOeNbFZqckGPA384imfeYlADppK/7eAxqfBVadVvZG8IJk4yvATgaIENIFj2cXxqu2mQ/Bp5Wr45uApvJsFXmi+v/nkiOEV1QpLOnEwAZo6EfFS4CCQtsymxJCl1PxdJ5LD4ZOtP xiuxi.sun@qq.com"
-    vm_size: Standard_D2s_v3
+    vm_size: "{{ azure_test_vm_size }}"
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     image:
@@ -31,7 +31,6 @@
   azure.azcollection.azure_rm_gallery:
     resource_group: "{{ resource_group }}-vm01"
     name: "gal{{ uid_short }}"
-    location: eastus2
     description: Specialized image gallery for integration tests
 
 - name: Create Specialized gallery image definition
@@ -39,7 +38,6 @@
     resource_group: "{{ resource_group }}-vm01"
     gallery_name: "gal{{ uid_short }}"
     name: "imgdef{{ uid_short }}"
-    location: eastus2
     os_type: linux
     os_state: specialized
     hypervgeneration: V1
@@ -60,13 +58,12 @@
     gallery_name: "gal{{ uid_short }}"
     gallery_image_name: "imgdef{{ uid_short }}"
     name: 1.0.0
-    location: eastus2
     storage_profile:
       source_image:
         virtual_machine_id: "{{ srcvm_info.vms[0].id }}"
     publishing_profile:
       target_regions:
-        - name: eastus2
+        - name: eastus
           regional_replica_count: 1
   register: sig_specialized
 
@@ -78,7 +75,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-negspec"
-    vm_size: Standard_D2s_v3
+    vm_size: "{{ azure_test_vm_size }}"
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     os_type: Linux
@@ -93,7 +90,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-spec"
-    vm_size: Standard_D2s_v3
+    vm_size: "{{ azure_test_vm_size }}"
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     specialized_image: true
@@ -112,7 +109,7 @@
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}-vm01"
     name: "{{ vm_name }}-spec"
-    vm_size: Standard_D2s_v3
+    vm_size: "{{ azure_test_vm_size }}"
     virtual_network: "{{ network_name }}"
     managed_disk_type: StandardSSD_LRS
     specialized_image: true
