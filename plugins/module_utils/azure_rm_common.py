@@ -132,6 +132,7 @@ AZURE_API_PROFILES = {
         'ServiceBusManagementClient': 'latest',
         'AutomationClient': 'latest',
         'IotHubClient': 'latest',
+        'RecoveryServicesClient': 'latest',
         'RecoveryServicesBackupClient': 'latest',
         'DataProtectionMgmtClient': 'latest',
         'DataFactoryManagementClient': 'latest',
@@ -275,6 +276,7 @@ try:
     from azure.mgmt.iothub import IotHubClient
     from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.recoveryservices import RecoveryServicesClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
     from azure.mgmt.search import SearchManagementClient
@@ -446,6 +448,8 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._recovery_services_client = None
+        self._recovery_services_legacy_client = None
         self._recovery_services_backup_client = None
         self._search_client = None
         self._datalake_store_client = None
@@ -1516,6 +1520,26 @@ class AzureRMModuleBase(object):
     def lock_models(self):
         self.log("Getting lock models")
         return ManagementLockClient.models('2016-09-01')
+
+    @property
+    def recovery_services_client(self):
+        self.log('Getting recovery services client')
+        if not self._recovery_services_client:
+            self._recovery_services_client = self.get_mgmt_svc_client(RecoveryServicesClient,
+                                                                      base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._recovery_services_client
+
+    @property
+    def recovery_services_legacy_client(self):
+        # Vaults created or updated with this api-version keep accepting soft delete changes from
+        # azure_rm_recoveryservicesvaultconfig, newer api-versions switch the vault to the vault API.
+        # RecoveryServicesClient takes api_version through **kwargs, which get_mgmt_svc_client does not forward.
+        self.log('Getting recovery services legacy client')
+        if not self._recovery_services_legacy_client:
+            self._recovery_services_legacy_client = self.get_mgmt_svc_client(RecoveryServicesClient,
+                                                                             base_url=self._cloud_environment.endpoints.resource_manager)
+            self._recovery_services_legacy_client._config.api_version = '2020-02-02'
+        return self._recovery_services_legacy_client
 
     @property
     def recovery_services_backup_client(self):
