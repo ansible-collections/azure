@@ -1,0 +1,23 @@
+---
+# Shared MSI uninstall of the Azure Connected Machine Agent, used by the
+# offboarding flow (windows_uninstall.yml) and by downgrades
+# (windows_install.yml). The msiexec exit code is checked so a failed
+# uninstall fails the play instead of leaving broken agent remnants behind.
+- name: Find the Azure Connected Machine Agent product code
+  ansible.builtin.raw: >-
+    Get-ChildItem -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall |
+    Get-ItemProperty |
+    Where-Object {$_.DisplayName -eq "Azure Connected Machine Agent"} |
+    Select-Object -ExpandProperty PsChildName
+  changed_when: false
+  register: azure_arc_windows_product_code
+
+- name: Uninstall the Azure Connected Machine Agent
+  when: azure_arc_windows_product_code.stdout_lines | length > 0
+  ansible.builtin.raw: >-
+    $p = Start-Process msiexec.exe -ArgumentList
+    '/x','{{ azure_arc_windows_product_code.stdout_lines[0] | trim }}','REBOOT=ReallySuppress','/qn'
+    -Wait -NoNewWindow -PassThru;
+    Write-Output "msiexec exit code: $($p.ExitCode)";
+    if ($p.ExitCode -notin 0, 1605, 3010) { throw "msiexec uninstall failed with exit code $($p.ExitCode)" }
+  changed_when: true

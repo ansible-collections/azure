@@ -10,6 +10,9 @@
   ansible.builtin.import_role:
     name: azure_arc
   vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
     azure_arc_state: absent
   delegate_to: arc_test_vm
 
@@ -49,6 +52,9 @@
   ansible.builtin.import_role:
     name: azure_arc
   vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
     azure_arc_state: absent
   delegate_to: arc_test_vm
 

@@ -21,7 +21,7 @@
 - name: Validate that desired_version is a major.minor Windows agent version
   when: desired_version is defined
   ansible.builtin.assert:
-    that: (desired_version | string).split('.') | length <= 2
+    that: desired_version | string is match('^[0-9]+(\.[0-9]+)?$')
     fail_msg: >-
       On Windows, desired_version must be the major.minor agent version (for example 1.56)
       used by the versioned AzureConnectedMachineAgent.msi download links in the Azure Arc
@@ -37,6 +37,17 @@
          or (desired_version is defined
              and not (azure_arc_azcmagent_installed_version
                       is match(desired_version | string | regex_escape ~ '([.-]|$)'))) }}
+
+# Downgrades need the installed agent removed first: installing an older
+# AzureConnectedMachineAgent.msi over a newer agent is not supported. The
+# uninstall keeps the agent directory with the host's connection state.
+- name: Set azcmagent downgrade fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_downgrade: >-
+      {{ azure_arc_azcmagent_installed
+         and desired_version is defined
+         and azure_arc_azcmagent_installed_version | length > 0
+         and azure_arc_azcmagent_installed_version is ansible.builtin.version(desired_version | string, '>') }}
 
 - name: Install Azure Connected Machine Agent
   when: azure_arc_azcmagent_install_needed
@@ -77,9 +88,16 @@
       register: _azure_arc_response
       changed_when: true
 
+    - name: Uninstall the installed agent before a downgrade
+      when: azure_arc_azcmagent_downgrade
+      ansible.builtin.include_tasks: "windows_msi_uninstall.yml"
+
     - name: Install the Connected Machine Agent
       ansible.builtin.raw: >-
-        Start-Process msiexec.exe -ArgumentList '/i','{{ azure_arc_installer_path }}','REBOOT=ReallySuppress','/qn' -Wait -NoNewWindow
+        $p = Start-Process msiexec.exe -ArgumentList '/i','{{ azure_arc_installer_path }}','REBOOT=ReallySuppress','/qn'
+        -Wait -NoNewWindow -PassThru;
+        Write-Output "msiexec exit code: $($p.ExitCode)";
+        if ($p.ExitCode -notin 0, 3010) { throw "msiexec install failed with exit code $($p.ExitCode)" }
       changed_when: true
 
     - name: Remove temp directory

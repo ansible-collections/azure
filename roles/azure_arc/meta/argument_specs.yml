@@ -73,6 +73,14 @@ argument_specs:
             in the Azure Arc agent release notes.
           - When unset, the agent is only installed when absent and is never
             upgraded.
+          - When the desired version is older than the installed agent,
+            Debian/Ubuntu hosts have the agent package removed before the
+            older version is installed (downgrades are not possible
+            non-interactively with apt), Windows hosts have the agent
+            uninstalled first (the MSI cannot install an older version over
+            a newer one), and RPM based Linux hosts downgrade in place. The
+            connection state is kept in all cases, so the host stays
+            connected.
         required: false
       altdownload:
         description:

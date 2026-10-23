@@ -9,7 +9,10 @@
 #
 # The pinned versions must remain available in the packages.microsoft.com
 # repository and must be older than the latest agent served by the default
-# download locations.
+# download locations. The downgrade in step 1 removes the package first and
+# reinstalls the older version (apt refuses non-interactive downgrades), so
+# it keeps working on the Ubuntu CI VM. On RPM based distributions the
+# downgrade happens in place instead.
 
 - name: Set agent versions used by the version convergence tests
   ansible.builtin.set_fact:
@@ -20,6 +23,9 @@
   ansible.builtin.import_role:
     name: azure_arc
   vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
     desired_version: "{{ azure_arc_test_older_version }}"
   delegate_to: arc_test_vm
 
@@ -50,6 +56,9 @@
   ansible.builtin.import_role:
     name: azure_arc
   vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
     desired_version: "{{ azure_arc_test_older_version }}"
   delegate_to: arc_test_vm
 
@@ -80,6 +89,9 @@
   ansible.builtin.import_role:
     name: azure_arc
   vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
     desired_version: "{{ azure_arc_test_newer_version }}"
   delegate_to: arc_test_vm
 
@@ -109,6 +121,10 @@
 - name: Run the role without desired_version
   ansible.builtin.import_role:
     name: azure_arc
+  vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
   delegate_to: arc_test_vm
 
 - name: Assert the agent is not force-upgraded when desired_version is unset
