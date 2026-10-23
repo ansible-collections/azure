@@ -7,6 +7,25 @@ argument_specs:
       - A role to Configure an Azure ARC host.
       - This role requires an resource_group, tenant id and subscription_id.
     options:
+      azure_arc_state:
+        description:
+          - Whether the Azure Arc host should be present or absent.
+          - V(present) onboards the host, it installs and connects the agent.
+          - V(absent) offboards the host, it disconnects the agent from Azure
+            and removes it from the host.
+        choices: [present, absent]
+        default: present
+        version_added: 4.2.0
+      azure_arc_force_local_only:
+        description:
+          - Pass --force-local-only to azcmagent disconnect when
+            I(azure_arc_state=absent), so the local agent is reset without
+            deleting the server resource in Azure.
+          - Useful when the Azure Arc-enabled server resource was already
+            deleted in Azure.
+        type: bool
+        default: false
+        version_added: 4.2.0
       azure_arc_cloud:
         description:
           - Which azure cloud to use.
@@ -45,10 +64,28 @@ argument_specs:
       desired_version:
         description:
           - Desired version of the azcmagent to install.
+          - If the agent is already installed at a different version, it is
+            upgraded or downgraded to this version.
+          - On Linux this can be a partial version, for example 1.56, or a full
+            version, for example 1.56.03167.593.
+          - On Windows this must be the major.minor version, for example 1.56,
+            used by the versioned AzureConnectedMachineAgent.msi download links
+            in the Azure Arc agent release notes.
+          - When unset, the agent is only installed when absent and is never
+            upgraded.
+          - When the desired version is older than the installed agent,
+            Debian/Ubuntu hosts have the agent package removed before the
+            older version is installed (downgrades are not possible
+            non-interactively with apt), Windows hosts have the agent
+            uninstalled first (the MSI cannot install an older version over
+            a newer one), and RPM based Linux hosts downgrade in place. The
+            connection state is kept in all cases, so the host stays
+            connected.
         required: false
       altdownload:
         description:
           - Alternative download URL for the azcmagent package.
+          - Takes precedence over the desired_version based download locations.
         required: false
       azure_arc_log_enabled:
         description:

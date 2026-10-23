@@ -1,0 +1,74 @@
+---
+# Offboarding tests (azure_arc_state: absent) for the azure_arc role. The earlier test
+# files leave the VM onboarded and connected.
+
+- name: Record the Arc resource id before offboarding
+  ansible.builtin.set_fact:
+    arc_offboard_resource_id: "{{ azure_arc_resource_id }}"
+
+- name: Offboard the VM with the azure_arc role
+  ansible.builtin.import_role:
+    name: azure_arc
+  vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
+    azure_arc_state: absent
+  delegate_to: arc_test_vm
+
+- name: Assert the role removed the agent and cleared the resource id
+  ansible.builtin.assert:
+    that:
+      - azure_arc_azcmagent_installed is defined
+      - not azure_arc_azcmagent_installed
+      - azure_arc_resource_id is defined
+      - azure_arc_resource_id | length == 0
+    success_msg: "Role offboarded {{ arc_offboard_resource_id }}"
+    fail_msg: "Role did not offboard the VM"
+
+- name: Look up the machine resource in Azure
+  azure.azcollection.azure_rm_resource_info:
+    url: "{{ arc_offboard_resource_id }}"
+    api_version: "2024-05-20-preview"
+  register: arc_offboard_machine_lookup
+  delegate_to: localhost
+
+- name: Assert the machine resource was deleted in Azure
+  ansible.builtin.assert:
+    that:
+      - arc_offboard_machine_lookup.status_code | default(0) == 404
+    success_msg: "Azure reports the machine resource as deleted"
+    fail_msg: "The machine resource still exists in Azure (status {{ arc_offboard_machine_lookup.status_code | default('unknown') }})"
+
+- name: Assert the agent was uninstalled from the VM
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  delegate_to: arc_test_vm
+  register: arc_offboard_version_check
+  failed_when: arc_offboard_version_check.rc == 0
+  changed_when: false
+
+- name: Run the role again with azure_arc_state absent to prove idempotency
+  ansible.builtin.import_role:
+    name: azure_arc
+  vars:
+    azure_arc_resource_group: "{{ arc_onboarding_rg }}"
+    azure_arc_subscription_id: "{{ azure_subscription_id }}"
+    azure_arc_tenant_id: "{{ azure_tenant }}"
+    azure_arc_state: absent
+  delegate_to: arc_test_vm
+
+- name: Assert the second azure_arc_state absent run was a no-op
+  ansible.builtin.assert:
+    that:
+      - not azure_arc_azcmagent_installed
+    success_msg: "Second azure_arc_state absent run was a no-op"
+    fail_msg: "Second azure_arc_state absent run wanted to change the host although the agent is already gone"
+
+- name: Assert the agent is still uninstalled
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  delegate_to: arc_test_vm
+  register: arc_offboard_version_check
+  failed_when: arc_offboard_version_check.rc == 0
+  changed_when: false

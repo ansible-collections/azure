@@ -12,7 +12,7 @@
       location: "{{ azure_arc_location | default('') }}"
       correlationId: "{{ azure_arc_correlation_id | default('') }}"
       authType: token
-      operation: onboarding
+      operation: "{{ azure_arc_signal_operation | default('onboarding') }}"
       namespace: "{{ azure_arc_provider_namespace | default('Microsoft.HybridCompute') }}"
       osType: "{{ azure_arc_os_type }}"
       messageType: "{{ azure_arc_signal_message_type }}"

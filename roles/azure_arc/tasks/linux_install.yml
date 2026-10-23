@@ -5,13 +5,52 @@
   register: azure_arc_azcmagent_version_cmd
   failed_when: false
   changed_when: false
+  # Reading the agent version never changes anything, so run it even in check mode
+  check_mode: false
 
 - name: Set azcmagent installed fact
   ansible.builtin.set_fact:
     azure_arc_azcmagent_installed: "{{ azure_arc_azcmagent_version_cmd.rc == 0 }}"
+    azure_arc_azcmagent_installed_version: ''
+
+- name: Set azcmagent installed version fact
+  when: azure_arc_azcmagent_installed
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_installed_version: "{{ azure_arc_azcmagent_version_cmd.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}') | default('', true) }}"
+
+- name: Validate that desired_version is an azcmagent version
+  when: desired_version is defined
+  ansible.builtin.assert:
+    that: desired_version | string is match('^[0-9]+(\.[0-9]+){0,3}$')
+    fail_msg: >-
+      desired_version must be an azcmagent version, for example 1.56 or
+      1.56.03167.593, not '{{ desired_version }}'
+
+# Install (or upgrade) whenever the agent is absent or, when desired_version is
+# set, the installed version differs from the desired one. A partial
+# desired_version (for example 1.56) matches any 1.56.x agent version.
+- name: Set azcmagent install needed fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_needed: >-
+      {{ not azure_arc_azcmagent_installed
+         or (desired_version is defined
+             and not (azure_arc_azcmagent_installed_version
+                      is match(desired_version | string | regex_escape ~ '([.-]|$)'))) }}
+
+# Downgrades need the installed version compared against the desired one:
+# a partial desired_version (for example 1.56) matches any 1.56.x agent
+# version, so a downgrade only applies when the installed version is newer
+# than the desired version.
+- name: Set azcmagent downgrade fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_downgrade: >-
+      {{ azure_arc_azcmagent_installed
+         and desired_version is defined
+         and azure_arc_azcmagent_installed_version | length > 0
+         and azure_arc_azcmagent_installed_version is ansible.builtin.version(desired_version | string, '>') }}
 
 - name: Create temp directory for azcmagent install script
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   become: true
   ansible.builtin.tempfile:
     state: directory
@@ -19,7 +58,7 @@
   register: azure_arc_tmpdir
 
 - name: Set install script path fact
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   ansible.builtin.set_fact:
     azure_arc_azcmagent_install_script_path: "{{ azure_arc_tmpdir.path }}/azcmagent-linux.sh"
 
@@ -31,7 +70,7 @@
       https_proxy: "{{ azure_arc_proxy_url }}"
 
 - name: Download azcmagent install script
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   become: true
   ansible.builtin.get_url:
     url: "{{ azure_arc_azcmagent_install_script_url }}"
@@ -40,7 +79,7 @@
   environment: "{{ azure_arc_proxy_environment | default({}) }}"
 
 - name: Initialize azcmagent install script argv
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   ansible.builtin.set_fact:
     azure_arc_azcmagent_install_script_argv:
       - "/bin/bash"
@@ -48,27 +87,48 @@
 
 - name: Add proxy args to azcmagent install script argv
   when:
-    - not azure_arc_azcmagent_installed
+    - azure_arc_azcmagent_install_needed
     - azure_arc_proxy_url is defined
   ansible.builtin.set_fact:
     azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--proxy', azure_arc_proxy_url] }}"
 
 - name: Add desired version args to azcmagent install script argv
   when:
-    - not azure_arc_azcmagent_installed
-    - azure_arc_desired_version is defined
+    - azure_arc_azcmagent_install_needed
+    - desired_version is defined
   ansible.builtin.set_fact:
-    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--desiredversion', azure_arc_desired_version] }}"
+    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--desiredversion', desired_version | string] }}"
 
 - name: Add altdownload args to azcmagent installer argv
   when:
-    - not azure_arc_azcmagent_installed
-    - azure_arc_altdownload is defined
+    - azure_arc_azcmagent_install_needed
+    - altdownload is defined
   ansible.builtin.set_fact:
-    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--altdownload', azure_arc_altdownload] }}"
+    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--altdownload', altdownload | string] }}"
+
+# Downgrades to an older agent version need the package removed first on
+# Debian/Ubuntu hosts: the install script installs the desired version with
+# apt install -y azcmagent=<version>, and apt refuses to downgrade a package
+# non-interactively, so the script would fail. The removal is safe there
+# because /var/opt/azcmagent with the connection state is not owned by the
+# deb package, so the host stays connected across the reinstall.
+# RPM based distributions downgrade in place instead: removing the package
+# would lose the connection state (rpm saves the connected agentconfig.json
+# as agentconfig.json.rpmsave and the reinstall lays down the package
+# default), while the in-place downgrade performed by the install script
+# keeps the connected agentconfig.json.
+- name: Remove the azcmagent package before a downgrade (apt)
+  when:
+    - azure_arc_azcmagent_install_needed
+    - azure_arc_azcmagent_downgrade
+    - ansible_pkg_mgr == 'apt'
+  become: true
+  ansible.builtin.apt:
+    name: azcmagent
+    state: absent
 
 - name: Run azcmagent install script
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   become: true
   ansible.builtin.command:
     argv: "{{ azure_arc_azcmagent_install_script_argv }}"
@@ -86,18 +146,23 @@
       })
     }}
   register: azure_arc_azcmagent_install_cmd
-  changed_when: false
+  # This task only runs when the agent is missing or not at the desired
+  # version, so running it always changes the installed agent.
+  changed_when: true
   failed_when: azure_arc_azcmagent_install_cmd.rc != 0
 
-- name: Log successful agent installation
-  when: not azure_arc_azcmagent_installed
+- name: Log successful agent installation or upgrade
+  when: azure_arc_azcmagent_install_needed
   vars:
     azure_arc_signal_message_type: info
-    azure_arc_signal_message: "azcmagent installed successfully via Ansible azure_arc role"
+    azure_arc_signal_message: >-
+      {{ 'azcmagent upgraded successfully via Ansible azure_arc role'
+         if azure_arc_azcmagent_installed
+         else 'azcmagent installed successfully via Ansible azure_arc role' }}
   ansible.builtin.include_tasks: "log_signal.yml"
 
 - name: Remove temp directory for azcmagent install script
-  when: not azure_arc_azcmagent_installed
+  when: azure_arc_azcmagent_install_needed
   become: true
   ansible.builtin.file:
     state: absent
