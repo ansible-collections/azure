@@ -680,7 +680,8 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         self.desired_properties = self.get_desired_properties()
 
         if self.state == 'absent':
-            self.to_do = Actions.Delete
+            if old_vault is not None:
+                self.to_do = Actions.Delete
         elif old_vault is None:
             self.to_do = Actions.Create
         else:
@@ -717,11 +718,7 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
         }
 
     def format_for_body(self, identity):
-        if identity:
-            identity = identity.as_dict()
-            if identity.get("user_assigned_identities", None):
-                identity["userAssignedIdentities"] = identity.pop("user_assigned_identities")
-        return identity
+        return identity.as_dict() if identity else identity
 
     def format_for_helper(self, identity):
         if identity and identity.get("userAssignedIdentities"):
@@ -810,10 +807,14 @@ class AzureRMRecoveryServicesVault(AzureRMModuleBaseExt):
                 if isinstance(response, LROPoller):
                     self.get_poller_result(response)
                 return
-            except Exception as exc:
-                if 'ConflictingOperation' in str(exc) and attempt < retry_limit - 1:
+            except HttpResponseError as exc:
+                # The vault rejects updates with 409 while another operation (such as its initialization) is running
+                error_code = exc.error.code if exc.error else None
+                if exc.status_code == 409 and error_code and 'ConflictingOperation' in error_code and attempt < retry_limit - 1:
                     time.sleep(15)
                     continue
+                self.fail("Error updating properties of Recovery Service Vault {0}: {1}".format(self.name, str(exc)))
+            except Exception as exc:
                 self.fail("Error updating properties of Recovery Service Vault {0}: {1}".format(self.name, str(exc)))
 
     def wait_for_vault_initialization(self):

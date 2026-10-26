@@ -415,6 +415,33 @@
           - output is changed
           - output.state.properties.security_settings.immutability_settings.state == 'Disabled'
 
+    - name: Disable public network access
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Disabled
+      register: output
+
+    - name: Assert that public network access is disabled
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.public_network_access == 'Disabled'
+
+    - name: Disable public network access (idempotent)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Disabled
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
     - name: Update tags on recovery services vault (append=false)
       azure.azcollection.azure_rm_recoveryservicesvault:
         resource_group: "{{ resource_group }}-recoveryservicevault"
@@ -519,6 +546,7 @@
           - output.response.tags.TestTag3 == 'TestValue3'
           - output.recoveryservicesvaults[0].properties.security_settings.soft_delete_settings.soft_delete_retention_period_in_days == 40
           - output.recoveryservicesvaults[0].properties.monitoring_settings.classic_alert_settings.alerts_for_critical_operations == 'Disabled'
+          - output.recoveryservicesvaults[0].properties.public_network_access == 'Disabled'
 
     - name: Create Azure Recovery Service vault with properties
       azure.azcollection.azure_rm_recoveryservicesvault:
@@ -532,6 +560,9 @@
         monitoring_settings:
           azure_monitor_alert_settings:
             alerts_for_all_job_failures: Disabled
+        redundancy_settings:
+          standard_tier_storage_redundancy: GeoRedundant
+          cross_region_restore: Enabled
       register: output
 
     - name: Assert that the vault is created with the properties
@@ -541,6 +572,8 @@
           - output.state.properties.security_settings.soft_delete_settings.soft_delete_state == 'AlwaysON'
           - output.state.properties.security_settings.soft_delete_settings.soft_delete_retention_period_in_days == 21
           - output.state.properties.monitoring_settings.azure_monitor_alert_settings.alerts_for_all_job_failures == 'Disabled'
+          - output.state.properties.redundancy_settings.standard_tier_storage_redundancy == 'GeoRedundant'
+          - output.state.properties.redundancy_settings.cross_region_restore == 'Enabled'
 
     - name: Create Azure Recovery Service vault with properties (idempotent)
       azure.azcollection.azure_rm_recoveryservicesvault:
@@ -554,6 +587,9 @@
         monitoring_settings:
           azure_monitor_alert_settings:
             alerts_for_all_job_failures: Disabled
+        redundancy_settings:
+          standard_tier_storage_redundancy: GeoRedundant
+          cross_region_restore: Enabled
       register: output
 
     - name: Assert that output has no changed
@@ -608,7 +644,7 @@
         that:
           - output is changed
           - output.state is none
-          - output_again is succeeded
+          - output_again is not changed
           - (name_rpfx ~ '2') not in (vaults.recoveryservicesvaults | map(attribute='name') | list)
 
     - name: Delete Azure Recovery Service vault
