@@ -1,0 +1,283 @@
+- name: Create test resource group
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-dapr"
+    location: eastus2
+
+- name: For dapr component coverage
+  block:
+    - name: Prepare random suffix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+      run_once: true
+
+    - name: Set derived facts
+      ansible.builtin.set_fact:
+        env_name: "env-dapr-{{ rpfx }}"
+        component_name: "statestore-{{ rpfx }}"
+
+    - name: Create Log Analytics workspace
+      azure.azcollection.azure_rm_loganalyticsworkspace:
+        resource_group: "{{ resource_group }}-dapr"
+        name: "law-dapr-{{ rpfx }}"
+        location: eastus2
+        sku: per_gb2018
+        retention_in_days: 30
+      register: law
+
+    - name: Fetch workspace shared keys
+      azure.azcollection.azure_rm_loganalyticsworkspace_info:
+        resource_group: "{{ resource_group }}-dapr"
+        name: "law-dapr-{{ rpfx }}"
+        show_shared_keys: true
+      register: law_keys
+
+    - name: Create managed environment
+      azure.azcollection.azure_rm_containerappenvironment:
+        resource_group: "{{ resource_group }}-dapr"
+        name: "{{ env_name }}"
+        location: eastus2
+        app_logs_configuration:
+          destination: log-analytics
+          log_analytics_configuration:
+            customer_id: "{{ law.customer_id }}"
+            shared_key: "{{ law_keys.workspaces[0].shared_keys.primary_shared_key }}"
+        workload_profiles:
+          - name: Consumption
+            workload_profile_type: Consumption
+        public_network_access: Enabled
+      register: env
+
+    - name: Assert environment created
+      ansible.builtin.assert:
+        that:
+          - env.state.id is defined
+          - env.state.provisioning_state is defined
+
+    - name: Component create (check mode)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        component_type: state.azure.blobstorage
+        version: v1
+        init_timeout: 30s
+        metadata:
+          - name: accountName
+            value: integrationstorage
+          - name: containerName
+            value: dapr-state
+          - name: accountKey
+            secret_ref: storage-account-key
+        secrets:
+          - name: storage-account-key
+            value: integration-secret-value
+        scopes:
+          - myapp
+      check_mode: true
+      register: component_check
+
+    - name: Assert component check mode changed
+      ansible.builtin.assert:
+        that:
+          - component_check is changed
+
+    - name: Component create
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        component_type: state.azure.blobstorage
+        version: v1
+        init_timeout: 30s
+        metadata:
+          - name: accountName
+            value: integrationstorage
+          - name: containerName
+            value: dapr-state
+          - name: accountKey
+            secret_ref: storage-account-key
+        secrets:
+          - name: storage-account-key
+            value: integration-secret-value
+        scopes:
+          - myapp
+      register: component
+
+    - name: Assert component created
+      ansible.builtin.assert:
+        that:
+          - component is changed
+          - component.daprcomponent.component_type == 'state.azure.blobstorage'
+          - component.daprcomponent.version == 'v1'
+          - component.daprcomponent.init_timeout == '30s'
+          - component.daprcomponent.scopes == ['myapp']
+          - component.daprcomponent.secrets | length == 1
+          - component.daprcomponent.secrets[0].name == 'storage-account-key'
+          - component.daprcomponent.secrets[0].value is not defined
+          - component.daprcomponent.metadata | selectattr('name', 'equalto', 'accountName') | list | length == 1
+          - component.daprcomponent.metadata | selectattr('name', 'equalto', 'accountKey') | map(attribute='secret_ref') | list == ['storage-account-key']
+
+    - name: Component create (idempotence)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        component_type: state.azure.blobstorage
+        version: v1
+        init_timeout: 30s
+        metadata:
+          - name: accountName
+            value: integrationstorage
+          - name: containerName
+            value: dapr-state
+          - name: accountKey
+            secret_ref: storage-account-key
+        secrets:
+          - name: storage-account-key
+            value: integration-secret-value
+        scopes:
+          - myapp
+      register: component_idem
+
+    - name: Assert component create idempotent
+      ansible.builtin.assert:
+        that:
+          - component_idem is not changed
+
+    - name: Get component by name
+      azure.azcollection.azure_rm_containerappdaprcomponent_info:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+      register: component_single
+
+    - name: Assert single component fetched
+      ansible.builtin.assert:
+        that:
+          - component_single.daprcomponents | length == 1
+          - component_single.daprcomponents[0].name == component_name
+          - component_single.daprcomponents[0].secrets[0].value is not defined
+
+    - name: Get component with secret values
+      azure.azcollection.azure_rm_containerappdaprcomponent_info:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        show_secrets: true
+      register: component_secrets
+
+    - name: Assert secret values fetched
+      ansible.builtin.assert:
+        that:
+          # the value was fetched (a value string came back) and was registered
+          # with Ansible's no-log redaction pool, so the result carries the
+          # redaction placeholder rather than the clear text value
+          - component_secrets.daprcomponents[0].secrets | selectattr('name', 'equalto', 'storage-account-key') | list | length == 1
+          - component_secrets.daprcomponents[0].secrets | selectattr('name', 'equalto', 'storage-account-key') | map(attribute='value') | list | first is not none
+          - component_secrets.daprcomponents[0].secrets | selectattr('name', 'equalto', 'storage-account-key') | map(attribute='value') | list | first != 'integration-secret-value'
+
+    - name: List components in the environment
+      azure.azcollection.azure_rm_containerappdaprcomponent_info:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+      register: component_list
+
+    - name: Assert component listed
+      ansible.builtin.assert:
+        that:
+          - component_list.daprcomponents | selectattr('name', 'equalto', component_name) | list | length == 1
+
+    - name: Update component scopes (secrets resupplied)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        scopes:
+          - myapp
+          - otherapp
+        secrets:
+          - name: storage-account-key
+            value: integration-secret-value
+      register: component_update
+
+    - name: Assert scopes updated
+      ansible.builtin.assert:
+        that:
+          - component_update is changed
+          - component_update.daprcomponent.scopes | length == 2
+          # fields not resupplied are carried forward
+          - component_update.daprcomponent.component_type == 'state.azure.blobstorage'
+          - component_update.daprcomponent.metadata | length == 3
+
+    - name: Update component without resupplying secrets (must fail)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+      ignore_errors: true
+      register: component_no_secrets
+
+    - name: Assert missing secrets update failed clearly
+      ansible.builtin.assert:
+        that:
+          - component_no_secrets is failed
+          - "'resupply secrets' in component_no_secrets.msg"
+
+    - name: Component delete (check mode)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        state: absent
+      check_mode: true
+      register: component_delete_check
+
+    - name: Assert component delete check mode changed
+      ansible.builtin.assert:
+        that:
+          - component_delete_check is changed
+
+    - name: Component delete
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        state: absent
+      register: component_delete
+
+    - name: Assert component deleted
+      ansible.builtin.assert:
+        that:
+          - component_delete is changed
+
+    - name: Component delete (idempotence)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        state: absent
+      register: component_delete_idem
+
+    - name: Assert component delete idempotent
+      ansible.builtin.assert:
+        that:
+          - component_delete_idem is not changed
+
+    - name: Get deleted component by name
+      azure.azcollection.azure_rm_containerappdaprcomponent_info:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+      register: component_gone
+
+    - name: Assert deleted component not found
+      ansible.builtin.assert:
+        that:
+          - component_gone.daprcomponents | length == 0
+
+  always:
+    - name: Force delete test resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-dapr"
+        force_delete_nonempty: true
+        state: absent
