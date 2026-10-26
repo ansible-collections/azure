@@ -111,7 +111,12 @@
 # apt install -y azcmagent=<version>, and apt refuses to downgrade a package
 # non-interactively, so the script would fail. The removal is safe there
 # because /var/opt/azcmagent with the connection state is not owned by the
-# deb package, so the host stays connected across the reinstall.
+# deb package, so the host stays connected across the reinstall. The deb
+# prerm also removes the Guest Configuration agent directories
+# (/opt/GC_Service and /opt/GC_Ext); the reinstall's postinst restores and
+# re-enables both agents from the package payload, and the extension
+# payloads in /var/lib/GuestConfig are kept because the package is removed
+# without purging.
 # RPM based distributions downgrade in place instead: removing the package
 # would lose the connection state (rpm saves the connected agentconfig.json
 # as agentconfig.json.rpmsave and the reinstall lays down the package

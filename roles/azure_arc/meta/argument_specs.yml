@@ -81,6 +81,12 @@ argument_specs:
             a newer one), and RPM based Linux hosts downgrade in place. The
             connection state is kept in all cases, so the host stays
             connected.
+          - On Debian/Ubuntu the pre-downgrade package removal also removes
+            the Guest Configuration agent directories (/opt/GC_Service and
+            /opt/GC_Ext) via the package's prerm; installing the older
+            version restores and re-enables both agents from the package
+            payload, and the extension payloads in /var/lib/GuestConfig are
+            kept because the package is removed without purging.
         required: false
       altdownload:
         description:
