@@ -62,9 +62,15 @@ options:
         description:
             - Collection of secrets used by the Dapr component. Secret values
               are referenced from I(metadata) entries by secret name.
-            - Secret values are write-only and never returned by Azure, so an
-              update that changes other fields must resupply I(secrets) - the
-              module fails instead of silently dropping existing secrets.
+            - Each entry is an inline C(name)/I(value) pair. Azure Key Vault
+              references are not supported for Dapr component secrets (the
+              service rejects I(keyVaultUrl) with DaprComponentSecretNull);
+              to consume Key Vault secrets, deploy a
+              C(secretstores.azure.keyvault) Dapr component instead.
+            - Inline secret values are write-only and never returned by Azure,
+              so an update of a component that has secrets must resupply them
+              when the update changes anything - the module fails instead of
+              silently dropping them.
             - Pass an empty list to remove all secrets.
         type: list
         elements: dict
@@ -114,10 +120,34 @@ options:
         choices:
             - present
             - absent
+    update_secrets:
+        description:
+            - When I(secrets) is sent to Azure for an existing component.
+            - Inline secret values are write-only and cannot be compared
+              against the stored values, so a run that only changes a secret
+              value is not detected as a change.
+            - With C(on_create) (the default), I(secrets) is included when the
+              component is created and when an update is triggered by other
+              changes, but a run that only supplies I(secrets) does not update
+              the component.
+            - With C(always), supplying I(secrets) always triggers an update,
+              which rotates the secret values of the existing component.
+        type: str
+        default: on_create
+        choices:
+            - on_create
+            - always
 notes:
     - On update, fields that are omitted are carried forward from the existing
-      component; secret values are write-only, so an update of a component that
-      has secrets must resupply I(secrets) and the module fails otherwise.
+      component. Secret values are write-only, so an update of a component
+      that has secrets must resupply I(secrets) when the update changes
+      anything, and the module fails otherwise. Use I(update_secrets=always)
+      to rotate secret values.
+    - Azure Key Vault references are not supported for Dapr component secrets
+      (the service rejects them with DaprComponentSecretNull). To consume Key
+      Vault secrets, deploy a C(secretstores.azure.keyvault) Dapr component
+      with the vault name in I(metadata) and give the environment's or apps'
+      managed identity access to the vault.
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -177,6 +207,16 @@ EXAMPLES = '''
       - name: storage-account-key
         value: "{{ vault_storage_account_key }}"
 
+- name: Rotate the secret value of the state store
+  azure.azcollection.azure_rm_containerappdaprcomponent:
+    resource_group: myResourceGroup
+    environment_name: myenvironment
+    name: statestore
+    secrets:
+      - name: storage-account-key
+        value: "{{ vault_storage_account_key }}"
+    update_secrets: always
+
 - name: Delete the pub/sub component
   azure.azcollection.azure_rm_containerappdaprcomponent:
     resource_group: myResourceGroup
@@ -205,6 +245,9 @@ daprcomponent:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.serialization import as_attribute_dict
+    from azure.mgmt.appcontainers.models import (
+        DaprComponent, DaprComponentProperties, DaprMetadata, Secret,
+    )
 except ImportError:
     pass
 
@@ -244,6 +287,7 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
             scopes=dict(type='list', elements='str'),
             secret_store_component=dict(type='str', no_log=False),
             state=dict(type='str', default='present', choices=['present', 'absent']),
+            update_secrets=dict(type='str', default='on_create', choices=['on_create', 'always'], no_log=False),
         )
 
         self.resource_group = None
@@ -258,6 +302,7 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
         self.scopes = None
         self.secret_store_component = None
         self.state = None
+        self.update_secrets = None
 
         self.results = dict(changed=False)
 
@@ -292,21 +337,35 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
                 self.results['daprcomponent'] = self._finalize(self.format_body(body))
             return self.results
 
-        # Update: secret values are write-only and cannot be carried forward,
-        # so an update of a component that has secrets must resupply them.
-        if self.secrets is None and existing.get('secrets'):
-            self.fail("dapr component '{0}' has secrets whose values are write-only; "
-                      "resupply secrets so they are not dropped by the update".format(self.name))
-
+        # Update: build the full-replace PUT body, carrying forward readable
+        # fields the user omitted (including Key Vault secret references).
         body = self._merge_existing(existing)
-        if not self._is_current(body, existing):
-            self.results['changed'] = True
-            if not self.check_mode:
-                self.results['daprcomponent'] = self.create_update_resource(body)
-            else:
-                self.results['daprcomponent'] = self._finalize(self.format_body(body))
-        else:
+        put_needed = not self._is_current(body, existing)
+
+        # Inline secret values are write-only and cannot be compared, so a
+        # run that only supplies secrets is not detected as a change;
+        # update_secrets always forces the PUT to rotate the values.
+        if not put_needed and self.secrets is not None and self.update_secrets == 'always':
+            put_needed = True
+
+        if not put_needed:
             self.results['daprcomponent'] = existing
+            return self.results
+
+        # Secret values are write-only and cannot be carried forward; fail
+        # when the update would drop them instead of silently removing the
+        # secrets.
+        if self.secrets is None and existing.get('secrets'):
+            dropped = [s.get('name') for s in existing['secrets']]
+            self.fail("dapr component '{0}' has inline secret(s) {1} whose values are "
+                      "write-only and cannot be carried forward; resupply secrets so "
+                      "they are not dropped by the update".format(self.name, dropped))
+
+        self.results['changed'] = True
+        if not self.check_mode:
+            self.results['daprcomponent'] = self.create_update_resource(body)
+        else:
+            self.results['daprcomponent'] = self._finalize(self.format_body(body))
         return self.results
 
     def get_resource(self):
@@ -371,8 +430,10 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
     def _merge_existing(self, existing):
         """Full-replace PUT body: carry forward readable fields the user omitted.
 
-        Secret values are write-only, so I(secrets) is never carried forward;
-        the caller has already failed when that would drop existing secrets.
+        Secret values are write-only, so I(secrets) is never carried forward
+        into a valid PUT body; the caller fails at PUT time when that would
+        drop existing secrets. The carried entries keep the secret names so
+        the idempotence comparison still matches.
         """
         body = {k: copy.deepcopy(v) for k, v in existing.items()
                 if k not in READ_ONLY_FIELDS and v is not None}
@@ -380,43 +441,27 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
         return body
 
     def _build_envelope(self, body):
-        """Build the camelCase ARM wire envelope from the snake_case body.
+        """Build the SDK model envelope from the snake_case body.
 
-        The envelope is a plain dict, matching
-        U(azure.mgmt.appcontainers.types.DaprComponent): in SDK 5.0.0 the
-        U(models.DaprSecret) model is a response-only type (its fields have
-        read visibility), so a model-based envelope would be serialized by the
-        client with the secrets silently emptied.
+        The secrets use the full Secret model (inline values or Azure Key
+        Vault references with the SDK handling the camelCase names). The
+        DaprSecret model is the read-only response type of the listSecrets
+        action and must not be used for requests.
         """
-        properties = dict()
-        if body.get('component_type') is not None:
-            properties['componentType'] = body['component_type']
-        if body.get('version') is not None:
-            properties['version'] = body['version']
-        if body.get('ignore_errors') is not None:
-            properties['ignoreErrors'] = body['ignore_errors']
-        if body.get('init_timeout') is not None:
-            properties['initTimeout'] = body['init_timeout']
-        if body.get('secret_store_component') is not None:
-            properties['secretStoreComponent'] = body['secret_store_component']
-        if body.get('secrets') is not None:
-            properties['secrets'] = [{k: v for k, v in s.items() if v is not None}
-                                     for s in body['secrets']]
-        if body.get('metadata') is not None:
-            # The module argument spec keeps snake_case keys; the ARM wire
-            # format expects secretRef.
-            metadata = list()
-            for m in body['metadata']:
-                entry = dict(name=m['name'])
-                if m.get('value') is not None:
-                    entry['value'] = m['value']
-                if m.get('secret_ref') is not None:
-                    entry['secretRef'] = m['secret_ref']
-                metadata.append(entry)
-            properties['metadata'] = metadata
-        if body.get('scopes') is not None:
-            properties['scopes'] = body['scopes']
-        return dict(properties=properties)
+        return DaprComponent(
+            properties=DaprComponentProperties(
+                component_type=body.get('component_type'),
+                version=body.get('version'),
+                ignore_errors=body.get('ignore_errors'),
+                init_timeout=body.get('init_timeout'),
+                secret_store_component=body.get('secret_store_component'),
+                secrets=[Secret(**{k: v for k, v in s.items() if v is not None})
+                         for s in (body.get('secrets') or [])] or None,
+                metadata=[DaprMetadata(**{k: v for k, v in m.items() if v is not None})
+                          for m in (body.get('metadata') or [])] or None,
+                scopes=body.get('scopes'),
+            ),
+        )
 
     def _is_current(self, body, existing):
         # Compare the update body against the fetched state, stripping the

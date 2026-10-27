@@ -209,11 +209,30 @@
           - component_update.daprcomponent.component_type == 'state.azure.blobstorage'
           - component_update.daprcomponent.metadata | length == 3
 
-    - name: Update component without resupplying secrets (must fail)
+    - name: Re-run with the same scopes and secrets omitted (no update needed)
       azure.azcollection.azure_rm_containerappdaprcomponent:
         resource_group: "{{ resource_group }}-dapr"
         environment_name: "{{ env_name }}"
         name: "{{ component_name }}"
+        scopes:
+          - myapp
+          - otherapp
+      register: component_noop
+
+    - name: Assert no update is needed and the run does not fail
+      ansible.builtin.assert:
+        that:
+          - component_noop is not changed
+          - component_noop is not failed
+
+    - name: Update component scopes without resupplying secrets (must fail)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        scopes:
+          - myapp
+          - yetanotherapp
       ignore_errors: true
       register: component_no_secrets
 
@@ -222,6 +241,49 @@
         that:
           - component_no_secrets is failed
           - "'resupply secrets' in component_no_secrets.msg"
+
+    - name: Rotate the secret value (update_secrets always)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        secrets:
+          - name: storage-account-key
+            value: integration-secret-value-2
+        update_secrets: always
+      register: component_rotate
+
+    - name: Assert rotation changed
+      ansible.builtin.assert:
+        that:
+          - component_rotate is changed
+
+    - name: Read the component's secrets with the listSecrets action
+      azure.azcollection.azure_rm_resource:
+        url: "{{ component.daprcomponent.id }}/listSecrets"
+        api_version: "2026-01-01"
+        method: POST
+      register: rotated_secrets
+
+    - name: Assert the rotated value is stored
+      ansible.builtin.assert:
+        that:
+          - rotated_secrets.response.value | selectattr('name', 'equalto', 'storage-account-key') | map(attribute='value') | list == ['integration-secret-value-2']
+
+    - name: Re-run with the rotated value without update_secrets (idempotence)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        secrets:
+          - name: storage-account-key
+            value: integration-secret-value-2
+      register: component_rotate_idem
+
+    - name: Assert rotation idempotent without update_secrets
+      ansible.builtin.assert:
+        that:
+          - component_rotate_idem is not changed
 
     - name: Component delete (check mode)
       azure.azcollection.azure_rm_containerappdaprcomponent:
