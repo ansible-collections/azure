@@ -211,6 +211,8 @@ action_groups:
     - azure.azcollection.azure_rm_loganalyticsworkspace_info
     - azure.azcollection.azure_rm_manageddisk
     - azure.azcollection.azure_rm_manageddisk_info
+    - azure.azcollection.azure_rm_managedredis
+    - azure.azcollection.azure_rm_managedredis_info
     - azure.azcollection.azure_rm_managementgroup
     - azure.azcollection.azure_rm_managementgroup_info
     - azure.azcollection.azure_rm_ml_batch_deployment

@@ -146,6 +146,7 @@ AZURE_API_PROFILES = {
         'HybridComputeManagementClient': 'latest',
         'CognitiveServicesManagementClient': 'latest',
         'AzureDatabricksManagementClient': 'latest',
+        'RedisEnterpriseManagementClient': 'latest',
     },
     '2019-03-01-hybrid': {
         'StorageManagementClient': '2017-10-01',
@@ -296,6 +297,7 @@ try:
     from azure.mgmt.databricks import AzureDatabricksManagementClient
     import azure.mgmt.databricks.models as DatabricksModels
     from azure.mgmt.dataprotection import DataProtectionMgmtClient
+    from azure.mgmt.redisenterprise import RedisEnterpriseManagementClient
 
 except ImportError as exc:
     AZURE_IMPORT_ERROR = traceback.format_exc()
@@ -459,6 +461,7 @@ class AzureRMModuleBase(object):
         self._cognitive_services_management_client = None
         self._databricks_client = None
         self._dataprotection_client = None
+        self._redisenterprise_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1532,6 +1535,14 @@ class AzureRMModuleBase(object):
             self._dataprotection_client = self.get_mgmt_svc_client(DataProtectionMgmtClient,
                                                                    base_url=self._cloud_environment.endpoints.resource_manager)
         return self._dataprotection_client
+
+    @property
+    def redisenterprise_client(self):
+        self.log('Getting redis enterprise client')
+        if not self._redisenterprise_client:
+            self._redisenterprise_client = self.get_mgmt_svc_client(RedisEnterpriseManagementClient,
+                                                                    base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._redisenterprise_client
 
     @property
     def recovery_services_backup_models(self):
