@@ -22,6 +22,7 @@ Role Variables
   - * **hostname**: The hostname of the proxy server.
   - * **port**: The port that the proxy server is listening on.
 * **azure_arc_log_enabled**: Log success / failure to Azure for assistance with debugging (true by default, set to false to disable)
+* **azure_arc_private_link_scope**: Full resource ID to the private link scope. Default is none
 
 Limitations
 ------------
