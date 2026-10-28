@@ -338,7 +338,7 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
             return self.results
 
         # Update: build the full-replace PUT body, carrying forward readable
-        # fields the user omitted (including Key Vault secret references).
+        # fields the user omitted.
         body = self._merge_existing(existing)
         put_needed = not self._is_current(body, existing)
 
@@ -443,8 +443,9 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
     def _build_envelope(self, body):
         """Build the SDK model envelope from the snake_case body.
 
-        The secrets use the full Secret model (inline values or Azure Key
-        Vault references with the SDK handling the camelCase names). The
+        The secrets use the Secret model with inline name/value pairs; Azure
+        rejects Key Vault references for Dapr component secrets
+        (DaprComponentSecretNull), so there is nothing else to carry. The
         DaprSecret model is the read-only response type of the listSecrets
         action and must not be used for requests.
         """
@@ -469,8 +470,15 @@ class AzureRMContainerAppDaprComponent(AzureRMModuleBaseExt):
         compare = copy.deepcopy(body)
         for secret in (compare.get('secrets') or []):
             secret.pop('value', None)
+        current = copy.deepcopy(existing)
+        # Azure omits empty collections from the GET response, so removing
+        # all secrets, metadata or scopes leaves no key behind; treat a
+        # missing list as [] so those removals stay idempotent.
+        for key in ('secrets', 'metadata', 'scopes'):
+            if key in compare and current.get(key) is None:
+                current[key] = []
         result = dict(compare=[])
-        return self.default_compare({}, compare, existing, '', result)
+        return self.default_compare({}, compare, current, '', result)
 
     def format_body(self, body):
         # Check mode: shape the wire body like a fetched resource.

@@ -285,6 +285,36 @@
         that:
           - component_rotate_idem is not changed
 
+    - name: Remove all secrets and metadata (empty lists)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        secrets: []
+        metadata: []
+      register: component_lists_removed
+
+    - name: Assert removal changed
+      ansible.builtin.assert:
+        that:
+          - component_lists_removed is changed
+          - component_lists_removed.daprcomponent.secrets is not defined or component_lists_removed.daprcomponent.secrets | length == 0
+          - component_lists_removed.daprcomponent.metadata is not defined or component_lists_removed.daprcomponent.metadata | length == 0
+
+    - name: Re-run the removal (idempotence)
+      azure.azcollection.azure_rm_containerappdaprcomponent:
+        resource_group: "{{ resource_group }}-dapr"
+        environment_name: "{{ env_name }}"
+        name: "{{ component_name }}"
+        secrets: []
+        metadata: []
+      register: component_lists_removed_idem
+
+    - name: Assert removal idempotent
+      ansible.builtin.assert:
+        that:
+          - component_lists_removed_idem is not changed
+
     - name: Component delete (check mode)
       azure.azcollection.azure_rm_containerappdaprcomponent:
         resource_group: "{{ resource_group }}-dapr"
