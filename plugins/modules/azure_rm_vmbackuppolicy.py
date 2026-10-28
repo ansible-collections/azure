@@ -14,6 +14,12 @@ version_added: '1.1.0'
 short_description: Create or Delete Azure VM Backup Policy
 description:
     - Create or Delete Azure VM Backup Policy.
+deprecated:
+    removed_in: '5.0.0'
+    removed_from_collection: azure.azcollection
+    why: This module is superseded by M(azure.azcollection.azure_rm_backuppolicy), which uses the Azure SDK and supports updates,
+         check mode, time zones, instant recovery retention and separate weekly, monthly and yearly retention counts.
+    alternative: Use M(azure.azcollection.azure_rm_backuppolicy) instead.
 options:
     name:
         description:
@@ -82,7 +88,7 @@ author:
 
 EXAMPLES = '''
 - name: Create VM Backup Policy
-  azure_rm_backvmuppolicy:
+  azure_rm_vmbackuppolicy:
      name: 'myBackupPolicy'
      vault_name: 'myVault'
      resource_group: 'myResourceGroup'
@@ -93,7 +99,7 @@ EXAMPLES = '''
      count: 4
      state: present
 - name: Delete VM Backup Policy
-  azure_rm_backvmuppolicy:
+  azure_rm_vmbackuppolicy:
      name: 'myBackupPolicy'
      vault_name: 'myVault'
      resource_group: 'myResourceGroup'
@@ -312,7 +318,7 @@ class VMBackupPolicy(AzureRMModuleBaseExt):
         schedule_policy['scheduleRunDays'] = self.weekdays
 
         weekly_schedule = dict()
-        weekly_schedule['daysOfTheWeek'] = ['Monday']
+        weekly_schedule['daysOfTheWeek'] = self.weekdays
         weekly_schedule['retentionTimes'] = [self.time]
         weekly_schedule['retentionDuration'] = dict()
         weekly_schedule['retentionDuration']['count'] = self.count
