@@ -175,8 +175,9 @@ import copy
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
-# Fields Azure fills on its own on read.
-READ_ONLY_FIELDS = ('id', 'name', 'type')
+# Fields Azure fills on its own on read, plus module-only context added to the
+# formatted result. None of these belong in the ProductContract write model.
+READ_ONLY_FIELDS = ('id', 'name', 'type', 'resource_group', 'service_name')
 
 
 class AzureRMApiManagementProduct(AzureRMModuleBaseExt):
