@@ -1,0 +1,302 @@
+- name: Create test resource group
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-apimproduct"
+    location: eastus
+
+- name: For api management product coverage
+  block:
+    - name: Prepare random suffix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}"
+      run_once: true
+
+    - name: Set derived facts
+      ansible.builtin.set_fact:
+        service_name: "apim-{{ rpfx }}"
+        product_id: "starter-{{ rpfx }}"
+        api_id_1: "api1-{{ rpfx }}"
+        api_id_2: "api2-{{ rpfx }}"
+
+    # The Consumption SKU provisions in a few minutes, unlike the Developer
+    # SKU used by the other API Management targets.
+    - name: Create API management service
+      azure.azcollection.azure_rm_apimanagementservice:
+        resource_group: "{{ resource_group }}-apimproduct"
+        name: "{{ service_name }}"
+        publisher_email: user@example.com
+        publisher_name: Username
+        sku_name: Consumption
+        sku_capacity: 0
+      register: apim_service
+
+    - name: Wait for the service to be reachable
+      azure.azcollection.azure_rm_apimanagementproduct_info:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+      register: service_probe
+      until: service_probe is not failed
+      retries: 20
+      delay: 30
+
+    - name: Create the first API
+      azure.azcollection.azure_rm_apimanagement:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        api_id: "{{ api_id_1 }}"
+        display_name: test-api-1
+        description: First test API
+        service_url: 'http://testapi1.example.net/api'
+        path: "apipath1-{{ rpfx }}"
+        protocols:
+          - https
+      register: api1
+
+    - name: Assert first API created
+      ansible.builtin.assert:
+        that:
+          - api1 is changed
+
+    - name: Create the second API
+      azure.azcollection.azure_rm_apimanagement:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        api_id: "{{ api_id_2 }}"
+        display_name: test-api-2
+        description: Second test API
+        service_url: 'http://testapi2.example.net/api'
+        path: "apipath2-{{ rpfx }}"
+        protocols:
+          - https
+      register: api2
+
+    - name: Assert second API created
+      ansible.builtin.assert:
+        that:
+          - api2 is changed
+
+    - name: Product create without display_name (must fail)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+      ignore_errors: true
+      register: product_no_name
+
+    - name: Assert missing display_name failed clearly
+      ansible.builtin.assert:
+        that:
+          - product_no_name is failed
+          - "'display_name is required' in product_no_name.msg"
+
+    - name: Product create (check mode)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        display_name: Starter
+        description: Free tier
+        terms: Terms of use
+        product_state: published
+        subscription_required: false
+      check_mode: true
+      register: product_check
+
+    - name: Assert product check mode changed
+      ansible.builtin.assert:
+        that:
+          - product_check is changed
+
+    - name: Product create
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        display_name: Starter
+        description: Free tier
+        terms: Terms of use
+        product_state: published
+        subscription_required: false
+      register: product
+
+    - name: Assert product created
+      ansible.builtin.assert:
+        that:
+          - product is changed
+          - product.product.display_name == 'Starter'
+          - product.product.product_state == 'published'
+          - product.product.subscription_required == false
+          - product.product.terms == 'Terms of use'
+          - product.product.apis == []
+
+    - name: Product create (idempotence)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        display_name: Starter
+        description: Free tier
+        terms: Terms of use
+        product_state: published
+        subscription_required: false
+      register: product_idem
+
+    - name: Assert product create idempotent
+      ansible.builtin.assert:
+        that:
+          - product_idem is not changed
+
+    - name: Add both APIs to the product
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        apis:
+          - "{{ api_id_1 }}"
+          - "{{ api_id_2 }}"
+      register: product_apis
+
+    - name: Assert APIs added
+      ansible.builtin.assert:
+        that:
+          - product_apis is changed
+          - product_apis.product.apis | length == 2
+          - api_id_1 in product_apis.product.apis
+          - api_id_2 in product_apis.product.apis
+
+    - name: Re-run with the same APIs (idempotence)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        apis:
+          - "{{ api_id_2 }}"
+          - "{{ api_id_1 }}"
+      register: product_apis_idem
+
+    - name: Assert API associations idempotent
+      ansible.builtin.assert:
+        that:
+          - product_apis_idem is not changed
+          - product_apis_idem.product.apis | length == 2
+
+    - name: Remove one API from the product
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        apis:
+          - "{{ api_id_1 }}"
+      register: product_apis_removed
+
+    - name: Assert API removed
+      ansible.builtin.assert:
+        that:
+          - product_apis_removed is changed
+          - product_apis_removed.product.apis == [api_id_1]
+
+    - name: Update the product fields (carry forward check)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        display_name: Starter Plus
+        subscription_required: true
+        approval_required: true
+        subscriptions_limit: 1
+      register: product_update
+
+    - name: Assert fields updated and others carried forward
+      ansible.builtin.assert:
+        that:
+          - product_update is changed
+          - product_update.product.display_name == 'Starter Plus'
+          - product_update.product.subscription_required == true
+          - product_update.product.approval_required == true
+          - product_update.product.subscriptions_limit == 1
+          - product_update.product.terms == 'Terms of use'
+          # apis was omitted, the association is untouched
+          - product_update.product.apis == [api_id_1]
+
+    - name: Get product by id
+      azure.azcollection.azure_rm_apimanagementproduct_info:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+      register: product_single
+
+    - name: Assert single product fetched
+      ansible.builtin.assert:
+        that:
+          - product_single.products | length == 1
+          - product_single.products[0].name == product_id
+          - product_single.products[0].apis == [api_id_1]
+
+    - name: List products of the service
+      azure.azcollection.azure_rm_apimanagementproduct_info:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+      register: product_list
+
+    - name: Assert product listed
+      ansible.builtin.assert:
+        that:
+          - product_list.products | selectattr('name', 'equalto', product_id) | list | length == 1
+
+    - name: Product delete (check mode)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        state: absent
+      check_mode: true
+      register: product_delete_check
+
+    - name: Assert product delete check mode changed
+      ansible.builtin.assert:
+        that:
+          - product_delete_check is changed
+
+    - name: Product delete
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        state: absent
+      register: product_delete
+
+    - name: Assert product deleted
+      ansible.builtin.assert:
+        that:
+          - product_delete is changed
+
+    - name: Product delete (idempotence)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        state: absent
+      register: product_delete_idem
+
+    - name: Assert product delete idempotent
+      ansible.builtin.assert:
+        that:
+          - product_delete_idem is not changed
+
+    - name: Get deleted product by id
+      azure.azcollection.azure_rm_apimanagementproduct_info:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+      register: product_gone
+
+    - name: Assert deleted product not found
+      ansible.builtin.assert:
+        that:
+          - product_gone.products | length == 0
+
+  always:
+    - name: Force delete test resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-apimproduct"
+        force_delete_nonempty: true
+        state: absent
