@@ -18,12 +18,15 @@
   - azure_rm_searchskillset_info:([#2385](https://github.com/ansible-collections/azure/pull/2385))
   - azure_rm_containerappdaprcomponent:([#2396](https://github.com/ansible-collections/azure/pull/2396))
   - azure_rm_containerappdaprcomponent_info:([#2396](https://github.com/ansible-collections/azure/pull/2396))
+  - azure_rm_subscriptiondeployment:([#2389](https://github.com/ansible-collections/azure/pull/2389))
+  - azure_rm_subscriptiondeployment_info:([#2389](https://github.com/ansible-collections/azure/pull/2389))
 
 ### FEATURE ENHANCEMENT
   - requirements.txt: Update `azure-cli-core` to `2.91.0` to lift cryptography cap ([#2382](https://github.com/ansible-collections/azure/pull/2382))
   - plugins/modules/azure_rm_virtualmachinescaleset.py: Add `load_balancer_backend_pool_name` to azure_rm_virtualmachinescaleset ([#2379](https://github.com/ansible-collections/azure/pull/2379))
   - plugins/module_utils/azure_rm_search_common.py: Add shared `merge_search_update` helper for the Search modules ([#2388](https://github.com/ansible-collections/azure/pull/2388))
   - plugins/inventory/azure_rm.py: Evaluate azure_rm inventory host filters before fetching VM details ([#2391](https://github.com/ansible-collections/azure/pull/2391))
+  - plugins/modules/azure_rm_recoveryservicesvault*: Manage Recovery Services vault properties with the SDK (Note: azure_rm_recoveryservicesvaultconfig and azure_rm_recoveryservicesvaultconfig_info are deprecated and will be removed in `5.0.0`) ([#2395](https://github.com/ansible-collections/azure/pull/2395))
 
 ### BUG FIXING
   - plugins/modules/azure_rm_virtualnetwork.py: Reconcile added address prefixes in purge mode ([#2378](https://github.com/ansible-collections/azure/pull/2378))
