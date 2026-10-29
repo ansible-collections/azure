@@ -55,6 +55,7 @@ parameters:
       - "azure_rm_cognitiveservicesaccount"
       - "azure_rm_cognitiveservicesdeployment"
       - "azure_rm_containerapp"
+      - "azure_rm_containerappdaprcomponent"
       - "azure_rm_containerinstance"
       - "azure_rm_containerregistry"
       - "azure_rm_containerregistryscopemap"

@@ -219,7 +219,7 @@ class AzureRMWebAppVnetConnection(AzureRMModuleBase):
         try:
             return self.web_client.web_apps.delete_swift_virtual_network(resource_group_name=self.resource_group, name=self.name)
         except Exception as exc:
-            self.fail("Error deleting webapp vnet connection {0} (rg={1}) - {3}".format(self.name, self.resource_group, str(exc)))
+            self.fail("Error deleting webapp vnet connection {0} (rg={1}) - {2}".format(self.name, self.resource_group, str(exc)))
 
     def create_or_update_vnet_connection(self, vnet):
         try:

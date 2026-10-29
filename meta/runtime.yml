@@ -93,6 +93,8 @@ action_groups:
     - azure.azcollection.azure_rm_cognitiveservicesmodel_info
     - azure.azcollection.azure_rm_containerapp
     - azure.azcollection.azure_rm_containerapp_info
+    - azure.azcollection.azure_rm_containerappdaprcomponent
+    - azure.azcollection.azure_rm_containerappdaprcomponent_info
     - azure.azcollection.azure_rm_containerappenvironment
     - azure.azcollection.azure_rm_containerappenvironment_info
     - azure.azcollection.azure_rm_containerinstance
@@ -464,3 +466,11 @@ plugin_routing:
         warning_text: >-
           Use azure.azcollection.azure_rm_recoveryservicesvault_info and read
           recoveryservicesvaults[].properties.security_settings.soft_delete_settings instead.
+    azure_rm_vmbackuppolicy:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: Use azure.azcollection.azure_rm_backuppolicy instead.
+    azure_rm_vmbackuppolicy_info:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: Use azure.azcollection.azure_rm_backuppolicy_info instead.
