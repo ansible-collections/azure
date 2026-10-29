@@ -501,17 +501,17 @@ async def test_azure_hub_consumer_checkpoint_store_init() -> None:
 
 
 @pytest.mark.asyncio
-async def test_azure_hub_consumer_max_wait_time_default() -> None:
+async def test_azure_hub_consumer_load_balancing_interval_default() -> None:
     queue: asyncio.Queue[Any] = asyncio.Queue()
     consumer = _make_consumer(queue)
-    assert consumer.max_wait_time == 60
+    assert consumer.load_balancing_interval == 30
 
 
 @pytest.mark.asyncio
-async def test_azure_hub_consumer_max_wait_time_custom() -> None:
+async def test_azure_hub_consumer_load_balancing_interval_custom() -> None:
     queue: asyncio.Queue[Any] = asyncio.Queue()
-    consumer = _make_consumer(queue, {"azure_max_wait_time": 30})
-    assert consumer.max_wait_time == 30
+    consumer = _make_consumer(queue, {"azure_load_balancing_interval": 60})
+    assert consumer.load_balancing_interval == 60
 
 
 @pytest.mark.asyncio
@@ -534,13 +534,23 @@ async def test_azure_hub_consumer_starting_position_string_preserved() -> None:
 async def test_start_receiving_without_checkpoint_store() -> None:
     mock_client = MockEventHubConsumerClient([])
 
-    with patch(PATCH_CREDENTIAL), patch(PATCH_CLIENT, return_value=mock_client):
+    with patch(PATCH_CREDENTIAL), patch(
+        PATCH_CLIENT, return_value=mock_client
+    ) as mock_client_class:
         queue: asyncio.Queue[Any] = asyncio.Queue()
         consumer = _make_consumer(queue, {"azure_starting_position": "@latest"})
         await consumer.start_receiving()
 
         assert mock_client.receive_kwargs["starting_position"] == "@latest"
-        assert mock_client.receive_kwargs["load_balancing_interval"] == 60
+        assert "load_balancing_interval" not in mock_client.receive_kwargs
+        mock_client_class.assert_called_once_with(
+            fully_qualified_namespace="test.servicebus.windows.net",
+            eventhub_name="test_hub",
+            consumer_group="$Default",
+            credential=consumer.credential,
+            checkpoint_store=None,
+            load_balancing_interval=30,
+        )
 
 
 @pytest.mark.asyncio
@@ -564,8 +574,8 @@ async def test_start_receiving_with_checkpoint_store() -> None:
 
         await consumer.start_receiving()
 
-        assert "starting_position" not in mock_client.receive_kwargs
-        assert mock_client.receive_kwargs["load_balancing_interval"] == 60
+        assert mock_client.receive_kwargs["starting_position"] == "@latest"
+        assert "load_balancing_interval" not in mock_client.receive_kwargs
         mock_blob_store.assert_called_once_with(
             blob_account_url="https://mystorageaccount.blob.core.windows.net",
             container_name="checkpoints",
@@ -577,6 +587,7 @@ async def test_start_receiving_with_checkpoint_store() -> None:
             consumer_group="$Default",
             credential=consumer.credential,
             checkpoint_store=mock_blob_store,
+            load_balancing_interval=30,
         )
 
 

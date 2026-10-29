@@ -85,14 +85,14 @@ options:
       - Required if azure_storage_account_name is provided
     type: str
     required: false
-  azure_max_wait_time:
+  azure_load_balancing_interval:
     description:
-      - Maximum time in seconds to wait for events before checking for partition rebalancing
+      - Interval in seconds for partition load balancing checks
       - Lower values (10-30) = faster failover detection but more Azure API calls
       - Higher values (60-120) = slower failover but fewer API calls and lower costs
       - Only relevant when using load balancing (multiple consumers with same consumer group)
     type: int
-    default: 60
+    default: 30
     required: false
   feedback:
     type: bool
@@ -242,7 +242,7 @@ class AzureHubConsumer:
         self.eda_feedback_queue = args.get("eda_feedback_queue")
 
         # Load balancing configuration - lower values = faster failover
-        self.max_wait_time = int(args.get("azure_max_wait_time", 60))
+        self.load_balancing_interval = int(args.get("azure_load_balancing_interval", 30))
 
         # Blob Storage for checkpoint persistence
         self.storage_account_name = args.get("azure_storage_account_name")
@@ -349,11 +349,7 @@ class AzureHubConsumer:
             self.event_hub_namespace,
             self.event_hub_name,
             self.consumer_group,
-            (
-                self.starting_position
-                if checkpoint_store is None
-                else "from checkpoint or earliest"
-            ),
+            self.starting_position,
         )
 
         client = EventHubConsumerClient(
@@ -362,24 +358,14 @@ class AzureHubConsumer:
             consumer_group=self.consumer_group,
             credential=self.credential,
             checkpoint_store=checkpoint_store,
+            load_balancing_interval=self.load_balancing_interval,
         )
 
         # Configure receive arguments
         receiver_args = {
             "on_event": self.on_event,
-            "load_balancing_interval": self.max_wait_time,  # Controls partition rebalancing checks
+            "starting_position": self.starting_position,
         }
-
-        # IMPORTANT: Only pass starting_position when checkpoint_store is None
-        # The Azure SDK has known issues with parameter precedence (see GitHub issue #17297)
-        # where passing starting_position alongside checkpoint_store can cause the SDK to
-        # prioritize starting_position over existing checkpoints, contrary to documented behavior.
-        # By NOT passing starting_position when checkpoint_store exists, the SDK correctly:
-        # - Resumes from checkpoint if one exists
-        # - Uses SDK default (earliest) if no checkpoint exists
-        # We only pass starting_position for in-memory checkpoint mode (no checkpoint_store).
-        if checkpoint_store is None:
-            receiver_args["starting_position"] = self.starting_position
 
         async with client:
             await client.receive(**receiver_args)
