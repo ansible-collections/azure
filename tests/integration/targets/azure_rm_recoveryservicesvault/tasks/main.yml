@@ -32,6 +32,28 @@
         - '1'
         - '2'
 
+    - name: Create Azure Recovery Service vault (check mode)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        state: "present"
+        identity:
+          type: SystemAssigned
+      check_mode: true
+      register: output
+
+    - name: List Azure Recovery Service vaults after check mode create
+      azure.azcollection.azure_rm_recoveryservicesvault_info:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+      register: vaults
+
+    - name: Assert that check mode reports a change but does not create the vault
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - name_rpfx not in (vaults.recoveryservicesvaults | map(attribute='name') | list)
+
     - name: Create Azure Recovery Service vault
       azure.azcollection.azure_rm_recoveryservicesvault:
         resource_group: "{{ resource_group }}-recoveryservicevault"
@@ -46,6 +68,9 @@
       ansible.builtin.assert:
         that:
           - output is changed
+          - output.state.name == name_rpfx
+          - output.state.identity.type == 'SystemAssigned'
+          - output.response.name == name_rpfx
 
     - name: Create Azure Recovery Service vault (idempotent)
       azure.azcollection.azure_rm_recoveryservicesvault:
@@ -147,6 +172,19 @@
         that:
           - output.response.id != None
           - output.response.name != None
+          - output.recoveryservicesvaults | length == 1
+          - output.recoveryservicesvaults[0].name == name_rpfx
+
+    - name: List Azure Recovery Service vaults in the resource group
+      azure.azcollection.azure_rm_recoveryservicesvault_info:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+      register: output
+
+    - name: Assert that the vault is listed
+      ansible.builtin.assert:
+        that:
+          - output.response.value | length == output.recoveryservicesvaults | length
+          - name_rpfx in (output.recoveryservicesvaults | map(attribute='name') | list)
 
     - name: Get Azure Recovery Service Vault Config Details
       azure.azcollection.azure_rm_recoveryservicesvaultconfig_info:
@@ -196,6 +234,213 @@
           - output.properties.enhanced_security_state == "AlwaysON"
           - output.properties.soft_delete_feature_state == "AlwaysON"
           - output.properties.soft_delete_retention_period_in_days == 180
+
+    - name: Set Azure Recovery Service vault properties (check mode)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Enabled
+        security_settings:
+          soft_delete_settings:
+            soft_delete_state: AlwaysON
+            soft_delete_retention_period_in_days: 30
+          immutability_settings:
+            state: Unlocked
+        redundancy_settings:
+          standard_tier_storage_redundancy: LocallyRedundant
+          cross_region_restore: Disabled
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Enabled
+          classic_alert_settings:
+            alerts_for_critical_operations: Disabled
+      check_mode: true
+      register: output
+
+    - name: Assert that check mode reports a change
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Set Azure Recovery Service vault properties
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Enabled
+        security_settings:
+          soft_delete_settings:
+            soft_delete_state: AlwaysON
+            soft_delete_retention_period_in_days: 30
+          immutability_settings:
+            state: Unlocked
+        redundancy_settings:
+          standard_tier_storage_redundancy: LocallyRedundant
+          cross_region_restore: Disabled
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Enabled
+          classic_alert_settings:
+            alerts_for_critical_operations: Disabled
+      register: output
+
+    - name: Assert that the vault properties are applied
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.response.properties.publicNetworkAccess == 'Enabled'
+          - output.response.properties.securitySettings.softDeleteSettings.softDeleteState == 'AlwaysON'
+          - output.response.properties.securitySettings.softDeleteSettings.softDeleteRetentionPeriodInDays == 30
+          - output.response.properties.securitySettings.immutabilitySettings.state == 'Unlocked'
+          - output.response.properties.redundancySettings.standardTierStorageRedundancy == 'LocallyRedundant'
+          - output.response.properties.redundancySettings.crossRegionRestore == 'Disabled'
+          - output.response.properties.monitoringSettings.azureMonitorAlertSettings.alertsForAllJobFailures == 'Enabled'
+          - output.response.properties.monitoringSettings.classicAlertSettings.alertsForCriticalOperations == 'Disabled'
+          - output.state.properties.security_settings.soft_delete_settings.soft_delete_retention_period_in_days == 30
+          - output.state.properties.monitoring_settings.classic_alert_settings.alerts_for_critical_operations == 'Disabled'
+
+    - name: Set Azure Recovery Service vault properties (idempotent)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Enabled
+        security_settings:
+          soft_delete_settings:
+            soft_delete_state: AlwaysON
+            soft_delete_retention_period_in_days: 30
+          immutability_settings:
+            state: Unlocked
+        redundancy_settings:
+          standard_tier_storage_redundancy: LocallyRedundant
+          cross_region_restore: Disabled
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Enabled
+          classic_alert_settings:
+            alerts_for_critical_operations: Disabled
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update only the soft delete retention and disable immutability
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          soft_delete_settings:
+            soft_delete_retention_period_in_days: 40
+          immutability_settings:
+            state: Disabled
+      register: output
+
+    - name: Assert that output has changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Azure Recovery Service Vault properties
+      azure.azcollection.azure_rm_recoveryservicesvault_info:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+      register: output
+
+    - name: Assert that the vault properties are returned
+      ansible.builtin.assert:
+        that:
+          - output.response.properties.securitySettings.softDeleteSettings.softDeleteState == 'AlwaysON'
+          - output.response.properties.securitySettings.softDeleteSettings.softDeleteRetentionPeriodInDays == 40
+          - output.response.properties.securitySettings.immutabilitySettings.state == 'Disabled'
+          - output.recoveryservicesvaults | length == 1
+          - output.recoveryservicesvaults[0].properties.security_settings.soft_delete_settings.soft_delete_retention_period_in_days == 40
+          - output.recoveryservicesvaults[0].properties.security_settings.immutability_settings.state == 'Disabled'
+
+    - name: Set a time based immutability configuration
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          immutability_settings:
+            state: Unlocked
+            configuration:
+              type: TimeBased
+              duration_in_days: 30
+      register: output
+
+    - name: Assert that the immutability configuration is applied
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.security_settings.immutability_settings.state == 'Unlocked'
+          - output.state.properties.security_settings.immutability_settings.configuration.type == 'TimeBased'
+          - output.state.properties.security_settings.immutability_settings.configuration.duration_in_days == 30
+
+    - name: Set a time based immutability configuration (idempotent)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          immutability_settings:
+            state: Unlocked
+            configuration:
+              type: TimeBased
+              duration_in_days: 30
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Disable immutability
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        security_settings:
+          immutability_settings:
+            state: Disabled
+      register: output
+
+    - name: Assert that immutability is disabled
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.security_settings.immutability_settings.state == 'Disabled'
+
+    - name: Disable public network access
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Disabled
+      register: output
+
+    - name: Assert that public network access is disabled
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.public_network_access == 'Disabled'
+
+    - name: Disable public network access (idempotent)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}"
+        location: "{{ location }}"
+        public_network_access: Disabled
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
 
     - name: Update tags on recovery services vault (append=false)
       azure.azcollection.azure_rm_recoveryservicesvault:
@@ -299,6 +544,108 @@
           - not output.response.tags.TestTag2 is defined
           - output.response.tags.TestTag3 is defined
           - output.response.tags.TestTag3 == 'TestValue3'
+          - output.recoveryservicesvaults[0].properties.security_settings.soft_delete_settings.soft_delete_retention_period_in_days == 40
+          - output.recoveryservicesvaults[0].properties.monitoring_settings.classic_alert_settings.alerts_for_critical_operations == 'Disabled'
+          - output.recoveryservicesvaults[0].properties.public_network_access == 'Disabled'
+
+    - name: Create Azure Recovery Service vault with properties
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}2"
+        location: "{{ location }}"
+        security_settings:
+          soft_delete_settings:
+            soft_delete_state: AlwaysON
+            soft_delete_retention_period_in_days: 21
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Disabled
+        redundancy_settings:
+          standard_tier_storage_redundancy: GeoRedundant
+          cross_region_restore: Enabled
+      register: output
+
+    - name: Assert that the vault is created with the properties
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.security_settings.soft_delete_settings.soft_delete_state == 'AlwaysON'
+          - output.state.properties.security_settings.soft_delete_settings.soft_delete_retention_period_in_days == 21
+          - output.state.properties.monitoring_settings.azure_monitor_alert_settings.alerts_for_all_job_failures == 'Disabled'
+          - output.state.properties.redundancy_settings.standard_tier_storage_redundancy == 'GeoRedundant'
+          - output.state.properties.redundancy_settings.cross_region_restore == 'Enabled'
+
+    - name: Create Azure Recovery Service vault with properties (idempotent)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}2"
+        location: "{{ location }}"
+        security_settings:
+          soft_delete_settings:
+            soft_delete_state: AlwaysON
+            soft_delete_retention_period_in_days: 21
+        monitoring_settings:
+          azure_monitor_alert_settings:
+            alerts_for_all_job_failures: Disabled
+        redundancy_settings:
+          standard_tier_storage_redundancy: GeoRedundant
+          cross_region_restore: Enabled
+      register: output
+
+    - name: Assert that output has no changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete Azure Recovery Service vault with properties (check mode)
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}2"
+        location: "{{ location }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Get Azure Recovery Service vault with properties after check mode delete
+      azure.azcollection.azure_rm_recoveryservicesvault_info:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}2"
+      register: vaults
+
+    - name: Assert that check mode reports a change but does not delete the vault
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - vaults.recoveryservicesvaults[0].name == name_rpfx ~ '2'
+
+    - name: Delete Azure Recovery Service vault with properties
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}2"
+        location: "{{ location }}"
+        state: absent
+      register: output
+
+    - name: Delete Azure Recovery Service vault with properties again
+      azure.azcollection.azure_rm_recoveryservicesvault:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+        name: "{{ name_rpfx }}2"
+        location: "{{ location }}"
+        state: absent
+      register: output_again
+
+    - name: List Azure Recovery Service vaults after delete
+      azure.azcollection.azure_rm_recoveryservicesvault_info:
+        resource_group: "{{ resource_group }}-recoveryservicevault"
+      register: vaults
+
+    - name: Assert that the vault is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state is none
+          - output_again is not changed
+          - (name_rpfx ~ '2') not in (vaults.recoveryservicesvaults | map(attribute='name') | list)
 
     - name: Delete Azure Recovery Service vault
       azure.azcollection.azure_rm_recoveryservicesvault:

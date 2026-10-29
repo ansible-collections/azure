@@ -158,6 +158,7 @@ parameters:
       - "azure_rm_azure_rm_serviceendpointpolicy"
       - "azure_rm_azure_rm_serviceendpointpolicydefinition"
       - "azure_rm_subscription"
+      - "azure_rm_subscriptiondeployment"
       - "azure_rm_trafficmanagerprofile"
       - "azure_rm_userassignedidentity"
       - "azure_rm_virtualmachine"

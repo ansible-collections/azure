@@ -47,7 +47,7 @@
         location: Global
         enabled: true
         scopes:
-          - "{{ recovery_services_vault_output.response.id }}"
+          - "{{ recovery_services_vault_output.state.id }}"
         target_resource_type: Microsoft.RecoveryServices/vaults
         evaluation_frequency: PT1H
         window_size: P1D
@@ -91,7 +91,7 @@
         location: Global
         enabled: true
         scopes:
-          - "{{ recovery_services_vault_output.response.id }}"
+          - "{{ recovery_services_vault_output.state.id }}"
         target_resource_type: Microsoft.RecoveryServices/vaults
         evaluation_frequency: PT1H
         window_size: P1D
@@ -134,7 +134,7 @@
         location: Global
         enabled: true
         scopes:
-          - "{{ recovery_services_vault_output.response.id }}"
+          - "{{ recovery_services_vault_output.state.id }}"
         target_resource_type: Microsoft.RecoveryServices/vaults
         evaluation_frequency: PT1H
         window_size: P1D
@@ -177,7 +177,7 @@
         location: Global
         enabled: true
         scopes:
-          - "{{ recovery_services_vault_output.response.id }}"
+          - "{{ recovery_services_vault_output.state.id }}"
         target_resource_type: Microsoft.RecoveryServices/vaults
         evaluation_frequency: PT1H
         window_size: P1D
@@ -221,7 +221,7 @@
         location: Global
         enabled: true
         scopes:
-          - "{{ recovery_services_vault_output.response.id }}"
+          - "{{ recovery_services_vault_output.state.id }}"
         target_resource_type: Microsoft.RecoveryServices/vaults
         evaluation_frequency: PT1H
         window_size: P1D

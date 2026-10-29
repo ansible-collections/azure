@@ -25,6 +25,7 @@ options:
         description:
             - If this parameter is not configured, all Vaults in the resource group are listed.
             - The name of the Azure Recovery Service Vault.
+            - Azure only returns the security and redundancy settings of a vault when it is requested by name.
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -42,12 +43,23 @@ EXAMPLES = '''
   azure_rm_recoveryservicesvault_info:
     resource_group: 'myResourceGroup'
     name: 'testVault'
+  register: vault_info
+
+- name: Reuse the soft delete settings of a vault on another vault
+  azure_rm_recoveryservicesvault:
+    resource_group: 'myResourceGroup'
+    name: 'otherVault'
+    location: 'eastus'
+    security_settings:
+      soft_delete_settings: "{{ vault_info.recoveryservicesvaults[0].properties.security_settings.soft_delete_settings }}"
 '''
 
 RETURN = '''
 response:
     description:
         - The response about the current state of the recovery services vault.
+        - Deprecated, will be removed in version 5.0.0. Use RV(recoveryservicesvaults) instead, which returns the same
+          information in snake_case.
     returned: always
     type: complex
     contains:
@@ -104,114 +116,146 @@ response:
             returned: when-used
             type: dict
             sample: {'key1': 'value'}
+recoveryservicesvaults:
+    description:
+        - List of recovery services vaults, with snake_case keys.
+    returned: always
+    type: list
+    elements: dict
+    version_added: '4.2.0'
+    contains:
+        id:
+            description:
+                - Resource ID.
+            returned: always
+            type: str
+            sample: "/subscriptions/xxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.RecoveryServices/vaults/testVault"
+        name:
+            description:
+                - Name of the recovery services vault.
+            returned: always
+            type: str
+            sample: testVault
+        type:
+            description:
+                - The type of the recovery services vault.
+            returned: always
+            type: str
+            sample: "Microsoft.RecoveryServices/vaults"
+        location:
+            description:
+                - The location of the resource.
+            returned: always
+            type: str
+            sample: "eastus"
+        etag:
+            description:
+                - A unique read-only string that changes whenever the resource is updated.
+            returned: always
+            type: str
+            sample: "W/datetime'2026-10-22T02%3A44%3A27.834293Z'"
+        sku:
+            description:
+                - The SKU of the recovery services vault.
+            returned: always
+            type: dict
+            sample: {"name": "Standard"}
+        identity:
+            description:
+                - The managed identity of the recovery services vault.
+            returned: when-used
+            type: dict
+            sample: {"type": "SystemAssigned", "principal_id": "xxxxxxx", "tenant_id": "xxxxxxx"}
+        tags:
+            description:
+                - The resource tags.
+            returned: when-used
+            type: dict
+            sample: {'key1': 'value'}
+        properties:
+            description:
+                - The recovery services vault properties.
+                - The settings managed by M(azure.azcollection.azure_rm_recoveryservicesvault) use the same names as its
+                  options, for example C(properties.security_settings.soft_delete_settings).
+            returned: always
+            type: dict
+            sample: {
+                    "provisioning_state": "Succeeded",
+                    "public_network_access": "Enabled",
+                    "security_settings": {
+                        "soft_delete_settings": {
+                            "soft_delete_state": "AlwaysON",
+                            "soft_delete_retention_period_in_days": 30,
+                            "enhanced_security_state": "Enabled"
+                        }
+                    }
+                    }
 '''
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_rest import GenericRestClient
+try:
+    from azure.core.serialization import as_attribute_dict
+except ImportError:
+    # This is handled in azure_rm_common
+    pass
+
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
-import json
 
 
 class AzureRMRecoveryServicesVaultInfo(AzureRMModuleBaseExt):
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group=dict(
-                type='str',
-                required=True
-            ),
-            name=dict(
-                type='str',
-            )
+            resource_group=dict(type='str', required=True),
+            name=dict(type='str'),
         )
 
         self.resource_group = None
         self.name = None
 
-        self.body = {}
-        self.results = dict(changed=False)
-        self.mgmt_client = None
-        self.url = None
-        self.status_code = [200, 201, 202, 204]
-
-        self.query_parameters = {}
-        self.query_parameters['api-version'] = None
-        self.header_parameters = {}
-        self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
+        self.results = dict(changed=False, recoveryservicesvaults=[])
 
         super(AzureRMRecoveryServicesVaultInfo, self).__init__(derived_arg_spec=self.module_arg_spec,
                                                                supports_check_mode=True,
                                                                supports_tags=True
                                                                )
 
-    def get_api_version(self):
-        return '2020-02-02'
-
-    def get_url(self):
-        if self.name is not None:
-            return '/subscriptions/' \
-                   + self.subscription_id \
-                   + '/resourceGroups/' \
-                   + self.resource_group \
-                   + '/providers/Microsoft.RecoveryServices' \
-                   + '/vaults' + '/' \
-                   + self.name
-        else:
-            return '/subscriptions/' \
-                   + self.subscription_id \
-                   + '/resourceGroups/' \
-                   + self.resource_group \
-                   + '/providers/Microsoft.RecoveryServices' \
-                   + '/vaults'
-
     def exec_module(self, **kwargs):
-        for key in list(self.module_arg_spec.keys()):
-            if hasattr(self, key):
-                setattr(self, key, kwargs[key])
-            elif kwargs[key] is not None:
-                self.body[key] = kwargs[key]
+        for key in self.module_arg_spec:
+            setattr(self, key, kwargs[key])
 
-        self.inflate_parameters(self.module_arg_spec, self.body, 0)
+        if self.name:
+            items = self._get()
+            self.results['response'] = self._format_response(items[0])
+        else:
+            items = self._list_by_rg()
+            self.results['response'] = dict(value=[self._format_response(i) for i in items])
 
-        self.query_parameters['api-version'] = self.get_api_version()
-        self.url = self.get_url()
-        old_response = None
-        response = None
-
-        self.mgmt_client = self.get_mgmt_svc_client(GenericRestClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager)
-
-        changed = False
-        response = self.get_recovery_service_vault_info()
-
-        self.results['response'] = response
-        self.results['changed'] = changed
-
+        self.results['recoveryservicesvaults'] = [self._format(i) for i in items]
+        self.module.deprecate("The 'response' return value is deprecated, use 'recoveryservicesvaults' instead which "
+                              "returns the same information in snake_case.", version='5.0.0', collection_name='azure.azcollection')
         return self.results
 
-    def get_recovery_service_vault_info(self):
-        # self.log('Get Recovery Service Vault Details {0}'.format(self.))
+    def _get(self):
         try:
-            response = self.mgmt_client.query(
-                self.url,
-                'GET',
-                self.query_parameters,
-                self.header_parameters,
-                None,
-                self.status_code,
-                600,
-                30,
-            )
-        except Exception as e:
-            self.log('Error in fetching Azure Recovery Service Vault Details.')
-            self.fail('Error in fetching Azure Recovery Service Vault Details {0}'.format(str(e)))
+            return [self.recovery_services_client.vaults.get(
+                resource_group_name=self.resource_group,
+                vault_name=self.name,
+            )]
+        except Exception as exc:
+            self.fail("Error retrieving Recovery Service Vault {0}: {1}".format(self.name, str(exc)))
 
-        if hasattr(response, 'body'):
-            response = json.loads(response.body())
-        elif hasattr(response, 'context'):
-            response = response.context['deserialized_data']
-        else:
-            self.fail("Create or Updating fail, no match message return, return info as {0}".format(response))
+    def _list_by_rg(self):
+        try:
+            return list(self.recovery_services_client.vaults.list_by_resource_group(
+                resource_group_name=self.resource_group,
+            ))
+        except Exception as exc:
+            self.fail("Error listing Recovery Service Vaults in {0}: {1}".format(self.resource_group, str(exc)))
 
-        return response
+    def _format_response(self, item):
+        return item.as_dict(exclude_readonly=False)
+
+    def _format(self, item):
+        return as_attribute_dict(item, exclude_readonly=False)
 
 
 def main():
