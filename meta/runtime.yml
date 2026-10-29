@@ -402,6 +402,8 @@ action_groups:
     - azure.azcollection.azure_rm_subnet
     - azure.azcollection.azure_rm_subnet_info
     - azure.azcollection.azure_rm_subscription_info
+    - azure.azcollection.azure_rm_subscriptiondeployment
+    - azure.azcollection.azure_rm_subscriptiondeployment_info
     - azure.azcollection.azure_rm_tags
     - azure.azcollection.azure_rm_tags_info
     - azure.azcollection.azure_rm_trafficmanager
