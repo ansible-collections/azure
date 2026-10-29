@@ -17,6 +17,16 @@ description:
     - Most of the information here is also part of azure_rm_recoveryservicesvault_info
     - it's seperated out because of https://github.com/Azure/azure-rest-api-specs/issues/34218
 
+deprecated:
+    removed_in: '5.0.0'
+    why: >-
+        Soft delete settings are now managed through the vault API, and
+        M(azure.azcollection.azure_rm_recoveryservicesvault_info) returns the same settings.
+    alternative: >-
+        Use M(azure.azcollection.azure_rm_recoveryservicesvault_info) and read
+        C(recoveryservicesvaults[].properties.security_settings.soft_delete_settings).
+    removed_from_collection: 'azure.azcollection'
+
 options:
     vault_name:
         description:
