@@ -605,7 +605,7 @@ class AzureApiManagement(AzureRMModuleBaseExt):
                     self.to_do = Actions.Update
                 elif (self.body['properties'].get('apiVersion') is not None and
                       self.body['properties']['apiVersion'] != old_response['properties'].get('apiVersion')):
-                    self.to_do == Actions.Update
+                    self.to_do = Actions.Update
                 elif (self.body['properties'].get('isCurrent') is not None and
                       self.body['properties']['isCurrent'] != old_response['properties'].get('isCurrent')):
                     self.to_do = Actions.Update

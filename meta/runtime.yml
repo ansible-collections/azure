@@ -93,6 +93,8 @@ action_groups:
     - azure.azcollection.azure_rm_cognitiveservicesmodel_info
     - azure.azcollection.azure_rm_containerapp
     - azure.azcollection.azure_rm_containerapp_info
+    - azure.azcollection.azure_rm_containerappdaprcomponent
+    - azure.azcollection.azure_rm_containerappdaprcomponent_info
     - azure.azcollection.azure_rm_containerappenvironment
     - azure.azcollection.azure_rm_containerappenvironment_info
     - azure.azcollection.azure_rm_containerinstance
@@ -400,6 +402,8 @@ action_groups:
     - azure.azcollection.azure_rm_subnet
     - azure.azcollection.azure_rm_subnet_info
     - azure.azcollection.azure_rm_subscription_info
+    - azure.azcollection.azure_rm_subscriptiondeployment
+    - azure.azcollection.azure_rm_subscriptiondeployment_info
     - azure.azcollection.azure_rm_tags
     - azure.azcollection.azure_rm_tags_info
     - azure.azcollection.azure_rm_trafficmanager
@@ -451,3 +455,24 @@ action_groups:
     - azure.azcollection.azure_rm_webappslot
     - azure.azcollection.azure_rm_webappvnetconnection
     - azure.azcollection.azure_rm_webappvnetconnection_info
+plugin_routing:
+  modules:
+    azure_rm_recoveryservicesvaultconfig:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: >-
+          Use azure.azcollection.azure_rm_recoveryservicesvault with the security_settings.soft_delete_settings option instead.
+    azure_rm_recoveryservicesvaultconfig_info:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: >-
+          Use azure.azcollection.azure_rm_recoveryservicesvault_info and read
+          recoveryservicesvaults[].properties.security_settings.soft_delete_settings instead.
+    azure_rm_vmbackuppolicy:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: Use azure.azcollection.azure_rm_backuppolicy instead.
+    azure_rm_vmbackuppolicy_info:
+      deprecation:
+        removal_version: 5.0.0
+        warning_text: Use azure.azcollection.azure_rm_backuppolicy_info instead.
