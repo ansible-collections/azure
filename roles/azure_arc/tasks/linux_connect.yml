@@ -1,26 +1,42 @@
 ---
+- name: Initialize azure arc connect command
+  no_log: true
+  ansible.builtin.set_fact:
+    azure_arc_connect_command_argv: >-
+      azcmagent
+      connect
+      --resource-group
+      {{ azure_arc_resource_group }}
+      --tenant-id
+      {{ azure_arc_tenant_id }}
+      --location
+      {{ azure_arc_location }}
+      --subscription-id
+      {{ azure_arc_subscription_id }}
+      --cloud
+      {{ azure_arc_cloud }}
+      --tags
+      {{ azure_arc_processed_tags }}
+      --access-token
+      {{ azure_arc_access_token.access_token }}
+      --correlation-id
+      {{ azure_arc_correlation_id }}
+
+- name: Add private link args to azcmagent install script argv
+  no_log: true
+  when:
+    - azure_arc_private_link_scope is defined
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_install_script_argv: >-
+      {{ azure_arc_azcmagent_install_script_argv }}
+      --private-link-scope 
+      {{ azure_arc_private_link_scope }}
+
 - name: Use azure arc agent to connect to azure
   become: true
   ansible.builtin.command:
-    argv:
-      - azcmagent
-      - connect
-      - --resource-group
-      - "{{ azure_arc_resource_group }}"
-      - --tenant-id
-      - "{{ azure_arc_tenant_id }}"
-      - --location
-      - "{{ azure_arc_location }}"
-      - --subscription-id
-      - "{{ azure_arc_subscription_id }}"
-      - --cloud
-      - "{{ azure_arc_cloud }}"
-      - --tags
-      - "{{ azure_arc_processed_tags }}"
-      - --access-token
-      - "{{ azure_arc_access_token.access_token }}"
-      - --correlation-id
-      - "{{ azure_arc_correlation_id }}"
+    argv: 
+      - {{ azure_arc_azcmagent_install_script_argv }}
       - --json
   no_log: true
   # If this command is run, it will always change the connection status from unconnected to connected
