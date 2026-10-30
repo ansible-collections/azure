@@ -1,8 +1,7 @@
 - name: Create a new resource group for multi managed disk test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-multidisk"
-    location: westus2
-
+    location: eastus
 - name: For multi managed disk test
   block:
     # Create managed disks with missing required parameters
@@ -100,7 +99,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ item.resource_group }}"
         name: "{{ item.name }}"
-        vm_size: Standard_D2s_v3
+        vm_size: "{{ azure_test_vm_size }}"
         virtual_network: "vnet-{{ item.name }}"
         network_interfaces: "interface-{{ item.name }}"
         managed_disk_type: Standard_LRS

@@ -8,7 +8,7 @@ export ANSIBLE_INVENTORY=test.azure_rm.yml
 ansible-playbook playbooks/empty_inventory_config.yml "$@"
 
 # create vm
-ansible-playbook playbooks/setup.yml "$@"
+ansible-playbook playbooks/setup.yml -e @../../integration_config.yml "$@"
 
 # using fully qualified name
 ansible-playbook playbooks/create_inventory_config.yml "$@"  
