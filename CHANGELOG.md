@@ -27,6 +27,7 @@
   - plugins/module_utils/azure_rm_search_common.py: Add shared `merge_search_update` helper for the Search modules ([#2388](https://github.com/ansible-collections/azure/pull/2388))
   - plugins/inventory/azure_rm.py: Evaluate azure_rm inventory host filters before fetching VM details ([#2391](https://github.com/ansible-collections/azure/pull/2391))
   - plugins/modules/azure_rm_recoveryservicesvault*: Manage Recovery Services vault properties with the SDK (Note: azure_rm_recoveryservicesvaultconfig and azure_rm_recoveryservicesvaultconfig_info are deprecated and will be removed in `5.0.0`) ([#2395](https://github.com/ansible-collections/azure/pull/2395))
+  - sanity-requirements.txt: Bump pylint from `3.3.7` to `4.0.9`. ([#2402](https://github.com/ansible-collections/azure/pull/2402))
 
 ### BUG FIXING
   - plugins/modules/azure_rm_virtualnetwork.py: Reconcile added address prefixes in purge mode ([#2378](https://github.com/ansible-collections/azure/pull/2378))
