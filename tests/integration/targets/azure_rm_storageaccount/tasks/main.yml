@@ -649,7 +649,7 @@
             max_age_in_seconds: 200
         https_only: false
         kind: StorageV2
-        minimum_tls_version: 'TLS1_1'
+        minimum_tls_version: 'TLS1_2'
         network_acls:
           bypass: AzureServices
           default_action: Deny
@@ -668,7 +668,7 @@
           - output.state.allow_blob_public_access != None
           - output.state.https_only == False
           - output.state.https_only != None
-          - output.state.minimum_tls_version == 'TLS1_1'
+          - output.state.minimum_tls_version == 'TLS1_2'
           - output.state.name == storage_account_name_default
           - output.state.tags == explicit_output.state.tags
           # These tests should be valid, but is currently broken due to 'output' not containing blob_cors and network_acls.ip_rules
