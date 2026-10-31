@@ -208,6 +208,41 @@
         that:
           - results is changed
 
+    - name: Create MX records in a new record set
+      azure.azcollection.azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
+        relative_name: mail
+        zone_name: "{{ domain_name }}.com"
+        record_type: MX
+        state: present
+        records:
+          - entry: mail1.{{ domain_name }}.com
+            preference: 10
+      register: results
+
+    - name: Assert that MX record set was created with the right type
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.type == 'MX'
+
+    - name: Create NS records in a new record set
+      azure.azcollection.azure_rm_dnsrecordset:
+        resource_group: "{{ resource_group }}-dnsrecoerdset"
+        relative_name: sub
+        zone_name: "{{ domain_name }}.com"
+        record_type: NS
+        state: present
+        records:
+          - entry: ns1.{{ domain_name }}.com
+      register: results
+
+    - name: Assert that NS record set was created with the right type
+      ansible.builtin.assert:
+        that:
+          - results is changed
+          - results.state.type == 'NS'
+
     - name: Update SOA record
       azure.azcollection.azure_rm_dnsrecordset:
         resource_group: "{{ resource_group }}-dnsrecoerdset"
