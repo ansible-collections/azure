@@ -78,6 +78,12 @@ options:
               the same time. Leave unset to allow unlimited subscriptions.
             - Only valid when I(subscription_required=true).
         type: int
+    delete_subscriptions:
+        description:
+            - Delete the product's existing subscriptions when deleting the
+              product. Required to delete a product that still has
+              subscriptions.
+        type: bool
     apis:
         description:
             - Identifiers of the APIs included in this product.
@@ -99,6 +105,9 @@ options:
 notes:
     - On update, fields that are omitted are carried forward from the existing
       product.
+    - Setting I(subscription_required=false) makes the product open. The
+      service clears I(approval_required) and I(subscriptions_limit) on an
+      open product, so they cannot be set and are not carried forward.
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -195,6 +204,7 @@ class AzureRMApiManagementProduct(AzureRMModuleBaseExt):
             subscription_required=dict(type='bool'),
             approval_required=dict(type='bool'),
             subscriptions_limit=dict(type='int'),
+            delete_subscriptions=dict(type='bool'),
             apis=dict(type='list', elements='str'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
         )
@@ -209,6 +219,7 @@ class AzureRMApiManagementProduct(AzureRMModuleBaseExt):
         self.subscription_required = None
         self.approval_required = None
         self.subscriptions_limit = None
+        self.delete_subscriptions = None
         self.apis = None
         self.state = None
 
@@ -241,7 +252,7 @@ class AzureRMApiManagementProduct(AzureRMModuleBaseExt):
             if self.display_name is None:
                 self.fail("display_name is required to create product '{0}' in service "
                           "'{1}'".format(self.product_id, self.service_name))
-            body = self._build_body()
+            body = self._apply_open_product_rules(self._build_body())
             self.results['changed'] = True
             if not self.check_mode:
                 self.results['product'] = self.create_update_resource(body, create=True)
@@ -321,6 +332,7 @@ class AzureRMApiManagementProduct(AzureRMModuleBaseExt):
                 service_name=self.service_name,
                 product_id=self.product_id,
                 if_match='*',
+                delete_subscriptions=self.delete_subscriptions,
             )
         except Exception as exc:
             self.fail("Error deleting product {0}: {1}".format(self.product_id, str(exc)))
@@ -350,6 +362,21 @@ class AzureRMApiManagementProduct(AzureRMModuleBaseExt):
         body = {k: copy.deepcopy(v) for k, v in existing.items()
                 if k not in READ_ONLY_FIELDS and k != 'apis' and v is not None}
         body.update(self._build_body())
+        return self._apply_open_product_rules(body)
+
+    def _apply_open_product_rules(self, body):
+        """The service rejects approvalRequired / subscriptionsLimit unless
+        the product is protected (subscription_required=true)."""
+        if body.get('subscription_required') is False:
+            if self.approval_required is not None:
+                self.fail("approval_required can only be set when subscription_required "
+                          "is true (product '{0}' must be protected)".format(self.product_id))
+            if self.subscriptions_limit is not None:
+                self.fail("subscriptions_limit can only be set when subscription_required "
+                          "is true (product '{0}' must be protected)".format(self.product_id))
+            # The fields must not be carried forward from a protected product.
+            for key in ('approval_required', 'subscriptions_limit'):
+                body.pop(key, None)
         return body
 
     def _is_current(self, body, existing):

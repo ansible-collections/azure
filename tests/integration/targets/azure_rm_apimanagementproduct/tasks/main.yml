@@ -14,6 +14,7 @@
       ansible.builtin.set_fact:
         service_name: "apim-{{ rpfx }}"
         product_id: "starter-{{ rpfx }}"
+        product_id_2: "premium-{{ rpfx }}"
         api_id_1: "api1-{{ rpfx }}"
         api_id_2: "api2-{{ rpfx }}"
 
@@ -217,6 +218,78 @@
           # apis was omitted, the association is untouched
           - product_update.product.apis == [api_id_1]
 
+    - name: Open product with approval_required must fail
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        subscription_required: false
+        approval_required: true
+      ignore_errors: true
+      register: product_open_invalid
+
+    - name: Assert invalid open product rejected early
+      ansible.builtin.assert:
+        that:
+          - product_open_invalid is failed
+          - "'can only be set when subscription_required is true' in product_open_invalid.msg"
+
+    - name: Switch the protected product to open
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        subscription_required: false
+      register: product_open
+
+    - name: Assert product switched to open with carry-forward
+      ansible.builtin.assert:
+        that:
+          - product_open is changed
+          - product_open.product.subscription_required == false
+          - product_open.product.display_name == 'Starter Plus'
+          - product_open.product.terms == 'Terms of use'
+
+    - name: Switch to open (idempotence)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        subscription_required: false
+      register: product_open_idem
+
+    - name: Assert open product idempotent
+      ansible.builtin.assert:
+        that:
+          - product_open_idem is not changed
+
+    - name: Remove all APIs from the product
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        apis: []
+      register: product_apis_none
+
+    - name: Assert all APIs removed
+      ansible.builtin.assert:
+        that:
+          - product_apis_none is changed
+          - product_apis_none.product.apis == []
+
+    - name: Remove all APIs (idempotence)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id }}"
+        apis: []
+      register: product_apis_none_idem
+
+    - name: Assert empty apis list idempotent
+      ansible.builtin.assert:
+        that:
+          - product_apis_none_idem is not changed
+
     - name: Get product by id
       azure.azcollection.azure_rm_apimanagementproduct_info:
         resource_group: "{{ resource_group }}-apimproduct"
@@ -229,7 +302,8 @@
         that:
           - product_single.products | length == 1
           - product_single.products[0].name == product_id
-          - product_single.products[0].apis == [api_id_1]
+          - product_single.products[0].apis == []
+          - product_single.products[0].subscription_required == false
 
     - name: List products of the service
       azure.azcollection.azure_rm_apimanagementproduct_info:
@@ -241,6 +315,72 @@
       ansible.builtin.assert:
         that:
           - product_list.products | selectattr('name', 'equalto', product_id) | list | length == 1
+
+    - name: Create an unpublished protected product with auto approval
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id_2 }}"
+        display_name: Premium
+        product_state: notPublished
+        subscription_required: true
+        approval_required: false
+      register: product2
+
+    - name: Assert unpublished product created
+      ansible.builtin.assert:
+        that:
+          - product2 is changed
+          - product2.product.display_name == 'Premium'
+          - product2.product.product_state == 'notPublished'
+          - product2.product.subscription_required == true
+          - product2.product.approval_required == false
+          - product2.product.apis == []
+
+    - name: Publish the product
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id_2 }}"
+        product_state: published
+      register: product2_publish
+
+    - name: Assert product published with fields carried forward
+      ansible.builtin.assert:
+        that:
+          - product2_publish is changed
+          - product2_publish.product.product_state == 'published'
+          - product2_publish.product.display_name == 'Premium'
+          - product2_publish.product.approval_required == false
+          - product2_publish.product.subscription_required == true
+
+    - name: Delete the product with its subscriptions
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id_2 }}"
+        state: absent
+        delete_subscriptions: true
+      register: product2_delete
+
+    - name: Assert product deleted with subscriptions option
+      ansible.builtin.assert:
+        that:
+          - product2_delete is changed
+
+    - name: Delete the product with its subscriptions (idempotence)
+      azure.azcollection.azure_rm_apimanagementproduct:
+        resource_group: "{{ resource_group }}-apimproduct"
+        service_name: "{{ service_name }}"
+        product_id: "{{ product_id_2 }}"
+        state: absent
+        delete_subscriptions: true
+      register: product2_delete_idem
+
+    - name: Assert delete with subscriptions idempotent
+      ansible.builtin.assert:
+        that:
+          - product2_delete_idem is not changed
 
     - name: Product delete (check mode)
       azure.azcollection.azure_rm_apimanagementproduct:
