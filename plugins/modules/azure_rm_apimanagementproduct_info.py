@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_apimanagementproduct_info
-version_added: "4.2.0"
+version_added: "4.3.0"
 short_description: Get products in an Azure API Management service
 description:
     - Get details of a single product, or list all products in an Azure API

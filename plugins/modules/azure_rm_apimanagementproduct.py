@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_apimanagementproduct
-version_added: "4.2.0"
+version_added: "4.3.0"
 short_description: Manage a product in an Azure API Management service
 description:
     - Create, update and delete a product in an Azure API Management service.
