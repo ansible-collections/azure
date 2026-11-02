@@ -16,8 +16,8 @@ description:
     - Create, update and delete a Fleet Manager resource and manage the
       clusters that belong to it.
     - A fleet orchestrates updates of multiple Kubernetes clusters; use the
-      clusters in I(members) as rollout stages or update strategies with
-      M(azure.azcollection.azure_rm_aksfleetupdaterun) in follow-up work.
+      clusters in I(members) as rollout stages or update strategies through
+      Fleet update runs.
     - A fleet without I(hub) does not deploy a hub cluster and only provides
       multi-cluster update orchestration.
 options:
@@ -57,11 +57,6 @@ options:
                 description:
                     - DNS prefix of the hub API server.
                 required: true
-                type: str
-            kubernetes_version:
-                description:
-                    - Kubernetes version of the hub cluster. Defaults to a
-                      version supported by the service.
                 type: str
     members:
         description:
@@ -161,7 +156,7 @@ except ImportError:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
 # Hub fields Azure fills on its own on read and takes on create / update.
-HUB_RO_FIELDS = ('fqdn', 'portal_fqdn')
+HUB_RO_FIELDS = ('fqdn', 'portal_fqdn', 'kubernetes_version')
 # Identity fields Azure fills on its own on read.
 IDENTITY_RO_FIELDS = ('principal_id', 'tenant_id')
 READ_ONLY_FIELDS = ('id', 'name', 'type', 'system_data', 'provisioning_state', 'status')
@@ -180,7 +175,6 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
                 type='dict',
                 options=dict(
                     dns_prefix=dict(type='str', required=True),
-                    kubernetes_version=dict(type='str'),
                 ),
             ),
             members=dict(type='list', elements='str'),
@@ -222,7 +216,7 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
 
         if existing is None:
             if self.location is None:
-                self.location = self.get_resource_group(self.resource_group)['location']
+                self.location = self.get_resource_group(self.resource_group).location
             self.results['changed'] = True
             if not self.check_mode:
                 body = self._merge(self._body(), existing)
@@ -348,9 +342,7 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
 
     def _reconcile_members(self):
         """Align the fleet's memberships with self.members. Returns changed."""
-        clusters = [self._member_name(rid) for rid in self.members]
-        if len(set(self.members)) != len(self.members):
-            self.fail("members contains the same cluster more than once")
+        clusters = self._member_names(self.members)
 
         current = self._member_list()
         current_by_name = {member['name']: member['cluster_resource_id'] for member in current}
@@ -373,7 +365,7 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
     def _members_need_update(self):
         """Diff for check mode. Returns True when a change is needed."""
         current_by_name = {member['name']: member['cluster_resource_id'] for member in self._member_list()}
-        clusters = [self._member_name(rid) for rid in self.members]
+        clusters = self._member_names(self.members)
         for cluster_resource_id, member_name in zip(self.members, clusters):
             if current_by_name.get(member_name) != cluster_resource_id:
                 return True
@@ -384,13 +376,26 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
         return False
 
     def _member_name(self, cluster_resource_id):
-        """Derive the member name from the last segment of the cluster's
-        resource ID."""
-        parts = cluster_resource_id.rstrip('/').split('/')
-        if len(parts) >= 2 and parts[-1]:
-            return parts[-1].lower()
+        """Validate a supported cluster ARM resource ID and derive its name."""
+        parts = cluster_resource_id.strip('/').split('/')
+        if (len(parts) == 8 and
+                parts[0].lower() == 'subscriptions' and parts[1] and
+                parts[2].lower() == 'resourcegroups' and parts[3] and
+                parts[4].lower() == 'providers' and
+                ((parts[5].lower() == 'microsoft.containerservice' and
+                  parts[6].lower() == 'managedclusters') or
+                 (parts[5].lower() == 'microsoft.kubernetes' and
+                  parts[6].lower() == 'connectedclusters')) and parts[7]):
+            return parts[7].lower()
         self.fail("members must hold Azure resource IDs of Kubernetes clusters, got '{0}'".format(cluster_resource_id))
         return None
+
+    def _member_names(self, cluster_resource_ids):
+        """Return Fleet member names, rejecting IDs that collide on name."""
+        names = [self._member_name(resource_id) for resource_id in cluster_resource_ids]
+        if len(set(names)) != len(names):
+            self.fail("members contains clusters with the same name; Fleet member names must be unique")
+        return names
 
     def _add_member(self, member_name, cluster_resource_id):
         self.log("Adding member {0} to fleet {1}".format(member_name, self.name))
@@ -452,7 +457,7 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
         result = dict(item)
         result['name'] = self.name
         result['location'] = self.location or \
-            (existing.get('location') if existing else self.get_resource_group(self.resource_group)['location'])
+            (existing.get('location') if existing else self.get_resource_group(self.resource_group).location)
         if self.tags is not None:
             result['tags'] = dict(self.tags)
         if self.hub is not None:
@@ -467,7 +472,7 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
     def _member_names_for_check(self, existing):
         if self.members is None:
             return [member['name'] for member in self._member_list()]
-        return [self._member_name(rid) for rid in self.members]
+        return self._member_names(self.members)
 
     def _flatten(self, fleet):
         if fleet is None:

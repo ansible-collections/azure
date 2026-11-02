@@ -9,7 +9,6 @@
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
         location: westus3
-        fleet_location: eastus
 
     - name: Set derived facts
       ansible.builtin.set_fact:
@@ -54,7 +53,6 @@
       azure.azcollection.azure_rm_aksfleet:
         resource_group: "{{ resource_group }}-aksfleet"
         name: "{{ fleet_name }}"
-        location: "{{ fleet_location }}"
         tags:
           env: test
       check_mode: true
@@ -64,6 +62,7 @@
       ansible.builtin.assert:
         that:
           - fleet_check is changed
+          - fleet_check.fleet.location == location
 
     - name: Check there is no fleet created
       azure.azcollection.azure_rm_aksfleet_info:
@@ -80,7 +79,6 @@
       azure.azcollection.azure_rm_aksfleet:
         resource_group: "{{ resource_group }}-aksfleet"
         name: "{{ fleet_name }}"
-        location: "{{ fleet_location }}"
         tags:
           env: test
       register: fleet
@@ -90,7 +88,7 @@
         that:
           - fleet is changed
           - fleet.fleet.name == fleet_name
-          - fleet.fleet.location == fleet_location
+          - fleet.fleet.location == location
           - "fleet.fleet.tags == {'env': 'test'}"
           - fleet.fleet.provisioning_state == "Succeeded"
           - fleet.fleet.members == []
@@ -99,7 +97,6 @@
       azure.azcollection.azure_rm_aksfleet:
         resource_group: "{{ resource_group }}-aksfleet"
         name: "{{ fleet_name }}"
-        location: "{{ fleet_location }}"
         tags:
           env: test
       register: fleet_idem
@@ -108,6 +105,35 @@
       ansible.builtin.assert:
         that:
           - fleet_idem is not changed
+
+    - name: Add a managed hub to the fleet
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        hub:
+          dns_prefix: "hub{{ rpfx }}"
+      register: fleet_hub
+
+    - name: Assert hub created with service-selected Kubernetes version
+      ansible.builtin.assert:
+        that:
+          - fleet_hub is changed
+          - fleet_hub.fleet.hub_profile.dns_prefix == 'hub' ~ rpfx
+          - fleet_hub.fleet.hub_profile.fqdn is defined
+          - fleet_hub.fleet.hub_profile.kubernetes_version is defined
+
+    - name: Reapply the hub configuration (idempotence)
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        hub:
+          dns_prefix: "hub{{ rpfx }}"
+      register: fleet_hub_idem
+
+    - name: Assert hub configuration idempotent
+      ansible.builtin.assert:
+        that:
+          - fleet_hub_idem is not changed
 
     - name: Fleet location is immutable (must fail)
       azure.azcollection.azure_rm_aksfleet:
@@ -151,6 +177,8 @@
         that:
           - fleet_tags is changed
           - "fleet_tags.fleet.tags == {'updated': 'tag'}"
+          - fleet_tags.fleet.hub_profile.dns_prefix == 'hub' ~ rpfx
+          - fleet_tags.fleet.hub_profile.kubernetes_version is defined
 
     - name: Update tags (idempotence)
       azure.azcollection.azure_rm_aksfleet:
@@ -169,6 +197,22 @@
       # The subscription is embedded in the fleet's own resource id.
       ansible.builtin.set_fact:
         member_id: "/subscriptions/{{ fleet.fleet.id.split('/')[2] }}/resourceGroups/{{ resource_group }}-aksfleet/providers/Microsoft.ContainerService/managedClusters/{{ cluster_name }}"
+
+    - name: Reject member clusters with colliding Fleet member names
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        members:
+          - "{{ member_id }}"
+          - "/subscriptions/{{ fleet.fleet.id.split('/')[2] }}/resourceGroups/another-resource-group/providers/Microsoft.ContainerService/managedClusters/{{ cluster_name }}"
+      ignore_errors: true
+      register: duplicate_member_names
+
+    - name: Assert colliding member names rejected before reconciliation
+      ansible.builtin.assert:
+        that:
+          - duplicate_member_names is failed
+          - "'same name' in duplicate_member_names.msg"
 
     - name: Register the member cluster
       azure.azcollection.azure_rm_aksfleet:
@@ -198,6 +242,30 @@
         that:
           - fleet_member_idem is not changed
 
+    - name: Get the fleet with its member
+      azure.azcollection.azure_rm_aksfleet_info:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+      register: fleet_single
+
+    - name: Assert single fleet fetched
+      ansible.builtin.assert:
+        that:
+          - fleet_single.fleets | length == 1
+          - fleet_single.fleets[0].name == fleet_name
+          - fleet_single.fleets[0].members | length == 1
+          - fleet_single.fleets[0].members[0].cluster_resource_id == member_id
+
+    - name: List all fleets of the resource group
+      azure.azcollection.azure_rm_aksfleet_info:
+        resource_group: "{{ resource_group }}-aksfleet"
+      register: fleet_list
+
+    - name: Assert fleet listed
+      ansible.builtin.assert:
+        that:
+          - fleet_list.fleets | selectattr('name', 'equalto', fleet_name) | list | length == 1
+
     - name: Remove the member from the fleet
       azure.azcollection.azure_rm_aksfleet:
         resource_group: "{{ resource_group }}-aksfleet"
@@ -222,44 +290,6 @@
       ansible.builtin.assert:
         that:
           - fleet_member_empty_idem is not changed
-
-    - name: Register the member cluster again
-      azure.azcollection.azure_rm_aksfleet:
-        resource_group: "{{ resource_group }}-aksfleet"
-        name: "{{ fleet_name }}"
-        members:
-          - "{{ member_id }}"
-      register: fleet_member_readded
-
-    - name: Assert member registered again
-      ansible.builtin.assert:
-        that:
-          - fleet_member_readded is changed
-          - fleet_member_readded.fleet.members | length == 1
-
-    - name: Get the fleet with its member
-      azure.azcollection.azure_rm_aksfleet_info:
-        resource_group: "{{ resource_group }}-aksfleet"
-        name: "{{ fleet_name }}"
-      register: fleet_single
-
-    - name: Assert single fleet fetched
-      ansible.builtin.assert:
-        that:
-          - fleet_single.fleets | length == 1
-          - fleet_single.fleets[0].name == fleet_name
-          - fleet_single.fleets[0].members | length == 1
-          - fleet_single.fleets[0].members[0].cluster_resource_id == member_id
-
-    - name: List all fleets of the resource group
-      azure.azcollection.azure_rm_aksfleet_info:
-        resource_group: "{{ resource_group }}-aksfleet"
-      register: fleet_list
-
-    - name: Assert fleet listed
-      ansible.builtin.assert:
-        that:
-          - fleet_list.fleets | selectattr('name', 'equalto', fleet_name) | list | length == 1
 
     - name: Fleet delete (check mode)
       azure.azcollection.azure_rm_aksfleet:
