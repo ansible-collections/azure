@@ -1,0 +1,6 @@
+---
+# Shared variables for all integration targets. ansible-test loads this file
+# automatically for role targets; runme.sh targets pass it via
+# `-e @../../integration_config.yml`.
+azure_test_vm_size: Standard_D2ds_v4  # 2 vCPUs + 8GiB
+azure_test_vm_size_large: Standard_D4ds_v4  # 4 vCPUs + 16GiB

@@ -67,7 +67,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-vmextension"
         name: testVM
-        vm_size: Standard_DS1_v2
+        vm_size: "{{ azure_test_vm_size }}"
         admin_username: testuser
         ssh_password_enabled: false
         open_ports:

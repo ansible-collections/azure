@@ -28,7 +28,7 @@
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-autoscale"
         name: testVMSS{{ rpfx }}
-        vm_size: Standard_D2s_v3
+        vm_size: "{{ azure_test_vm_size }}"
         admin_username: testuser
         ssh_password_enabled: false
         ssh_public_keys:
@@ -226,7 +226,7 @@
     - name: Clean VMSS
       azure.azcollection.azure_rm_virtualmachinescaleset:
         resource_group: "{{ resource_group }}-autoscale"
-        vm_size: Standard_DS1_v2
+        vm_size: "{{ azure_test_vm_size }}"
         name: testVMSS{{ rpfx }}
         state: absent
 

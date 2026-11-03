@@ -1,0 +1,420 @@
+- name: Prepare random number
+  ansible.builtin.set_fact:
+    rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+    template_rg_name: "{{ resource_group }}-subdep"
+    template_link_rg_name: "{{ resource_group }}-subdeplink"
+  run_once: true
+
+- name: For subscription deployment test
+  vars:
+    quickstart_commit: 8295dc7cbbacd776765e79091f0558300d4c3d67
+    quickstart_base: "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/{{ quickstart_commit }}"
+    template_link_uri: "{{ quickstart_base }}/subscription-deployments/create-rg/azuredeploy.json"
+    subscription_template:
+      $schema: "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#"
+      contentVersion: "1.0.0.0"
+      parameters:
+        rgName:
+          type: string
+        rgLocation:
+          type: string
+        rgTag:
+          type: string
+          defaultValue: initial
+        adminSecret:
+          type: securestring
+          defaultValue: ""
+      resources:
+        - type: Microsoft.Resources/resourceGroups
+          apiVersion: "2022-09-01"
+          name: "[parameters('rgName')]"
+          location: "[parameters('rgLocation')]"
+          tags:
+            purpose: "[parameters('rgTag')]"
+      outputs:
+        rgId:
+          type: string
+          value: "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
+  block:
+    - name: Create subscription deployment -- check mode
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+        tags:
+          testing: testing
+      check_mode: true
+      register: output
+
+    - name: Assert the deployment would be created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create subscription deployment
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+        tags:
+          testing: testing
+      register: output
+
+    - name: Assert the deployment was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.provisioning_state == 'Succeeded'
+          - output.state.properties.outputs.rgId.value.endswith('/resourceGroups/' ~ template_rg_name)
+
+    - name: Create subscription deployment (idempotent)
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+        tags:
+          testing: testing
+      register: output
+
+    - name: Assert the deployment is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update subscription deployment parameters and tags
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        tags:
+          testing: testing
+          env: updated
+      register: output
+
+    - name: Assert the deployment was updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.tags.env == 'updated'
+          - output.state.properties.parameters.rgTag.value == 'updated'
+
+    - name: Update subscription deployment parameters and tags (idempotent)
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        tags:
+          testing: testing
+          env: updated
+      register: output
+
+    - name: Assert the update is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update subscription deployment debug setting
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        debug_setting:
+          detail_level: requestContent,responseContent
+        tags:
+          testing: testing
+          env: updated
+      register: output
+
+    - name: Assert the debug setting was updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Update subscription deployment debug setting (idempotent)
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        debug_setting:
+          detail_level: requestContent,responseContent
+        tags:
+          testing: testing
+          env: updated
+      register: output
+
+    - name: Assert the debug setting update is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update tags without debug_setting
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        tags:
+          testing: testing
+          env: updated
+          stage: carried
+      register: output
+
+    - name: Assert the existing debug setting was kept
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.debug_setting.detail_level | lower is search('requestcontent')
+          - output.state.properties.debug_setting.detail_level | lower is search('responsecontent')
+
+    - name: Redeploy with secure_parameters
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        secure_parameters:
+          adminSecret:
+            value: "Pw{{ rpfx }}!x"
+        tags:
+          testing: testing
+          env: updated
+          stage: secure
+      register: output
+
+    - name: Assert the secure parameter was deployed and hidden
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.provisioning_state == 'Succeeded'
+          - ('Pw' ~ rpfx ~ '!x') not in (output | to_json)
+          - output.state.properties.parameters.adminSecret.type | lower == 'securestring'
+          - output.state.properties.parameters.adminSecret.value is not defined
+          - output.state.properties.debug_setting.detail_level | lower is search('requestcontent')
+
+    - name: Redeploy with secure_parameters (idempotent)
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        location: eastus
+        template: "{{ subscription_template }}"
+        parameters:
+          rgName:
+            value: "{{ template_rg_name }}"
+          rgLocation:
+            value: eastus
+          rgTag:
+            value: updated
+        secure_parameters:
+          adminSecret:
+            value: "Pw{{ rpfx }}!x"
+        tags:
+          testing: testing
+          env: updated
+          stage: secure
+      register: output
+
+    - name: Assert the secure_parameters redeploy is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get subscription deployment by name
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
+        name: "subdep{{ rpfx }}"
+      register: output
+
+    - name: Assert the deployment facts
+      ansible.builtin.assert:
+        that:
+          - output.deployments | length == 1
+          - output.deployments[0].name == "subdep" ~ rpfx
+          - output.deployments[0].tags.env == 'updated'
+          - output.deployments[0].properties.provisioning_state == 'Succeeded'
+
+    - name: Get subscription deployment by name and non-matching tag
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
+        name: "subdep{{ rpfx }}"
+        tags:
+          - env:missing
+      register: output
+
+    - name: Assert the tag filter excludes the deployment
+      ansible.builtin.assert:
+        that:
+          - output.deployments | length == 0
+
+    - name: Delete subscription deployment -- check mode
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert the deployment would be deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get subscription deployment after check mode delete
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
+        name: "subdep{{ rpfx }}"
+      register: output
+
+    - name: Assert the deployment still exists
+      ansible.builtin.assert:
+        that:
+          - output.deployments | length == 1
+
+    - name: Delete subscription deployment
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the deployment was deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete subscription deployment (idempotent)
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the delete is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get the deleted subscription deployment
+      azure.azcollection.azure_rm_subscriptiondeployment_info:
+        name: "subdep{{ rpfx }}"
+      register: output
+
+    - name: Assert the deployment no longer exists
+      ansible.builtin.assert:
+        that:
+          - output.deployments | length == 0
+
+    - name: Create subscription deployment with template_link
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdeplink{{ rpfx }}"
+        location: eastus
+        template_link:
+          uri: "{{ template_link_uri }}"
+        parameters:
+          rgName:
+            value: "{{ template_link_rg_name }}"
+      register: output
+
+    - name: Assert the template_link deployment was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.state.properties.provisioning_state == 'Succeeded'
+          - output.state.properties.template_link.uri == template_link_uri
+
+    - name: Create subscription deployment with template_link (idempotent)
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdeplink{{ rpfx }}"
+        location: eastus
+        template_link:
+          uri: "{{ template_link_uri }}"
+        parameters:
+          rgName:
+            value: "{{ template_link_rg_name }}"
+      register: output
+
+    - name: Assert the template_link deployment is idempotent
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Delete subscription deployment with template_link
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdeplink{{ rpfx }}"
+        state: absent
+      register: output
+
+    - name: Assert the template_link deployment was deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+  always:
+    - name: Delete the subscription deployment
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdep{{ rpfx }}"
+        state: absent
+
+    - name: Delete the template_link subscription deployment
+      azure.azcollection.azure_rm_subscriptiondeployment:
+        name: "subdeplink{{ rpfx }}"
+        state: absent
+
+    - name: Delete the resource group created by the template
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ template_rg_name }}"
+        state: absent
+        force_delete_nonempty: true
+
+    - name: Delete the resource group created by the linked template
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ template_link_rg_name }}"
+        state: absent
+        force_delete_nonempty: true

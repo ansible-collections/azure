@@ -33,13 +33,13 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             mode: System
             os_type: Linux
             os_sku: Ubuntu
           - name: def
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             mode: User
             os_type: Windows
             os_sku: Windows2022
@@ -92,13 +92,13 @@
         agent_pool_profiles:
           - name: default
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             mode: System
             os_type: Linux
             os_sku: Ubuntu
           - name: def
             count: 1
-            vm_size: Standard_D2s_v3
+            vm_size: "{{ azure_test_vm_size }}"
             mode: User
             os_type: Windows
             os_sku: Windows2022

@@ -20,6 +20,16 @@ description:
     - Supports diff mode
     - Check mode assumes all changes you make are legal and accepted by the API
 
+deprecated:
+    removed_in: '5.0.0'
+    why: >-
+        Soft delete settings are now managed through the vault API. Once the vault API has been used to change soft delete
+        settings, which includes every vault created with a recent vault api-version, Azure rejects changes made by this
+        module with BMSUserErrorSoftDeleteUseVaultApi.
+    alternative: >-
+        Use M(azure.azcollection.azure_rm_recoveryservicesvault) with the I(security_settings.soft_delete_settings) option.
+    removed_from_collection: 'azure.azcollection'
+
 options:
     vault_name:
         description:

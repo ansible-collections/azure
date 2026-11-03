@@ -14,6 +14,11 @@ version_added: '1.1.0'
 short_description: Fetch Backup Policy Details
 description:
     - Get Backup Policy Details.
+deprecated:
+    removed_in: '5.0.0'
+    removed_from_collection: azure.azcollection
+    why: This module is superseded by M(azure.azcollection.azure_rm_backuppolicy_info), which uses the Azure SDK.
+    alternative: Use M(azure.azcollection.azure_rm_backuppolicy_info) instead.
 options:
     name:
         description:
@@ -39,7 +44,7 @@ author:
 
 EXAMPLES = '''
 - name: Get backvm policy facts
-  azure_rm_backvmuppolicy_info:
+  azure_rm_vmbackuppolicy_info:
     name: 'myBackupPolicy'
     vault_name: 'myVault'
     resource_group: 'myResourceGroup'

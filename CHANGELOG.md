@@ -1,4 +1,44 @@
 # Change Log
+## v4.2.0 (2026-10-30)
+
+### NEW MODULES
+  - azure_rm_dataprotectionbackupinstancedisk:([#2375](https://github.com/ansible-collections/azure/pull/2375))
+  - azure_rm_dataprotectionbackupinstancedisk_info:([#2375](https://github.com/ansible-collections/azure/pull/2375))
+  - azure_rm_searchindex:([#2377](https://github.com/ansible-collections/azure/pull/2377))
+  - azure_rm_searchindex_info:([#2377](https://github.com/ansible-collections/azure/pull/2377))
+  - azure_rm_searchdatasource:([#2384](https://github.com/ansible-collections/azure/pull/2384))
+  - azure_rm_searchdatasource_info:([#2384](https://github.com/ansible-collections/azure/pull/2384))
+  - azure_rm_cognitiveservicesdeployment:([#2383](https://github.com/ansible-collections/azure/pull/2383))
+  - azure_rm_cognitiveservicesdeployment_info:([#2383](https://github.com/ansible-collections/azure/pull/2383))
+  - azure_rm_searchindexer:([#2387](https://github.com/ansible-collections/azure/pull/2387))
+  - azure_rm_searchindexer_info:([#2387](https://github.com/ansible-collections/azure/pull/2387))
+  - azure_rm_searchsynonymmap:([#2386](https://github.com/ansible-collections/azure/pull/2386))
+  - azure_rm_searchsynonymmap_info:([#2386](https://github.com/ansible-collections/azure/pull/2386))
+  - azure_rm_searchskillset:([#2385](https://github.com/ansible-collections/azure/pull/2385))
+  - azure_rm_searchskillset_info:([#2385](https://github.com/ansible-collections/azure/pull/2385))
+  - azure_rm_containerappdaprcomponent:([#2396](https://github.com/ansible-collections/azure/pull/2396))
+  - azure_rm_containerappdaprcomponent_info:([#2396](https://github.com/ansible-collections/azure/pull/2396))
+  - azure_rm_subscriptiondeployment:([#2389](https://github.com/ansible-collections/azure/pull/2389))
+  - azure_rm_subscriptiondeployment_info:([#2389](https://github.com/ansible-collections/azure/pull/2389))
+
+### FEATURE ENHANCEMENT
+  - requirements.txt: Update `azure-cli-core` to `2.91.0` to lift cryptography cap ([#2382](https://github.com/ansible-collections/azure/pull/2382))
+  - plugins/modules/azure_rm_virtualmachinescaleset.py: Add `load_balancer_backend_pool_name` to azure_rm_virtualmachinescaleset ([#2379](https://github.com/ansible-collections/azure/pull/2379))
+  - plugins/module_utils/azure_rm_search_common.py: Add shared `merge_search_update` helper for the Search modules ([#2388](https://github.com/ansible-collections/azure/pull/2388))
+  - plugins/inventory/azure_rm.py: Evaluate azure_rm inventory host filters before fetching VM details ([#2391](https://github.com/ansible-collections/azure/pull/2391))
+  - plugins/modules/azure_rm_recoveryservicesvault*: Manage Recovery Services vault properties with the SDK (Note: azure_rm_recoveryservicesvaultconfig and azure_rm_recoveryservicesvaultconfig_info are deprecated and will be removed in `5.0.0`) ([#2395](https://github.com/ansible-collections/azure/pull/2395))
+  - sanity-requirements.txt: Bump pylint from `3.3.7` to `4.0.9`. ([#2402](https://github.com/ansible-collections/azure/pull/2402))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_virtualnetwork.py: Reconcile added address prefixes in purge mode ([#2378](https://github.com/ansible-collections/azure/pull/2378))
+  - plugins/modules/azure_rm_resource.py: Ignore server-added fields in azure_rm_resource idempotency ([#2380](https://github.com/ansible-collections/azure/pull/2380))
+  - plugins/modules/azure_rm_vmbackuppolicy.py: Match weekly retention days to schedule days in vmbackuppolicy (Note: azure_rm_vmbackuppolicy and azure_rm_vmbackuppolicy_info are deprecated and will be removed in `5.0.0`)([#2393](https://github.com/ansible-collections/azure/pull/2393))
+  - plugins/modules/azure_rm_apimanagement.py: Fix api_version change detection ([#2398](https://github.com/ansible-collections/azure/pull/2398))
+  - plugins/modules/azure_rm_webappvnetconnection.py: Fix error message index error ([#2398](https://github.com/ansible-collections/azure/pull/2398))
+  - plugins/inventory/azure_rm.py: Forward certificate and OIDC auth options in inventory plugins ([#2399](https://github.com/ansible-collections/azure/pull/2399))
+  - plugins/inventory/azure_kql.py: Forward certificate and OIDC auth options in inventory plugins ([#2399](https://github.com/ansible-collections/azure/pull/2399))
+
+
 ## v4.1.0 (2026-09-29)
 
 ### NEW MODULES

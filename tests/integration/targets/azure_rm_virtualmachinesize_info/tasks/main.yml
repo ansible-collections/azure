@@ -5,14 +5,14 @@
 - name: Get specific size information for a specific location
   azure.azcollection.azure_rm_virtualmachinesize_info:
     location: "{{ location }}"
-    name: Standard_D2s_v3
+    name: "{{ azure_test_vm_size }}"
   register: output
 
 - name: Assert the virtuam machine size
   ansible.builtin.assert:
     that:
       - output['sizes'] | length == 1
-      - output['sizes'][0]['name'] == 'Standard_D2s_v3'
+      - output['sizes'][0]['name'] == azure_test_vm_size
       - output['sizes'][0]['resource_type'] == 'virtualMachines'
       - output['sizes'][0]['capabilities'] is iterable
       - "'MaxDataDiskCount' in (output['sizes'][0]['capabilities'] | map(attribute='name') | list)"

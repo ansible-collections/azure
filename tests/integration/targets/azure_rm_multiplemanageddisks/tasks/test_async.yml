@@ -1,8 +1,7 @@
 - name: Create a new resource group for multi managed disk test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ resource_group }}-multidisk"
-    location: westus2
-
+    location: eastus
 - name: For multi managed disk test
   block:
     # setup: create virtual machines to attach disks on
@@ -35,7 +34,7 @@
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}-multidisk"
         name: "{{ async_virtual_machine_prefix }}-{{ item }}"
-        vm_size: Standard_D2s_v3
+        vm_size: "{{ azure_test_vm_size }}"
         managed_disk_type: Standard_LRS
         virtual_network: "{{ async_virtual_network }}-{{ item }}"
         network_interfaces: "{{ async_interface }}-{{ item }}"
