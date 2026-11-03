@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_managedredis
-version_added: "4.2.0"
+version_added: "4.3.0"
 short_description: Manage an Azure Managed Redis cluster
 description:
     - Create, update and delete an Azure Managed Redis cluster (C(Microsoft.Cache/redisEnterprise)).

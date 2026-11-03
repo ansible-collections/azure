@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_managedredis_info
-version_added: "4.2.0"
+version_added: "4.3.0"
 short_description: Get Azure Managed Redis cluster facts
 description:
     - Get facts of Azure Managed Redis clusters (C(Microsoft.Cache/redisEnterprise)).
