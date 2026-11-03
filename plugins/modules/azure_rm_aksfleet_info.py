@@ -74,7 +74,6 @@ fleets:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.serialization import as_attribute_dict
-    from azure.mgmt.containerservicefleet import ContainerServiceFleetMgmtClient
 except ImportError:
     pass
 
@@ -108,8 +107,7 @@ class AzureRMAksFleetInfo(AzureRMModuleBaseExt):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
-        self.fleet_client = self.get_mgmt_svc_client(
-            ContainerServiceFleetMgmtClient, base_url=self._cloud_environment.endpoints.resource_manager)
+        self.fleet_client = self.containerservicefleet_client
 
         if self.name:
             items = self._get()

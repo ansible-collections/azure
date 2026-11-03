@@ -37,13 +37,6 @@ options:
               resource group.
             - Immutable once the fleet is created.
         type: str
-    tags:
-        description:
-            - Dictionary of string:string tags assigned to the fleet.
-            - Tags are replaced by providing the new list; tags not included
-              are removed.
-            - Leave unset to carry the existing tags forward.
-        type: dict
     hub:
         description:
             - Configuration of the managed hub cluster of the fleet.
@@ -61,8 +54,7 @@ options:
     members:
         description:
             - Azure resource IDs of the clusters that belong to the fleet.
-              Both Azure Kubernetes Service clusters and Azure Arc-enabled
-              Kubernetes clusters can be members.
+              Azure Kubernetes Service managed clusters are supported.
             - When set, the module reconciles the fleet's memberships to
               exactly this list; members not listed are removed from the
               fleet (the clusters themselves are untouched).
@@ -88,6 +80,7 @@ notes:
     - Deleting a fleet also removes its memberships and local update runs.
 extends_documentation_fragment:
     - azure.azcollection.azure
+    - azure.azcollection.azure_tags
 author:
     - Bill Peck (@p3ck)
 '''
@@ -102,7 +95,7 @@ EXAMPLES = '''
       env: prod
     members:
       - /subscriptions/xxx/resourceGroups/rg1/providers/Microsoft.ContainerService/managedClusters/aks1
-      - /subscriptions/xxx/resourceGroups/rg2/providers/Microsoft.ContainerService/connectedClusters/arc1
+      - /subscriptions/xxx/resourceGroups/rg2/providers/Microsoft.ContainerService/managedClusters/aks2
 
 - name: Update the membership of the fleet
   azure.azcollection.azure_rm_aksfleet:
@@ -145,21 +138,24 @@ fleet:
     }
 '''
 
+import re
+
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.serialization import as_attribute_dict
-    from azure.mgmt.containerservicefleet import ContainerServiceFleetMgmtClient
     from azure.mgmt.containerservicefleet import models as fleet_models
 except ImportError:
     pass
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
 
-# Hub fields Azure fills on its own on read and takes on create / update.
-HUB_RO_FIELDS = ('fqdn', 'portal_fqdn', 'kubernetes_version')
+# Fields which are read-only or create-only and must not be replayed on update.
+HUB_RO_FIELDS = ('fqdn', 'portal_fqdn', 'kubernetes_version', 'agent_profile', 'api_server_access_profile')
 # Identity fields Azure fills on its own on read.
 IDENTITY_RO_FIELDS = ('principal_id', 'tenant_id')
 READ_ONLY_FIELDS = ('id', 'name', 'type', 'system_data', 'provisioning_state', 'status')
+FLEET_MEMBER_NAME_PATTERN = re.compile(r'^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
+FLEET_MEMBER_NAME_MAX_LENGTH = 50
 
 
 class AzureRMAksFleet(AzureRMModuleBaseExt):
@@ -195,15 +191,14 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
         super(AzureRMAksFleet, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
-            supports_tags=False,
+            supports_tags=True,
         )
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        self.fleet_client = self.get_mgmt_svc_client(
-            ContainerServiceFleetMgmtClient, base_url=self._cloud_environment.endpoints.resource_manager)
+        self.fleet_client = self.containerservicefleet_client
 
         existing = self.get_resource()
 
@@ -213,6 +208,11 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
                 if not self.check_mode:
                     self.delete_resource()
             return self.results
+
+        if existing is not None:
+            tags_changed, self.tags = self.update_tags(existing.get('tags'))
+            if tags_changed:
+                self.results['changed'] = True
 
         if existing is None:
             if self.location is None:
@@ -345,35 +345,30 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
         clusters = self._member_names(self.members)
 
         current = self._member_list()
-        current_by_name = {member['name']: member['cluster_resource_id'] for member in current}
+        desired_ids = {resource_id.lower() for resource_id in self.members}
+        current_ids = {member['cluster_resource_id'].lower() for member in current}
 
         changed = False
+        # Remove stale memberships first. This also frees a child name if a
+        # different cluster with the same name is being substituted.
+        for member in current:
+            if member['cluster_resource_id'].lower() not in desired_ids:
+                self._delete_member(member['name'])
+                changed = True
+
         for cluster_resource_id, member_name in zip(self.members, clusters):
-            if member_name in current_by_name and current_by_name[member_name] == cluster_resource_id:
+            if cluster_resource_id.lower() in current_ids:
                 continue
-            if member_name in current_by_name:
-                # The member points to a different cluster: replace it.
-                self._delete_member(member_name)
             self._add_member(member_name, cluster_resource_id)
             changed = True
-        for member_name in current_by_name:
-            if member_name not in clusters:
-                self._delete_member(member_name)
-                changed = True
         return changed
 
     def _members_need_update(self):
         """Diff for check mode. Returns True when a change is needed."""
-        current_by_name = {member['name']: member['cluster_resource_id'] for member in self._member_list()}
-        clusters = self._member_names(self.members)
-        for cluster_resource_id, member_name in zip(self.members, clusters):
-            if current_by_name.get(member_name) != cluster_resource_id:
-                return True
-        names_wanted = set(clusters)
-        for member_name in current_by_name:
-            if member_name not in names_wanted:
-                return True
-        return False
+        current_ids = {member['cluster_resource_id'].lower() for member in self._member_list()}
+        self._member_names(self.members)
+        desired_ids = {resource_id.lower() for resource_id in self.members}
+        return current_ids != desired_ids
 
     def _member_name(self, cluster_resource_id):
         """Validate a supported cluster ARM resource ID and derive its name."""
@@ -382,12 +377,17 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
                 parts[0].lower() == 'subscriptions' and parts[1] and
                 parts[2].lower() == 'resourcegroups' and parts[3] and
                 parts[4].lower() == 'providers' and
-                ((parts[5].lower() == 'microsoft.containerservice' and
-                  parts[6].lower() == 'managedclusters') or
-                 (parts[5].lower() == 'microsoft.kubernetes' and
-                  parts[6].lower() == 'connectedclusters')) and parts[7]):
-            return parts[7].lower()
-        self.fail("members must hold Azure resource IDs of Kubernetes clusters, got '{0}'".format(cluster_resource_id))
+                parts[5].lower() == 'microsoft.containerservice' and
+                parts[6].lower() == 'managedclusters' and parts[7]):
+            name = parts[7].lower()
+            if (len(name) <= FLEET_MEMBER_NAME_MAX_LENGTH and
+                    FLEET_MEMBER_NAME_PATTERN.match(name)):
+                return name
+            self.fail("cluster name '{0}' is not a valid Fleet member name; names must match "
+                      "{1} and be at most {2} characters".format(
+                          parts[7], FLEET_MEMBER_NAME_PATTERN.pattern,
+                          FLEET_MEMBER_NAME_MAX_LENGTH))
+        self.fail("members must hold Azure resource IDs of AKS managed clusters, got '{0}'".format(cluster_resource_id))
         return None
 
     def _member_names(self, cluster_resource_ids):

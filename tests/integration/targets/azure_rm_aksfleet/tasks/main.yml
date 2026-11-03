@@ -162,9 +162,9 @@
       ansible.builtin.assert:
         that:
           - fleet_bad_member is failed
-          - "'resource IDs of Kubernetes clusters' in fleet_bad_member.msg"
+          - "'resource IDs of AKS managed clusters' in fleet_bad_member.msg"
 
-    - name: Update tags of the fleet
+    - name: Append tags to the fleet
       azure.azcollection.azure_rm_aksfleet:
         resource_group: "{{ resource_group }}-aksfleet"
         name: "{{ fleet_name }}"
@@ -172,15 +172,15 @@
           updated: tag
       register: fleet_tags
 
-    - name: Assert tags replaced
+    - name: Assert tags appended and hub configuration carried forward
       ansible.builtin.assert:
         that:
           - fleet_tags is changed
-          - "fleet_tags.fleet.tags == {'updated': 'tag'}"
+          - "fleet_tags.fleet.tags == {'env': 'test', 'updated': 'tag'}"
           - fleet_tags.fleet.hub_profile.dns_prefix == 'hub' ~ rpfx
           - fleet_tags.fleet.hub_profile.kubernetes_version is defined
 
-    - name: Update tags (idempotence)
+    - name: Append tags (idempotence)
       azure.azcollection.azure_rm_aksfleet:
         resource_group: "{{ resource_group }}-aksfleet"
         name: "{{ fleet_name }}"
@@ -188,15 +188,59 @@
           updated: tag
       register: fleet_tags_idem
 
-    - name: Assert tags update idempotent
+    - name: Assert tag append idempotent
       ansible.builtin.assert:
         that:
           - fleet_tags_idem is not changed
+
+    - name: Replace tags on the fleet
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        tags:
+          updated: tag
+        append_tags: false
+      register: fleet_tags_replaced
+
+    - name: Assert tags replaced
+      ansible.builtin.assert:
+        that:
+          - fleet_tags_replaced is changed
+          - "fleet_tags_replaced.fleet.tags == {'updated': 'tag'}"
+
+    - name: Replace tags (idempotence)
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        tags:
+          updated: tag
+        append_tags: false
+      register: fleet_tags_replaced_idem
+
+    - name: Assert tag replacement idempotent
+      ansible.builtin.assert:
+        that:
+          - fleet_tags_replaced_idem is not changed
 
     - name: Set the member resource id
       # The subscription is embedded in the fleet's own resource id.
       ansible.builtin.set_fact:
         member_id: "/subscriptions/{{ fleet.fleet.id.split('/')[2] }}/resourceGroups/{{ resource_group }}-aksfleet/providers/Microsoft.ContainerService/managedClusters/{{ cluster_name }}"
+
+    - name: Reject an invalid Fleet member name before reconciliation
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        members:
+          - "/subscriptions/{{ fleet.fleet.id.split('/')[2] }}/resourceGroups/another-resource-group/providers/Microsoft.ContainerService/managedClusters/my_cluster"
+      ignore_errors: true
+      register: invalid_fleet_member_name
+
+    - name: Assert invalid Fleet member name rejected
+      ansible.builtin.assert:
+        that:
+          - invalid_fleet_member_name is failed
+          - "'not a valid Fleet member name' in invalid_fleet_member_name.msg"
 
     - name: Reject member clusters with colliding Fleet member names
       azure.azcollection.azure_rm_aksfleet:
@@ -241,6 +285,19 @@
       ansible.builtin.assert:
         that:
           - fleet_member_idem is not changed
+
+    - name: Reconcile a casing-only resource ID difference
+      azure.azcollection.azure_rm_aksfleet:
+        resource_group: "{{ resource_group }}-aksfleet"
+        name: "{{ fleet_name }}"
+        members:
+          - "{{ member_id | upper }}"
+      register: fleet_member_case_idem
+
+    - name: Assert resource ID comparison is case-insensitive
+      ansible.builtin.assert:
+        that:
+          - fleet_member_case_idem is not changed
 
     - name: Get the fleet with its member
       azure.azcollection.azure_rm_aksfleet_info:

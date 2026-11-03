@@ -256,6 +256,7 @@ try:
     from azure.mgmt.monitor import MonitorManagementClient
     from azure.mgmt.web import WebSiteManagementClient
     from azure.mgmt.containerservice import ContainerServiceClient
+    from azure.mgmt.containerservicefleet import ContainerServiceFleetMgmtClient
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
     from azure.storage.blob import BlobServiceClient
@@ -431,6 +432,7 @@ class AzureRMModuleBase(object):
         self._containerregistrytoken_client = None
         self._containerinstance_client = None
         self._containerservice_client = None
+        self._containerservicefleet_client = None
         self._managedcluster_client = None
         self._containerapps_client = None
         self._traffic_manager_management_client = None
@@ -1289,6 +1291,15 @@ class AzureRMModuleBase(object):
                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
                                                                      api_version='2019-04-01')
         return self._containerservice_client
+
+    @property
+    def containerservicefleet_client(self):
+        self.log('Getting container service fleet client')
+        if not self._containerservicefleet_client:
+            self._containerservicefleet_client = self.get_mgmt_svc_client(
+                ContainerServiceFleetMgmtClient,
+                base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._containerservicefleet_client
 
     @property
     def managedcluster_models(self):
