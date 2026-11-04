@@ -14,15 +14,15 @@
       --access-token "{{ azure_arc_access_token.access_token }}"
       --correlation-id "{{ azure_arc_correlation_id }}"
 
-- name: Add private link args to azcmagent install script argv
+- name: Add private link args to azcmagent connect script argv
   no_log: true
   when:
     - azure_arc_private_link_scope is defined
   ansible.builtin.set_fact:
-    azure_arc_azcmagent_install_script_argv: "{{ azure_arc_azcmagent_install_script_argv + ['--private-link-scope', azure_arc_private_link_scope] }}"
+    azure_arc_connect_command_argv: "{{ azure_arc_connect_command_argv + ['--private-link-scope', azure_arc_private_link_scope] }}"
 
 - name: Use azure arc agent to connect to azure
-  ansible.builtin.raw: "{{ azure_arc_connect_command_argv }}"
+  ansible.builtin.raw: "{{ azure_arc_connect_command_argv }} --json"
   no_log: true
   # If this command is run, it will always change the connection status from unconnected to connected
   changed_when: true
