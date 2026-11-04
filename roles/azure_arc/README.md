@@ -30,6 +30,7 @@ Role Variables
   - * **port**: The port that the proxy server is listening on.
 * **azure_arc_force_local_only**: When true and `azure_arc_state` is `absent`, pass `--force-local-only` to `azcmagent disconnect` so the local agent is reset without deleting the server resource in Azure. Useful when the resource was already deleted in Azure. Default `false`
 * **azure_arc_log_enabled**: Log success / failure to Azure for assistance with debugging (true by default, set to false to disable)
+* **azure_arc_private_link_scope**: Full resource ID to the private link scope. Default is none
 
 Limitations
 ------------
