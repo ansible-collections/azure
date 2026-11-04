@@ -147,18 +147,17 @@ try:
 except ImportError:
     pass
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 # Fields which are read-only or create-only and must not be replayed on update.
 HUB_RO_FIELDS = ('fqdn', 'portal_fqdn', 'kubernetes_version', 'agent_profile', 'api_server_access_profile')
 # Identity fields Azure fills on its own on read.
 IDENTITY_RO_FIELDS = ('principal_id', 'tenant_id')
-READ_ONLY_FIELDS = ('id', 'name', 'type', 'system_data', 'provisioning_state', 'status')
 FLEET_MEMBER_NAME_PATTERN = re.compile(r'^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
 FLEET_MEMBER_NAME_MAX_LENGTH = 50
 
 
-class AzureRMAksFleet(AzureRMModuleBaseExt):
+class AzureRMAksFleet(AzureRMModuleBase):
     """Manage a Fleet Manager and its cluster memberships."""
 
     def __init__(self):
@@ -198,6 +197,11 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
+        # Validate the complete desired membership before any Azure reads or
+        # writes, so malformed names cannot leave a partially reconciled fleet.
+        if self.members is not None:
+            self._member_names(self.members)
+
         self.fleet_client = self.containerservicefleet_client
 
         existing = self.get_resource()
@@ -224,7 +228,8 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
             else:
                 self.results['fleet'] = self._for_check_mode(existing)
         else:
-            if self.location is not None and self.location != existing['location']:
+            if (self.location is not None and
+                    self.location.replace(' ', '').lower() != existing['location'].replace(' ', '').lower()):
                 self.fail("The location of fleet '{0}' is immutable: '{1}' cannot be applied on "
                           "'{2}'".format(self.name, self.location, existing['location']))
             body = self._merge(self._body(), existing)
@@ -246,8 +251,9 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
             if changed:
                 self.results['changed'] = True
 
-        if not self.check_mode and self.state == 'present':
-            self.results['fleet']['members'] = self._member_list()
+        if self.state == 'present':
+            self.results['fleet']['members'] = (
+                self._members_for_check() if self.check_mode else self._member_list())
 
         return self.results
 
@@ -262,11 +268,7 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
             return None
         except Exception as exc:
             self.fail("Error retrieving fleet {0}: {1}".format(self.name, str(exc)))
-        normalized = as_attribute_dict(response, exclude_readonly=False)
-        if normalized.get('properties'):
-            normalized.update(normalized.pop('properties'))
-        normalized['resource_group'] = self.resource_group
-        return normalized
+        return self._flatten(response)
 
     def create_update_resource(self, body):
         self.log("Creating / updating fleet {0}".format(self.name))
@@ -277,11 +279,12 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
             fleet.properties = fleet_models.FleetProperties(
                 hub_profile=fleet_models.FleetHubProfile(**body['hub_profile']))
         try:
-            response = self.fleet_client.fleets.begin_create_or_update(
+            poller = self.fleet_client.fleets.begin_create_or_update(
                 resource_group_name=self.resource_group,
                 fleet_name=self.name,
                 resource=fleet,
-            ).result()
+            )
+            response = self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error creating / updating fleet {0}: {1}".format(self.name, str(exc)))
         return self._flatten(response)
@@ -289,10 +292,11 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
     def delete_resource(self):
         self.log("Deleting fleet {0}".format(self.name))
         try:
-            self.fleet_client.fleets.begin_delete(
+            poller = self.fleet_client.fleets.begin_delete(
                 resource_group_name=self.resource_group,
                 fleet_name=self.name,
-            ).result()
+            )
+            self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error deleting fleet {0}: {1}".format(self.name, str(exc)))
         return True
@@ -400,13 +404,14 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
     def _add_member(self, member_name, cluster_resource_id):
         self.log("Adding member {0} to fleet {1}".format(member_name, self.name))
         try:
-            self.fleet_client.fleet_members.begin_create(
+            poller = self.fleet_client.fleet_members.begin_create(
                 resource_group_name=self.resource_group,
                 fleet_name=self.name,
                 fleet_member_name=member_name,
                 resource=fleet_models.FleetMember(
                     properties=fleet_models.FleetMemberProperties(cluster_resource_id=cluster_resource_id)),
-            ).result()
+            )
+            self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error adding member {0} to fleet {1}: {2}".format(member_name, self.name, str(exc)))
         return True
@@ -414,11 +419,12 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
     def _delete_member(self, member_name):
         self.log("Removing member {0} from fleet {1}".format(member_name, self.name))
         try:
-            self.fleet_client.fleet_members.begin_delete(
+            poller = self.fleet_client.fleet_members.begin_delete(
                 resource_group_name=self.resource_group,
                 fleet_name=self.name,
                 fleet_member_name=member_name,
-            ).result()
+            )
+            self.get_poller_result(poller)
         except Exception as exc:
             self.fail("Error removing member {0} from fleet {1}: {2}".format(member_name, self.name, str(exc)))
         return True
@@ -465,14 +471,24 @@ class AzureRMAksFleet(AzureRMModuleBaseExt):
                 (existing.get('hub_profile') or {}), **{k: v for k, v in self.hub.items() if v is not None})
             result['hub_profile'].pop('fqdn', None)
             result['hub_profile'].pop('portal_fqdn', None)
-        result['members'] = sorted(self._member_names_for_check(existing))
         result['resource_group'] = self.resource_group
         return result
 
-    def _member_names_for_check(self, existing):
+    def _members_for_check(self):
+        """Return member dictionaries representing the check-mode result."""
+        current = self._member_list()
         if self.members is None:
-            return [member['name'] for member in self._member_list()]
-        return self._member_names(self.members)
+            return current
+        current_by_id = {member['cluster_resource_id'].lower(): member for member in current}
+        names = self._member_names(self.members)
+        planned = []
+        for resource_id, member_name in zip(self.members, names):
+            member = current_by_id.get(resource_id.lower())
+            if member is not None:
+                planned.append(member)
+            else:
+                planned.append(dict(name=member_name, cluster_resource_id=resource_id))
+        return planned
 
     def _flatten(self, fleet):
         if fleet is None:

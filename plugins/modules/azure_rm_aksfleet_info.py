@@ -14,19 +14,27 @@ version_added: "4.3.0"
 short_description: Get Fleet Managers and their cluster memberships
 description:
     - Get details of a single Fleet Manager and its member clusters, or list
-      all fleets in a resource group.
+      fleets in a resource group or subscription.
     - Every returned fleet includes its members in I(members).
 options:
     resource_group:
         description:
             - Name of the resource group containing the fleet.
-        required: true
+            - If omitted, fleets are listed across the subscription. Required
+              when I(name) is specified.
         type: str
     name:
         description:
             - Name of a specific fleet to fetch. If omitted, all fleets of
-              the resource group are listed.
+              the resource group or subscription are listed.
         type: str
+    tags:
+        description:
+            - Filter the results by a list of tags.
+            - Specify tags as C(key) or C(key:value). All specified tags must
+              match.
+        type: list
+        elements: str
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
@@ -44,6 +52,12 @@ EXAMPLES = '''
   azure.azcollection.azure_rm_aksfleet_info:
     resource_group: myResourceGroup
   register: fleets
+
+- name: List subscription fleets with a matching tag
+  azure.azcollection.azure_rm_aksfleet_info:
+    tags:
+      - env:prod
+  register: production_fleets
 '''
 
 RETURN = '''
@@ -77,20 +91,22 @@ try:
 except ImportError:
     pass
 
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 
-class AzureRMAksFleetInfo(AzureRMModuleBaseExt):
+class AzureRMAksFleetInfo(AzureRMModuleBase):
     """Get Fleet Managers and their cluster memberships."""
 
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group=dict(type='str', required=True),
+            resource_group=dict(type='str'),
             name=dict(type='str'),
+            tags=dict(type='list', elements='str'),
         )
 
         self.resource_group = None
         self.name = None
+        self.tags = None
 
         self.results = dict(
             changed=False,
@@ -101,20 +117,26 @@ class AzureRMAksFleetInfo(AzureRMModuleBaseExt):
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
             supports_tags=False,
+            facts_module=True,
         )
 
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
 
+        if self.name and not self.resource_group:
+            self.fail("resource_group is required when name is specified")
+
         self.fleet_client = self.containerservicefleet_client
 
         if self.name:
             items = self._get()
+        elif self.resource_group:
+            items = self._list_by_resource_group()
         else:
-            items = self._list()
+            items = self._list_by_subscription()
 
-        self.results['fleets'] = [self._format(item) for item in items]
+        self.results['fleets'] = [self._format(item) for item in items if self.has_tags(item.tags, self.tags)]
         return self.results
 
     def _get(self):
@@ -128,7 +150,7 @@ class AzureRMAksFleetInfo(AzureRMModuleBaseExt):
         except Exception as exc:
             self.fail("Error retrieving fleet {0}: {1}".format(self.name, str(exc)))
 
-    def _list(self):
+    def _list_by_resource_group(self):
         try:
             return list(self.fleet_client.fleets.list_by_resource_group(
                 resource_group_name=self.resource_group,
@@ -136,18 +158,25 @@ class AzureRMAksFleetInfo(AzureRMModuleBaseExt):
         except Exception as exc:
             self.fail("Error listing fleets in resource group {0}: {1}".format(self.resource_group, str(exc)))
 
+    def _list_by_subscription(self):
+        try:
+            return list(self.fleet_client.fleets.list_by_subscription())
+        except Exception as exc:
+            self.fail("Error listing fleets in the subscription: {0}".format(str(exc)))
+
     def _format(self, item):
         normalized = as_attribute_dict(item, exclude_readonly=False)
         if normalized.get('properties'):
             normalized.update(normalized.pop('properties'))
-        normalized['resource_group'] = self.resource_group
-        normalized['members'] = self._member_list(normalized['name'])
+        resource_group = self.resource_group or self.parse_resource_to_dict(normalized['id'])['resource_group']
+        normalized['resource_group'] = resource_group
+        normalized['members'] = self._member_list(resource_group, normalized['name'])
         return normalized
 
-    def _member_list(self, fleet_name):
+    def _member_list(self, resource_group, fleet_name):
         try:
             members = list(self.fleet_client.fleet_members.list_by_fleet(
-                resource_group_name=self.resource_group,
+                resource_group_name=resource_group,
                 fleet_name=fleet_name,
             ))
         except Exception as exc:
