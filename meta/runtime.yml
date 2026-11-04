@@ -36,6 +36,8 @@ action_groups:
     - azure.azcollection.azure_rm_aksversion_info
     - azure.azcollection.azure_rm_apimanagement
     - azure.azcollection.azure_rm_apimanagement_info
+    - azure.azcollection.azure_rm_apimanagementproduct
+    - azure.azcollection.azure_rm_apimanagementproduct_info
     - azure.azcollection.azure_rm_apimanagementservice
     - azure.azcollection.azure_rm_apimanagementservice_info
     - azure.azcollection.azure_rm_appconfiguration
