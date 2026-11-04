@@ -11,147 +11,154 @@
   ansible.builtin.set_fact:
     azure_arc_correlation_id: "{{ (2**64) | random | to_uuid }}"
 
-- name: Generate tags string
-  ansible.builtin.set_fact:
-    azure_arc_processed_tags: |-
-      {%- for k, v in azure_arc_tags.items() %}
-      {{ k | quote }}={{ v | replace(",", "\,") | quote }}{% if not loop.last %},{% endif %}
-      {%- endfor %}
-
-- name: Set helper fact for proxy proxy.url if needed
-  when: proxy is defined
-  ansible.builtin.set_fact:
-    azure_arc_proxy_url: "http://{{ proxy['hostname'] }}:{{ proxy['port'] }}"
-
-- name: Set helper fact for desired_version if needed
-  when: desired_version is defined
-  ansible.builtin.set_fact:
-    azure_arc_desired_version: "{{ desired_version }}"
-
-- name: Set helper fact for altdownload if needed
-  when: altdownload is defined
-  ansible.builtin.set_fact:
-    azure_arc_altdownload: "{{ altdownload }}"
-
-- name: Gather Resource Group info
-  azure.azcollection.azure_rm_resourcegroup_info:
-    name: "{{ azure_arc_resource_group }}"
-  register: __azure_arc_rg_info
-  delegate_to: localhost
-  when: azure_arc_location is not defined
-
-- name: Set azure_location from resource_group
-  ansible.builtin.set_fact:
-    azure_arc_location: "{{ __azure_arc_rg_info.resourcegroups.0.location }}"
-  when: azure_arc_location is not defined
-
-- name: Include install tasks for Linux
-  ansible.builtin.include_tasks: "linux_install.yml"
-  when: ansible_system == 'Linux'
-
-- name: Include install tasks for Windows
-  ansible.builtin.include_tasks: "windows_install.yml"
-  when: ansible_os_family == 'Windows'
-
-- name: Include show tasks for Linux
-  ansible.builtin.include_tasks: "linux_show.yml"
-  when: ansible_system == 'Linux'
-
-- name: Include show tasks for Windows
-  ansible.builtin.include_tasks: "windows_show.yml"
-  when: ansible_os_family == 'Windows'
-
-- name: Set helper fact for configuration
-  ansible.builtin.set_fact:
-    azure_arc_show: "{{ azure_arc_show_json.stdout | ansible.builtin.from_json }}"
-
-- name: Set azcmagent proxy setting if not already set correctly
-  when: azure_arc_proxy_url is defined and azure_arc_show.httpsProxy != azure_arc_proxy_url
+- name: Offboard the Azure Arc host
+  when: azure_arc_state == 'absent'
   block:
-    - name: Include proxy tasks for Linux
-      ansible.builtin.include_tasks: "linux_proxy.yml"
+    - name: Include offboarding tasks for Linux
+      ansible.builtin.include_tasks: "linux_offboard.yml"
       when: ansible_system == 'Linux'
 
-    - name: Include proxy tasks for Windows
-      ansible.builtin.include_tasks: "windows_proxy.yml"
+    - name: Include offboarding tasks for Windows
+      ansible.builtin.include_tasks: "windows_offboard.yml"
       when: ansible_os_family == 'Windows'
-
-# When registered with Azure, validate current configuration is equal to expected configuration and set the resource id as ansible fact
-- name: Assert that configuration is matching expected values and set resource id fact
-  when: azure_arc_show.resourceId | default('') != ''
-  block:
-    - name: Set resource id as variable for easy access in other roles (already connected to azure arc)
-      ansible.builtin.set_fact:
-        azure_arc_resource_id: "{{ azure_arc_show.resourceId }}"
-
-    - name: Verify configuration settings match expected values
-      ansible.builtin.assert:
-        that:
-          - azure_arc_show.cloud == azure_arc_cloud
-          - azure_arc_show.resourceGroup == azure_arc_resource_group
-          - azure_arc_show.location == azure_arc_location
-          - azure_arc_show.tenantId == azure_arc_tenant_id
-          - azure_arc_show.subscriptionId == azure_arc_subscription_id
-
-- name: Connect if not already connected to azure
-  when: azure_arc_show.resourceId | default('') == ''
-  block:
-    - name: Get access token for arc onboarding  # noqa: jinja[invalid]
-      # Run on localhost, so that service principal secrets don't leave control node
-      delegate_to: localhost
-      # This command produces output that includes an access token
-      no_log: true
-      azure.azcollection.azure_rm_accesstoken_info:
-        client_id: "{{ azure_arc_application_id | default(omit) }}"
-        secret: "{{ azure_arc_client_secret | default(omit) }}"
-        tenant: "{{ azure_arc_tenant_id | default(omit) }}"
-        subscription_id: "{{ azure_arc_subscription_id | default(omit) }}"
-        scopes:
-          - https://management.azure.com/.default
-        auth_source: "{{ auth_source | default(omit) }}"
-      register: azure_arc_access_token
-
-    - name: Include Connect tasks for Linux
-      ansible.builtin.include_tasks: "linux_connect.yml"
-      when: ansible_system == 'Linux'
-
-    - name: Include Connect tasks for Windows
-      ansible.builtin.include_tasks: "windows_connect.yml"
-      when: ansible_os_family == 'Windows'
-
-    # The connect task is no_log (its command line carries an access token), so
-    # surface only stderr here to keep failures debuggable without leaking the token.
-    - name: Fail if azcmagent connect was unsuccessful
-      when: azure_arc_azcmagent_connect_json.rc != 0
-      ansible.builtin.fail:
-        msg: >-
-          azcmagent connect failed (rc={{ azure_arc_azcmagent_connect_json.rc }}):
-          {{ azure_arc_azcmagent_connect_json.stderr | default('') }}
-
-    - name: Log onboarding success
-      vars:
-        azure_arc_signal_message_type: info
-        azure_arc_signal_message: "azcmagent connect succeeded via Ansible azure_arc role"
-      ansible.builtin.include_tasks: "log_signal.yml"
-
-    - name: Transform json stdout output to variable
-      ansible.builtin.set_fact:
-        azure_arc_azcmagent_connect: "{{ azure_arc_azcmagent_connect_json.stdout | ansible.builtin.from_json }}"
-
-    - name: Set resource id as variable for easy access in other roles (newly registered system in azure arc)
-      ansible.builtin.set_fact:
-        azure_arc_resource_id: "{{ azure_arc_azcmagent_connect.resourceId }}"
   rescue:
-    - name: Log onboarding failure
+    - name: Log offboarding failure
       vars:
+        azure_arc_signal_operation: offboarding
         azure_arc_signal_message_type: error
         azure_arc_signal_message: >-
-          azcmagent connect failed:
+          Azure Arc offboarding failed:
           {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}
       ansible.builtin.include_tasks: "log_signal.yml"
 
-    - name: Raise Azure Arc onboarding failure
+    - name: Raise Azure Arc offboarding failure
       ansible.builtin.fail:
         msg: >-
-          Azure Arc onboarding (azcmagent connect) failed:
+          Azure Arc offboarding failed:
           {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}
+
+- name: Onboard the Azure Arc host
+  when: azure_arc_state == 'present'
+  block:
+    - name: Generate tags string
+      ansible.builtin.set_fact:
+        azure_arc_processed_tags: |-
+          {%- for k, v in azure_arc_tags.items() %}
+          {{ k | quote }}={{ v | replace(",", "\,") | quote }}{% if not loop.last %},{% endif %}
+          {%- endfor %}
+
+    - name: Set helper fact for proxy proxy.url if needed
+      when: proxy is defined
+      ansible.builtin.set_fact:
+        azure_arc_proxy_url: "http://{{ proxy['hostname'] }}:{{ proxy['port'] }}"
+
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ azure_arc_resource_group }}"
+      register: __azure_arc_rg_info
+      delegate_to: localhost
+      when: azure_arc_location is not defined
+
+    - name: Set azure_location from resource_group
+      ansible.builtin.set_fact:
+        azure_arc_location: "{{ __azure_arc_rg_info.resourcegroups.0.location }}"
+      when: azure_arc_location is not defined
+
+    - name: Include install tasks for Linux
+      ansible.builtin.include_tasks: "linux_install.yml"
+      when: ansible_system == 'Linux'
+
+    - name: Include install tasks for Windows
+      ansible.builtin.include_tasks: "windows_install.yml"
+      when: ansible_os_family == 'Windows'
+
+    - name: Include show tasks for Linux
+      ansible.builtin.include_tasks: "linux_show.yml"
+      when: ansible_system == 'Linux'
+
+    - name: Include show tasks for Windows
+      ansible.builtin.include_tasks: "windows_show.yml"
+      when: ansible_os_family == 'Windows'
+
+    - name: Set helper fact for configuration
+      ansible.builtin.set_fact:
+        azure_arc_show: "{{ azure_arc_show_json.stdout | ansible.builtin.from_json }}"
+
+    - name: Set azcmagent proxy setting if not already set correctly
+      when: azure_arc_proxy_url is defined and azure_arc_show.httpsProxy != azure_arc_proxy_url
+      block:
+        - name: Include proxy tasks for Linux
+          ansible.builtin.include_tasks: "linux_proxy.yml"
+          when: ansible_system == 'Linux'
+
+        - name: Include proxy tasks for Windows
+          ansible.builtin.include_tasks: "windows_proxy.yml"
+          when: ansible_os_family == 'Windows'
+
+    # When registered with Azure, validate current configuration is equal to expected configuration and set the resource id as ansible fact
+    - name: Assert that configuration is matching expected values and set resource id fact
+      when: azure_arc_show.resourceId | default('') != ''
+      block:
+        - name: Set resource id as variable for easy access in other roles (already connected to azure arc)
+          ansible.builtin.set_fact:
+            azure_arc_resource_id: "{{ azure_arc_show.resourceId }}"
+
+        - name: Verify configuration settings match expected values
+          ansible.builtin.assert:
+            that:
+              - azure_arc_show.cloud == azure_arc_cloud
+              - azure_arc_show.resourceGroup == azure_arc_resource_group
+              - azure_arc_show.location == azure_arc_location
+              - azure_arc_show.tenantId == azure_arc_tenant_id
+              - azure_arc_show.subscriptionId == azure_arc_subscription_id
+
+    - name: Connect if not already connected to azure
+      when: azure_arc_show.resourceId | default('') == ''
+      block:
+        - name: Include access token tasks
+          ansible.builtin.include_tasks: "access_token.yml"
+
+        - name: Include Connect tasks for Linux
+          ansible.builtin.include_tasks: "linux_connect.yml"
+          when: ansible_system == 'Linux'
+
+        - name: Include Connect tasks for Windows
+          ansible.builtin.include_tasks: "windows_connect.yml"
+          when: ansible_os_family == 'Windows'
+
+        # The connect task is no_log (its command line carries an access token), so
+        # surface only stderr here to keep failures debuggable without leaking the token.
+        - name: Fail if azcmagent connect was unsuccessful
+          when: azure_arc_azcmagent_connect_json.rc != 0
+          ansible.builtin.fail:
+            msg: >-
+              azcmagent connect failed (rc={{ azure_arc_azcmagent_connect_json.rc }}):
+              {{ azure_arc_azcmagent_connect_json.stderr | default('') }}
+
+        - name: Log onboarding success
+          vars:
+            azure_arc_signal_message_type: info
+            azure_arc_signal_message: "azcmagent connect succeeded via Ansible azure_arc role"
+          ansible.builtin.include_tasks: "log_signal.yml"
+
+        - name: Transform json stdout output to variable
+          ansible.builtin.set_fact:
+            azure_arc_azcmagent_connect: "{{ azure_arc_azcmagent_connect_json.stdout | ansible.builtin.from_json }}"
+
+        - name: Set resource id as variable for easy access in other roles (newly registered system in azure arc)
+          ansible.builtin.set_fact:
+            azure_arc_resource_id: "{{ azure_arc_azcmagent_connect.resourceId }}"
+      rescue:
+        - name: Log onboarding failure
+          vars:
+            azure_arc_signal_message_type: error
+            azure_arc_signal_message: >-
+              azcmagent connect failed:
+              {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}
+          ansible.builtin.include_tasks: "log_signal.yml"
+
+        - name: Raise Azure Arc onboarding failure
+          ansible.builtin.fail:
+            msg: >-
+              Azure Arc onboarding (azcmagent connect) failed:
+              {{ ansible_failed_result.msg | default(ansible_failed_result.stderr | default('unknown error')) }}

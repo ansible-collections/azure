@@ -1,0 +1,85 @@
+---
+- name: Check if azcmagent is installed
+  ansible.builtin.command:
+    cmd: azcmagent --version
+  register: azure_arc_azcmagent_version_cmd
+  failed_when: false
+  changed_when: false
+  # Reading the agent version never changes anything, so run it even in check mode
+  check_mode: false
+
+- name: Set azcmagent installed fact
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_installed: "{{ azure_arc_azcmagent_version_cmd.rc == 0 }}"
+    azure_arc_azcmagent_installed_version: ''
+
+- name: Set azcmagent installed version fact
+  when: azure_arc_azcmagent_installed
+  ansible.builtin.set_fact:
+    azure_arc_azcmagent_installed_version: "{{ azure_arc_azcmagent_version_cmd.stdout | regex_search('[0-9]+(\\.[0-9]+){2,3}') | default('', true) }}"
+
+- name: Log that there is nothing to offboard when the agent is absent
+  when: not azure_arc_azcmagent_installed
+  vars:
+    azure_arc_signal_operation: offboarding
+    azure_arc_signal_message_type: info
+    azure_arc_signal_message: "azcmagent is not installed, nothing to offboard"
+  ansible.builtin.include_tasks: "log_signal.yml"
+
+- name: Disconnect the installed agent from Azure
+  when: azure_arc_azcmagent_installed
+  block:
+    - name: Include show tasks for Linux
+      ansible.builtin.include_tasks: "linux_show.yml"
+
+    - name: Set helper fact for configuration
+      ansible.builtin.set_fact:
+        azure_arc_show: "{{ azure_arc_show_json.stdout | ansible.builtin.from_json }}"
+
+    - name: Disconnect the agent when it is still connected
+      when: azure_arc_show.resourceId | default('') != ''
+      block:
+        - name: Include access token tasks
+          ansible.builtin.include_tasks: "access_token.yml"
+
+        - name: Include disconnect tasks for Linux
+          ansible.builtin.include_tasks: "linux_disconnect.yml"
+
+        # The disconnect task is no_log (its command line carries an access
+        # token), so surface only stderr here to keep failures debuggable
+        # without leaking the token.
+        - name: Fail if azcmagent disconnect was unsuccessful
+          when: azure_arc_azcmagent_disconnect_json.rc != 0
+          ansible.builtin.fail:
+            msg: >-
+              azcmagent disconnect failed (rc={{ azure_arc_azcmagent_disconnect_json.rc }}):
+              {{ azure_arc_azcmagent_disconnect_json.stderr | default('') }}
+
+        - name: Log offboarding success
+          vars:
+            azure_arc_signal_operation: offboarding
+            azure_arc_signal_message_type: info
+            azure_arc_signal_message: "azcmagent disconnect succeeded via Ansible azure_arc role"
+          ansible.builtin.include_tasks: "log_signal.yml"
+
+        - name: Clear the azure arc resource id fact of the disconnected host
+          ansible.builtin.set_fact:
+            azure_arc_resource_id: ''
+
+- name: Remove the installed agent from the host
+  when: azure_arc_azcmagent_installed
+  block:
+    - name: Include uninstall tasks for Linux
+      ansible.builtin.include_tasks: "linux_uninstall.yml"
+
+    - name: Log agent removal success
+      vars:
+        azure_arc_signal_operation: offboarding
+        azure_arc_signal_message_type: info
+        azure_arc_signal_message: "azcmagent uninstalled successfully via Ansible azure_arc role"
+      ansible.builtin.include_tasks: "log_signal.yml"
+
+    - name: Record that the agent is no longer installed
+      ansible.builtin.set_fact:
+        azure_arc_azcmagent_installed: false
+        azure_arc_azcmagent_installed_version: ''
