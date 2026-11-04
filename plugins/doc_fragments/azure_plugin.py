@@ -95,6 +95,9 @@ requirements:
 notes:
     - For authentication with Azure you can pass parameters, set environment variables, use a profile stored
       in ~/.azure/credentials, or log in before you run your tasks or playbook with C(az login).
+    - When authenticating with C(az login), the C(az) executable must be on C(PATH) but installed separately from the
+      collection's Python requirements, for example as an OS package or in its own virtual environment. Do not install
+      C(azure-cli) with pip into the same environment as requirements.txt, as their pinned Azure SDK versions conflict.
     - Authentication is also possible using a service principal.
     - To authenticate via OIDC, pass client_id, tenant and oidc_token or oidc_token_file_path, or set environment
       variables AZURE_CLIENT_ID, AZURE_TENANT and AZURE_FEDERATED_TOKEN or AZURE_FEDERATED_TOKEN_FILE.
@@ -107,4 +110,7 @@ seealso:
     - name: Sign in with Azure CLI
       link: https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest
       description: How to authenticate using the C(az login) command.
+    - name: Install the Azure CLI
+      link: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
+      description: How to install the C(az) command.
     '''
