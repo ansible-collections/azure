@@ -3,3 +3,4 @@ azure-eventhub
 aiohttp
 pytest-asyncio
 azure-identity==1.25.2
+azure-mgmt-databricks==2.0.0

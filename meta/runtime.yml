@@ -118,6 +118,8 @@ action_groups:
     - azure.azcollection.azure_rm_cosmosdbaccount_info
     - azure.azcollection.azure_rm_databricksworkspace
     - azure.azcollection.azure_rm_databricksworkspace_info
+    - azure.azcollection.azure_rm_databrickscluster
+    - azure.azcollection.azure_rm_databricksnotebook
     - azure.azcollection.azure_rm_datafactory
     - azure.azcollection.azure_rm_datafactory_info
     - azure.azcollection.azure_rm_dataprotectionbackupinstancedisk
@@ -389,6 +391,8 @@ action_groups:
     - azure.azcollection.azure_rm_sqlmidbshorttermretentionpolicy_info
     - azure.azcollection.azure_rm_sqlserver
     - azure.azcollection.azure_rm_sqlserver_info
+    - azure.azcollection.azure_rm_synapselinkedservice
+    - azure.azcollection.azure_rm_synapseworkspace
     - azure.azcollection.azure_rm_sshpublickey
     - azure.azcollection.azure_rm_sshpublickey_info
     - azure.azcollection.azure_rm_storageaccount

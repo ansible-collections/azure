@@ -1,0 +1,282 @@
+- name: Validate required workspace and SQL test variables
+  ansible.builtin.assert:
+    that:
+      - databricks_test_resource_group is defined
+      - databricks_test_workspace is defined
+      - synapse_test_resource_group is defined
+      - synapse_test_workspace is defined
+      - azure_sql_server is defined
+      - azure_sql_database is defined
+      - azure_sql_user is defined
+      - azure_sql_password is defined
+    fail_msg: See tests/integration/targets/azure_rm_analytics_dataplane/README.md for required variables.
+
+- name: Exercise Databricks and Synapse data-plane modules
+  block:
+    - name: Create unique resource names
+      ansible.builtin.set_fact:
+        analytics_test_id: "{{ resource_group | hash('md5') | truncate(7, true, '') }}{{ 1000 | random }}"
+
+    - name: Set module test resource names
+      ansible.builtin.set_fact:
+        cluster_name: "it{{ analytics_test_id }}"
+        notebook_path: "/Shared/ansible-it-{{ analytics_test_id }}"
+        linked_service_name: "ansible-it-{{ analytics_test_id }}"
+
+    - name: Predict cluster creation without creating it
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 2
+      check_mode: true
+      register: cluster_check
+
+    - name: Assert cluster check mode
+      ansible.builtin.assert:
+        that:
+          - cluster_check is changed
+          - cluster_check.cluster.cluster_name == cluster_name
+
+    - name: Create Databricks cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 2
+      register: cluster_create
+
+    - name: Assert cluster created
+      ansible.builtin.assert:
+        that:
+          - cluster_create is changed
+          - cluster_create.cluster.cluster_id is defined
+
+    - name: Reconcile cluster (idempotency)
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 2
+      register: cluster_idempotent
+
+    - name: Assert cluster idempotent
+      ansible.builtin.assert:
+        that:
+          - cluster_idempotent is not changed
+
+    - name: Resize cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 4
+      register: cluster_resized
+
+    - name: Assert resize
+      ansible.builtin.assert:
+        that:
+          - cluster_resized is changed
+          - cluster_resized.cluster.num_workers == 4
+
+    - name: Import notebook to workspace
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        path: "{{ notebook_path }}"
+        source: "{{ role_path }}/files/notebook.py"
+        format: SOURCE
+        language: PYTHON
+      register: notebook_import
+
+    - name: Assert notebook imported
+      ansible.builtin.assert:
+        that:
+          - notebook_import is changed
+
+    - name: Reimport notebook (idempotency)
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        path: "{{ notebook_path }}"
+        source: "{{ role_path }}/files/notebook.py"
+        format: SOURCE
+        language: PYTHON
+      register: notebook_idempotent
+
+    - name: Assert notebook idempotent
+      ansible.builtin.assert:
+        that:
+          - notebook_idempotent is not changed
+
+    - name: Export notebook to the test controller
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        path: "{{ notebook_path }}"
+        state: exported
+        format: SOURCE
+        dest: "{{ remote_tmp_dir }}/{{ notebook_path | basename }}.py"
+      register: notebook_export
+
+    - name: Assert notebook exported
+      ansible.builtin.assert:
+        that:
+          - notebook_export.notebook.sha256 is defined
+
+    - name: Reconcile the existing Synapse workspace
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_test_resource_group }}"
+        name: "{{ synapse_test_workspace }}"
+      register: synapse_workspace
+
+    - name: Assert Synapse workspace can be read idempotently
+      ansible.builtin.assert:
+        that:
+          - synapse_workspace is not changed
+          - synapse_workspace.workspace.name == synapse_test_workspace
+
+    - name: Create Azure SQL linked service in Synapse
+      azure.azcollection.azure_rm_synapselinkedservice:
+        resource_group: "{{ synapse_test_resource_group }}"
+        workspace_name: "{{ synapse_test_workspace }}"
+        name: "{{ linked_service_name }}"
+        server: "{{ azure_sql_server }}"
+        database: "{{ azure_sql_database }}"
+        user_name: "{{ azure_sql_user }}"
+        password: "{{ azure_sql_password }}"
+        integration_runtime: AutoResolveIntegrationRuntime
+      register: linked_service_create
+
+    - name: Assert linked service created without returning credentials
+      ansible.builtin.assert:
+        that:
+          - linked_service_create is changed
+          - linked_service_create.linked_service.properties.type == 'AzureSqlDatabase'
+          - "'connectionString' not in linked_service_create.linked_service.properties.typeProperties"
+
+    - name: Verify linked service independently through ARM
+      azure.azcollection.azure_rm_resource_info:
+        url: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ synapse_test_resource_group }}/providers/Microsoft.Synapse/workspaces/{{ synapse_test_workspace }}/linkedServices/{{ linked_service_name }}"
+        api_version: '2021-06-01'
+      register: linked_service_info
+
+    - name: Assert Synapse linked service visible
+      ansible.builtin.assert:
+        that:
+          - linked_service_info.response | length == 1
+          - linked_service_info.response[0].properties.type == 'AzureSqlDatabase'
+          - linked_service_info.response[0].properties.connectVia.referenceName == 'AutoResolveIntegrationRuntime'
+
+    - name: Reconcile linked service (idempotency)
+      azure.azcollection.azure_rm_synapselinkedservice:
+        resource_group: "{{ synapse_test_resource_group }}"
+        workspace_name: "{{ synapse_test_workspace }}"
+        name: "{{ linked_service_name }}"
+        server: "{{ azure_sql_server }}"
+        database: "{{ azure_sql_database }}"
+        user_name: "{{ azure_sql_user }}"
+        password: "{{ azure_sql_password }}"
+        integration_runtime: AutoResolveIntegrationRuntime
+      register: linked_service_idempotent
+
+    - name: Assert linked service idempotent
+      ansible.builtin.assert:
+        that:
+          - linked_service_idempotent is not changed
+
+    - name: Predict linked service deletion
+      azure.azcollection.azure_rm_synapselinkedservice:
+        resource_group: "{{ synapse_test_resource_group }}"
+        workspace_name: "{{ synapse_test_workspace }}"
+        name: "{{ linked_service_name }}"
+        state: absent
+      check_mode: true
+      register: linked_service_delete_check
+
+    - name: Assert linked service deletion check mode
+      ansible.builtin.assert:
+        that:
+          - linked_service_delete_check is changed
+
+    - name: Delete linked service
+      azure.azcollection.azure_rm_synapselinkedservice:
+        resource_group: "{{ synapse_test_resource_group }}"
+        workspace_name: "{{ synapse_test_workspace }}"
+        name: "{{ linked_service_name }}"
+        state: absent
+      register: linked_service_delete
+
+    - name: Verify linked service deleted
+      azure.azcollection.azure_rm_resource_info:
+        url: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ synapse_test_resource_group }}/providers/Microsoft.Synapse/workspaces/{{ synapse_test_workspace }}/linkedServices/{{ linked_service_name }}"
+        api_version: '2021-06-01'
+      register: linked_service_gone
+
+    - name: Assert linked service absent
+      ansible.builtin.assert:
+        that:
+          - linked_service_delete is changed
+          - linked_service_gone.response | length == 0
+
+    - name: Delete cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      register: cluster_delete
+
+    - name: Assert cluster deleted
+      ansible.builtin.assert:
+        that:
+          - cluster_delete is changed
+
+    - name: Delete imported notebook
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        path: "{{ notebook_path }}"
+        state: absent
+      register: notebook_delete
+
+    - name: Assert notebook deleted
+      ansible.builtin.assert:
+        that:
+          - notebook_delete is changed
+
+  always:
+    - name: Remove test cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      when: cluster_name is defined
+      ignore_errors: true
+
+    - name: Remove test notebook
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        path: "{{ notebook_path }}"
+        state: absent
+      when: notebook_path is defined
+      ignore_errors: true
+
+    - name: Remove test linked service
+      azure.azcollection.azure_rm_synapselinkedservice:
+        resource_group: "{{ synapse_test_resource_group }}"
+        workspace_name: "{{ synapse_test_workspace }}"
+        name: "{{ linked_service_name }}"
+        state: absent
+      when: linked_service_name is defined
+      ignore_errors: true
