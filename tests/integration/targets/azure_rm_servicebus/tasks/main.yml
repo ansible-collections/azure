@@ -219,6 +219,119 @@
         that:
           - queue.id is defined
           - queue is changed
+          - queue.max_message_size_in_kb == 2048
+
+    - name: Create a queue with duplicate detection
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        requires_duplicate_detection: true
+        max_delivery_count: 5
+      register: queuedd_output
+
+    - name: Assert duplicate detection enabled on the queue
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is changed
+          - queuedd_output.requires_duplicate_detection is true
+
+    - name: Disable duplicate detection on the existing queue
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        requires_duplicate_detection: false
+      register: queuedd_output
+      ignore_errors: true
+
+    - name: Assert the queue duplicate detection change is rejected
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is failed
+          - "'cannot be changed' in queuedd_output.msg"
+
+    - name: Enable sessions on the existing queue
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        requires_session: true
+      register: queuedd_output
+      ignore_errors: true
+
+    - name: Assert the queue session change is rejected
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is failed
+          - "'cannot be changed' in queuedd_output.msg"
+
+    - name: Update only max_size_in_mb on the queue
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        max_size_in_mb: 2048
+      register: queuedd_output
+
+    - name: Assert unspecified queue options are preserved
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is changed
+          - queuedd_output.max_size_in_mb == 2048
+          - queuedd_output.max_delivery_count == 5
+          - queuedd_output.requires_duplicate_detection is true
+
+    - name: Update only max_size_in_mb on the queue (idempotent)
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        max_size_in_mb: 2048
+      register: queuedd_output
+
+    - name: Assert the queue update is idempotent
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is not changed
+
+    - name: Disable batched operations and receiving on the queue
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        enable_batched_operations: false
+        status: receive_disabled
+      register: queuedd_output
+
+    - name: Assert queue false and status updates are applied and other options preserved
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is changed
+          - queuedd_output.enable_batched_operations is false
+          - queuedd_output.status == 'receive_disabled'
+          - queuedd_output.max_delivery_count == 5
+
+    - name: Disable batched operations and receiving on the queue (idempotent)
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        enable_batched_operations: false
+        status: receive_disabled
+      register: queuedd_output
+
+    - name: Assert the queue status update is idempotent
+      ansible.builtin.assert:
+        that:
+          - queuedd_output is not changed
+
+    - name: Delete the duplicate detection queue
+      azure.azcollection.azure_rm_servicebusqueue:
+        name: "queuedd{{ rpfx }}"
+        namespace: "ns{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        state: absent
 
     - name: Create a topic (check mode)
       azure.azcollection.azure_rm_servicebustopic:
@@ -251,7 +364,8 @@
         that:
           - output is changed
           - output.id is defined
-          - "'subscription_count' not in output"
+          - output.subscription_count == 0
+          - output.max_message_size_in_kb == 2048
 
     - name: Create a topic (idempontent)
       azure.azcollection.azure_rm_servicebustopic:
@@ -267,6 +381,105 @@
       ansible.builtin.assert:
         that:
           - output is not changed
+
+    - name: Create a topic with duplicate detection
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        requires_duplicate_detection: true
+        duplicate_detection_time_in_seconds: 600
+      register: topicdd_output
+
+    - name: Assert duplicate detection enabled on the topic
+      ansible.builtin.assert:
+        that:
+          - topicdd_output is changed
+          - topicdd_output.requires_duplicate_detection is true
+          - topicdd_output.duplicate_detection_time_in_seconds == 600
+
+    - name: Update the topic without requires_duplicate_detection
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        duplicate_detection_time_in_seconds: 1200
+      register: topicdd_output
+
+    - name: Assert duplicate detection preserved on the topic
+      ansible.builtin.assert:
+        that:
+          - topicdd_output is changed
+          - topicdd_output.requires_duplicate_detection is true
+          - topicdd_output.duplicate_detection_time_in_seconds == 1200
+
+    - name: Disable duplicate detection on the existing topic
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        requires_duplicate_detection: false
+      register: topicdd_output
+      ignore_errors: true
+
+    - name: Assert the topic change is rejected
+      ansible.builtin.assert:
+        that:
+          - topicdd_output is failed
+          - "'cannot be changed' in topicdd_output.msg"
+
+    - name: Update the topic duplicate detection window (check mode)
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        duplicate_detection_time_in_seconds: 1800
+      check_mode: true
+      register: topicdd_output
+
+    - name: Assert the check mode update reports a change
+      ansible.builtin.assert:
+        that:
+          - topicdd_output is changed
+
+    - name: Disable batched operations and sending on the topic
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        enable_batched_operations: false
+        status: send_disabled
+      register: topicdd_output
+
+    - name: Assert false and status updates are applied and other options preserved
+      ansible.builtin.assert:
+        that:
+          - topicdd_output is changed
+          - topicdd_output.enable_batched_operations is false
+          - topicdd_output.status == 'send_disabled'
+          - topicdd_output.requires_duplicate_detection is true
+          - topicdd_output.duplicate_detection_time_in_seconds == 1200
+
+    - name: Disable batched operations and sending on the topic (idempotent)
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        enable_batched_operations: false
+        status: send_disabled
+      register: topicdd_output
+
+    - name: Assert the topic update is idempotent
+      ansible.builtin.assert:
+        that:
+          - topicdd_output is not changed
+
+    - name: Delete the duplicate detection topic
+      azure.azcollection.azure_rm_servicebustopic:
+        name: "topicdd{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        state: absent
 
     - name: Create test policy
       azure.azcollection.azure_rm_servicebussaspolicy:
@@ -289,6 +502,70 @@
         that:
           - subs.id is defined
           - subs is changed
+
+    - name: Update the subscription delivery count and batched operations
+      azure.azcollection.azure_rm_servicebustopicsubscription:
+        name: "subs{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+        max_delivery_count: 5
+        enable_batched_operations: false
+      register: subs_output
+
+    - name: Assert the subscription update is applied
+      ansible.builtin.assert:
+        that:
+          - subs_output is changed
+          - subs_output.max_delivery_count == 5
+          - subs_output.enable_batched_operations is false
+
+    - name: Update only the subscription lock duration
+      azure.azcollection.azure_rm_servicebustopicsubscription:
+        name: "subs{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+        lock_duration_in_seconds: 90
+      register: subs_output
+
+    - name: Assert unspecified subscription options are preserved
+      ansible.builtin.assert:
+        that:
+          - subs_output is changed
+          - subs_output.lock_duration_in_seconds == 90
+          - subs_output.max_delivery_count == 5
+          - subs_output.enable_batched_operations is false
+
+    - name: Update only the subscription lock duration (idempotent)
+      azure.azcollection.azure_rm_servicebustopicsubscription:
+        name: "subs{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+        lock_duration_in_seconds: 90
+      register: subs_output
+
+    - name: Assert the subscription update is idempotent
+      ansible.builtin.assert:
+        that:
+          - subs_output is not changed
+
+    - name: Enable sessions on the existing subscription
+      azure.azcollection.azure_rm_servicebustopicsubscription:
+        name: "subs{{ rpfx }}"
+        resource_group: "{{ resource_group }}-servicebus"
+        namespace: "ns{{ rpfx }}"
+        topic: "topic{{ rpfx }}"
+        requires_session: true
+      register: subs_output
+      ignore_errors: true
+
+    - name: Assert the subscription change is rejected
+      ansible.builtin.assert:
+        that:
+          - subs_output is failed
+          - "'cannot be changed' in subs_output.msg"
 
     - name: Retrive topic
       azure.azcollection.azure_rm_servicebus_info:
