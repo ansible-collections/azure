@@ -61,7 +61,7 @@
       ansible.builtin.assert:
         that:
           - create_check is changed
-          - before_create.response | length == 0
+          - before_create.status_code == 404
 
     - name: Create manual throughput container
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:
@@ -153,6 +153,7 @@
         that:
           - manual_update is changed
           - manual_after.response[0].properties.resource.indexingPolicy.indexingMode == 'none'
+          - not manual_after.response[0].properties.resource.indexingPolicy.automatic
           - manual_after.response[0].properties.resource._rid == manual_before.response[0].properties.resource._rid
           - manual_after.response[0].properties.resource.partitionKey.paths == ['/tenant']
           - manual_ru.response[0].properties.resource.throughput == 800
@@ -260,7 +261,7 @@
       ansible.builtin.assert:
         that:
           - deleted.results | selectattr('changed') | list | length == 2
-          - after_delete.response | length == 0
+          - after_delete.status_code == 404
 
     - name: Repeat deletion
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:

@@ -41,6 +41,9 @@ options:
         description: Indexing mode. Other indexing settings are preserved on update.
         type: str
         choices: [consistent, none]
+    automatic:
+        description: Whether indexing is automatic. Defaults to false when I(indexing_mode=none).
+        type: bool
     throughput:
         description:
             - Dedicated manual throughput in request units per second.
@@ -112,6 +115,7 @@ class AzureRMCosmosDBSqlContainer(AzureRMModuleBase):
             name=dict(type='str', required=True),
             partition_key_paths=dict(type='list', elements='str', no_log=False),
             indexing_mode=dict(type='str', choices=['consistent', 'none']),
+            automatic=dict(type='bool'),
             throughput=dict(type='int'),
             autoscale_max_throughput=dict(type='int'),
             state=dict(type='str', default='present', choices=['present', 'absent']),
@@ -168,11 +172,37 @@ class AzureRMCosmosDBSqlContainer(AzureRMModuleBase):
         resource = copy.deepcopy(existing.resource) if existing else models.SqlContainerResource(
             id=self.name, partition_key=models.ContainerPartitionKey(paths=self.partition_key_paths, kind='Hash'))
         old_mode = resource.indexing_policy.indexing_mode if resource.indexing_policy else None
-        resource_changed = existing is None or (self.indexing_mode is not None and self.indexing_mode != old_mode)
+        old_automatic = resource.indexing_policy.automatic if resource.indexing_policy else None
+        desired_automatic = self.automatic
         if self.indexing_mode is not None:
             if resource.indexing_policy is None:
                 resource.indexing_policy = models.IndexingPolicy()
             resource.indexing_policy.indexing_mode = self.indexing_mode
+            if self.indexing_mode == 'none' and self.automatic is None:
+                desired_automatic = False
+            elif self.indexing_mode == 'consistent' and old_mode == 'none' and self.automatic is None:
+                desired_automatic = True
+                resource.indexing_policy.included_paths = [models.IncludedPath(path='/*')]
+                resource.indexing_policy.excluded_paths = [models.ExcludedPath(path='/*/_etag/?')]
+        if self.indexing_mode == 'none':
+            resource.indexing_policy.included_paths = None
+            resource.indexing_policy.excluded_paths = None
+            resource.indexing_policy.composite_indexes = None
+            resource.indexing_policy.spatial_indexes = None
+        if desired_automatic is not None:
+            if self.indexing_mode == 'none' and desired_automatic:
+                self.fail('automatic must be false when indexing_mode is none')
+            if resource.indexing_policy is None:
+                resource.indexing_policy = models.IndexingPolicy()
+            resource.indexing_policy.automatic = desired_automatic
+        resource_changed = existing is None or (
+            self.indexing_mode is not None and self.indexing_mode != old_mode) or (
+                desired_automatic is not None and desired_automatic != old_automatic) or (
+                    self.indexing_mode == 'none' and old_mode == 'none' and existing.resource.indexing_policy and (
+                        existing.resource.indexing_policy.included_paths or
+                        existing.resource.indexing_policy.excluded_paths or
+                        existing.resource.indexing_policy.composite_indexes or
+                        existing.resource.indexing_policy.spatial_indexes))
         if self.check_mode:
             return dict(changed=resource_changed or throughput_changed)
 

@@ -40,7 +40,7 @@ def params(**overrides):
 def existing_collection():
     return models.MongoDBCollectionGetResults(resource=models.MongoDBCollectionGetPropertiesResource(
         id='collection', shard_key={'tenant': 'Hash'}, indexes=[models.MongoIndex(
-            key=models.MongoIndexKeys(keys=['_id']), options=models.MongoIndexOptions(unique=True))]))
+            key=models.MongoIndexKeys(keys=['_id']))]))
 
 
 def test_create_mongo_collection_with_indexes_and_throughput():
@@ -64,6 +64,13 @@ def test_creation_requires_shard_key():
 def test_index_update_and_shard_key_immutability():
     obj, client = module(existing_collection(), check_mode=True)
     assert obj.exec_module(**params(indexes=[{'keys': ['tenant'], 'unique': False}]))['changed']
+    client.begin_create_update_mongo_db_collection.assert_not_called()
+
+
+def test_default_id_index_is_idempotent_when_api_omits_unique_option():
+    obj, client = module(existing_collection())
+    result = obj.exec_module(**params(indexes=[{'keys': ['_id'], 'unique': True}]))
+    assert not result['changed']
     client.begin_create_update_mongo_db_collection.assert_not_called()
     obj, client = module(existing_collection())
     with pytest.raises(ValueError, match='shard_key cannot be changed'):

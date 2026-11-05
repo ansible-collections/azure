@@ -63,7 +63,7 @@
       ansible.builtin.assert:
         that:
           - collection_check is changed
-          - before_create.response | length == 0
+          - before_create.status_code == 404
 
     - name: Create MongoDB collection
       azure.azcollection.azure_rm_cosmosdbmongocollection:

@@ -12,7 +12,7 @@ def module(existing=None, throughput=None, check_mode=False):
     obj = AzureRMCosmosDBSqlContainer.__new__(AzureRMCosmosDBSqlContainer)
     obj.module_arg_spec = dict.fromkeys(('resource_group', 'account_name', 'database_name', 'name',
                                          'partition_key_paths', 'indexing_mode', 'throughput',
-                                         'autoscale_max_throughput', 'state'))
+                                         'automatic', 'autoscale_max_throughput', 'state'))
     client = MagicMock()
     if existing is None:
         client.get_sql_container.side_effect = ResourceNotFoundError('missing')
@@ -33,7 +33,7 @@ def module(existing=None, throughput=None, check_mode=False):
 
 def params(**overrides):
     values = dict(resource_group='rg', account_name='account', database_name='db', name='container',
-                  partition_key_paths=None, indexing_mode=None, throughput=None,
+                  partition_key_paths=None, indexing_mode=None, automatic=None, throughput=None,
                   autoscale_max_throughput=None, state='present')
     values.update(overrides)
     return values
@@ -60,7 +60,9 @@ def test_index_update_preserves_existing_properties():
     body = client.begin_create_update_sql_container.call_args.kwargs['create_update_sql_container_parameters']
     assert result['changed']
     assert body.resource.indexing_policy.indexing_mode == 'none'
-    assert body.resource.indexing_policy.automatic is True
+    assert body.resource.indexing_policy.automatic is False
+    assert body.resource.indexing_policy.included_paths is None
+    assert body.resource.indexing_policy.excluded_paths is None
     assert body.resource.default_ttl == 3600
     assert old.resource.indexing_policy.indexing_mode == 'consistent'
 

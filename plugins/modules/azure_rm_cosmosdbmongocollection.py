@@ -164,13 +164,9 @@ class AzureRMCosmosDBMongoCollection(AzureRMModuleBase):
                 options=models.MongoIndexOptions(
                     unique=index.get('unique'), expire_after_seconds=index.get('expire_after_seconds')))
                 for index in self.indexes]
-        old = existing.resource.as_dict() if existing else None
-        new = resource.as_dict()
-        if existing:
-            for key in ('_rid', '_ts', '_etag'):
-                old.pop(key, None)
-                new.pop(key, None)
-        resource_changed = existing is None or old != new
+        resource_changed = existing is None or (self.indexes is not None and
+                                                self._normalized_indexes(existing.resource.indexes) !=
+                                                self._normalized_indexes(resource.indexes))
         if self.check_mode:
             return dict(changed=resource_changed or throughput_changed)
         try:
@@ -212,6 +208,23 @@ class AzureRMCosmosDBMongoCollection(AzureRMModuleBase):
         if (autoscale is not None) != (self.autoscale_max_throughput is not None):
             self.fail('Changing throughput mode is not supported; migrate collection throughput first')
         return desired != (autoscale.max_throughput if autoscale else current.throughput)
+
+    def _normalized_indexes(self, indexes):
+        """Normalize SDK defaults that Cosmos omits from collection responses."""
+        normalized = []
+        for index in indexes or []:
+            value = index.as_dict() if hasattr(index, 'as_dict') else index
+            key = value.get('key') or {}
+            keys = key.get('keys') or []
+            options = value.get('options') or {}
+            unique = options.get('unique', False)
+            # Cosmos implicitly creates the unique _id index, and may omit
+            # its options object from reads even if it was specified on PUT.
+            if keys == ['_id'] and not unique:
+                unique = True
+            normalized.append((tuple(keys), bool(unique),
+                               options.get('expire_after_seconds', options.get('expireAfterSeconds'))))
+        return normalized
 
 
 def main():
