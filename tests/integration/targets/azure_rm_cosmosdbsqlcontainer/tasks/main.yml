@@ -1,0 +1,284 @@
+- name: Create resource group for Cosmos DB container tests
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-cosmoscontainer"
+    location: eastus
+
+- name: Exercise SQL containers
+  block:
+    - name: Set test names
+      ansible.builtin.set_fact:
+        cosmos_rg: "{{ resource_group }}-cosmoscontainer"
+        cosmos_account: "ct{{ resource_group | hash('md5') | truncate(16, true, '') }}"
+        cosmos_api_version: '2024-02-15-preview'
+
+    - name: Create Cosmos DB account
+      azure.azcollection.azure_rm_cosmosdbaccount:
+        resource_group: "{{ cosmos_rg }}"
+        name: "{{ cosmos_account }}"
+        location: eastus
+        kind: global_document_db
+        database_account_offer_type: Standard
+        geo_rep_locations:
+          - name: eastus
+            failover_priority: 0
+      register: cosmos_account_result
+
+    - name: Create prerequisite SQL database
+      azure.azcollection.azure_rm_resource:
+        url: "{{ cosmos_account_result.id }}/sqlDatabases/testdb"
+        api_version: "{{ cosmos_api_version }}"
+        method: PUT
+        body:
+          properties:
+            resource:
+              id: testdb
+        polling_timeout: 900
+
+    - name: Set URLs for independent verification
+      ansible.builtin.set_fact:
+        manual_url: "{{ cosmos_account_result.id }}/sqlDatabases/testdb/containers/manual"
+        auto_url: "{{ cosmos_account_result.id }}/sqlDatabases/testdb/containers/autoscale"
+
+    - name: Predict manual container creation
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        partition_key_paths: [/tenant]
+        indexing_mode: consistent
+        throughput: 400
+      check_mode: true
+      register: create_check
+
+    - name: Independently check that check mode did not create the container
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: before_create
+
+    - name: Assert predicted creation
+      ansible.builtin.assert:
+        that:
+          - create_check is changed
+          - before_create.response | length == 0
+
+    - name: Create manual throughput container
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        partition_key_paths: [/tenant]
+        indexing_mode: consistent
+        throughput: 400
+      register: manual_create
+
+    - name: Read created container independently
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: manual_before
+
+    - name: Assert container creation
+      ansible.builtin.assert:
+        that:
+          - manual_create is changed
+          - manual_before.response[0].properties.resource.indexingPolicy.indexingMode == 'consistent'
+          - manual_before.response[0].properties.resource.partitionKey.paths == ['/tenant']
+
+    - name: Repeat manual container creation
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        partition_key_paths: [/tenant]
+        indexing_mode: consistent
+        throughput: 400
+      register: manual_repeat
+
+    - name: Assert manual container is idempotent
+      ansible.builtin.assert:
+        that:
+          - manual_repeat is not changed
+
+    - name: Predict indexing and throughput update
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        indexing_mode: none
+        throughput: 800
+      check_mode: true
+      register: update_check
+
+    - name: Independently verify indexing before real update
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: before_update
+
+    - name: Assert check mode did not update indexing
+      ansible.builtin.assert:
+        that:
+          - update_check is changed
+          - before_update.response[0].properties.resource.indexingPolicy.indexingMode == 'consistent'
+
+    - name: Update indexing and manual throughput
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        indexing_mode: none
+        throughput: 800
+      register: manual_update
+
+    - name: Read updated container independently
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: manual_after
+
+    - name: Read updated manual throughput independently
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}/throughputSettings/default"
+        api_version: "{{ cosmos_api_version }}"
+      register: manual_ru
+
+    - name: Assert indexing and throughput updated without recreation
+      ansible.builtin.assert:
+        that:
+          - manual_update is changed
+          - manual_after.response[0].properties.resource.indexingPolicy.indexingMode == 'none'
+          - manual_after.response[0].properties.resource._rid == manual_before.response[0].properties.resource._rid
+          - manual_after.response[0].properties.resource.partitionKey.paths == ['/tenant']
+          - manual_ru.response[0].properties.resource.throughput == 800
+
+    - name: Repeat manual update
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        indexing_mode: none
+        throughput: 800
+      register: manual_update_repeat
+
+    - name: Assert manual update idempotency
+      ansible.builtin.assert:
+        that:
+          - manual_update_repeat is not changed
+
+    - name: Create autoscale container
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: autoscale
+        partition_key_paths: [/tenant]
+        autoscale_max_throughput: 4000
+      register: auto_create
+
+    - name: Scale autoscale container
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: autoscale
+        autoscale_max_throughput: 6000
+      register: auto_update
+
+    - name: Read autoscale throughput independently
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ auto_url }}/throughputSettings/default"
+        api_version: "{{ cosmos_api_version }}"
+      register: auto_ru
+
+    - name: Assert autoscale throughput
+      ansible.builtin.assert:
+        that:
+          - auto_create is changed
+          - auto_update is changed
+          - auto_ru.response[0].properties.resource.autoscaleSettings.maxThroughput == 6000
+
+    - name: Repeat autoscale update
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: autoscale
+        autoscale_max_throughput: 6000
+      register: auto_repeat
+
+    - name: Assert autoscale update idempotency
+      ansible.builtin.assert:
+        that:
+          - auto_repeat is not changed
+
+    - name: Predict deletion of manual container
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        state: absent
+      check_mode: true
+      register: delete_check
+
+    - name: Check manual container still exists
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: before_delete
+
+    - name: Assert deletion check mode
+      ansible.builtin.assert:
+        that:
+          - delete_check is changed
+          - before_delete.response | length == 1
+
+    - name: Delete both containers
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: "{{ item }}"
+        state: absent
+      loop: [manual, autoscale]
+      register: deleted
+
+    - name: Verify manual container is gone
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: after_delete
+
+    - name: Assert deletion
+      ansible.builtin.assert:
+        that:
+          - deleted.results | selectattr('changed') | list | length == 2
+          - after_delete.response | length == 0
+
+    - name: Repeat deletion
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        state: absent
+      register: delete_repeat
+
+    - name: Assert deletion idempotency
+      ansible.builtin.assert:
+        that:
+          - delete_repeat is not changed
+
+  always:
+    - name: Delete test resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-cosmoscontainer"
+        state: absent
+        force_delete_nonempty: true

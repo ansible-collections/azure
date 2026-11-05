@@ -3,3 +3,4 @@ azure-eventhub
 aiohttp
 pytest-asyncio
 azure-identity==1.25.2
+azure-mgmt-cosmosdb==10.0.0b3

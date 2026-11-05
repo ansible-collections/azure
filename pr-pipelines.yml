@@ -55,6 +55,8 @@ parameters:
       - "azure_rm_cognitiveservices"
       - "azure_rm_cognitiveservicesaccount"
       - "azure_rm_cognitiveservicesdeployment"
+      - "azure_rm_cosmosdbsqlcontainer"
+      - "azure_rm_cosmosdbmongocollection"
       - "azure_rm_containerapp"
       - "azure_rm_containerappdaprcomponent"
       - "azure_rm_containerinstance"
