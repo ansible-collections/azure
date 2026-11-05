@@ -27,6 +27,8 @@ action_groups:
     - azure.azcollection.azure_rm_afdruleset
     - azure.azcollection.azure_rm_afdruleset_info
     - azure.azcollection.azure_rm_aks
+    - azure.azcollection.azure_rm_aksfleet
+    - azure.azcollection.azure_rm_aksfleet_info
     - azure.azcollection.azure_rm_aks_info
     - azure.azcollection.azure_rm_aksagentpool
     - azure.azcollection.azure_rm_aksagentpool_info
