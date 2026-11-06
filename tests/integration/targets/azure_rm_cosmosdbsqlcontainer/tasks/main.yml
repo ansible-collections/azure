@@ -87,6 +87,22 @@
           - manual_before.response[0].properties.resource.indexingPolicy.indexingMode == 'consistent'
           - manual_before.response[0].properties.resource.partitionKey.paths == ['/tenant']
 
+    - name: Read SQL container through its info module
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer_info:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        retrieve_throughput: true
+      register: manual_facts
+
+    - name: Assert SQL container info result
+      ansible.builtin.assert:
+        that:
+          - manual_facts.containers | length == 1
+          - manual_facts.containers[0].resource.indexing_policy.indexing_mode == 'consistent'
+          - manual_facts.containers[0].throughput.resource.throughput == 400
+
     - name: Repeat manual container creation
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:
         resource_group: "{{ cosmos_rg }}"
@@ -157,6 +173,22 @@
           - manual_after.response[0].properties.resource._rid == manual_before.response[0].properties.resource._rid
           - manual_after.response[0].properties.resource.partitionKey.paths == ['/tenant']
           - manual_ru.response[0].properties.resource.throughput == 800
+
+    - name: Read updated SQL container through its info module
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer_info:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        retrieve_throughput: true
+      register: manual_facts_updated
+
+    - name: Assert updated SQL info
+      ansible.builtin.assert:
+        that:
+          - manual_facts_updated.containers[0].resource.indexing_policy.indexing_mode == 'none'
+          - not manual_facts_updated.containers[0].resource.indexing_policy.automatic
+          - manual_facts_updated.containers[0].throughput.resource.throughput == 800
 
     - name: Repeat manual update
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:
@@ -276,6 +308,19 @@
       ansible.builtin.assert:
         that:
           - delete_repeat is not changed
+
+    - name: Read deleted SQL container through its info module
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer_info:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+      register: missing_container_facts
+
+    - name: Assert deleted SQL container is not returned
+      ansible.builtin.assert:
+        that:
+          - missing_container_facts.containers | length == 0
 
   always:
     - name: Delete test resource group

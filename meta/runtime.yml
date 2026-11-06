@@ -117,7 +117,9 @@ action_groups:
     - azure.azcollection.azure_rm_cosmosdbaccount
     - azure.azcollection.azure_rm_cosmosdbaccount_info
     - azure.azcollection.azure_rm_cosmosdbmongocollection
+    - azure.azcollection.azure_rm_cosmosdbmongocollection_info
     - azure.azcollection.azure_rm_cosmosdbsqlcontainer
+    - azure.azcollection.azure_rm_cosmosdbsqlcontainer_info
     - azure.azcollection.azure_rm_databricksworkspace
     - azure.azcollection.azure_rm_databricksworkspace_info
     - azure.azcollection.azure_rm_datafactory

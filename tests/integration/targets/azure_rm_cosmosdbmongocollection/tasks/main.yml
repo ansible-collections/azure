@@ -92,6 +92,22 @@
           - after_create.response[0].properties.resource.shardKey.tenantId == 'Hash'
           - after_create.response[0].properties.resource.indexes | length == 1
 
+    - name: Read collection using its info module
+      azure.azcollection.azure_rm_cosmosdbmongocollection_info:
+        resource_group: "{{ mongo_rg }}"
+        account_name: "{{ mongo_account }}"
+        database_name: testdb
+        name: events
+        retrieve_throughput: true
+      register: collection_facts
+
+    - name: Assert MongoDB collection info
+      ansible.builtin.assert:
+        that:
+          - collection_facts.collections | length == 1
+          - collection_facts.collections[0].resource.shard_key.tenantId == 'Hash'
+          - collection_facts.collections[0].throughput.resource.throughput == 400
+
     - name: Assert collection idempotency
       azure.azcollection.azure_rm_cosmosdbmongocollection:
         resource_group: "{{ mongo_rg }}"
@@ -143,6 +159,21 @@
           - after_update.response[0].properties.resource.indexes | length == 2
           - throughput_info.response[0].properties.resource.throughput == 800
 
+    - name: Read updated MongoDB collection using its info module
+      azure.azcollection.azure_rm_cosmosdbmongocollection_info:
+        resource_group: "{{ mongo_rg }}"
+        account_name: "{{ mongo_account }}"
+        database_name: testdb
+        name: events
+        retrieve_throughput: true
+      register: collection_facts_updated
+
+    - name: Assert updated MongoDB collection facts
+      ansible.builtin.assert:
+        that:
+          - collection_facts_updated.collections[0].resource.indexes | length == 2
+          - collection_facts_updated.collections[0].throughput.resource.throughput == 800
+
     - name: Predict collection deletion
       azure.azcollection.azure_rm_cosmosdbmongocollection:
         resource_group: "{{ mongo_rg }}"
@@ -186,6 +217,19 @@
       ansible.builtin.assert:
         that:
           - delete_repeat is not changed
+
+    - name: Read deleted MongoDB collection using its info module
+      azure.azcollection.azure_rm_cosmosdbmongocollection_info:
+        resource_group: "{{ mongo_rg }}"
+        account_name: "{{ mongo_account }}"
+        database_name: testdb
+        name: events
+      register: missing_collection_facts
+
+    - name: Assert deleted collection is not returned
+      ansible.builtin.assert:
+        that:
+          - missing_collection_facts.collections | length == 0
 
   always:
     - name: Delete test resource group
