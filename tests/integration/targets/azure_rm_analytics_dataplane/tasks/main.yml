@@ -87,6 +87,19 @@
           - cluster_resized is changed
           - cluster_resized.cluster.num_workers == 4
 
+    - name: Read resized cluster through its info module
+      azure.azcollection.azure_rm_databrickscluster_info:
+        resource_group: "{{ databricks_test_resource_group }}"
+        workspace_name: "{{ databricks_test_workspace }}"
+        name: "{{ cluster_name }}"
+      register: cluster_facts
+
+    - name: Assert cluster info reports resized cluster
+      ansible.builtin.assert:
+        that:
+          - cluster_facts.clusters | length == 1
+          - cluster_facts.clusters[0].num_workers == 4
+
     - name: Import notebook to workspace
       azure.azcollection.azure_rm_databricksnotebook:
         resource_group: "{{ databricks_test_resource_group }}"
@@ -144,6 +157,21 @@
           - synapse_workspace is not changed
           - synapse_workspace.workspace.name == synapse_test_workspace
 
+    - name: Read Synapse workspace through its info module
+      azure.azcollection.azure_rm_synapseworkspace_info:
+        resource_group: "{{ synapse_test_resource_group }}"
+        name: "{{ synapse_test_workspace }}"
+      register: synapse_workspace_facts
+
+    - name: Assert Synapse workspace facts
+      ansible.builtin.assert:
+        that:
+          - synapse_workspace_facts.workspaces | length == 1
+          - synapse_workspace_facts.workspaces[0].name == synapse_test_workspace
+          - sql_admin_password not in synapse_workspace_facts | to_json
+      vars:
+        sql_admin_password: "{{ azure_sql_password }}"
+
     - name: Create Azure SQL linked service in Synapse
       azure.azcollection.azure_rm_synapselinkedservice:
         resource_group: "{{ synapse_test_resource_group }}"
@@ -162,6 +190,20 @@
           - linked_service_create is changed
           - linked_service_create.linked_service.properties.type == 'AzureSqlDatabase'
           - "'connectionString' not in linked_service_create.linked_service.properties.typeProperties"
+
+    - name: Read linked service through its info module
+      azure.azcollection.azure_rm_synapselinkedservice_info:
+        resource_group: "{{ synapse_test_resource_group }}"
+        workspace_name: "{{ synapse_test_workspace }}"
+        name: "{{ linked_service_name }}"
+      register: linked_service_facts
+
+    - name: Assert linked service info omits secure credentials
+      ansible.builtin.assert:
+        that:
+          - linked_service_facts.linked_services | length == 1
+          - linked_service_facts.linked_services[0].properties.type == 'AzureSqlDatabase'
+          - "'connectionString' not in linked_service_facts.linked_services[0].properties.typeProperties"
 
     - name: Verify linked service independently through ARM
       azure.azcollection.azure_rm_resource_info:
