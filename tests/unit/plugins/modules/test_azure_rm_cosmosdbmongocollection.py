@@ -46,8 +46,9 @@ def existing_collection():
 def test_create_mongo_collection_with_indexes_and_throughput():
     obj, client = module()
     client.begin_create_update_mongo_db_collection.return_value.result.return_value = existing_collection()
-    result = obj.exec_module(**params(shard_key={'tenant': 'Hash'}, indexes=[{'keys': ['_id'], 'unique': True}],
-                                       throughput=400))
+    arguments = params(shard_key={'tenant': 'Hash'}, indexes=[{'keys': ['_id'], 'unique': True}],
+                       throughput=400)
+    result = obj.exec_module(**arguments)
     assert result['changed']
     call = client.begin_create_update_mongo_db_collection.call_args.kwargs
     assert call['create_update_mongo_db_collection_parameters'].resource.shard_key == {'tenant': 'Hash'}

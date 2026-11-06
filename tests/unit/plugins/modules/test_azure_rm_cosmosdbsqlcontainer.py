@@ -25,6 +25,7 @@ def module(existing=None, throughput=None, check_mode=False):
         endpoints=SimpleNamespace(resource_manager='https://example.com')))
     obj.check_mode = check_mode
     obj.get_poller_result = MagicMock(side_effect=lambda poller: poller.result())
+
     def fail(message):
         raise ValueError(message)
     obj.fail = MagicMock(side_effect=fail)
