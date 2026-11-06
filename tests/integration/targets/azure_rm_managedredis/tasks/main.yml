@@ -1,0 +1,494 @@
+- name: Create a resource group for the test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-managedredis"
+    location: eastus
+
+- name: Test azure_rm_managedredis
+  block:
+    # Variables
+    - name: Set variables
+      ansible.builtin.set_fact:
+        rg: "{{ resource_group }}-managedredis"
+        rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
+        location: eastus
+        managed_identity_ids: []
+
+    - name: Set the cluster name
+      ansible.builtin.set_fact:
+        cluster_name: "amr{{ rpfx }}"
+
+    - name: Create a user assigned identity
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'managedredis'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'create'
+        managed_identity_location: "{{ location }}"
+        new_resource_group: "{{ rg }}"
+      with_items:
+        - '1'
+
+    # Create
+    - name: Create cluster without public_network_access (expected failure)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+      register: output
+      ignore_errors: true
+
+    - name: Assert create without public_network_access fails
+      ansible.builtin.assert:
+        that:
+          - output.failed
+          - output.msg is search('public_network_access is required')
+
+    - name: Create cluster (check mode)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        location: "{{ location }}"
+        sku: Balanced_B0
+        high_availability: Disabled
+        public_network_access: Disabled
+        minimum_tls_version: '1.2'
+        identity:
+          type: SystemAssigned
+        tags:
+          key1: value1
+      check_mode: true
+      register: output
+
+    - name: Assert check mode reports a change
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.id is not defined
+
+    - name: Get cluster after check mode create
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert check mode did not create the cluster
+      ansible.builtin.assert:
+        that:
+          - output.clusters | length == 0
+
+    - name: Create cluster
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        location: "{{ location }}"
+        sku: Balanced_B0
+        high_availability: Disabled
+        public_network_access: Disabled
+        minimum_tls_version: '1.2'
+        identity:
+          type: SystemAssigned
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert the cluster is created
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.id is defined
+
+    - name: Set the cluster ID
+      ansible.builtin.set_fact:
+        cluster_id: "{{ output.id }}"
+
+    # Idempotence
+    - name: Create cluster again (idempotent)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        location: "{{ location }}"
+        sku: Balanced_B0
+        high_availability: Disabled
+        public_network_access: Disabled
+        minimum_tls_version: '1.2'
+        identity:
+          type: SystemAssigned
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert no change
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.id == cluster_id
+
+    # Read
+    - name: Get cluster info after create
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert returned values after create
+      ansible.builtin.assert:
+        that:
+          - output.clusters | length == 1
+          - output.clusters[0].id == cluster_id
+          - output.clusters[0].name == cluster_name
+          - output.clusters[0].type == 'Microsoft.Cache/redisEnterprise'
+          - output.clusters[0].location | replace(' ', '') | lower == location
+          - output.clusters[0].sku.name == 'Balanced_B0'
+          - output.clusters[0].high_availability == 'Disabled'
+          - output.clusters[0].public_network_access == 'Disabled'
+          - output.clusters[0].minimum_tls_version == '1.2'
+          - output.clusters[0].identity.type == 'SystemAssigned'
+          - output.clusters[0].identity.principal_id is defined
+          - "output.clusters[0].tags == {'key1': 'value1'}"
+          - output.clusters[0].host_name is defined
+          - output.clusters[0].provisioning_state == 'Succeeded'
+
+    # Update (tags and public network access)
+    - name: Update cluster tags and public network access (check mode)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        public_network_access: Enabled
+        tags:
+          key2: value2
+      check_mode: true
+      register: output
+
+    - name: Assert check mode reports an update
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.id == cluster_id
+
+    - name: Get cluster info after check mode update
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert check mode did not update the cluster
+      ansible.builtin.assert:
+        that:
+          - output.clusters[0].public_network_access == 'Disabled'
+          - "output.clusters[0].tags == {'key1': 'value1'}"
+
+    - name: Update cluster tags (append) and public network access
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        public_network_access: Enabled
+        tags:
+          key2: value2
+      register: output
+
+    - name: Assert the cluster is updated
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Update cluster tags (append) and public network access again (idempotent)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        public_network_access: Enabled
+        tags:
+          key2: value2
+      register: output
+
+    - name: Assert no change after tag append update
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Get cluster info after tag append update
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert tags were appended and other settings were kept
+      ansible.builtin.assert:
+        that:
+          - output.clusters[0].public_network_access == 'Enabled'
+          - "output.clusters[0].tags == {'key1': 'value1', 'key2': 'value2'}"
+          - output.clusters[0].minimum_tls_version == '1.2'
+          - output.clusters[0].identity.type == 'SystemAssigned'
+
+    - name: Replace cluster tags
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        append_tags: false
+        tags:
+          key3: value3
+      register: output
+
+    - name: Assert the tags are replaced
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Replace cluster tags again (idempotent)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        append_tags: false
+        tags:
+          key3: value3
+      register: output
+
+    - name: Assert no change after tag replace
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Get cluster info after tag replace
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert only the replaced tags remain
+      ansible.builtin.assert:
+        that:
+          - "output.clusters[0].tags == {'key3': 'value3'}"
+
+    # Update (identity)
+    - name: Add a user assigned identity
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
+
+    - name: Assert the user assigned identity is added
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Add a user assigned identity again (idempotent)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        identity:
+          type: SystemAssigned, UserAssigned
+          user_assigned_identities:
+            id:
+              - "{{ managed_identity_ids[0] }}"
+      register: output
+
+    - name: Assert no change after adding the identity
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Get cluster info after identity add
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert the identity contains the user assigned identity
+      ansible.builtin.assert:
+        that:
+          - output.clusters[0].identity.type == 'SystemAssigned, UserAssigned'
+          - managed_identity_ids[0] | lower in (output.clusters[0].identity.user_assigned_identities.keys() | map('lower') | list)
+
+    - name: Remove the user assigned identity
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        identity:
+          type: SystemAssigned
+      register: output
+
+    - name: Assert the user assigned identity is removed
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Remove the user assigned identity again (idempotent)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        sku: Balanced_B0
+        identity:
+          type: SystemAssigned
+      register: output
+
+    - name: Assert no change after removing the identity
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Get cluster info after identity removal
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert only the system assigned identity remains
+      ansible.builtin.assert:
+        that:
+          - output.clusters[0].identity.type == 'SystemAssigned'
+          - not (output.clusters[0].identity.user_assigned_identities | default({}))
+
+    # Update (immutable location)
+    - name: Change location of an existing cluster
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        location: westus2
+        sku: Balanced_B0
+      register: output
+
+    - name: Assert location change only warns
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+          - output.warnings | select('search', 'location cannot be changed') | list | length == 1
+
+    # Read (list)
+    - name: List clusters in the resource group by tag
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        tags:
+          - key3:value3
+      register: output
+
+    - name: Assert the cluster is listed by tag
+      ansible.builtin.assert:
+        that:
+          - output.clusters | selectattr('name', 'equalto', cluster_name) | list | length == 1
+
+    - name: List clusters in the resource group by a non-matching tag
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        tags:
+          - key3:nomatch
+      register: output
+
+    - name: Assert the cluster is filtered out
+      ansible.builtin.assert:
+        that:
+          - output.clusters | selectattr('name', 'equalto', cluster_name) | list | length == 0
+
+    - name: List clusters in the subscription
+      azure.azcollection.azure_rm_managedredis_info:
+        tags:
+          - key3:value3
+      register: output
+
+    - name: Assert the cluster is listed in the subscription
+      ansible.builtin.assert:
+        that:
+          - output.clusters | selectattr('id', 'equalto', cluster_id) | list | length == 1
+
+    - name: Get cluster by name without resource group (expected failure)
+      azure.azcollection.azure_rm_managedredis_info:
+        name: "{{ cluster_name }}"
+      register: output
+      ignore_errors: true
+
+    - name: Assert name without resource group fails
+      ansible.builtin.assert:
+        that:
+          - output.failed
+          - output.msg is search('resource_group is required when filtering by name')
+
+    # Delete
+    - name: Delete cluster (check mode)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert check mode reports a delete
+      ansible.builtin.assert:
+        that:
+          - output.changed
+
+    - name: Get cluster info after check mode delete
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert check mode did not delete the cluster
+      ansible.builtin.assert:
+        that:
+          - output.clusters | length == 1
+
+    - name: Delete cluster
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      register: output
+
+    - name: Assert the cluster is deleted
+      ansible.builtin.assert:
+        that:
+          - output.changed
+          - output.id == cluster_id
+
+    - name: Delete cluster again (idempotent)
+      azure.azcollection.azure_rm_managedredis:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      register: output
+
+    - name: Assert no change after delete
+      ansible.builtin.assert:
+        that:
+          - not output.changed
+
+    - name: Get cluster info after delete
+      azure.azcollection.azure_rm_managedredis_info:
+        resource_group: "{{ rg }}"
+        name: "{{ cluster_name }}"
+      register: output
+
+    - name: Assert the cluster no longer exists
+      ansible.builtin.assert:
+        that:
+          - output.clusters | length == 0
+
+  # Cleanup
+  always:
+    - name: Delete the user assigned identity
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../integration_common_tasks/managed_identity.yml"
+      vars:
+        managed_identity_test_unique: 'managedredis'
+        managed_identity_unique: "{{ item }}"
+        managed_identity_action: 'delete'
+        managed_identity_location: eastus
+        new_resource_group: "{{ resource_group }}-managedredis"
+      with_items:
+        - '1'
+
+    - name: Delete the test resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-managedredis"
+        force_delete_nonempty: true
+        state: absent
