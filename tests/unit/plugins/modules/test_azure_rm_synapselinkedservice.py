@@ -19,7 +19,10 @@ def module(current=None, check_mode=False):
         subscription_id='sub')
     obj.check_mode = check_mode
     obj.module = SimpleNamespace(log=MagicMock(), debug=MagicMock())
-    obj.fail = MagicMock(side_effect=lambda message: (_ for _ in ()).throw(ValueError(message)))
+
+    def fail(message):
+        raise ValueError(message)
+    obj.fail = MagicMock(side_effect=fail)
     return obj
 
 

@@ -1,5 +1,4 @@
 import base64
-import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -21,7 +20,10 @@ def make_module(cls, workspace_url='adb.example.net', check_mode=False):
     module.check_mode = check_mode
     module.validate_certs = True
     module.module = SimpleNamespace(params={'polling_timeout': 60}, log=MagicMock(), debug=MagicMock())
-    module.fail = MagicMock(side_effect=lambda message: (_ for _ in ()).throw(ValueError(message)))
+
+    def fail(message):
+        raise ValueError(message)
+    module.fail = MagicMock(side_effect=fail)
     return module
 
 
