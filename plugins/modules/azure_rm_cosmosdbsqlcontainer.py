@@ -233,14 +233,25 @@ class AzureRMCosmosDBSqlContainer(AzureRMModuleBase):
             if len(self.partition_key_paths) > 3:
                 self.fail('partition_key_paths supports at most three paths')
             return models.SqlContainerResource(
-                id=self.name, partition_key=models.ContainerPartitionKey(
-                    paths=self.partition_key_paths, kind=self._partition_key_kind(self.partition_key_paths)))
+                id=self.name, partition_key=self._partition_key())
         if self.partition_key_paths is not None:
             current = existing.resource.partition_key
             if (not current or self.partition_key_paths != current.paths
                     or self._partition_key_kind(self.partition_key_paths) != current.kind):
                 self.fail('partition_key_paths cannot be changed on an existing container')
         return copy.deepcopy(existing.resource)
+
+    def _partition_key(self):
+        """Build the partition key, deriving the kind from the path count.
+
+        A single path uses a Hash key, while two or three paths define a
+        hierarchical MultiHash key, which requires partition key definition
+        version 2.
+        """
+        kind = self._partition_key_kind(self.partition_key_paths)
+        return models.ContainerPartitionKey(
+            paths=self.partition_key_paths, kind=kind,
+            version=2 if kind == 'MultiHash' else None)
 
     def _partition_key_kind(self, paths):
         """A single path uses a Hash key; multiple paths form a hierarchical MultiHash key."""

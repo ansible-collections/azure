@@ -60,6 +60,7 @@ def test_hierarchical_partition_key_uses_multihash():
     body = client.begin_create_update_sql_container.call_args.kwargs['create_update_sql_container_parameters']
     assert body.resource.partition_key.kind == 'MultiHash'
     assert body.resource.partition_key.paths == ['/tenant', '/user']
+    assert body.resource.partition_key.version == 2
 
 
 def test_reject_more_than_three_partition_key_paths():
