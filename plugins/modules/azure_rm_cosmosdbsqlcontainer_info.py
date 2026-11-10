@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2026
+# Copyright (c) 2026 Bill Peck (@p3ck)
+#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -37,7 +38,7 @@ options:
 extends_documentation_fragment:
     - azure.azcollection.azure
 author:
-    - OpenAI (@openai)
+    - Bill Peck (@p3ck)
 '''
 
 EXAMPLES = '''
@@ -67,7 +68,6 @@ containers:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
-    from azure.mgmt.cosmosdb import CosmosDBManagementClient
 except ImportError:
     pass
 
@@ -91,8 +91,7 @@ class AzureRMCosmosDBSqlContainerInfo(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in self.module_arg_spec:
             setattr(self, key, kwargs[key])
-        self.client = self.get_mgmt_svc_client(
-            CosmosDBManagementClient, base_url=self._cloud_environment.endpoints.resource_manager).sql_resources
+        self.client = self.cosmosdb_client.sql_resources
         args = (self.resource_group, self.account_name, self.database_name)
         if self.name:
             try:

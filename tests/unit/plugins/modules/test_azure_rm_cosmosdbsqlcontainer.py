@@ -13,6 +13,7 @@ def module(existing=None, throughput=None, check_mode=False):
     obj.module_arg_spec = dict.fromkeys(('resource_group', 'account_name', 'database_name', 'name',
                                          'partition_key_paths', 'indexing_mode', 'throughput',
                                          'automatic', 'autoscale_max_throughput', 'state'))
+    obj.results = dict(changed=False)
     client = MagicMock()
     if existing is None:
         client.get_sql_container.side_effect = ResourceNotFoundError('missing')
@@ -20,9 +21,8 @@ def module(existing=None, throughput=None, check_mode=False):
         client.get_sql_container.return_value = existing
     if throughput is not None:
         client.get_sql_container_throughput.return_value.resource = throughput
-    obj.get_mgmt_svc_client = MagicMock(return_value=SimpleNamespace(sql_resources=client))
-    obj.azure_auth = SimpleNamespace(_cloud_environment=SimpleNamespace(
-        endpoints=SimpleNamespace(resource_manager='https://example.com')))
+    obj._cosmosdb_client = SimpleNamespace(sql_resources=client)
+    obj.module = SimpleNamespace(debug=MagicMock())
     obj.check_mode = check_mode
     obj.get_poller_result = MagicMock(side_effect=lambda poller: poller.result())
 
@@ -50,6 +50,29 @@ def test_creation_requires_partition_key():
     obj, client = module()
     with pytest.raises(ValueError, match='partition_key_paths is required'):
         obj.exec_module(**params())
+    client.begin_create_update_sql_container.assert_not_called()
+
+
+def test_hierarchical_partition_key_uses_multihash():
+    obj, client = module()
+    client.begin_create_update_sql_container.return_value.result.return_value = existing_container()
+    obj.exec_module(**params(partition_key_paths=['/tenant', '/user']))
+    body = client.begin_create_update_sql_container.call_args.kwargs['create_update_sql_container_parameters']
+    assert body.resource.partition_key.kind == 'MultiHash'
+    assert body.resource.partition_key.paths == ['/tenant', '/user']
+
+
+def test_reject_more_than_three_partition_key_paths():
+    obj, client = module()
+    with pytest.raises(ValueError, match='at most three paths'):
+        obj.exec_module(**params(partition_key_paths=['/a', '/b', '/c', '/d']))
+    client.begin_create_update_sql_container.assert_not_called()
+
+
+def test_unchanged_partition_key_is_idempotent():
+    obj, client = module(existing_container())
+    result = obj.exec_module(**params(partition_key_paths=['/tenant']))
+    assert not result['changed']
     client.begin_create_update_sql_container.assert_not_called()
 
 

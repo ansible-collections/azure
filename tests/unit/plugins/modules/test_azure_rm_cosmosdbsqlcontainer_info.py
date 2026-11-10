@@ -15,9 +15,7 @@ def module(resources=None, not_found=False):
         client.get_sql_container.side_effect = ResourceNotFoundError('missing')
     else:
         client.list_sql_containers.return_value = resources or []
-    obj.get_mgmt_svc_client = MagicMock(return_value=SimpleNamespace(sql_resources=client))
-    obj.azure_auth = SimpleNamespace(_cloud_environment=SimpleNamespace(
-        endpoints=SimpleNamespace(resource_manager='https://management.azure.com')))
+    obj._cosmosdb_client = SimpleNamespace(sql_resources=client)
     obj.module = SimpleNamespace(debug=MagicMock())
 
     def fail(message):

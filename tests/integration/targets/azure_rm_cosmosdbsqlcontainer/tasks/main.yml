@@ -251,6 +251,42 @@
         that:
           - auto_repeat is not changed
 
+    - name: Create hierarchical partition key container
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: hierarchical
+        partition_key_paths: [/tenant, /user]
+      register: hierarchical_create
+
+    - name: Read hierarchical container independently
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ cosmos_account_result.id }}/sqlDatabases/testdb/containers/hierarchical"
+        api_version: "{{ cosmos_api_version }}"
+      register: hierarchical_info
+
+    - name: Assert hierarchical partition key
+      ansible.builtin.assert:
+        that:
+          - hierarchical_create is changed
+          - hierarchical_info.response[0].properties.resource.partitionKey.kind == 'MultiHash'
+          - hierarchical_info.response[0].properties.resource.partitionKey.paths == ['/tenant', '/user']
+
+    - name: Repeat hierarchical container creation
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: hierarchical
+        partition_key_paths: [/tenant, /user]
+      register: hierarchical_repeat
+
+    - name: Assert hierarchical container is idempotent
+      ansible.builtin.assert:
+        that:
+          - hierarchical_repeat is not changed
+
     - name: Predict deletion of manual container
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:
         resource_group: "{{ cosmos_rg }}"
@@ -273,14 +309,14 @@
           - delete_check is changed
           - before_delete.response | length == 1
 
-    - name: Delete both containers
+    - name: Delete all containers
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:
         resource_group: "{{ cosmos_rg }}"
         account_name: "{{ cosmos_account }}"
         database_name: testdb
         name: "{{ item }}"
         state: absent
-      loop: [manual, autoscale]
+      loop: [manual, autoscale, hierarchical]
       register: deleted
 
     - name: Verify manual container is gone
@@ -292,7 +328,7 @@
     - name: Assert deletion
       ansible.builtin.assert:
         that:
-          - deleted.results | selectattr('changed') | list | length == 2
+          - deleted.results | selectattr('changed') | list | length == 3
           - after_delete.status_code == 404
 
     - name: Repeat deletion
