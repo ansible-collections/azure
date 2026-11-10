@@ -181,7 +181,7 @@ class AzureRMCosmosDBSqlContainer(AzureRMModuleBase):
         if self.autoscale_max_throughput is not None and self.autoscale_max_throughput <= 0:
             self.fail('autoscale_max_throughput must be positive')
 
-        resource = self._resource(existing)
+        resource = self._body(existing)
         resource_changed = self._reconcile_indexing_policy(resource, existing)
         throughput_changed = self._throughput_needs_update(existing)
         self.results['changed'] = resource_changed or throughput_changed
@@ -225,7 +225,7 @@ class AzureRMCosmosDBSqlContainer(AzureRMModuleBase):
         except Exception as exc:
             self.fail('Error deleting SQL container {0}: {1}'.format(self.name, str(exc)))
 
-    def _resource(self, existing):
+    def _body(self, existing):
         """Build the container resource payload for the create / update call."""
         if existing is None:
             if not self.partition_key_paths:
