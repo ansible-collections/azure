@@ -91,6 +91,7 @@ options:
     requires_session:
         description:
             - A value that indicates whether the subscription supports the concept of sessions.
+            - Can only be set when the subscription is created. Changing it on an existing subscription fails; delete and recreate the subscription instead.
         type: bool
     duplicate_detection_time_in_seconds:
         description:
@@ -133,7 +134,8 @@ id:
 '''
 
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -151,7 +153,10 @@ duration_spec_map = dict(
 )
 
 
-class AzureRMServiceSubscription(AzureRMModuleBase):
+create_only_attributes = ('requires_session',)
+
+
+class AzureRMServiceSubscription(AzureRMModuleBaseExt):
 
     def __init__(self):
 
@@ -223,7 +228,7 @@ class AzureRMServiceSubscription(AzureRMModuleBase):
                 requires_session=self.requires_session
             )
             if self.status:
-                params['status'] = self.servicebus_models.EntityStatus(str.capitalize(_snake_to_camel(self.status)))
+                params['status'] = self.servicebus_models.EntityStatus(_snake_to_camel(self.status, capitalize_first=True))
             for k, v in duration_spec_map.items():
                 seconds = getattr(self, v)
                 if seconds:
@@ -236,13 +241,20 @@ class AzureRMServiceSubscription(AzureRMModuleBase):
                 result = instance
             else:
                 result = original
+                for attribute in create_only_attributes:
+                    requested = getattr(instance, attribute)
+                    current = bool(getattr(original, attribute))
+                    if requested is not None and requested != current:
+                        self.fail("{0} cannot be changed on existing subscription {1} (current: {2}, requested: {3}). "
+                                  "Delete and recreate the subscription to change it.".format(attribute, self.name, current, requested))
+                # full PUT: carry forward options the user did not set.
+                # Unset durations come back as TimeSpan.MaxValue, which overflows when sent back, leaving them out of update.
                 attribute_map_keys = set(self.servicebus_models.SBSubscription._attribute_map.keys())
                 validation_keys = set(self.servicebus_models.SBSubscription._validation.keys())
-                attribute_map = attribute_map_keys - validation_keys
-                for attribute in attribute_map:
-                    value = getattr(instance, attribute)
-                    if value and value != getattr(original, attribute):
-                        changed = True
+                for attribute in attribute_map_keys - validation_keys:
+                    if getattr(instance, attribute) is None and is_valid_timedelta(getattr(original, attribute)) is not None:
+                        setattr(instance, attribute, getattr(original, attribute))
+                changed = not self.default_compare({}, instance.as_dict(), original.as_dict(), '', dict(compare=[]))
             if changed and not self.check_mode:
                 result = self.create_or_update(instance)
             self.results = self.to_dict(result)
@@ -277,15 +289,17 @@ class AzureRMServiceSubscription(AzureRMModuleBase):
         try:
             client = self._get_client()
             return client.get(self.resource_group, self.namespace, self.topic, self.name)
-        except Exception:
+        except ResourceNotFoundError:
             return None
+        except Exception as exc:
+            self.fail("Error getting servicebus subscription {0} - {1}".format(self.name, str(exc)))
 
     def to_dict(self, instance):
         result = dict()
         attribute_map = self.servicebus_models.SBSubscription._attribute_map
         for attribute in attribute_map.keys():
             value = getattr(instance, attribute)
-            if not value:
+            if value is None:
                 continue
             if attribute_map[attribute]['type'] == 'duration':
                 if is_valid_timedelta(value):
