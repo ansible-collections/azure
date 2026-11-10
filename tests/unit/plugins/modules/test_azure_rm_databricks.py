@@ -157,7 +157,8 @@ def test_notebook_import_idempotency_and_export(tmp_path):
     exported = make_module(AzureRMDatabricksNotebook)
     with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook.databricks_request',
                return_value={'content': base64.b64encode(b'print(1)').decode('ascii')}):
-        result = exported.exec_module(**notebook_params(state='exported', source=None, dest=str(destination)))
+        result = exported.exec_module(**notebook_params(state='exported', source=None, dest=str(destination),
+                                                        language=None))
     assert result['changed']
     assert destination.read_bytes() == b'print(1)'
 

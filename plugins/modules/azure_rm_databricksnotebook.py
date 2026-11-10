@@ -45,7 +45,7 @@ options:
         choices: [SOURCE, HTML, JUPYTER, DBC]
         default: SOURCE
     language:
-        description: Notebook language. Required by the workspace for SOURCE format.
+        description: Notebook language. Required by the workspace when importing SOURCE format.
         type: str
         choices: [SCALA, PYTHON, SQL, R]
     overwrite:
@@ -138,11 +138,12 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
 
-        # The language check cannot be expressed with required_if because it
-        # only applies to imports and exports, not to state=absent.
+        # The language check cannot be expressed with required_if because the
+        # workspace only requires it for SOURCE imports, not exports or
+        # deletion.
         if not self.path.startswith('/'):
             self.fail('path must be an absolute workspace path')
-        if self.format == 'SOURCE' and not self.language and self.state != 'absent':
+        if self.format == 'SOURCE' and not self.language and self.state == 'present':
             self.fail('language is required when format is SOURCE')
 
         self.host = databricks_workspace_host(self, self.resource_group, self.workspace_name)
