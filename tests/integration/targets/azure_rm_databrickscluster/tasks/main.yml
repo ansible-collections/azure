@@ -16,6 +16,10 @@
         cluster_name: "it{{ analytics_test_id }}"
         notebook_path: "/Shared/ansible-it-{{ analytics_test_id }}"
 
+    - name: Set a controller directory for notebook exports
+      ansible.builtin.set_fact:
+        remote_tmp_dir: "{{ lookup('ansible.builtin.env', 'TMPDIR') | default('/tmp', true) }}"
+
     - name: Predict cluster creation without creating it
       azure.azcollection.azure_rm_databrickscluster:
         resource_group: "{{ databricks_test_resource_group }}"
