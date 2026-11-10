@@ -118,7 +118,8 @@ EXAMPLES = '''
     resource_group: myResourceGroup
     name: myManagedApplication
     kind: ServiceCatalog
-    application_definition_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Solutions/applicationDefinitions/myDefinition"
+    application_definition_id: >-
+      /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Solutions/applicationDefinitions/myDefinition
     managed_resource_group_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/myManagedResourceGroup"
     parameters:
       storageAccountNamePrefix:
