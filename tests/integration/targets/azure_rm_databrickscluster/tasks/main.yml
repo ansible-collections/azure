@@ -24,6 +24,7 @@
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
         node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
         num_workers: 2
+        data_security_mode: SINGLE_USER
       check_mode: true
       register: cluster_check
 
@@ -41,6 +42,7 @@
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
         node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
         num_workers: 2
+        data_security_mode: SINGLE_USER
       register: cluster_create
 
     - name: Assert cluster created
@@ -57,6 +59,7 @@
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
         node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
         num_workers: 2
+        data_security_mode: SINGLE_USER
       register: cluster_idempotent
 
     - name: Assert cluster idempotent
@@ -72,6 +75,7 @@
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
         node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
         num_workers: 4
+        data_security_mode: SINGLE_USER
       register: cluster_resize
 
     - name: Assert resize

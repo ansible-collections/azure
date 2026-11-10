@@ -10,7 +10,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databr
 def make_module(cls, workspace_url='adb.example.net', check_mode=False):
     module = cls.__new__(cls)
     keys = (('resource_group', 'workspace_name', 'name', 'spark_version', 'node_type_id', 'num_workers',
-             'autoscale', 'autotermination_minutes', 'state') if cls is AzureRMDatabricksCluster else
+             'autoscale', 'autotermination_minutes', 'data_security_mode', 'state') if cls is AzureRMDatabricksCluster else
             ('resource_group', 'workspace_name', 'path', 'state', 'source', 'dest', 'format', 'language', 'overwrite'))
     module.module_arg_spec = dict.fromkeys(keys)
     module.results = dict(changed=False)
@@ -32,7 +32,7 @@ def make_module(cls, workspace_url='adb.example.net', check_mode=False):
 def cluster_params(**kwargs):
     result = dict(resource_group='rg', workspace_name='ws', name='etl', spark_version='13.3.x-scala2.12',
                   node_type_id='Standard_DS3_v2', num_workers=2, autoscale=None,
-                  autotermination_minutes=60, state='present')
+                  autotermination_minutes=60, data_security_mode='SINGLE_USER', state='present')
     result.update(kwargs)
     return result
 
@@ -56,11 +56,13 @@ def test_cluster_create_and_check_mode():
     assert result['changed']
     assert request.call_args_list[1].args[3] == 'POST'
     assert request.call_args_list[1].args[4]['spark_version'] == '13.3.x-scala2.12'
+    assert request.call_args_list[1].args[4]['data_security_mode'] == 'SINGLE_USER'
 
 
 def test_cluster_idempotency_and_edit():
     existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
-                    node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60)
+                    node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
+                    data_security_mode='SINGLE_USER')
     module = make_module(AzureRMDatabricksCluster)
     with mock_request([{'clusters': [existing]}]):
         assert not module.exec_module(**cluster_params())['changed']

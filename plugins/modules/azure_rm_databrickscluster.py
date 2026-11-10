@@ -55,6 +55,15 @@ options:
         description: Automatically terminate an idle cluster after this many minutes.
         type: int
         default: 60
+    data_security_mode:
+        description:
+            - Cluster access mode. Required on Premium workspaces, which do not allow
+              clusters without an explicit access mode.
+            - C(SINGLE_USER) dedicates the cluster to one user, C(USER_ISOLATION) shares
+              it between users, and C(NONE) creates a no-isolation cluster where allowed.
+            - The access mode cannot be changed on an existing cluster.
+        type: str
+        choices: [SINGLE_USER, USER_ISOLATION, NONE]
     state:
         description: Desired state of the cluster.
         type: str
@@ -74,6 +83,7 @@ EXAMPLES = '''
     name: etl
     spark_version: 13.3.x-scala2.12
     node_type_id: Standard_DS3_v2
+    data_security_mode: SINGLE_USER
     autoscale:
       min_workers: 2
       max_workers: 4
@@ -124,6 +134,7 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
                 max_workers=dict(type='int', required=True),
             )),
             autotermination_minutes=dict(type='int', default=60),
+            data_security_mode=dict(type='str', choices=['SINGLE_USER', 'USER_ISOLATION', 'NONE']),
             state=dict(type='str', choices=['present', 'absent'], default='present'),
         )
 
@@ -135,6 +146,7 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
         self.num_workers = None
         self.autoscale = None
         self.autotermination_minutes = None
+        self.data_security_mode = None
         self.state = None
 
         self.results = dict(changed=False)
@@ -242,6 +254,8 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
             node_type_id=self.node_type_id,
             autotermination_minutes=self.autotermination_minutes,
         )
+        if self.data_security_mode is not None:
+            desired['data_security_mode'] = self.data_security_mode
         if self.autoscale is not None:
             desired['autoscale'] = self.autoscale
         else:
