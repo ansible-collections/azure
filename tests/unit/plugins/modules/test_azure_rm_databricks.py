@@ -62,7 +62,7 @@ def test_cluster_create_and_check_mode():
 def test_cluster_idempotency_and_edit():
     existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
                     node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
-                    data_security_mode='SINGLE_USER')
+                    data_security_mode='SINGLE_USER', state='RUNNING')
     module = make_module(AzureRMDatabricksCluster)
     with mock_request([{'clusters': [existing]}]):
         assert not module.exec_module(**cluster_params())['changed']
@@ -70,6 +70,19 @@ def test_cluster_idempotency_and_edit():
     with mock_request([{'clusters': [existing]}, {}]) as request:
         assert module.exec_module(**cluster_params(num_workers=4))['changed']
     assert request.call_args_list[1].args[2].endswith('/edit')
+
+
+def test_cluster_edit_waits_for_stable_state():
+    existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
+                    node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
+                    data_security_mode='SINGLE_USER', state='PENDING')
+    module = make_module(AzureRMDatabricksCluster)
+    with mock_request([{'clusters': [existing]},
+                       {'cluster_id': 'id', 'state': 'RUNNING'}, {}]) as request:
+        assert module.exec_module(**cluster_params(num_workers=4))['changed']
+    paths = [call.args[2] for call in request.call_args_list]
+    assert paths[1].startswith('/api/2.0/clusters/get')
+    assert paths[2].endswith('/edit')
 
 
 def test_cluster_absent_terminates_and_permanently_deletes():

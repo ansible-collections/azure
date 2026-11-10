@@ -113,11 +113,13 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databr
     databricks_workspace_host,
 )
 
-# clusters/permanent-delete requires a terminated cluster, and terminating a
-# large cluster can take several minutes.
-DELETE_TIMEOUT = 600
-DELETE_INTERVAL = 10
+# clusters/edit requires a cluster in a stable state and
+# clusters/permanent-delete requires a terminated cluster; reaching either
+# can take several minutes for a large cluster.
+STATE_TIMEOUT = 600
+STATE_INTERVAL = 10
 TERMINAL_STATES = ('TERMINATED', 'ERROR', 'UNKNOWN')
+EDITABLE_STATES = ('RUNNING', 'TERMINATED', 'ERROR', 'UNKNOWN')
 
 
 class AzureRMDatabricksCluster(AzureRMModuleBase):
@@ -211,6 +213,8 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
             self.results['cluster'] = dict(existing, **desired)
             return self.results
         desired['cluster_id'] = existing['cluster_id']
+        if existing.get('state') not in EDITABLE_STATES:
+            self._wait_for_state(existing['cluster_id'], EDITABLE_STATES, 'be ready for the update')
         self.results['cluster'] = databricks_request(
             self, self.host, '/api/2.0/clusters/edit', 'POST', desired) or desired
         return self.results
@@ -229,22 +233,22 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
                 if existing.get('state') != 'TERMINATING':
                     databricks_request(self, self.host, '/api/2.0/clusters/delete', 'POST',
                                        {'cluster_id': cluster_id})
-                self._wait_terminated(cluster_id)
+                self._wait_for_state(cluster_id, TERMINAL_STATES, 'terminate')
             databricks_request(self, self.host, '/api/2.0/clusters/permanent-delete', 'POST',
                                {'cluster_id': cluster_id})
         except Exception as exc:
             self.fail('Error deleting Databricks cluster {0}: {1}'.format(self.name, str(exc)))
 
-    def _wait_terminated(self, cluster_id):
-        """Wait for the cluster to reach a terminal state before permanent deletion."""
-        deadline = time.time() + DELETE_TIMEOUT
+    def _wait_for_state(self, cluster_id, states, action):
+        """Wait until the cluster reaches one of the given states."""
+        deadline = time.time() + STATE_TIMEOUT
         while time.time() < deadline:
             cluster = databricks_request(
                 self, self.host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': cluster_id}))
-            if cluster.get('state') in TERMINAL_STATES:
+            if cluster.get('state') in states:
                 return
-            time.sleep(DELETE_INTERVAL)
-        self.fail('Timed out waiting for Databricks cluster {0} to terminate'.format(self.name))
+            time.sleep(STATE_INTERVAL)
+        self.fail('Timed out waiting for Databricks cluster {0} to {1}'.format(self.name, action))
 
     def _body(self):
         """Build the cluster payload for the create / edit call."""
