@@ -13,13 +13,15 @@ def make_module(cls, workspace_url='adb.example.net', check_mode=False):
              'autoscale', 'autotermination_minutes', 'state') if cls is AzureRMDatabricksCluster else
             ('resource_group', 'workspace_name', 'path', 'state', 'source', 'dest', 'format', 'language', 'overwrite'))
     module.module_arg_spec = dict.fromkeys(keys)
-    module.azure_auth = SimpleNamespace(azure_credential_track2=SimpleNamespace(
-        get_token=MagicMock(return_value=SimpleNamespace(token='secret-token'))))
+    module.results = dict(changed=False)
+    module.azure_auth = SimpleNamespace(
+        azure_credential_track2=SimpleNamespace(
+            get_token=MagicMock(return_value=SimpleNamespace(token='secret-token'))),
+        _cert_validation_mode='validate')
     module._databricks_client = SimpleNamespace(workspaces=SimpleNamespace(
         get=MagicMock(return_value=SimpleNamespace(workspace_url=workspace_url))))
     module.check_mode = check_mode
-    module.validate_certs = True
-    module.module = SimpleNamespace(params={'polling_timeout': 60}, log=MagicMock(), debug=MagicMock())
+    module.module = SimpleNamespace(params={}, log=MagicMock(), debug=MagicMock())
 
     def fail(message):
         raise ValueError(message)
@@ -45,6 +47,7 @@ def test_cluster_create_and_check_mode():
     with mock_request([{'clusters': []}]):
         result = planned.exec_module(**cluster_params())
     assert result['changed']
+    assert result['cluster']['cluster_name'] == 'etl'
     planned.databricks_client.workspaces.get.assert_called_once()
 
     created = make_module(AzureRMDatabricksCluster)
@@ -67,16 +70,32 @@ def test_cluster_idempotency_and_edit():
     assert request.call_args_list[1].args[2].endswith('/edit')
 
 
-def test_cluster_delete_and_absent_check_mode():
-    existing = {'cluster_id': 'id', 'cluster_name': 'etl'}
+def test_cluster_absent_terminates_and_permanently_deletes():
+    existing = dict(cluster_id='id', cluster_name='etl', state='RUNNING')
+    module = make_module(AzureRMDatabricksCluster)
+    with mock_request([{'clusters': [existing]}, {},
+                       {'cluster_id': 'id', 'state': 'TERMINATED'}, {}]) as request:
+        assert module.exec_module(**cluster_params(state='absent'))['changed']
+    paths = [call.args[2] for call in request.call_args_list]
+    assert paths[1].endswith('/delete')
+    assert paths[2].startswith('/api/2.0/clusters/get')
+    assert paths[3].endswith('/permanent-delete')
+
+
+def test_cluster_absent_skips_termination_for_terminated_cluster():
+    existing = dict(cluster_id='id', cluster_name='etl', state='TERMINATED')
+    module = make_module(AzureRMDatabricksCluster)
+    with mock_request([{'clusters': [existing]}, {}]) as request:
+        assert module.exec_module(**cluster_params(state='absent'))['changed']
+    assert request.call_args_list[1].args[2].endswith('/permanent-delete')
+
+
+def test_cluster_absent_check_mode_does_not_delete():
+    existing = {'cluster_id': 'id', 'cluster_name': 'etl', 'state': 'RUNNING'}
     module = make_module(AzureRMDatabricksCluster, check_mode=True)
     with mock_request([{'clusters': [existing]}]) as request:
         assert module.exec_module(**cluster_params(state='absent'))['changed']
     assert request.call_count == 1
-    module = make_module(AzureRMDatabricksCluster)
-    with mock_request([{'clusters': [existing]}, {}]) as request:
-        assert module.exec_module(**cluster_params(state='absent'))['changed']
-    assert request.call_args.args[2].endswith('/delete')
 
 
 def test_databricks_request_uses_aad_token_and_decodes_json():
@@ -86,8 +105,20 @@ def test_databricks_request_uses_aad_token_and_decodes_json():
                return_value=response) as open_request:
         assert databricks_request(module, 'https://adb.example.net/', '/api/2.0/test') == {'ok': True}
     assert open_request.call_args.kwargs['headers']['Authorization'] == 'Bearer secret-token'
+    assert open_request.call_args.kwargs['validate_certs'] is True
+    assert open_request.call_args.kwargs['timeout'] == 60
     module.azure_auth.azure_credential_track2.get_token.assert_called_once_with(
         '2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default')
+
+
+def test_databricks_request_honors_cert_validation_mode():
+    module = make_module(AzureRMDatabricksCluster)
+    module.azure_auth._cert_validation_mode = 'ignore'
+    response = SimpleNamespace(code=200, read=lambda: b'{}')
+    with patch('ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks.open_url',
+               return_value=response) as open_request:
+        databricks_request(module, 'https://adb.example.net/', '/api/2.0/test')
+    assert open_request.call_args.kwargs['validate_certs'] is False
 
 
 def notebook_params(**kwargs):

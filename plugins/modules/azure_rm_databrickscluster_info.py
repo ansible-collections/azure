@@ -60,13 +60,11 @@ clusters:
 
 from urllib.parse import urlencode
 
-try:
-    from azure.core.exceptions import ResourceNotFoundError
-except ImportError:
-    pass
-
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import databricks_request
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import (
+    databricks_request,
+    databricks_workspace_host,
+)
 
 
 class AzureRMDatabricksClusterInfo(AzureRMModuleBase):
@@ -80,33 +78,21 @@ class AzureRMDatabricksClusterInfo(AzureRMModuleBase):
         self.results = dict(changed=False, clusters=[])
         super(AzureRMDatabricksClusterInfo, self).__init__(
             derived_arg_spec=self.module_arg_spec, supports_check_mode=True,
-            supports_tags=False, facts_module=True)
+            supports_tags=False, facts_module=True,
+            mutually_exclusive=[('name', 'cluster_id')])
 
     def exec_module(self, **kwargs):
-        for key in self.module_arg_spec:
+        for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-        if self.name and self.cluster_id:
-            self.fail('name and cluster_id are mutually exclusive')
-        try:
-            workspace = self.databricks_client.workspaces.get(self.resource_group, self.workspace_name)
-        except ResourceNotFoundError:
-            self.fail('Databricks workspace {0} was not found'.format(self.workspace_name))
-        except Exception as exc:
-            self.fail('Error retrieving Databricks workspace {0}: {1}'.format(self.workspace_name, exc))
-        workspace_url = getattr(workspace, 'workspace_url', None)
-        if not workspace_url:
-            self.fail('Databricks workspace {0} did not return a workspace URL'.format(self.workspace_name))
-        host = 'https://' + workspace_url
+
+        host = databricks_workspace_host(self, self.resource_group, self.workspace_name)
         if self.cluster_id:
             cluster = databricks_request(
                 self, host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': self.cluster_id}),
                 allow_not_found=True)
             clusters = [cluster] if cluster else []
         else:
-            try:
-                clusters = databricks_request(self, host, '/api/2.0/clusters/list').get('clusters', [])
-            except Exception as exc:
-                self.fail('Error listing Databricks clusters: {0}'.format(exc))
+            clusters = databricks_request(self, host, '/api/2.0/clusters/list').get('clusters', [])
             if self.name:
                 clusters = [cluster for cluster in clusters if cluster.get('cluster_name') == self.name]
         self.results['clusters'] = clusters

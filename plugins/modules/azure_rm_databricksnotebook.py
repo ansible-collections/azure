@@ -90,13 +90,11 @@ import hashlib
 import os
 from urllib.parse import urlencode
 
-try:
-    from azure.core.exceptions import ResourceNotFoundError
-except ImportError:
-    pass
-
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import databricks_request
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import (
+    databricks_request,
+    databricks_workspace_host,
+)
 
 
 class AzureRMDatabricksNotebook(AzureRMModuleBase):
@@ -112,78 +110,106 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
             language=dict(type='str', choices=['SCALA', 'PYTHON', 'SQL', 'R']),
             overwrite=dict(type='bool', default=True),
         )
+
+        self.resource_group = None
+        self.workspace_name = None
+        self.path = None
+        self.state = None
+        self.source = None
+        self.dest = None
+        self.format = None
+        self.language = None
+        self.overwrite = None
+
+        self.results = dict(changed=False)
+        self.host = None
+
         super(AzureRMDatabricksNotebook, self).__init__(
-            derived_arg_spec=self.module_arg_spec, supports_check_mode=True, supports_tags=False)
+            derived_arg_spec=self.module_arg_spec, supports_check_mode=True,
+            required_if=[
+                ('state', 'present', ('source',)),
+                ('state', 'exported', ('dest',)),
+            ],
+            supports_tags=False)
 
     def exec_module(self, **kwargs):
-        for key in self.module_arg_spec:
+        for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
+
+        # The language check cannot be expressed with required_if because it
+        # only applies to imports and exports, not to state=absent.
         if not self.path.startswith('/'):
             self.fail('path must be an absolute workspace path')
-        if self.state == 'present' and not self.source:
-            self.fail('source is required when state is present')
-        if self.state == 'exported' and not self.dest:
-            self.fail('dest is required when state is exported')
         if self.format == 'SOURCE' and not self.language and self.state != 'absent':
             self.fail('language is required when format is SOURCE')
 
-        try:
-            workspace = self.databricks_client.workspaces.get(self.resource_group, self.workspace_name)
-        except ResourceNotFoundError:
-            self.fail('Databricks workspace {0} was not found'.format(self.workspace_name))
-        except Exception as exc:
-            self.fail('Error retrieving Databricks workspace {0}: {1}'.format(self.workspace_name, exc))
-        workspace_url = getattr(workspace, 'workspace_url', None)
-        if not workspace_url:
-            self.fail('Databricks workspace {0} did not return a workspace URL'.format(self.workspace_name))
-        host = 'https://' + workspace_url
-        query = urlencode(dict(path=self.path, format=self.format))
+        self.host = databricks_workspace_host(self, self.resource_group, self.workspace_name)
 
         if self.state == 'exported':
-            exported = databricks_request(self, host, '/api/2.0/workspace/export?' + query)
-            content = base64.b64decode(exported['content'])
-            current = None
-            if os.path.exists(self.dest):
-                with open(self.dest, 'rb') as stream:
-                    current = stream.read()
-            changed = current != content
-            if changed and not self.check_mode:
-                parent = os.path.dirname(self.dest)
-                if parent and not os.path.isdir(parent):
-                    os.makedirs(parent)
-                with open(self.dest, 'wb') as stream:
-                    stream.write(content)
-            return dict(changed=changed, notebook=dict(path=self.path, dest=self.dest,
-                                                       sha256=hashlib.sha256(content).hexdigest()))
+            return self.export_notebook()
 
-        status = databricks_request(self, host, '/api/2.0/workspace/get-status?' + urlencode({'path': self.path}),
-                                    allow_not_found=True)
+        status = self._status()
         if self.state == 'absent':
-            if status and not self.check_mode:
-                databricks_request(self, host, '/api/2.0/workspace/delete?' + urlencode({'path': self.path}), 'POST')
-            return dict(changed=status is not None)
+            return self.delete_notebook(status)
 
+        return self.import_notebook(status)
+
+    def export_notebook(self):
+        exported = databricks_request(self, self.host, '/api/2.0/workspace/export?' + self._query())
+        content = base64.b64decode(exported['content'])
+        current = None
+        if os.path.exists(self.dest):
+            with open(self.dest, 'rb') as stream:
+                current = stream.read()
+        self.results['changed'] = current != content
+        if self.results['changed'] and not self.check_mode:
+            parent = os.path.dirname(self.dest)
+            if parent and not os.path.isdir(parent):
+                os.makedirs(parent)
+            with open(self.dest, 'wb') as stream:
+                stream.write(content)
+        self.results['notebook'] = dict(path=self.path, dest=self.dest,
+                                        sha256=hashlib.sha256(content).hexdigest())
+        return self.results
+
+    def delete_notebook(self, status):
+        if status is not None:
+            self.results['changed'] = True
+            if not self.check_mode:
+                databricks_request(self, self.host,
+                                   '/api/2.0/workspace/delete?' + urlencode({'path': self.path}), 'POST')
+        return self.results
+
+    def import_notebook(self, status):
         with open(self.source, 'rb') as stream:
             content = stream.read()
-        encoded = base64.b64encode(content).decode('ascii')
-        if status:
-            current = databricks_request(self, host, '/api/2.0/workspace/export?' + query)
-            current_content = base64.b64decode(current['content'])
-            changed = current_content != content
-            if not changed:
-                return dict(changed=False, notebook=status)
+        if status is not None:
+            current = databricks_request(self, self.host, '/api/2.0/workspace/export?' + self._query())
+            self.results['changed'] = base64.b64decode(current['content']) != content
+            if not self.results['changed']:
+                self.results['notebook'] = status
+                return self.results
             if not self.overwrite:
                 self.fail('Notebook {0} exists and overwrite is false'.format(self.path))
         else:
-            changed = True
-        if changed and not self.check_mode:
-            body = dict(path=self.path, format=self.format, content=encoded, overwrite=self.overwrite)
-            if self.language:
-                body['language'] = self.language
-            result = databricks_request(self, host, '/api/2.0/workspace/import', 'POST', body)
-        else:
-            result = dict(path=self.path)
-        return dict(changed=changed, notebook=result)
+            self.results['changed'] = True
+        if self.check_mode:
+            self.results['notebook'] = dict(path=self.path)
+            return self.results
+        body = dict(path=self.path, format=self.format,
+                    content=base64.b64encode(content).decode('ascii'), overwrite=self.overwrite)
+        if self.language:
+            body['language'] = self.language
+        self.results['notebook'] = databricks_request(self, self.host, '/api/2.0/workspace/import', 'POST', body)
+        return self.results
+
+    def _status(self):
+        return databricks_request(self, self.host,
+                                  '/api/2.0/workspace/get-status?' + urlencode({'path': self.path}),
+                                  allow_not_found=True)
+
+    def _query(self):
+        return urlencode(dict(path=self.path, format=self.format))
 
 
 def main():

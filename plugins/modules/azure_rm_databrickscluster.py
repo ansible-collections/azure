@@ -15,6 +15,8 @@ short_description: Manage clusters in an Azure Databricks workspace
 description:
     - Create, update, and delete all-purpose clusters in an Azure Databricks workspace.
     - Authenticate to the workspace data plane using the configured Azure identity.
+    - I(state=absent) terminates the cluster and permanently deletes it; Databricks keeps
+      merely terminated clusters in the cluster list for 30 days.
 options:
     resource_group:
         description: Resource group containing the workspace.
@@ -92,13 +94,20 @@ cluster:
     sample: {"cluster_id": "0123-456789-abcd", "cluster_name": "etl", "spark_version": "13.3.x-scala2.12", "state": "RUNNING"}
 '''
 
-try:
-    from azure.core.exceptions import ResourceNotFoundError
-except ImportError:
-    pass
+import time
+from urllib.parse import urlencode
 
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
-from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import databricks_request
+from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import (
+    databricks_request,
+    databricks_workspace_host,
+)
+
+# clusters/permanent-delete requires a terminated cluster, and terminating a
+# large cluster can take several minutes.
+DELETE_TIMEOUT = 600
+DELETE_INTERVAL = 10
+TERMINAL_STATES = ('TERMINATED', 'ERROR', 'UNKNOWN')
 
 
 class AzureRMDatabricksCluster(AzureRMModuleBase):
@@ -117,46 +126,116 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
             autotermination_minutes=dict(type='int', default=60),
             state=dict(type='str', choices=['present', 'absent'], default='present'),
         )
+
+        self.resource_group = None
+        self.workspace_name = None
+        self.name = None
+        self.spark_version = None
+        self.node_type_id = None
+        self.num_workers = None
+        self.autoscale = None
+        self.autotermination_minutes = None
+        self.state = None
+
+        self.results = dict(changed=False)
+        self.host = None
+
         super(AzureRMDatabricksCluster, self).__init__(
             derived_arg_spec=self.module_arg_spec,
             supports_check_mode=True,
             mutually_exclusive=[('num_workers', 'autoscale')],
+            required_if=[
+                ('state', 'present', ('spark_version', 'node_type_id')),
+                ('state', 'present', ('num_workers', 'autoscale'), True),
+            ],
             supports_tags=False,
         )
 
     def exec_module(self, **kwargs):
-        for key in self.module_arg_spec:
+        for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
-        if self.state == 'present':
-            if not self.spark_version or not self.node_type_id:
-                self.fail('spark_version and node_type_id are required when state is present')
-            if self.num_workers is None and self.autoscale is None:
-                self.fail('Either num_workers or autoscale is required when state is present')
-            if self.num_workers is not None and self.num_workers < 0:
-                self.fail('num_workers must be zero or greater')
-            if self.autoscale is not None and (
-                    self.autoscale['min_workers'] < 0 or
-                    self.autoscale['max_workers'] < self.autoscale['min_workers']):
-                self.fail('autoscale requires 0 <= min_workers <= max_workers')
 
-        try:
-            workspace = self.databricks_client.workspaces.get(self.resource_group, self.workspace_name)
-        except ResourceNotFoundError:
-            self.fail('Databricks workspace {0} was not found'.format(self.workspace_name))
-        except Exception as exc:
-            self.fail('Error retrieving Databricks workspace {0}: {1}'.format(self.workspace_name, exc))
-        workspace_url = getattr(workspace, 'workspace_url', None)
-        if not workspace_url:
-            self.fail('Databricks workspace {0} did not return a workspace URL'.format(self.workspace_name))
+        # Validate the desired sizing before any Azure reads or writes, so a
+        # malformed autoscale cannot leave a partially reconciled workspace.
+        if self.state == 'present' and self.autoscale is not None and (
+                self.autoscale['min_workers'] < 0 or
+                self.autoscale['max_workers'] < self.autoscale['min_workers']):
+            self.fail('autoscale requires 0 <= min_workers <= max_workers')
 
-        clusters = databricks_request(self, 'https://' + workspace_url, '/api/2.0/clusters/list').get('clusters', [])
-        existing = next((cluster for cluster in clusters if cluster.get('cluster_name') == self.name), None)
+        self.host = databricks_workspace_host(self, self.resource_group, self.workspace_name)
+
+        existing = self.get_cluster()
+
         if self.state == 'absent':
-            if existing and not self.check_mode:
-                databricks_request(self, 'https://' + workspace_url, '/api/2.0/clusters/delete', 'POST',
-                                   {'cluster_id': existing['cluster_id']})
-            return dict(changed=existing is not None)
+            if existing is not None:
+                self.results['changed'] = True
+                if not self.check_mode:
+                    self.delete_cluster(existing)
+            return self.results
 
+        return self.create_or_update_cluster(existing)
+
+    def get_cluster(self):
+        self.log('Get Databricks cluster {0}'.format(self.name))
+        clusters = databricks_request(self, self.host, '/api/2.0/clusters/list').get('clusters', [])
+        return next((cluster for cluster in clusters if cluster.get('cluster_name') == self.name), None)
+
+    def create_or_update_cluster(self, existing):
+        desired = self._body()
+        if existing is None:
+            self.results['changed'] = True
+            if not self.check_mode:
+                self.results['cluster'] = databricks_request(
+                    self, self.host, '/api/2.0/clusters/create', 'POST', desired)
+            else:
+                self.results['cluster'] = desired
+            return self.results
+
+        self.results['changed'] = any(existing.get(key) != value for key, value in desired.items())
+        if not self.results['changed']:
+            self.results['cluster'] = existing
+            return self.results
+        if self.check_mode:
+            self.results['cluster'] = dict(existing, **desired)
+            return self.results
+        desired['cluster_id'] = existing['cluster_id']
+        self.results['cluster'] = databricks_request(
+            self, self.host, '/api/2.0/clusters/edit', 'POST', desired) or desired
+        return self.results
+
+    def delete_cluster(self, existing):
+        """Terminate and permanently delete the cluster.
+
+        clusters/delete only terminates a cluster and Databricks keeps
+        terminated clusters in clusters/list for 30 days, so absent must also
+        call clusters/permanent-delete to remove the cluster entirely.
+        """
+        self.log('Delete Databricks cluster {0}'.format(self.name))
+        cluster_id = existing['cluster_id']
+        try:
+            if existing.get('state') not in TERMINAL_STATES:
+                if existing.get('state') != 'TERMINATING':
+                    databricks_request(self, self.host, '/api/2.0/clusters/delete', 'POST',
+                                       {'cluster_id': cluster_id})
+                self._wait_terminated(cluster_id)
+            databricks_request(self, self.host, '/api/2.0/clusters/permanent-delete', 'POST',
+                               {'cluster_id': cluster_id})
+        except Exception as exc:
+            self.fail('Error deleting Databricks cluster {0}: {1}'.format(self.name, str(exc)))
+
+    def _wait_terminated(self, cluster_id):
+        """Wait for the cluster to reach a terminal state before permanent deletion."""
+        deadline = time.time() + DELETE_TIMEOUT
+        while time.time() < deadline:
+            cluster = databricks_request(
+                self, self.host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': cluster_id}))
+            if cluster.get('state') in TERMINAL_STATES:
+                return
+            time.sleep(DELETE_INTERVAL)
+        self.fail('Timed out waiting for Databricks cluster {0} to terminate'.format(self.name))
+
+    def _body(self):
+        """Build the cluster payload for the create / edit call."""
         desired = dict(
             cluster_name=self.name,
             spark_version=self.spark_version,
@@ -167,20 +246,7 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
             desired['autoscale'] = self.autoscale
         else:
             desired['num_workers'] = self.num_workers
-        if existing is None:
-            if self.check_mode:
-                return dict(changed=True, cluster=desired)
-            cluster = databricks_request(self, 'https://' + workspace_url, '/api/2.0/clusters/create', 'POST', desired)
-            return dict(changed=True, cluster=cluster)
-
-        changed = any(existing.get(key) != value for key, value in desired.items())
-        if not changed:
-            return dict(changed=False, cluster=existing)
-        desired['cluster_id'] = existing['cluster_id']
-        if self.check_mode:
-            return dict(changed=True, cluster=dict(existing, **desired))
-        cluster = databricks_request(self, 'https://' + workspace_url, '/api/2.0/clusters/edit', 'POST', desired)
-        return dict(changed=True, cluster=cluster or desired)
+        return desired
 
 
 def main():

@@ -1,4 +1,5 @@
-# Copyright (c) 2026
+# Copyright (c) 2026 Bill Peck (@p3ck)
+#
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 """Helpers for Azure Databricks workspace data-plane APIs."""
@@ -8,8 +9,28 @@ from urllib.error import HTTPError
 
 from ansible.module_utils.urls import open_url
 
+try:
+    from azure.core.exceptions import ResourceNotFoundError
+except ImportError:
+    pass
+
 
 ADB_RESOURCE_ID = '2ff814a6-3304-4ab8-85cb-cd0e6f879c1d'
+REQUEST_TIMEOUT = 60
+
+
+def databricks_workspace_host(module, resource_group, workspace_name):
+    """Resolve the HTTPS host of a Databricks workspace data plane."""
+    try:
+        workspace = module.databricks_client.workspaces.get(resource_group, workspace_name)
+    except ResourceNotFoundError:
+        module.fail('Databricks workspace {0} was not found'.format(workspace_name))
+    except Exception as exc:
+        module.fail('Error retrieving Databricks workspace {0}: {1}'.format(workspace_name, str(exc)))
+    workspace_url = getattr(workspace, 'workspace_url', None)
+    if not workspace_url:
+        module.fail('Databricks workspace {0} did not return a workspace URL'.format(workspace_name))
+    return 'https://' + workspace_url
 
 
 def databricks_request(module, workspace_url, path, method='GET', body=None, allow_not_found=False):
@@ -27,8 +48,8 @@ def databricks_request(module, workspace_url, path, method='GET', body=None, all
                 'Content-Type': 'application/json',
             },
             method=method,
-            validate_certs=module.validate_certs,
-            timeout=module.module.params.get('polling_timeout', 60) or 60,
+            validate_certs=module.azure_auth._cert_validation_mode != 'ignore',
+            timeout=REQUEST_TIMEOUT,
         )
         status = response.code
         content = response.read()
