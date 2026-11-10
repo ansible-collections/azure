@@ -162,8 +162,9 @@ def test_notebook_import_idempotency_and_export(tmp_path):
     assert destination.read_bytes() == b'print(1)'
 
     repeated = make_module(AzureRMDatabricksNotebook)
+    exported = base64.b64encode(b'# Databricks notebook source\nprint(1)').decode('ascii')
     with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook.databricks_request',
-               side_effect=[{'path': '/Shared/etl'}, {'content': base64.b64encode(b'print(1)').decode('ascii')}]) as request:
+               side_effect=[{'path': '/Shared/etl'}, {'content': exported}]) as request:
         result = repeated.exec_module(**notebook_params(source=str(source)))
     assert not result['changed']
     assert request.call_count == 2
