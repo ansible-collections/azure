@@ -1,0 +1,57 @@
+- name: Validate required workspace test variables
+  ansible.builtin.assert:
+    that:
+      - synapse_test_resource_group is defined
+      - synapse_test_workspace is defined
+    fail_msg: See tests/integration/targets/azure_rm_synapseworkspace/README.md for required variables.
+
+- name: Exercise Synapse workspace modules
+  block:
+    - name: Reconcile the existing Synapse workspace
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_test_resource_group }}"
+        name: "{{ synapse_test_workspace }}"
+      register: synapse_workspace
+
+    - name: Assert Synapse workspace can be read idempotently
+      ansible.builtin.assert:
+        that:
+          - synapse_workspace is not changed
+          - synapse_workspace.workspace.name == synapse_test_workspace
+          - synapse_workspace.workspace.provisioning_state == 'Succeeded'
+
+    - name: Read Synapse workspace through its info module
+      azure.azcollection.azure_rm_synapseworkspace_info:
+        resource_group: "{{ synapse_test_resource_group }}"
+        name: "{{ synapse_test_workspace }}"
+      register: synapse_workspace_facts
+
+    - name: Assert Synapse workspace facts
+      ansible.builtin.assert:
+        that:
+          - synapse_workspace_facts.workspaces | length == 1
+          - synapse_workspace_facts.workspaces[0].name == synapse_test_workspace
+          - "'sql_administrator_login_password' not in synapse_workspace_facts | to_json"
+
+    - name: List Synapse workspaces in the resource group
+      azure.azcollection.azure_rm_synapseworkspace_info:
+        resource_group: "{{ synapse_test_resource_group }}"
+      register: synapse_workspace_list
+
+    - name: Assert the test workspace is listed
+      ansible.builtin.assert:
+        that:
+          - synapse_test_workspace in (synapse_workspace_list.workspaces | map(attribute='name') | list)
+
+    - name: Predict deletion without deleting the workspace
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_test_resource_group }}"
+        name: "{{ synapse_test_workspace }}"
+        state: absent
+      check_mode: true
+      register: synapse_delete_check
+
+    - name: Assert deletion check mode
+      ansible.builtin.assert:
+        that:
+          - synapse_delete_check is changed
