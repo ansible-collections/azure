@@ -49,6 +49,10 @@
         network_interfaces: "nic-{{ rpfx }}"
         managed_disk_type: StandardSSD_LRS
         os_disk_caching: ReadWrite
+        data_disks:
+          - lun: 0
+            disk_size_gb: 4
+            managed_disk_type: StandardSSD_LRS
         image:
           offer: 0001-com-ubuntu-server-focal
           publisher: canonical
@@ -104,6 +108,70 @@
         that:
           - protected_info.response.id is defined
           - protected_info.response.name is defined
+
+    - name: Include and exclude disks together (mutually exclusive)
+      azure.azcollection.azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+        backup_policy_id: "{{ policy_out.id }}"
+        include_disks:
+          - 0
+        exclude_disks:
+          - 0
+        state: update
+      register: mutex_out
+      failed_when: "'mutually exclusive' not in mutex_out.msg"
+
+    - name: Exclude the data disk from the backup
+      azure.azcollection.azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+        backup_policy_id: "{{ policy_out.id }}"
+        exclude_disks:
+          - 0
+        state: update
+      register: exclude_out
+
+    - name: Get protected item info after excluding the data disk
+      azure.azcollection.azure_rm_backupazurevm_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+      register: exclude_info
+
+    - name: Assert the data disk is excluded
+      ansible.builtin.assert:
+        that:
+          - exclude_out is changed
+          - exclude_info.response.properties.extendedProperties.diskExclusionProperties.diskLunList == [0]
+          - not exclude_info.response.properties.extendedProperties.diskExclusionProperties.isInclusionList
+
+    - name: Include only the data disk in the backup
+      azure.azcollection.azure_rm_backupazurevm:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+        backup_policy_id: "{{ policy_out.id }}"
+        include_disks:
+          - 0
+        state: update
+      register: include_out
+
+    - name: Get protected item info after including the data disk
+      azure.azcollection.azure_rm_backupazurevm_info:
+        resource_group: "{{ resource_group }}-backupazurevm"
+        recovery_vault_name: "{{ recovery_vault_name }}"
+        resource_id: "{{ vm_out.ansible_facts.azure_vm.id }}"
+      register: include_info
+
+    - name: Assert the data disk is included
+      ansible.builtin.assert:
+        that:
+          - include_out is changed
+          - include_info.response.properties.extendedProperties.diskExclusionProperties.diskLunList == [0]
+          - include_info.response.properties.extendedProperties.diskExclusionProperties.isInclusionList
 
     # Skipped on purpose: triggering an on-demand backup creates a recovery
     # point that Azure's secure-by-default policy retains under 14-day soft
