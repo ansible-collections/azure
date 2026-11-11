@@ -205,6 +205,46 @@
         that:
           - manual_update_repeat is not changed
 
+    - name: Switch indexing back to consistent
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        indexing_mode: consistent
+      register: manual_reenable
+
+    - name: Read re-enabled container independently
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ manual_url }}"
+        api_version: "{{ cosmos_api_version }}"
+      register: manual_reenable_info
+
+    - name: Assert indexing re-enabled with the service default paths
+      ansible.builtin.assert:
+        that:
+          - manual_reenable is changed
+          - manual_reenable_info.response[0].properties.resource.indexingPolicy.indexingMode == 'consistent'
+          - manual_reenable_info.response[0].properties.resource.indexingPolicy.automatic
+          - manual_reenable_info.response[0].properties.resource.indexingPolicy.includedPaths | length == 1
+          - manual_reenable_info.response[0].properties.resource.indexingPolicy.includedPaths[0].path == '/*'
+          - manual_reenable_info.response[0].properties.resource.indexingPolicy.excludedPaths | length == 1
+          - manual_reenable_info.response[0].properties.resource.indexingPolicy.excludedPaths[0].path == '/"_etag"/?'
+
+    - name: Repeat indexing re-enable
+      azure.azcollection.azure_rm_cosmosdbsqlcontainer:
+        resource_group: "{{ cosmos_rg }}"
+        account_name: "{{ cosmos_account }}"
+        database_name: testdb
+        name: manual
+        indexing_mode: consistent
+      register: manual_reenable_repeat
+
+    - name: Assert indexing re-enable idempotency
+      ansible.builtin.assert:
+        that:
+          - manual_reenable_repeat is not changed
+
     - name: Create autoscale container
       azure.azcollection.azure_rm_cosmosdbsqlcontainer:
         resource_group: "{{ cosmos_rg }}"

@@ -92,6 +92,21 @@ def test_index_update_preserves_existing_properties():
     assert old.resource.indexing_policy.indexing_mode == 'consistent'
 
 
+def test_index_reenable_uses_service_default_paths():
+    unindexed = models.SqlContainerGetResults(resource=models.SqlContainerGetPropertiesResource(
+        id='container', partition_key=models.ContainerPartitionKey(paths=['/tenant'], kind='Hash'),
+        indexing_policy=models.IndexingPolicy(indexing_mode='none', automatic=False), default_ttl=3600))
+    obj, client = module(unindexed)
+    client.begin_create_update_sql_container.return_value.result.return_value = unindexed
+    result = obj.exec_module(**params(indexing_mode='consistent'))
+    body = client.begin_create_update_sql_container.call_args.kwargs['create_update_sql_container_parameters']
+    assert result['changed']
+    assert body.resource.indexing_policy.indexing_mode == 'consistent'
+    assert body.resource.indexing_policy.automatic is True
+    assert [path.path for path in body.resource.indexing_policy.included_paths] == ['/*']
+    assert [path.path for path in body.resource.indexing_policy.excluded_paths] == ['/"_etag"/?']
+
+
 def test_index_idempotent_and_check_mode():
     obj, client = module(existing_container(), check_mode=True)
     assert not obj.exec_module(**params(indexing_mode='consistent'))['changed']

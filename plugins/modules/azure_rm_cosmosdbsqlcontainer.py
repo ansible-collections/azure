@@ -274,7 +274,7 @@ class AzureRMCosmosDBSqlContainer(AzureRMModuleBase):
             elif self.indexing_mode == 'consistent' and old_mode == 'none' and self.automatic is None:
                 desired_automatic = True
                 resource.indexing_policy.included_paths = [models.IncludedPath(path='/*')]
-                resource.indexing_policy.excluded_paths = [models.ExcludedPath(path='/*/_etag/?')]
+                resource.indexing_policy.excluded_paths = [models.ExcludedPath(path='/"_etag"/?')]
         if self.indexing_mode == 'none':
             resource.indexing_policy.included_paths = None
             resource.indexing_policy.excluded_paths = None
