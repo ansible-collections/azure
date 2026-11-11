@@ -29,15 +29,22 @@ options:
         required: true
         type: str
     state:
-        description: Import a local notebook, export it to the controller, or remove it.
+        description:
+            - I(present) with I(source) imports the notebook, I(present) with I(dest) exports it
+              to the controller, and I(absent) removes it.
         type: str
-        choices: [present, exported, absent]
+        choices: [present, absent]
         default: present
     source:
-        description: Local source file to import. Required when I(state=present).
+        description:
+            - Local file to import. The file is read on the host the module runs on,
+              which is the Ansible controller unless the task is delegated.
         type: path
     dest:
-        description: Local destination file to write. Required when I(state=exported).
+        description:
+            - Local file to write the exported notebook to. The file is written on the host
+              the module runs on, which is the Ansible controller unless the task is delegated.
+            - Use with I(state=present) to export the notebook.
         type: path
     format:
         description: Notebook format.
@@ -72,15 +79,13 @@ EXAMPLES = '''
     resource_group: analytics
     workspace_name: analytics-workspace
     path: /Shared/etl
-    state: exported
     dest: /tmp/etl.py
-    language: PYTHON
 '''
 
 RETURN = '''
 notebook:
     description: Workspace notebook metadata, when available.
-    returned: when I(state=present) or I(state=exported)
+    returned: when I(state=present)
     type: dict
     sample: {"path": "/Shared/etl", "object_type": "NOTEBOOK", "language": "PYTHON"}
 '''
@@ -105,7 +110,7 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
             resource_group=dict(type='str', required=True),
             workspace_name=dict(type='str', required=True),
             path=dict(type='str', required=True),
-            state=dict(type='str', choices=['present', 'exported', 'absent'], default='present'),
+            state=dict(type='str', choices=['present', 'absent'], default='present'),
             source=dict(type='path'),
             dest=dict(type='path'),
             format=dict(type='str', choices=['SOURCE', 'HTML', 'JUPYTER', 'DBC'], default='SOURCE'),
@@ -128,9 +133,9 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
 
         super(AzureRMDatabricksNotebook, self).__init__(
             derived_arg_spec=self.module_arg_spec, supports_check_mode=True,
+            mutually_exclusive=[('source', 'dest')],
             required_if=[
-                ('state', 'present', ('source',)),
-                ('state', 'exported', ('dest',)),
+                ('state', 'present', ('source', 'dest'), True),
             ],
             supports_tags=False)
 
@@ -143,19 +148,19 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
         # deletion.
         if not self.path.startswith('/'):
             self.fail('path must be an absolute workspace path')
-        if self.format == 'SOURCE' and not self.language and self.state == 'present':
+        if self.state == 'present' and self.source is not None and self.format == 'SOURCE' and not self.language:
             self.fail('language is required when format is SOURCE')
 
         self.host = databricks_workspace_host(self, self.resource_group, self.workspace_name)
 
-        if self.state == 'exported':
-            return self.export_notebook()
-
-        status = self._status()
         if self.state == 'absent':
+            status = self._status()
             return self.delete_notebook(status)
 
-        return self.import_notebook(status)
+        if self.dest is not None:
+            return self.export_notebook()
+
+        return self.import_notebook(self._status())
 
     def export_notebook(self):
         exported = databricks_request(self, self.host, '/api/2.0/workspace/export?' + self._query())

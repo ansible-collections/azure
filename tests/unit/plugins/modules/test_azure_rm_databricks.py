@@ -2,6 +2,8 @@ import base64
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from ansible_collections.azure.azcollection.plugins.modules.azure_rm_databrickscluster import AzureRMDatabricksCluster
 from ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook import AzureRMDatabricksNotebook
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import databricks_request
@@ -51,25 +53,37 @@ def test_cluster_create_and_check_mode():
     planned.databricks_client.workspaces.get.assert_called_once()
 
     created = make_module(AzureRMDatabricksCluster)
-    with mock_request([{'clusters': []}, {'cluster_id': 'id'}]) as request:
+    stored = {'cluster_id': 'id', 'cluster_name': 'etl', 'state': 'PENDING'}
+    with mock_request([{'clusters': []}, {'cluster_id': 'id'}, stored]) as request:
         result = created.exec_module(**cluster_params())
     assert result['changed']
+    assert result['cluster'] == stored
     assert request.call_args_list[1].args[3] == 'POST'
     assert request.call_args_list[1].args[4]['spark_version'] == '13.3.x-scala2.12'
     assert request.call_args_list[1].args[4]['data_security_mode'] == 'SINGLE_USER'
+    assert request.call_args_list[2].args[2].startswith('/api/2.0/clusters/get')
 
 
 def test_cluster_idempotency_and_edit():
     existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
                     node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
-                    data_security_mode='SINGLE_USER', state='RUNNING')
+                    data_security_mode='SINGLE_USER', state='RUNNING',
+                    custom_tags={'Team': 'data'}, spark_conf={'spark.speculation': 'true'})
     module = make_module(AzureRMDatabricksCluster)
     with mock_request([{'clusters': [existing]}]):
         assert not module.exec_module(**cluster_params())['changed']
     module = make_module(AzureRMDatabricksCluster)
-    with mock_request([{'clusters': [existing]}, {}]) as request:
-        assert module.exec_module(**cluster_params(num_workers=4))['changed']
+    stored = dict(existing, num_workers=4)
+    with mock_request([{'clusters': [existing]}, {}, stored]) as request:
+        result = module.exec_module(**cluster_params(num_workers=4))
+    assert result['changed']
+    assert result['cluster'] == stored
+    body = request.call_args_list[1].args[4]
     assert request.call_args_list[1].args[2].endswith('/edit')
+    # Unmanaged spec fields are carried forward so the full-replace edit
+    # does not wipe them.
+    assert body['custom_tags'] == {'Team': 'data'}
+    assert body['spark_conf'] == {'spark.speculation': 'true'}
 
 
 def test_cluster_edit_waits_for_stable_state():
@@ -77,28 +91,30 @@ def test_cluster_edit_waits_for_stable_state():
                     node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
                     data_security_mode='SINGLE_USER', state='PENDING')
     module = make_module(AzureRMDatabricksCluster)
+    stored = dict(existing, state='RUNNING', num_workers=4)
     with mock_request([{'clusters': [existing]},
-                       {'cluster_id': 'id', 'state': 'RUNNING'}, {}]) as request:
-        assert module.exec_module(**cluster_params(num_workers=4))['changed']
+                       {'cluster_id': 'id', 'state': 'RUNNING'}, {}, stored]) as request:
+        result = module.exec_module(**cluster_params(num_workers=4))
+    assert result['changed']
+    assert result['cluster'] == stored
     paths = [call.args[2] for call in request.call_args_list]
     assert paths[1].startswith('/api/2.0/clusters/get')
     assert paths[2].endswith('/edit')
 
 
-def test_cluster_absent_terminates_and_permanently_deletes():
-    existing = dict(cluster_id='id', cluster_name='etl', state='RUNNING')
+def test_cluster_edit_fails_fast_on_error_state():
+    existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
+                    node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
+                    data_security_mode='SINGLE_USER', state='ERROR')
     module = make_module(AzureRMDatabricksCluster)
-    with mock_request([{'clusters': [existing]}, {},
-                       {'cluster_id': 'id', 'state': 'TERMINATED'}, {}]) as request:
-        assert module.exec_module(**cluster_params(state='absent'))['changed']
-    paths = [call.args[2] for call in request.call_args_list]
-    assert paths[1].endswith('/delete')
-    assert paths[2].startswith('/api/2.0/clusters/get')
-    assert paths[3].endswith('/permanent-delete')
+    with mock_request([{'clusters': [existing]}, {'cluster_id': 'id', 'state': 'ERROR'}]):
+        with pytest.raises(ValueError, match='is in state ERROR'):
+            module.exec_module(**cluster_params(num_workers=4))
+    module.fail.assert_called()
 
 
-def test_cluster_absent_skips_termination_for_terminated_cluster():
-    existing = dict(cluster_id='id', cluster_name='etl', state='TERMINATED')
+def test_cluster_absent_permanently_deletes():
+    existing = {'cluster_id': 'id', 'cluster_name': 'etl', 'state': 'RUNNING'}
     module = make_module(AzureRMDatabricksCluster)
     with mock_request([{'clusters': [existing]}, {}]) as request:
         assert module.exec_module(**cluster_params(state='absent'))['changed']
@@ -157,7 +173,7 @@ def test_notebook_import_idempotency_and_export(tmp_path):
     exported = make_module(AzureRMDatabricksNotebook)
     with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook.databricks_request',
                return_value={'content': base64.b64encode(b'print(1)').decode('ascii')}):
-        result = exported.exec_module(**notebook_params(state='exported', source=None, dest=str(destination),
+        result = exported.exec_module(**notebook_params(source=None, dest=str(destination),
                                                         language=None))
     assert result['changed']
     assert destination.read_bytes() == b'print(1)'

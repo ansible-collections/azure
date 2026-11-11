@@ -15,8 +15,8 @@ short_description: Manage clusters in an Azure Databricks workspace
 description:
     - Create, update, and delete all-purpose clusters in an Azure Databricks workspace.
     - Authenticate to the workspace data plane using the configured Azure identity.
-    - I(state=absent) terminates the cluster and permanently deletes it; Databricks keeps
-      merely terminated clusters in the cluster list for 30 days.
+    - I(state=absent) permanently deletes the cluster. Databricks keeps merely terminated
+      clusters in the cluster list for 30 days, so absent does not stop at terminating it.
 options:
     resource_group:
         description: Resource group containing the workspace.
@@ -113,13 +113,32 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databr
     databricks_workspace_host,
 )
 
-# clusters/edit requires a cluster in a stable state and
-# clusters/permanent-delete requires a terminated cluster; reaching either
-# can take several minutes for a large cluster.
+# clusters/edit only accepts a RUNNING or TERMINATED cluster, and starting a
+# cluster can take several minutes.
 STATE_TIMEOUT = 600
 STATE_INTERVAL = 10
-TERMINAL_STATES = ('TERMINATED', 'ERROR', 'UNKNOWN')
-EDITABLE_STATES = ('RUNNING', 'TERMINATED', 'ERROR', 'UNKNOWN')
+EDITABLE_STATES = ('RUNNING', 'TERMINATED')
+
+# clusters/edit replaces the whole cluster spec, so every field this module
+# does not manage must be carried forward from the existing cluster.
+PRESERVED_SPEC_FIELDS = (
+    'azure_attributes',
+    'cluster_log_conf',
+    'cluster_source',
+    'custom_tags',
+    'docker_image',
+    'driver_node_type_id',
+    'enable_elastic_disk',
+    'enable_local_disk_encryption',
+    'init_scripts',
+    'instance_pool_id',
+    'policy_id',
+    'runtime_engine',
+    'single_user_name',
+    'spark_conf',
+    'spark_env_vars',
+    'ssh_public_keys',
+)
 
 
 class AzureRMDatabricksCluster(AzureRMModuleBase):
@@ -199,8 +218,8 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
         if existing is None:
             self.results['changed'] = True
             if not self.check_mode:
-                self.results['cluster'] = databricks_request(
-                    self, self.host, '/api/2.0/clusters/create', 'POST', desired)
+                created = databricks_request(self, self.host, '/api/2.0/clusters/create', 'POST', desired)
+                self.results['cluster'] = self._get_cluster_by_id(created['cluster_id'])
             else:
                 self.results['cluster'] = desired
             return self.results
@@ -213,40 +232,48 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
             self.results['cluster'] = dict(existing, **desired)
             return self.results
         desired['cluster_id'] = existing['cluster_id']
+        for field in PRESERVED_SPEC_FIELDS:
+            if field not in desired and field in existing:
+                desired[field] = existing[field]
         if existing.get('state') not in EDITABLE_STATES:
-            self._wait_for_state(existing['cluster_id'], EDITABLE_STATES, 'be ready for the update')
-        self.results['cluster'] = databricks_request(
-            self, self.host, '/api/2.0/clusters/edit', 'POST', desired) or desired
+            self._wait_for_state(existing['cluster_id'], EDITABLE_STATES, 'be ready for the update',
+                                 fail_states=('ERROR', 'UNKNOWN'))
+        databricks_request(self, self.host, '/api/2.0/clusters/edit', 'POST', desired)
+        self.results['cluster'] = self._get_cluster_by_id(existing['cluster_id'])
         return self.results
 
     def delete_cluster(self, existing):
-        """Terminate and permanently delete the cluster.
+        """Permanently delete the cluster.
 
         clusters/delete only terminates a cluster and Databricks keeps
-        terminated clusters in clusters/list for 30 days, so absent must also
-        call clusters/permanent-delete to remove the cluster entirely.
+        terminated clusters in clusters/list for 30 days, so absent calls
+        clusters/permanent-delete, which terminates and removes the cluster
+        in a single call whatever its state.
         """
         self.log('Delete Databricks cluster {0}'.format(self.name))
-        cluster_id = existing['cluster_id']
         try:
-            if existing.get('state') not in TERMINAL_STATES:
-                if existing.get('state') != 'TERMINATING':
-                    databricks_request(self, self.host, '/api/2.0/clusters/delete', 'POST',
-                                       {'cluster_id': cluster_id})
-                self._wait_for_state(cluster_id, TERMINAL_STATES, 'terminate')
             databricks_request(self, self.host, '/api/2.0/clusters/permanent-delete', 'POST',
-                               {'cluster_id': cluster_id})
+                               {'cluster_id': existing['cluster_id']})
         except Exception as exc:
             self.fail('Error deleting Databricks cluster {0}: {1}'.format(self.name, str(exc)))
 
-    def _wait_for_state(self, cluster_id, states, action):
+    def _get_cluster_by_id(self, cluster_id):
+        """Read the cluster back so the result reflects the stored configuration."""
+        return databricks_request(
+            self, self.host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': cluster_id}))
+
+    def _wait_for_state(self, cluster_id, states, action, fail_states=()):
         """Wait until the cluster reaches one of the given states."""
         deadline = time.time() + STATE_TIMEOUT
         while time.time() < deadline:
             cluster = databricks_request(
                 self, self.host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': cluster_id}))
-            if cluster.get('state') in states:
+            state = cluster.get('state')
+            if state in states:
                 return
+            if state in fail_states:
+                self.fail('Databricks cluster {0} is in state {1}; start or terminate it before updating it'.format(
+                    self.name, state))
             time.sleep(STATE_INTERVAL)
         self.fail('Timed out waiting for Databricks cluster {0} to {1}'.format(self.name, action))
 

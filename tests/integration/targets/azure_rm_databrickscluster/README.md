@@ -1,22 +1,28 @@
 # Databricks data-plane integration test
 
-This target uses an existing Azure Databricks workspace to avoid creating
-expensive workspace infrastructure. Supply these variables through
-`tests/integration/integration_config.yml` or `-e @/path/to/private-vars.yml`:
+This target is self-contained: it creates a Premium Databricks workspace in
+`{{ resource_group }}` with `azure_rm_databricksworkspace`, runs the cluster
+and notebook checks against it, and removes the workspace afterwards. No
+extra variables are required, but workspace creation and deletion each take
+a few minutes.
 
-- `databricks_test_resource_group`, `databricks_test_workspace`
-- `databricks_test_spark_version` and `databricks_test_node_type` (optional; defaults are in tasks)
+Optional variables (through `tests/integration/integration_config.yml` or
+`-e`):
 
-The Azure principal must be a workspace user allowed to create clusters and
-notebooks.
+- `databricks_test_spark_version` and `databricks_test_node_type` (defaults are in tasks)
+
+The Azure principal must be allowed to create Databricks workspaces in the
+resource group; the principal that creates the workspace automatically has
+data-plane access to it.
 
 Run with:
 
 ```bash
 ansible-test integration azure_rm_databrickscluster --docker --allow-destructive \
-  --python 3.12 -e @/path/to/private-vars.yml
+  --python 3.12
 ```
 
-The target creates a uniquely named cluster and notebook, removes them with
-`state: absent` (which terminates and permanently deletes the cluster), and
-asserts both are gone. It does not delete the workspace.
+The target creates a uniquely named cluster and notebook, exports the
+notebook to a temporary directory, removes the cluster with `state: absent`
+(which permanently deletes it), and asserts both are gone before deleting
+the workspace.
