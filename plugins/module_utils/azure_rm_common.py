@@ -295,6 +295,7 @@ try:
     from azure.mgmt.cdn import CdnManagementClient
     from azure.mgmt.hybridcompute import HybridComputeManagementClient
     from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
+    from azure.mgmt.cosmosdb import CosmosDBManagementClient
     from azure.mgmt.databricks import AzureDatabricksManagementClient
     import azure.mgmt.databricks.models as DatabricksModels
     from azure.mgmt.dataprotection import DataProtectionMgmtClient
@@ -463,6 +464,7 @@ class AzureRMModuleBase(object):
         self._cognitive_services_management_client = None
         self._databricks_client = None
         self._dataprotection_client = None
+        self._cosmosdb_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1661,6 +1663,14 @@ class AzureRMModuleBase(object):
     def databricks_models(self):
         self.log('Getting databricks models')
         return DatabricksModels
+
+    @property
+    def cosmosdb_client(self):
+        self.log('Getting cosmosdb client...')
+        if not self._cosmosdb_client:
+            self._cosmosdb_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
+                                                             base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._cosmosdb_client
 
 
 class AzureRMAuthException(Exception):
