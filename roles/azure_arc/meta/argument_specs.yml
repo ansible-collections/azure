@@ -88,6 +88,11 @@ argument_specs:
             payload, and the extension payloads in /var/lib/GuestConfig are
             kept because the package is removed without purging.
         required: false
+      azure_arc_private_link_scope:
+        description:
+          - Private link scope as a full resource ID.
+          - This is only needed if your environment utilizes a private link.
+        required: false
       altdownload:
         description:
           - Alternative download URL for the azcmagent package.
