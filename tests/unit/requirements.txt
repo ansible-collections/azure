@@ -2,4 +2,6 @@ azure-servicebus
 azure-eventhub
 aiohttp
 pytest-asyncio
-azure-identity==1.25.2
+azure-identity==1.21.0; python_version < '3.9'
+azure-identity==1.25.2; python_version >= '3.9'
+azure-mgmt-databricks==2.0.0

@@ -1,0 +1,238 @@
+- name: Exercise Databricks data-plane modules
+  block:
+    - name: Set the test workspace name
+      ansible.builtin.set_fact:
+        adb_workspace: "{{ 'adb' + (resource_group | hash('md5') | truncate(16, true, '')) }}"
+
+    - name: Create a Databricks workspace for the data-plane tests
+      azure.azcollection.azure_rm_databricksworkspace:
+        resource_group: "{{ resource_group }}"
+        name: "{{ adb_workspace }}"
+        location: eastus
+        managed_resource_group_id: "{{ '/subscriptions/' + azure_subscription_id ~ '/resourceGroups/' ~ adb_workspace ~ '-managed' }}"
+        sku:
+          name: premium
+
+    - name: Create unique resource names
+      ansible.builtin.set_fact:
+        analytics_test_id: "{{ resource_group | hash('md5') | truncate(7, true, '') }}{{ 1000 | random }}"
+
+    - name: Set module test resource names
+      ansible.builtin.set_fact:
+        cluster_name: "it{{ analytics_test_id }}"
+        notebook_path: "/Shared/ansible-it-{{ analytics_test_id }}"
+
+    - name: Set a controller directory for notebook exports
+      ansible.builtin.set_fact:
+        remote_tmp_dir: "{{ lookup('ansible.builtin.env', 'TMPDIR') | default('/tmp', true) }}"
+
+    - name: Predict cluster creation without creating it
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 2
+        data_security_mode: SINGLE_USER
+      check_mode: true
+      register: cluster_check
+
+    - name: Assert cluster check mode
+      ansible.builtin.assert:
+        that:
+          - cluster_check is changed
+          - cluster_check.cluster.cluster_name == cluster_name
+
+    - name: Create Databricks cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 2
+        data_security_mode: SINGLE_USER
+      register: cluster_create
+      # A freshly created workspace takes a few minutes before its data plane
+      # accepts cluster creation ("no associated worker environments").
+      retries: 12
+      delay: 30
+      until: cluster_create is not failed
+
+    - name: Assert cluster created
+      ansible.builtin.assert:
+        that:
+          - cluster_create is changed
+          - cluster_create.cluster.cluster_id is defined
+          - cluster_create.cluster.state is defined
+
+    - name: Reconcile cluster (idempotency)
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 2
+        data_security_mode: SINGLE_USER
+      register: cluster_idempotent
+
+    - name: Assert cluster idempotent
+      ansible.builtin.assert:
+        that:
+          - cluster_idempotent is not changed
+
+    - name: Resize cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 4
+        data_security_mode: SINGLE_USER
+      register: cluster_resize
+
+    - name: Assert resize
+      ansible.builtin.assert:
+        that:
+          - cluster_resize is changed
+          - cluster_resize.cluster.num_workers == 4
+
+    - name: Read resized cluster through its info module
+      azure.azcollection.azure_rm_databrickscluster_info:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+      register: cluster_facts
+
+    - name: Assert cluster info reports resized cluster
+      ansible.builtin.assert:
+        that:
+          - cluster_facts.clusters | length == 1
+          - cluster_facts.clusters[0].num_workers == 4
+
+    - name: Import notebook to workspace
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}"
+        source: "{{ role_path }}/files/notebook.py"
+        format: SOURCE
+        language: PYTHON
+      register: notebook_import
+
+    - name: Assert notebook imported
+      ansible.builtin.assert:
+        that:
+          - notebook_import is changed
+
+    - name: Reimport notebook (idempotency)
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}"
+        source: "{{ role_path }}/files/notebook.py"
+        format: SOURCE
+        language: PYTHON
+      register: notebook_idempotent
+
+    - name: Assert notebook idempotent
+      ansible.builtin.assert:
+        that:
+          - notebook_idempotent is not changed
+
+    - name: Export notebook to the test controller
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}"
+        dest: "{{ remote_tmp_dir }}/{{ notebook_path | basename }}.py"
+      register: notebook_export
+
+    - name: Assert notebook exported
+      ansible.builtin.assert:
+        that:
+          - notebook_export.notebook.sha256 is defined
+
+    - name: Predict cluster deletion
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      check_mode: true
+      register: cluster_delete_check
+
+    - name: Assert cluster deletion check mode
+      ansible.builtin.assert:
+        that:
+          - cluster_delete_check is changed
+
+    - name: Delete cluster
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      register: cluster_delete
+
+    - name: Assert cluster deleted
+      ansible.builtin.assert:
+        that:
+          - cluster_delete is changed
+
+    - name: Read deleted cluster through its info module
+      azure.azcollection.azure_rm_databrickscluster_info:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+      register: deleted_cluster_facts
+
+    - name: Assert deleted cluster is not returned
+      ansible.builtin.assert:
+        that:
+          - deleted_cluster_facts.clusters | length == 0
+
+    - name: Repeat cluster deletion
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        state: absent
+      register: cluster_delete_repeat
+
+    - name: Assert cluster deletion idempotency
+      ansible.builtin.assert:
+        that:
+          - cluster_delete_repeat is not changed
+
+    - name: Delete imported notebook
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}"
+        state: absent
+      register: notebook_delete
+
+    - name: Assert notebook deleted
+      ansible.builtin.assert:
+        that:
+          - notebook_delete is changed
+
+  always:
+    - name: Remove the exported notebook file
+      ansible.builtin.file:
+        path: "{{ remote_tmp_dir }}/{{ notebook_path | basename }}.py"
+        state: absent
+      when: notebook_path is defined
+      ignore_errors: true
+
+    - name: Remove the Databricks workspace
+      azure.azcollection.azure_rm_databricksworkspace:
+        resource_group: "{{ resource_group }}"
+        name: "{{ adb_workspace }}"
+        state: absent
+      when: adb_workspace is defined
+      ignore_errors: true
