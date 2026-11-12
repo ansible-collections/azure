@@ -215,6 +215,8 @@ action_groups:
     - azure.azcollection.azure_rm_lock_info
     - azure.azcollection.azure_rm_loganalyticsworkspace
     - azure.azcollection.azure_rm_loganalyticsworkspace_info
+    - azure.azcollection.azure_rm_managedapplication
+    - azure.azcollection.azure_rm_managedapplication_info
     - azure.azcollection.azure_rm_manageddisk
     - azure.azcollection.azure_rm_manageddisk_info
     - azure.azcollection.azure_rm_managementgroup

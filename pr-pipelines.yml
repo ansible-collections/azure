@@ -94,6 +94,7 @@ parameters:
       - "azure_rm_loadbalancerbackendaddresspool"
       - "azure_rm_loganalyticsworkspace"
       - "azure_rm_localnetworkgateway"
+      - "azure_rm_managedapplication"
       - "azure_rm_manageddisk"
       - "azure_rm_managementgroup"
       - "azure_rm_ml_workspace"
