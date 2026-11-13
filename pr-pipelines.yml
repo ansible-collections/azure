@@ -95,6 +95,7 @@ parameters:
       - "azure_rm_loganalyticsworkspace"
       - "azure_rm_localnetworkgateway"
       - "azure_rm_manageddisk"
+      - "azure_rm_managedredis"
       - "azure_rm_managementgroup"
       - "azure_rm_ml_workspace"
       - "azure_rm_ml_compute"
