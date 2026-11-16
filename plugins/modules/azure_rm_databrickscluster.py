@@ -115,8 +115,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databr
 )
 
 # clusters/edit only accepts a RUNNING or TERMINATED cluster, and starting a
-# cluster can take several minutes.
-STATE_TIMEOUT = 600
+# cluster can take several minutes. A cluster created right after its
+# workspace can sit in PENDING for well over ten minutes while the fresh
+# workspace attaches its worker environments, so allow half an hour.
+STATE_TIMEOUT = 1800
 STATE_INTERVAL = 10
 EDITABLE_STATES = ('RUNNING', 'TERMINATED')
 
@@ -296,6 +298,7 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
     def _wait_for_state(self, cluster_id, states, action, fail_states=()):
         """Wait until the cluster reaches one of the given states."""
         deadline = time.time() + STATE_TIMEOUT
+        state = None
         while time.time() < deadline:
             cluster = databricks_request(
                 self, self.host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': cluster_id}))
@@ -306,7 +309,8 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
                 self.fail('Databricks cluster {0} is in state {1}; start or terminate it before updating it'.format(
                     self.name, state))
             time.sleep(STATE_INTERVAL)
-        self.fail('Timed out waiting for Databricks cluster {0} to {1}'.format(self.name, action))
+        self.fail('Timed out after {0}s waiting for Databricks cluster {1} to {2} (last state {3})'.format(
+            STATE_TIMEOUT, self.name, action, state))
 
     def _body(self):
         """Build the cluster payload for the create / edit call."""

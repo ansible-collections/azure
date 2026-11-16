@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ansible_collections.azure.azcollection.plugins.modules.azure_rm_databrickscluster import AzureRMDatabricksCluster
+from ansible_collections.azure.azcollection.plugins.modules.azure_rm_databrickscluster import AzureRMDatabricksCluster, STATE_TIMEOUT
 from ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook import AzureRMDatabricksNotebook
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databricks import databricks_request
 
@@ -138,6 +138,19 @@ def test_cluster_edit_fails_fast_on_error_state():
         with pytest.raises(ValueError, match='is in state ERROR'):
             module.exec_module(**cluster_params(num_workers=4))
     module.fail.assert_called()
+
+
+def test_cluster_edit_wait_timeout_reports_last_state():
+    existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
+                    node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
+                    data_security_mode='SINGLE_USER', state='PENDING')
+    module = make_module(AzureRMDatabricksCluster)
+    with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databrickscluster.time') as clock:
+        clock.time.side_effect = [0, 1, STATE_TIMEOUT + 1]
+        clock.sleep = MagicMock()
+        with mock_request([{'clusters': [existing]}, {'cluster_id': 'id', 'state': 'PENDING'}]):
+            with pytest.raises(ValueError, match='Timed out after .*s .*last state PENDING'):
+                module.exec_module(**cluster_params(num_workers=4))
 
 
 def test_cluster_absent_permanently_deletes():
