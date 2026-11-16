@@ -61,7 +61,8 @@ options:
               clusters without an explicit access mode.
             - C(SINGLE_USER) dedicates the cluster to one user, C(USER_ISOLATION) shares
               it between users, and C(NONE) creates a no-isolation cluster where allowed.
-            - The access mode cannot be changed on an existing cluster.
+            - The access mode cannot be changed on an existing cluster. When omitted on
+              an existing cluster, the stored access mode is kept.
         type: str
         choices: [SINGLE_USER, USER_ISOLATION, NONE]
     state:
@@ -119,25 +120,36 @@ STATE_TIMEOUT = 600
 STATE_INTERVAL = 10
 EDITABLE_STATES = ('RUNNING', 'TERMINATED')
 
-# clusters/edit replaces the whole cluster spec, so every field this module
-# does not manage must be carried forward from the existing cluster.
-PRESERVED_SPEC_FIELDS = (
-    'azure_attributes',
-    'cluster_log_conf',
+# Read-only metadata returned by clusters/get and clusters/list next to the
+# editable spec. clusters/edit replaces the whole editable spec, so the edit
+# request is built from the existing cluster minus this metadata with the
+# desired values overlaid: an editable field left out of the request would be
+# reset to its default, while read-only metadata is not an edit field.
+READONLY_CLUSTER_FIELDS = (
+    'cluster_cores',
+    'cluster_log_status',
+    'cluster_memory_mb',
     'cluster_source',
-    'custom_tags',
-    'docker_image',
-    'driver_node_type_id',
-    'enable_elastic_disk',
-    'enable_local_disk_encryption',
-    'init_scripts',
-    'instance_pool_id',
-    'policy_id',
-    'runtime_engine',
-    'single_user_name',
-    'spark_conf',
-    'spark_env_vars',
-    'ssh_public_keys',
+    'creator_user_name',
+    'default_tags',
+    'disk_spec',
+    'driver',
+    'driver_instance_source',
+    'executors',
+    'init_scripts_safe_cluster_only',
+    'init_scripts_safe_mode',
+    'instance_source',
+    'jdbc_port',
+    'last_activity_time',
+    'last_restarted_time',
+    'last_state_loss_time',
+    'spark_context_id',
+    'spec',
+    'start_time',
+    'state',
+    'state_message',
+    'terminated_time',
+    'termination_reason',
 )
 
 
@@ -224,21 +236,18 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
                 self.results['cluster'] = desired
             return self.results
 
+        body = self._edit_body(existing, desired)
         self.results['changed'] = any(existing.get(key) != value for key, value in desired.items())
         if not self.results['changed']:
             self.results['cluster'] = existing
             return self.results
         if self.check_mode:
-            self.results['cluster'] = dict(existing, **desired)
+            self.results['cluster'] = dict(existing, **body)
             return self.results
-        desired['cluster_id'] = existing['cluster_id']
-        for field in PRESERVED_SPEC_FIELDS:
-            if field not in desired and field in existing:
-                desired[field] = existing[field]
         if existing.get('state') not in EDITABLE_STATES:
             self._wait_for_state(existing['cluster_id'], EDITABLE_STATES, 'be ready for the update',
                                  fail_states=('ERROR', 'UNKNOWN'))
-        databricks_request(self, self.host, '/api/2.0/clusters/edit', 'POST', desired)
+        databricks_request(self, self.host, '/api/2.0/clusters/edit', 'POST', body)
         self.results['cluster'] = self._get_cluster_by_id(existing['cluster_id'])
         return self.results
 
@@ -261,6 +270,28 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
         """Read the cluster back so the result reflects the stored configuration."""
         return databricks_request(
             self, self.host, '/api/2.0/clusters/get?' + urlencode({'cluster_id': cluster_id}))
+
+    def _edit_body(self, existing, desired):
+        """Build the clusters/edit request from the existing cluster.
+
+        clusters/edit replaces the whole editable spec, so the request starts
+        from the existing cluster's editable fields with the desired values
+        overlaid. Fields the task does not manage (data_security_mode,
+        spark_conf, init_scripts, ...) keep their stored values instead of
+        being reset, and read-only metadata is dropped because clusters/edit
+        does not accept it.
+        """
+        body = {field: value for field, value in existing.items()
+                if field not in READONLY_CLUSTER_FIELDS}
+        body['cluster_id'] = existing['cluster_id']
+        body.update(desired)
+        # The task's sizing replaces the stored sizing; clusters/edit rejects
+        # a request carrying both num_workers and autoscale.
+        if 'autoscale' in desired:
+            body.pop('num_workers', None)
+        else:
+            body.pop('autoscale', None)
+        return body
 
     def _wait_for_state(self, cluster_id, states, action, fail_states=()):
         """Wait until the cluster reaches one of the given states."""

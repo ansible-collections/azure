@@ -101,7 +101,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_databr
     databricks_workspace_host,
 )
 
-NOTEBOOK_SOURCE_HEADER = b'# Databricks notebook source'
+NOTEBOOK_SOURCE_MARKER = b'Databricks notebook source'
 
 
 class AzureRMDatabricksNotebook(AzureRMModuleBase):
@@ -219,7 +219,8 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
     def _content_changed(self, current, content):
         """Compare notebook content, ignoring the SOURCE-format notebook header.
 
-        Databricks adds the header to every SOURCE-format export even when
+        Databricks prefixes every SOURCE-format export with a language-specific
+        comment ('# ', '-- ', or '// Databricks notebook source') even when
         the imported file did not have one, so comparing raw bytes would
         report a change on every run.
         """
@@ -228,13 +229,10 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
         return self._without_source_header(current) != self._without_source_header(content)
 
     def _without_source_header(self, content):
-        if not content.startswith(NOTEBOOK_SOURCE_HEADER):
-            return content
-        content = content[len(NOTEBOOK_SOURCE_HEADER):]
-        if content[:2] == b'\r\n':
-            return content[2:]
-        if content[:1] == b'\n':
-            return content[1:]
+        """Drop the SOURCE-format header line, whatever its comment prefix."""
+        line, _, remainder = content.partition(b'\n')
+        if NOTEBOOK_SOURCE_MARKER in line:
+            return remainder
         return content
 
     def _query(self):

@@ -83,7 +83,7 @@
         that:
           - cluster_idempotent is not changed
 
-    - name: Resize cluster
+    - name: Resize cluster without managing its access mode
       azure.azcollection.azure_rm_databrickscluster:
         resource_group: "{{ resource_group }}"
         workspace_name: "{{ adb_workspace }}"
@@ -91,7 +91,6 @@
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
         node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
         num_workers: 4
-        data_security_mode: SINGLE_USER
       register: cluster_resize
 
     - name: Assert resize
@@ -112,6 +111,24 @@
         that:
           - cluster_facts.clusters | length == 1
           - cluster_facts.clusters[0].num_workers == 4
+          # clusters/edit replaces the whole spec, so the resize above must
+          # carry the stored access mode forward instead of resetting it.
+          - cluster_facts.clusters[0].data_security_mode == 'SINGLE_USER'
+
+    - name: Resize cluster again (idempotency)
+      azure.azcollection.azure_rm_databrickscluster:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        name: "{{ cluster_name }}"
+        spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
+        node_type_id: "{{ databricks_test_node_type | default('Standard_DS3_v2') }}"
+        num_workers: 4
+      register: cluster_resize_repeat
+
+    - name: Assert resize idempotency
+      ansible.builtin.assert:
+        that:
+          - cluster_resize_repeat is not changed
 
     - name: Import notebook to workspace
       azure.azcollection.azure_rm_databricksnotebook:
@@ -142,6 +159,36 @@
       ansible.builtin.assert:
         that:
           - notebook_idempotent is not changed
+
+    - name: Import SQL notebook to workspace
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}-sql"
+        source: "{{ role_path }}/files/notebook.sql"
+        format: SOURCE
+        language: SQL
+      register: sql_notebook_import
+
+    - name: Assert SQL notebook imported
+      ansible.builtin.assert:
+        that:
+          - sql_notebook_import is changed
+
+    - name: Reimport SQL notebook (idempotency)
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}-sql"
+        source: "{{ role_path }}/files/notebook.sql"
+        format: SOURCE
+        language: SQL
+      register: sql_notebook_idempotent
+
+    - name: Assert SQL notebook idempotent
+      ansible.builtin.assert:
+        that:
+          - sql_notebook_idempotent is not changed
 
     - name: Export notebook to the test controller
       azure.azcollection.azure_rm_databricksnotebook:
@@ -220,6 +267,19 @@
       ansible.builtin.assert:
         that:
           - notebook_delete is changed
+
+    - name: Delete imported SQL notebook
+      azure.azcollection.azure_rm_databricksnotebook:
+        resource_group: "{{ resource_group }}"
+        workspace_name: "{{ adb_workspace }}"
+        path: "{{ notebook_path }}-sql"
+        state: absent
+      register: sql_notebook_delete
+
+    - name: Assert SQL notebook deleted
+      ansible.builtin.assert:
+        that:
+          - sql_notebook_delete is changed
 
   always:
     - name: Remove the exported notebook file

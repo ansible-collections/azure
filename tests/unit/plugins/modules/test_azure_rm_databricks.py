@@ -67,15 +67,16 @@ def test_cluster_create_and_check_mode():
 def test_cluster_idempotency_and_edit():
     existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
                     node_type_id='Standard_DS3_v2', num_workers=2, autotermination_minutes=60,
-                    data_security_mode='SINGLE_USER', state='RUNNING',
+                    data_security_mode='SINGLE_USER', state='RUNNING', cluster_source='UI',
+                    default_tags={'Vendor': 'Databricks'}, creator_user_name='admin@example.com',
                     custom_tags={'Team': 'data'}, spark_conf={'spark.speculation': 'true'})
     module = make_module(AzureRMDatabricksCluster)
     with mock_request([{'clusters': [existing]}]):
-        assert not module.exec_module(**cluster_params())['changed']
+        assert not module.exec_module(**cluster_params(data_security_mode=None))['changed']
     module = make_module(AzureRMDatabricksCluster)
     stored = dict(existing, num_workers=4)
     with mock_request([{'clusters': [existing]}, {}, stored]) as request:
-        result = module.exec_module(**cluster_params(num_workers=4))
+        result = module.exec_module(**cluster_params(num_workers=4, data_security_mode=None))
     assert result['changed']
     assert result['cluster'] == stored
     body = request.call_args_list[1].args[4]
@@ -84,6 +85,32 @@ def test_cluster_idempotency_and_edit():
     # does not wipe them.
     assert body['custom_tags'] == {'Team': 'data'}
     assert body['spark_conf'] == {'spark.speculation': 'true'}
+    # data_security_mode is not managed by this task, so the stored access
+    # mode is carried forward instead of being reset.
+    assert body['data_security_mode'] == 'SINGLE_USER'
+    # Read-only metadata is not an edit field.
+    assert 'cluster_source' not in body
+    assert 'state' not in body
+    assert 'default_tags' not in body
+    assert 'creator_user_name' not in body
+
+
+def test_cluster_edit_replaces_sizing_mode():
+    existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
+                    node_type_id='Standard_DS3_v2', autoscale={'min_workers': 2, 'max_workers': 8},
+                    autotermination_minutes=60, data_security_mode='SINGLE_USER', state='RUNNING')
+    module = make_module(AzureRMDatabricksCluster)
+    stored = dict(existing, num_workers=2)
+    del stored['autoscale']
+    with mock_request([{'clusters': [existing]}, {}, stored]) as request:
+        result = module.exec_module(**cluster_params(num_workers=2, autoscale=None))
+    assert result['changed']
+    assert result['cluster'] == stored
+    body = request.call_args_list[1].args[4]
+    # The task's sizing mode replaces the stored one; clusters/edit rejects
+    # a request carrying both num_workers and autoscale.
+    assert body['num_workers'] == 2
+    assert 'autoscale' not in body
 
 
 def test_cluster_edit_waits_for_stable_state():
@@ -183,6 +210,33 @@ def test_notebook_import_idempotency_and_export(tmp_path):
     with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook.databricks_request',
                side_effect=[{'path': '/Shared/etl'}, {'content': exported}]) as request:
         result = repeated.exec_module(**notebook_params(source=str(source)))
+    assert not result['changed']
+    assert request.call_count == 2
+
+
+def test_notebook_import_idempotent_across_header_prefixes(tmp_path):
+    # Databricks prefixes SOURCE exports with a language-specific comment:
+    # '# ' for Python, '-- ' for SQL, and '// ' for Scala.
+    for prefix, language in ((b'# ', 'PYTHON'), (b'-- ', 'SQL'), (b'// ', 'SCALA')):
+        source = tmp_path / ('notebook.' + language.lower())
+        source.write_bytes(prefix + b'Databricks notebook source\nSELECT 1')
+        exported = base64.b64encode(prefix + b'Databricks notebook source\nSELECT 1').decode('ascii')
+        module = make_module(AzureRMDatabricksNotebook)
+        with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook.databricks_request',
+                   side_effect=[{'path': '/Shared/etl'}, {'content': exported}]) as request:
+            result = module.exec_module(**notebook_params(source=str(source), language=language))
+        assert not result['changed']
+        assert request.call_count == 2
+
+
+def test_notebook_import_idempotent_without_header(tmp_path):
+    source = tmp_path / 'notebook.sql'
+    source.write_bytes(b'SELECT 1')
+    exported = base64.b64encode(b'-- Databricks notebook source\nSELECT 1').decode('ascii')
+    module = make_module(AzureRMDatabricksNotebook)
+    with patch('ansible_collections.azure.azcollection.plugins.modules.azure_rm_databricksnotebook.databricks_request',
+               side_effect=[{'path': '/Shared/etl'}, {'content': exported}]) as request:
+        result = module.exec_module(**notebook_params(source=str(source), language='SQL'))
     assert not result['changed']
     assert request.call_count == 2
 
