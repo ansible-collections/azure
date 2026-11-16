@@ -230,7 +230,8 @@ class AzureRMDatabricksNotebook(AzureRMModuleBase):
 
     def _without_source_header(self, content):
         """Drop the SOURCE-format header line, whatever its comment prefix."""
-        line, _, remainder = content.partition(b'\n')
+        # A '_' placeholder would trip the ansible-test pylint sanity check
+        line, separator, remainder = content.partition(b'\n')
         if NOTEBOOK_SOURCE_MARKER in line:
             return remainder
         return content
