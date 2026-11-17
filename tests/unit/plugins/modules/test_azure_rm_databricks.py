@@ -96,8 +96,12 @@ def test_cluster_idempotency_and_edit():
 
 
 def test_cluster_edit_replaces_sizing_mode():
+    # clusters/get reports num_workers for an autoscale cluster too (its
+    # current size), so the stored num_workers matches the task's value and
+    # only the sizing mode differs.
     existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
-                    node_type_id='Standard_DS3_v2', autoscale={'min_workers': 2, 'max_workers': 8},
+                    node_type_id='Standard_DS3_v2', num_workers=2,
+                    autoscale={'min_workers': 2, 'max_workers': 8},
                     autotermination_minutes=60, data_security_mode='SINGLE_USER', state='RUNNING')
     module = make_module(AzureRMDatabricksCluster)
     stored = dict(existing, num_workers=2)
@@ -111,6 +115,22 @@ def test_cluster_edit_replaces_sizing_mode():
     # a request carrying both num_workers and autoscale.
     assert body['num_workers'] == 2
     assert 'autoscale' not in body
+
+
+def test_cluster_edit_replaces_sizing_mode_with_autoscale():
+    existing = dict(cluster_id='id', cluster_name='etl', spark_version='13.3.x-scala2.12',
+                    node_type_id='Standard_DS3_v2', num_workers=2,
+                    autotermination_minutes=60, data_security_mode='SINGLE_USER', state='RUNNING')
+    module = make_module(AzureRMDatabricksCluster)
+    stored = dict(existing, autoscale={'min_workers': 2, 'max_workers': 8})
+    del stored['num_workers']
+    with mock_request([{'clusters': [existing]}, {}, stored]) as request:
+        result = module.exec_module(**cluster_params(num_workers=None, autoscale={'min_workers': 2, 'max_workers': 8}))
+    assert result['changed']
+    assert result['cluster'] == stored
+    body = request.call_args_list[1].args[4]
+    assert body['autoscale'] == {'min_workers': 2, 'max_workers': 8}
+    assert 'num_workers' not in body
 
 
 def test_cluster_edit_waits_for_stable_state():

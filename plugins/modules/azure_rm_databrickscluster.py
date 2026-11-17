@@ -239,7 +239,11 @@ class AzureRMDatabricksCluster(AzureRMModuleBase):
             return self.results
 
         body = self._edit_body(existing, desired)
-        self.results['changed'] = any(existing.get(key) != value for key, value in desired.items())
+        # clusters/get reports num_workers for an autoscale cluster too (its
+        # current size), so a sizing-mode switch where the values match must
+        # be detected from the mode rather than the field values.
+        self.results['changed'] = ('autoscale' in desired) != ('autoscale' in existing) or \
+            any(existing.get(key) != value for key, value in desired.items())
         if not self.results['changed']:
             self.results['cluster'] = existing
             return self.results
