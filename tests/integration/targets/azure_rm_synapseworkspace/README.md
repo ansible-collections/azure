@@ -2,7 +2,8 @@
 
 This target uses an existing Azure Synapse workspace to avoid creating
 expensive workspace infrastructure. Supply these variables through
-`tests/integration/integration_config.yml` or `-e @/path/to/private-vars.yml`:
+`tests/integration/integration_config.yml`, which ansible-test loads
+automatically for integration targets:
 
 - `synapse_test_resource_group`, `synapse_test_workspace`
 
@@ -12,7 +13,7 @@ Run with:
 
 ```bash
 ansible-test integration azure_rm_synapseworkspace --docker --allow-destructive \
-  --python 3.12 -e @/path/to/private-vars.yml
+  --python 3.12
 ```
 
 The target reconciles the pre-existing workspace, reads it through the info
