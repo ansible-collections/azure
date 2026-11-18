@@ -66,109 +66,35 @@
     #   ansible.builtin.wait_for:
     #     timeout: 360
 
-    - name: Create a Disk Backup policy (raw ARM call; azure_rm_dataprotectionbackuppolicydisk is out of scope for this test)
-      azure.azcollection.azure_rm_resource:
+    - name: Create a Disk Backup policy
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
         resource_group: "{{ new_resource_group }}"
-        provider: DataProtection
-        resource_type: backupVaults
-        resource_name: "{{ name_rpfx }}vault"
-        subresource:
-          - type: backupPolicies
-            name: "{{ name_rpfx }}policy"
-        api_version: "2026-06-01"
-        body:
-          properties:
-            datasourceTypes:
-              - Microsoft.Compute/disks
-            objectType: BackupPolicy
-            policyRules:
-              - name: BackupIntervals
-                objectType: AzureBackupRule
-                backupParameters:
-                  backupType: Incremental
-                  objectType: AzureBackupParams
-                dataStore:
-                  dataStoreType: OperationalStore
-                  objectType: DataStoreInfoBase
-                trigger:
-                  objectType: ScheduleBasedTriggerContext
-                  schedule:
-                    repeatingTimeIntervals:
-                      - "R/2024-01-01T00:00:00+00:00/P1D"
-                    timeZone: UTC
-                  taggingCriteria:
-                    - isDefault: true
-                      taggingPriority: 99
-                      tagInfo:
-                        tagName: Default
-              - name: Default
-                objectType: AzureRetentionRule
-                isDefault: true
-                lifecycles:
-                  - deleteAfter:
-                      objectType: AbsoluteDeleteOption
-                      duration: P7D
-                    sourceDataStore:
-                      dataStoreType: OperationalStore
-                      objectType: DataStoreInfoBase
-        state: present
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        time_zone: UTC
+        default_retention_duration: P7D
       register: __policy
 
     - name: Set the backup policy ID fact
       ansible.builtin.set_fact:
-        backup_policy_id: "{{ __policy.response.id }}"
+        backup_policy_id: "{{ __policy.id }}"
 
     - name: Create a second Disk Backup policy (used later to exercise the update path)
-      azure.azcollection.azure_rm_resource:
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
         resource_group: "{{ new_resource_group }}"
-        provider: DataProtection
-        resource_type: backupVaults
-        resource_name: "{{ name_rpfx }}vault"
-        subresource:
-          - type: backupPolicies
-            name: "{{ name_rpfx }}policy2"
-        api_version: "2026-06-01"
-        body:
-          properties:
-            datasourceTypes:
-              - Microsoft.Compute/disks
-            objectType: BackupPolicy
-            policyRules:
-              - name: BackupIntervals
-                objectType: AzureBackupRule
-                backupParameters:
-                  backupType: Incremental
-                  objectType: AzureBackupParams
-                dataStore:
-                  dataStoreType: OperationalStore
-                  objectType: DataStoreInfoBase
-                trigger:
-                  objectType: ScheduleBasedTriggerContext
-                  schedule:
-                    repeatingTimeIntervals:
-                      - "R/2024-01-01T00:00:00+00:00/P1D"
-                    timeZone: UTC
-                  taggingCriteria:
-                    - isDefault: true
-                      taggingPriority: 99
-                      tagInfo:
-                        tagName: Default
-              - name: Default
-                objectType: AzureRetentionRule
-                isDefault: true
-                lifecycles:
-                  - deleteAfter:
-                      objectType: AbsoluteDeleteOption
-                      duration: P14D
-                    sourceDataStore:
-                      dataStoreType: OperationalStore
-                      objectType: DataStoreInfoBase
-        state: present
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        time_zone: UTC
+        default_retention_duration: P14D
       register: __policy2
 
     - name: Set the second backup policy ID fact
       ansible.builtin.set_fact:
-        backup_policy_id_2: "{{ __policy2.response.id }}"
+        backup_policy_id_2: "{{ __policy2.id }}"
 
     - name: Create a Disk Backup instance (check mode)
       azure.azcollection.azure_rm_dataprotectionbackupinstancedisk:
@@ -359,28 +285,18 @@
           - output.backupinstances | length == 0
 
     - name: Delete the second Disk Backup policy (this is the instance's last-used policy; Azure's mandatory AlwaysOn soft delete keeps a soft-deleted association to it after the instance delete above, so this is expected to fail until the retention window elapses)
-      azure.azcollection.azure_rm_resource:
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
         resource_group: "{{ new_resource_group }}"
-        provider: DataProtection
-        resource_type: backupVaults
-        resource_name: "{{ name_rpfx }}vault"
-        subresource:
-          - type: backupPolicies
-            name: "{{ name_rpfx }}policy2"
-        api_version: "2026-06-01"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
         state: absent
       ignore_errors: true
 
     - name: Delete the first Disk Backup policy
-      azure.azcollection.azure_rm_resource:
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
         resource_group: "{{ new_resource_group }}"
-        provider: DataProtection
-        resource_type: backupVaults
-        resource_name: "{{ name_rpfx }}vault"
-        subresource:
-          - type: backupPolicies
-            name: "{{ name_rpfx }}policy"
-        api_version: "2026-06-01"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
         state: absent
 
     - name: Delete the Backup vault

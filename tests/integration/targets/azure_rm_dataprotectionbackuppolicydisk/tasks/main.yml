@@ -1,0 +1,500 @@
+- name: Create a new resource group for data protection backup policy (disk) test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-dataprotectionbackuppolicydisk"
+    location: eastus
+
+- name: For data protection backup policy (disk) test
+  block:
+    - name: Gather Resource Group info
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ resource_group }}-dataprotectionbackuppolicydisk"
+      register: __rg_info
+
+    - name: Fix resource prefix and location
+      ansible.builtin.set_fact:
+        name_rpfx: "dpbp{{ resource_group | hash('md5') | truncate(22, True, '') }}"
+        location: "{{ __rg_info.resourcegroups.0.location }}"
+        new_resource_group: "{{ resource_group }}-dataprotectionbackuppolicydisk"
+
+    - name: Create a Backup vault to hold the policy
+      azure.azcollection.azure_rm_dataprotectionbackupvault:
+        resource_group: "{{ new_resource_group }}"
+        name: "{{ name_rpfx }}vault"
+        location: "{{ location }}"
+        datastore_type: VaultStore
+        redundancy: LocallyRedundant
+
+    - name: Create a Disk Backup policy (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        time_zone: UTC
+        default_retention_duration: P7D
+      check_mode: true
+      register: output
+
+    - name: Assert that check mode reports changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Disk Backup policy by name (should not exist after check mode)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+      register: output
+
+    - name: Assert that the backup policy was not created in check mode
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 0
+
+    - name: Create a Disk Backup policy
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        time_zone: UTC
+        default_retention_duration: P7D
+      register: output
+
+    - name: Assert that the policy was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id is defined
+
+    - name: Create the Disk Backup policy again (idempotence)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        time_zone: UTC
+        default_retention_duration: P7D
+      register: output
+
+    - name: Assert that no change was made
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Create the Disk Backup policy again without time_zone (time_zone is not compared when omitted)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        default_retention_duration: P7D
+      register: output
+
+    - name: Assert that no change was made
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Disk Backup policy by name
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+      register: output
+
+    - name: Assert the policy facts
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 1
+          - output.backuppolicies[0].name == name_rpfx ~ 'policy'
+          - output.backuppolicies[0].backup_repeating_time_intervals == ['R/2024-01-01T00:00:00+00:00/P1D']
+          - output.backuppolicies[0].time_zone == 'UTC'
+          - output.backuppolicies[0].default_retention_duration == 'P7D'
+          - output.backuppolicies[0].retention_rules | length == 0
+
+    - name: Create the Disk Backup policy again (check mode, policy already exists)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/P1D"
+        time_zone: UTC
+        default_retention_duration: P7D
+      check_mode: true
+      register: output
+
+    - name: Assert that check mode reports no change for an identical policy
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Change the existing Disk Backup policy (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        time_zone: UTC
+        default_retention_duration: P14D
+      check_mode: true
+      register: output
+      ignore_errors: true
+
+    - name: Assert that a policy with different settings is rejected
+      ansible.builtin.assert:
+        that:
+          - output is failed
+          - "'does not support updating an existing policy' in output.msg"
+
+    - name: Change the existing Disk Backup policy
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        time_zone: UTC
+        default_retention_duration: P14D
+      register: output
+      ignore_errors: true
+
+    - name: Assert that a policy with different settings is rejected
+      ansible.builtin.assert:
+        that:
+          - output is failed
+          - "'does not support updating an existing policy' in output.msg"
+
+    - name: Get Disk Backup policy by name (should be unchanged)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+      register: output
+
+    - name: Assert that the policy was not modified
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies[0].backup_repeating_time_intervals == ['R/2024-01-01T00:00:00+00:00/P1D']
+          - output.backuppolicies[0].default_retention_duration == 'P7D'
+          - output.backuppolicies[0].retention_rules | length == 0
+
+    - name: Change one setting at a time on the existing Disk Backup policy
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals: "{{ item.intervals }}"
+        time_zone: "{{ item.time_zone }}"
+        default_retention_duration: "{{ item.duration }}"
+        retention_rules: "{{ item.rules }}"
+      loop:
+        - name: time zone
+          intervals: ["R/2024-01-01T00:00:00+00:00/P1D"]
+          time_zone: Pacific Standard Time
+          duration: P7D
+          rules: []
+        - name: default retention
+          intervals: ["R/2024-01-01T00:00:00+00:00/P1D"]
+          time_zone: UTC
+          duration: P8D
+          rules: []
+        - name: schedule
+          intervals: ["R/2024-01-01T00:00:00+00:00/PT12H"]
+          time_zone: UTC
+          duration: P7D
+          rules: []
+        - name: added retention rule
+          intervals: ["R/2024-01-01T00:00:00+00:00/P1D"]
+          time_zone: UTC
+          duration: P7D
+          rules:
+            - name: Weekly
+              duration: P30D
+              priority: 20
+              absolute_criteria: FirstOfWeek
+      loop_control:
+        label: "{{ item.name }}"
+      register: output
+      ignore_errors: true
+
+    - name: Assert that every single-setting change is rejected
+      ansible.builtin.assert:
+        that:
+          - output.results | length == 4
+          - output.results | map(attribute='failed') | select | list | length == 4
+          - output.results | map(attribute='msg') | select('search', 'does not support updating an existing policy') | list | length == 4
+
+    - name: Create a Disk Backup policy with retention rules
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        time_zone: UTC
+        default_retention_duration: P14D
+        retention_rules:
+          - name: Weekly
+            duration: P30D
+            priority: 20
+            absolute_criteria: FirstOfWeek
+          - name: Monthly
+            duration: P90D
+            priority: 10
+            absolute_criteria: FirstOfMonth
+      register: output
+
+    - name: Assert that the policy with retention rules was created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.id is defined
+
+    - name: Create the Disk Backup policy with retention rules again (idempotence, rules in a different order)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        time_zone: UTC
+        default_retention_duration: P14D
+        retention_rules:
+          - name: Monthly
+            duration: P90D
+            priority: 10
+            absolute_criteria: FirstOfMonth
+          - name: Weekly
+            duration: P30D
+            priority: 20
+            absolute_criteria: FirstOfWeek
+      register: output
+
+    - name: Assert that no change was made
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get the Disk Backup policy with retention rules
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
+      register: output
+
+    - name: Assert the retention rule facts
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 1
+          - output.backuppolicies[0].backup_repeating_time_intervals == ['R/2024-01-01T00:00:00+00:00/PT12H']
+          - output.backuppolicies[0].default_retention_duration == 'P14D'
+          - output.backuppolicies[0].retention_rules | length == 2
+          - output.backuppolicies[0].retention_rules[0].name == 'Monthly'
+          - output.backuppolicies[0].retention_rules[0].duration == 'P90D'
+          - output.backuppolicies[0].retention_rules[0].priority == 10
+          - output.backuppolicies[0].retention_rules[0].absolute_criteria == 'FirstOfMonth'
+          - output.backuppolicies[0].retention_rules[1].name == 'Weekly'
+          - output.backuppolicies[0].retention_rules[1].duration == 'P30D'
+          - output.backuppolicies[0].retention_rules[1].priority == 20
+          - output.backuppolicies[0].retention_rules[1].absolute_criteria == 'FirstOfWeek'
+
+    - name: Change the retention rules of the existing policy with retention rules
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        time_zone: UTC
+        default_retention_duration: P14D
+        retention_rules: "{{ item.rules }}"
+      loop:
+        - name: removed retention rule
+          rules:
+            - name: Monthly
+              duration: P90D
+              priority: 10
+              absolute_criteria: FirstOfMonth
+        - name: changed retention rule duration
+          rules:
+            - name: Monthly
+              duration: P91D
+              priority: 10
+              absolute_criteria: FirstOfMonth
+            - name: Weekly
+              duration: P30D
+              priority: 20
+              absolute_criteria: FirstOfWeek
+      loop_control:
+        label: "{{ item.name }}"
+      register: output
+      ignore_errors: true
+
+    - name: Assert that every retention rule change is rejected
+      ansible.builtin.assert:
+        that:
+          - output.results | length == 2
+          - output.results | map(attribute='failed') | select | list | length == 2
+          - output.results | map(attribute='msg') | select('search', 'does not support updating an existing policy') | list | length == 2
+
+    - name: Reject duplicate retention rule names
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy3"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        default_retention_duration: P14D
+        retention_rules:
+          - name: Weekly
+            duration: P30D
+            priority: 20
+            absolute_criteria: FirstOfWeek
+          - name: Weekly
+            duration: P60D
+            priority: 30
+            absolute_criteria: FirstOfMonth
+      register: output
+      ignore_errors: true
+
+    - name: Assert that duplicate rule names were rejected
+      ansible.builtin.assert:
+        that:
+          - output is failed
+          - "'must be unique' in output.msg"
+
+    - name: Reject a retention rule named Default
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        backup_repeating_time_intervals:
+          - "R/2024-01-01T00:00:00+00:00/PT12H"
+        default_retention_duration: P14D
+        retention_rules:
+          - name: Default
+            duration: P30D
+            priority: 20
+            absolute_criteria: FirstOfWeek
+      register: output
+      ignore_errors: true
+
+    - name: Assert that the reserved rule name was rejected
+      ansible.builtin.assert:
+        that:
+          - output is failed
+          - "'must not be' in output.msg"
+
+    - name: List Disk Backup policies in the vault
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+      register: output
+
+    - name: Assert the policy is listed
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 2
+          - output.backuppolicies | selectattr('name', 'equalto', name_rpfx ~ 'policy') | list | length == 1
+
+    - name: Delete the Disk Backup policy (check mode)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert that check mode reports changed
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Get Disk Backup policy by name (should still exist after check mode delete)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+      register: output
+
+    - name: Assert that check mode did not delete the policy
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 1
+
+    - name: Delete the Disk Backup policy
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        state: absent
+      register: output
+
+    - name: Assert that the policy was deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete the Disk Backup policy again (idempotence)
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+        state: absent
+      register: output
+
+    - name: Assert that no change was made
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get Disk Backup policy by name after deletion
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy"
+      register: output
+
+    - name: Assert the policy no longer exists
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 0
+
+    - name: Delete the Disk Backup policy with retention rules
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+        name: "{{ name_rpfx }}policy2"
+        state: absent
+      register: output
+
+    - name: Assert that the policy with retention rules was deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: List Disk Backup policies in the vault after deletion
+      azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info:
+        resource_group: "{{ new_resource_group }}"
+        vault_name: "{{ name_rpfx }}vault"
+      register: output
+
+    - name: Assert that no Disk Backup policies remain
+      ansible.builtin.assert:
+        that:
+          - output.backuppolicies | length == 0
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-dataprotectionbackuppolicydisk"
+        force_delete_nonempty: true
+        state: absent
