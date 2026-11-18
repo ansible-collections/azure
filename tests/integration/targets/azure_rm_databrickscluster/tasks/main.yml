@@ -1,3 +1,12 @@
+- name: Set the test resource group name
+  ansible.builtin.set_fact:
+    adb_resource_group: "{{ resource_group }}-databrickscluster"
+
+- name: Create a new resource group for the Databricks cluster test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ adb_resource_group }}"
+    location: eastus
+
 - name: Exercise Databricks data-plane modules
   block:
     - name: Set the test workspace name
@@ -6,9 +15,8 @@
 
     - name: Create a Databricks workspace for the data-plane tests
       azure.azcollection.azure_rm_databricksworkspace:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         name: "{{ adb_workspace }}"
-        location: eastus
         managed_resource_group_id: "{{ '/subscriptions/' + azure_subscription_id ~ '/resourceGroups/' ~ adb_workspace ~ '-managed' }}"
         sku:
           name: premium
@@ -28,7 +36,7 @@
 
     - name: Predict cluster creation without creating it
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
@@ -46,7 +54,7 @@
 
     - name: Create Databricks cluster
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
@@ -69,7 +77,7 @@
 
     - name: Reconcile cluster (idempotency)
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
@@ -85,7 +93,7 @@
 
     - name: Resize cluster without managing its access mode
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
@@ -101,7 +109,7 @@
 
     - name: Read resized cluster through its info module
       azure.azcollection.azure_rm_databrickscluster_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
       register: cluster_facts
@@ -117,7 +125,7 @@
 
     - name: Resize cluster again (idempotency)
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         spark_version: "{{ databricks_test_spark_version | default('13.3.x-scala2.12') }}"
@@ -132,7 +140,7 @@
 
     - name: Import notebook to workspace
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}"
         source: "{{ role_path }}/files/notebook.py"
@@ -147,7 +155,7 @@
 
     - name: Reimport notebook (idempotency)
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}"
         source: "{{ role_path }}/files/notebook.py"
@@ -162,7 +170,7 @@
 
     - name: Import SQL notebook to workspace
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}-sql"
         source: "{{ role_path }}/files/notebook.sql"
@@ -177,7 +185,7 @@
 
     - name: Reimport SQL notebook (idempotency)
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}-sql"
         source: "{{ role_path }}/files/notebook.sql"
@@ -192,7 +200,7 @@
 
     - name: Export notebook to the test controller
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}"
         dest: "{{ remote_tmp_dir }}/{{ notebook_path | basename }}.py"
@@ -205,7 +213,7 @@
 
     - name: Predict cluster deletion
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         state: absent
@@ -219,7 +227,7 @@
 
     - name: Delete cluster
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         state: absent
@@ -232,7 +240,7 @@
 
     - name: Read deleted cluster through its info module
       azure.azcollection.azure_rm_databrickscluster_info:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
       register: deleted_cluster_facts
@@ -244,7 +252,7 @@
 
     - name: Repeat cluster deletion
       azure.azcollection.azure_rm_databrickscluster:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         name: "{{ cluster_name }}"
         state: absent
@@ -257,7 +265,7 @@
 
     - name: Delete imported notebook
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}"
         state: absent
@@ -270,7 +278,7 @@
 
     - name: Delete imported SQL notebook
       azure.azcollection.azure_rm_databricksnotebook:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         workspace_name: "{{ adb_workspace }}"
         path: "{{ notebook_path }}-sql"
         state: absent
@@ -291,8 +299,14 @@
 
     - name: Remove the Databricks workspace
       azure.azcollection.azure_rm_databricksworkspace:
-        resource_group: "{{ resource_group }}"
+        resource_group: "{{ adb_resource_group }}"
         name: "{{ adb_workspace }}"
         state: absent
       when: adb_workspace is defined
       ignore_errors: true
+
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ adb_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
