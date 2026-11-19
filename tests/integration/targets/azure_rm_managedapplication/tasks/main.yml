@@ -1,0 +1,292 @@
+- name: Create a new resource group for managed application test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ resource_group }}-managedapp"
+    location: eastus
+
+- name: For managed application test
+  block:
+    - name: Create resource prefix
+      ansible.builtin.set_fact:
+        rpfx: "{{ resource_group | hash('md5') | truncate(7, True, '') }}{{ 1000 | random }}"
+      run_once: true
+
+    - name: Set test variables
+      ansible.builtin.set_fact:
+        test_resource_group: "{{ resource_group }}-managedapp"
+        managed_resource_group_id: "/subscriptions/{{ azure_subscription_id }}/resourceGroups/{{ resource_group }}-mrg{{ rpfx }}"
+        definition_name: "def{{ rpfx }}"
+        application_name: "app{{ rpfx }}"
+        admin_secret: "Sec{{ rpfx }}!"
+
+    - name: Create a service catalog managed application definition
+      azure.azcollection.azure_rm_resource:
+        resource_group: "{{ test_resource_group }}"
+        provider: Solutions
+        resource_type: applicationDefinitions
+        resource_name: "{{ definition_name }}"
+        api_version: "2019-07-01"
+        body:
+          location: eastus
+          properties:
+            lockLevel: None
+            displayName: "Ansible test definition"
+            description: "Managed application definition for azure_rm_managedapplication integration test"
+            mainTemplate:
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
+              contentVersion: "1.0.0.0"
+              parameters:
+                environmentName:
+                  type: string
+                adminSecret:
+                  type: securestring
+              resources: []
+              outputs:
+                environmentName:
+                  type: string
+                  value: "[parameters('environmentName')]"
+            createUiDefinition:
+              "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#"
+              handler: "Microsoft.Azure.CreateUIDef"
+              version: "0.1.2-preview"
+              parameters:
+                basics: []
+                steps: []
+                outputs: {}
+        state: present
+      register: definition
+
+    - name: Create managed application (check mode)
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: test
+          adminSecret:
+            value: "{{ admin_secret }}"
+        tags:
+          key1: value1
+      check_mode: true
+      register: output
+
+    - name: Assert the managed application would be created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Create managed application
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: test
+          adminSecret:
+            value: "{{ admin_secret }}"
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert the managed application is created
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.provisioning_state == 'Succeeded'
+          - output.kind == 'ServiceCatalog'
+          - output.outputs.environmentName.value == 'test'
+          - output.tags.key1 == 'value1'
+
+    - name: Create managed application (idempotent)
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: test
+          adminSecret:
+            value: "{{ admin_secret }}"
+        tags:
+          key1: value1
+      register: output
+
+    - name: Assert the managed application is not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update managed application tags
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: test
+          adminSecret:
+            value: "{{ admin_secret }}"
+        tags:
+          key2: value2
+      register: output
+
+    - name: Assert the managed application tags are updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.tags.key1 == 'value1'
+          - output.tags.key2 == 'value2'
+
+    - name: Update managed application tags (idempotent)
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: test
+          adminSecret:
+            value: "{{ admin_secret }}"
+        tags:
+          key2: value2
+      register: output
+
+    - name: Assert the managed application tags are not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Update managed application parameters
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: prod
+          adminSecret:
+            value: "{{ admin_secret }}"
+      register: output
+
+    - name: Assert the managed application parameters are updated
+      ansible.builtin.assert:
+        that:
+          - output is changed
+          - output.outputs.environmentName.value == 'prod'
+          - output.tags.key1 == 'value1'
+          - output.tags.key2 == 'value2'
+
+    - name: Update managed application parameters (idempotent)
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        kind: ServiceCatalog
+        application_definition_id: "{{ definition.response.id }}"
+        managed_resource_group_id: "{{ managed_resource_group_id }}"
+        parameters:
+          environmentName:
+            value: prod
+          adminSecret:
+            value: "{{ admin_secret }}"
+      register: output
+
+    - name: Assert the managed application parameters are not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+    - name: Get managed application by name
+      azure.azcollection.azure_rm_managedapplication_info:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+      register: output
+
+    - name: Assert the managed application facts
+      ansible.builtin.assert:
+        that:
+          - output.managed_applications | length == 1
+          - output.managed_applications[0].name == application_name
+          - output.managed_applications[0].resource_group == test_resource_group
+          - output.managed_applications[0].kind == 'ServiceCatalog'
+          - output.managed_applications[0].managed_resource_group_id | lower == managed_resource_group_id | lower
+
+    - name: List managed applications in the resource group filtered by tag
+      azure.azcollection.azure_rm_managedapplication_info:
+        resource_group: "{{ test_resource_group }}"
+        tags:
+          - key2:value2
+      register: output
+
+    - name: Assert the managed application is listed
+      ansible.builtin.assert:
+        that:
+          - output.managed_applications | length == 1
+
+    - name: List managed applications in the resource group with a missing tag
+      azure.azcollection.azure_rm_managedapplication_info:
+        resource_group: "{{ test_resource_group }}"
+        tags:
+          - key3
+      register: output
+
+    - name: Assert no managed application is listed
+      ansible.builtin.assert:
+        that:
+          - output.managed_applications | length == 0
+
+    - name: Delete managed application (check mode)
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        state: absent
+      check_mode: true
+      register: output
+
+    - name: Assert the managed application would be deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete managed application
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        state: absent
+      register: output
+
+    - name: Assert the managed application is deleted
+      ansible.builtin.assert:
+        that:
+          - output is changed
+
+    - name: Delete managed application (idempotent)
+      azure.azcollection.azure_rm_managedapplication:
+        resource_group: "{{ test_resource_group }}"
+        name: "{{ application_name }}"
+        state: absent
+      register: output
+
+    - name: Assert the managed application is not changed
+      ansible.builtin.assert:
+        that:
+          - output is not changed
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}-managedapp"
+        force_delete_nonempty: true
+        state: absent
