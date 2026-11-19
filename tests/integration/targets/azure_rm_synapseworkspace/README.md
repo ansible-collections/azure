@@ -1,13 +1,16 @@
 # Synapse workspace integration test
 
-This target uses an existing Azure Synapse workspace to avoid creating
-expensive workspace infrastructure. Supply these variables through
-`tests/integration/integration_config.yml`, which ansible-test loads
-automatically for integration targets:
+This target provisions everything it needs inside a dedicated resource group
+(`{{ resource_group }}-synapseworkspace`): an ADLS Gen2 storage account, a
+filesystem, and a Synapse workspace. It exercises workspace creation
+(including the system-assigned managed identity), idempotent reconciliation,
+tag updates and removal, the immutability of the create-only fields, the info
+module (by name, by resource group, and across the subscription), check-mode
+deletion, and deletion idempotency. The resource group is force-deleted in
+the always block.
 
-- `synapse_test_resource_group`, `synapse_test_workspace`
-
-The Azure principal must be allowed to read Synapse workspaces.
+The Azure principal must be allowed to create Synapse workspaces and storage
+accounts in the subscription.
 
 Run with:
 
@@ -15,7 +18,3 @@ Run with:
 ansible-test integration azure_rm_synapseworkspace --docker --allow-destructive \
   --python 3.12
 ```
-
-The target reconciles the pre-existing workspace, reads it through the info
-module, and asserts idempotency and check-mode behavior. It does not create
-or delete the workspace.

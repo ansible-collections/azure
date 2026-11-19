@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
 from azure.core.exceptions import ResourceNotFoundError
 from azure.mgmt.synapse import models
 
@@ -12,12 +13,21 @@ def module(name=None, not_found=False):
     obj.module_arg_spec = dict.fromkeys(('resource_group', 'name'))
     obj.results = dict(changed=False, workspaces=[])
     client = MagicMock()
+    resource_id = '/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Synapse/workspaces/ws'
+    # The model constructor ignores readonly attributes such as id, so they
+    # are assigned after construction like the SDK deserializer does.
+
+    def workspace_with_id():
+        workspace = models.Workspace(location='eastus')
+        workspace.id = resource_id
+        return workspace
+
     if not_found:
         client.workspaces.get.side_effect = ResourceNotFoundError('missing')
     else:
-        client.workspaces.get.return_value = models.Workspace(
-            location='eastus', sql_administrator_login='admin')
+        client.workspaces.get.return_value = workspace_with_id()
         client.workspaces.list_by_resource_group.return_value = [models.Workspace(location='eastus')]
+        client.workspaces.list.return_value = [workspace_with_id()]
     obj._synapse_client = client
     obj.resource_group = 'rg'
     obj.name = name
@@ -48,3 +58,17 @@ def test_synapse_workspace_info_list():
 def test_synapse_workspace_info_missing_name_is_empty():
     obj, client = module(name='missing', not_found=True)
     assert obj.exec_module(resource_group='rg', name='missing')['workspaces'] == []
+
+
+def test_synapse_workspace_info_list_subscription():
+    obj, client = module()
+    result = obj.exec_module(resource_group=None, name=None)
+    client.workspaces.list.assert_called_once_with()
+    assert len(result['workspaces']) == 1
+    assert result['workspaces'][0]['resource_group'] == 'rg'
+
+
+def test_synapse_workspace_info_name_requires_resource_group():
+    obj, client = module(name='ws')
+    with pytest.raises(ValueError, match='resource_group is required'):
+        obj.exec_module(resource_group=None, name='ws')

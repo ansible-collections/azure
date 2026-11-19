@@ -15,6 +15,8 @@ short_description: Manage an Azure Synapse workspace
 description:
     - Create, update, or delete an Azure Synapse Analytics workspace.
     - Creating a workspace requires an existing ADLS Gen2 storage account and filesystem.
+    - New workspaces are created with a system-assigned managed identity, as Synapse requires.
+    - I(storage_account_url), I(filesystem) and I(managed_resource_group_name) can only be set at creation.
     - SQL administrator passwords are not returned. Use I(force_password_update) to rotate a password.
 options:
     resource_group:
@@ -29,10 +31,14 @@ options:
         description: Azure region for the workspace. Required at creation.
         type: str
     storage_account_url:
-        description: DFS endpoint URL of the existing ADLS Gen2 account.
+        description:
+            - DFS endpoint URL of the existing ADLS Gen2 account.
+            - Required at creation and immutable afterwards.
         type: str
     filesystem:
-        description: Existing ADLS Gen2 filesystem used as the default data lake.
+        description:
+            - Existing ADLS Gen2 filesystem used as the default data lake.
+            - Required at creation and immutable afterwards.
         type: str
     sql_admin_login:
         description: SQL administrator login name.
@@ -41,7 +47,9 @@ options:
         description: SQL administrator password.
         type: str
     managed_resource_group_name:
-        description: Managed resource group name for the workspace.
+        description:
+            - Managed resource group name for the workspace.
+            - Can only be set at creation.
         type: str
     public_network_access:
         description: Controls public network access to the workspace.
@@ -51,7 +59,9 @@ options:
         description: Resource tags.
         type: dict
     force_password_update:
-        description: Update the SQL administrator password even if other settings are unchanged.
+        description:
+            - Update the SQL administrator password even if other settings are unchanged.
+            - Requires I(sql_admin_password).
         type: bool
         default: false
     state:
@@ -86,7 +96,8 @@ workspace:
     description: Synapse workspace. Administrator passwords are omitted.
     returned: when I(state=present)
     type: dict
-    sample: {"name": "analytics-synapse", "location": "eastus", "provisioning_state": "Succeeded"}
+    sample: {"name": "analytics-synapse", "location": "eastus", "provisioning_state": "Succeeded",
+             "identity": {"type": "SystemAssigned"}}
 '''
 
 try:
@@ -131,7 +142,8 @@ class AzureRMSynapseWorkspace(AzureRMModuleBase):
         self.results = dict(changed=False)
 
         super(AzureRMSynapseWorkspace, self).__init__(
-            derived_arg_spec=self.module_arg_spec, supports_check_mode=True, supports_tags=True)
+            derived_arg_spec=self.module_arg_spec, supports_check_mode=True, supports_tags=True,
+            required_if=[('force_password_update', True, ('sql_admin_password',))])
 
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
@@ -162,8 +174,15 @@ class AzureRMSynapseWorkspace(AzureRMModuleBase):
         if existing is not None:
             if self.location is not None and self.location.lower() != existing.location.lower():
                 self.fail('The location of Synapse workspace {0} is immutable'.format(self.name))
-            if self.tags is not None:
-                tags_changed, self.tags = self.update_tags(existing.tags)
+            storage = existing.default_data_lake_storage or models.DataLakeStorageAccountDetails()
+            if self.storage_account_url is not None and self.storage_account_url != storage.account_url:
+                self.fail('The storage_account_url of Synapse workspace {0} is immutable'.format(self.name))
+            if self.filesystem is not None and self.filesystem != storage.filesystem:
+                self.fail('The filesystem of Synapse workspace {0} is immutable'.format(self.name))
+            if self.managed_resource_group_name is not None and \
+                    self.managed_resource_group_name != existing.managed_resource_group_name:
+                self.fail('The managed_resource_group_name of Synapse workspace {0} is immutable'.format(self.name))
+            tags_changed, self.tags = self.update_tags(existing.tags)
         else:
             # required_if cannot express fields that are only needed when the
             # workspace does not exist yet.
@@ -225,7 +244,11 @@ class AzureRMSynapseWorkspace(AzureRMModuleBase):
             public_network_access=self.public_network_access or (
                 existing.public_network_access if existing is not None else None),
         )
-        if existing is not None:
+        if existing is None:
+            # Synapse requires a system-assigned managed identity, and the SDK
+            # only creates one when it is set explicitly.
+            workspace.identity = models.ManagedIdentity(type='SystemAssigned')
+        else:
             # Carry forward the properties this module does not manage so the
             # full-replace update does not reset them.
             workspace.identity = existing.identity

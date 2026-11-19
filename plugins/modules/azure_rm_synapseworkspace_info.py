@@ -13,15 +13,16 @@ module: azure_rm_synapseworkspace_info
 version_added: "4.3.0"
 short_description: Get Azure Synapse workspace facts
 description:
-    - Get one Synapse workspace or list workspaces in a resource group.
+    - Get one Synapse workspace, list workspaces in a resource group, or list workspaces in the subscription.
     - SQL administrator passwords are never returned by the module.
 options:
     resource_group:
-        description: Resource group containing the workspace.
+        description:
+            - Resource group containing the workspace.
+            - Required when I(name) is set. When omitted, workspaces are listed across the subscription.
         type: str
-        required: true
     name:
-        description: Return only this workspace. When omitted, list resource-group workspaces.
+        description: Return only this workspace. When omitted, list workspaces.
         type: str
 extends_documentation_fragment:
     - azure.azcollection.azure
@@ -38,6 +39,9 @@ EXAMPLES = '''
 - name: List Synapse workspaces in a resource group
   azure.azcollection.azure_rm_synapseworkspace_info:
     resource_group: analytics
+
+- name: List Synapse workspaces in the subscription
+  azure.azcollection.azure_rm_synapseworkspace_info:
 '''
 
 RETURN = '''
@@ -60,7 +64,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 class AzureRMSynapseWorkspaceInfo(AzureRMModuleBase):
     def __init__(self):
         self.module_arg_spec = dict(
-            resource_group=dict(type='str', required=True),
+            resource_group=dict(type='str'),
             name=dict(type='str'),
         )
         self.results = dict(changed=False, workspaces=[])
@@ -73,26 +77,42 @@ class AzureRMSynapseWorkspaceInfo(AzureRMModuleBase):
             setattr(self, key, kwargs[key])
 
         if self.name:
+            if not self.resource_group:
+                self.fail('resource_group is required when name is set')
             try:
                 workspaces = [self.synapse_client.workspaces.get(self.resource_group, self.name)]
             except ResourceNotFoundError:
                 workspaces = []
             except Exception as exc:
                 self.fail('Error retrieving Synapse workspace {0}: {1}'.format(self.name, str(exc)))
-        else:
+        elif self.resource_group:
             try:
                 workspaces = list(self.synapse_client.workspaces.list_by_resource_group(self.resource_group))
             except Exception as exc:
                 self.fail('Error listing Synapse workspaces in resource group {0}: {1}'.format(
                     self.resource_group, str(exc)))
+        else:
+            try:
+                workspaces = list(self.synapse_client.workspaces.list())
+            except Exception as exc:
+                self.fail('Error listing Synapse workspaces in the subscription: {0}'.format(str(exc)))
         self.results['workspaces'] = [self._format(workspace) for workspace in workspaces]
         return self.results
 
     def _format(self, workspace):
         result = workspace.as_dict()
-        result['resource_group'] = self.resource_group
+        result['resource_group'] = self.resource_group or self._resource_group_from_id(result.get('id'))
         result.pop('sql_administrator_login_password', None)
         return result
+
+    @staticmethod
+    def _resource_group_from_id(resource_id):
+        if not resource_id:
+            return None
+        parts = resource_id.split('/')
+        if 'resourceGroups' in parts:
+            return parts[parts.index('resourceGroups') + 1]
+        return None
 
 
 def main():

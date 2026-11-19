@@ -8,7 +8,7 @@ from azure.mgmt.synapse import models
 from ansible_collections.azure.azcollection.plugins.modules.azure_rm_synapseworkspace import AzureRMSynapseWorkspace
 
 
-def module(existing=None, check_mode=False, tags=None):
+def module(existing=None, check_mode=False, tags=None, append_tags=True):
     obj = AzureRMSynapseWorkspace.__new__(AzureRMSynapseWorkspace)
     obj.module_arg_spec = dict.fromkeys(('resource_group', 'name', 'location', 'storage_account_url', 'filesystem',
                                          'sql_admin_login', 'sql_admin_password', 'managed_resource_group_name',
@@ -20,7 +20,7 @@ def module(existing=None, check_mode=False, tags=None):
     else:
         client.workspaces.get.return_value = existing
     obj._synapse_client = client
-    obj.module = SimpleNamespace(debug=MagicMock(), params={'tags': tags, 'append_tags': True})
+    obj.module = SimpleNamespace(debug=MagicMock(), params={'tags': tags, 'append_tags': append_tags})
     obj.check_mode = check_mode
 
     def fail(message):
@@ -104,6 +104,53 @@ def test_reject_location_change():
     obj, client = module(existing_workspace(), tags={'env': 'test'})
     with pytest.raises(ValueError, match='immutable'):
         obj.exec_module(**params(location='westus'))
+    client.workspaces.begin_create_or_update.assert_not_called()
+
+
+def test_create_assigns_system_assigned_identity():
+    obj, client = module(tags={'env': 'test'})
+    client.workspaces.begin_create_or_update.return_value.result.return_value = existing_workspace()
+    obj.exec_module(**params())
+    body = client.workspaces.begin_create_or_update.call_args.args[2]
+    assert body.identity.type == 'SystemAssigned'
+
+
+def test_update_carries_forward_the_existing_identity():
+    identity = models.ManagedIdentity(type='SystemAssigned', principal_id='principal')
+    existing = existing_workspace()
+    existing.identity = identity
+    obj, client = module(existing, tags={'env': 'prod'})
+    obj.exec_module(**params(tags={'env': 'prod'}))
+    body = client.workspaces.begin_create_or_update.call_args.args[2]
+    assert body.identity is identity
+
+
+def test_existing_tags_removed_when_append_tags_false():
+    obj, client = module(existing_workspace(), tags=None, append_tags=False)
+    result = obj.exec_module(**params(tags=None))
+    assert result['changed']
+    body = client.workspaces.begin_create_or_update.call_args.args[2]
+    assert body.tags == {}
+
+
+def test_reject_storage_account_url_change():
+    obj, client = module(existing_workspace(), tags={'env': 'test'})
+    with pytest.raises(ValueError, match='immutable'):
+        obj.exec_module(**params(storage_account_url='https://other.dfs.core.windows.net'))
+    client.workspaces.begin_create_or_update.assert_not_called()
+
+
+def test_reject_filesystem_change():
+    obj, client = module(existing_workspace(), tags={'env': 'test'})
+    with pytest.raises(ValueError, match='immutable'):
+        obj.exec_module(**params(filesystem='other'))
+    client.workspaces.begin_create_or_update.assert_not_called()
+
+
+def test_reject_managed_resource_group_change():
+    obj, client = module(existing_workspace(), tags={'env': 'test'})
+    with pytest.raises(ValueError, match='immutable'):
+        obj.exec_module(**params(managed_resource_group_name='other-managed'))
     client.workspaces.begin_create_or_update.assert_not_called()
 
 
