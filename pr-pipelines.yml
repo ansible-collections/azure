@@ -35,6 +35,7 @@ parameters:
       - "azure_rm_aduser"
       - "azure_rm_afdendpoint"
       - "azure_rm_aks"
+      - "azure_rm_aksfleet"
       - "azure_rm_aksagentpool"
       - "azure_rm_apimanagement"
       - "azure_rm_apimanagementproduct"
