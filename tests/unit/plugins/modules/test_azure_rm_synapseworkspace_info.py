@@ -8,12 +8,12 @@ from azure.mgmt.synapse import models
 from ansible_collections.azure.azcollection.plugins.modules.azure_rm_synapseworkspace_info import AzureRMSynapseWorkspaceInfo
 
 
-def module(name=None, not_found=False):
+def module(name=None, not_found=False, resource_group_in_id='resourceGroups'):
     obj = AzureRMSynapseWorkspaceInfo.__new__(AzureRMSynapseWorkspaceInfo)
     obj.module_arg_spec = dict.fromkeys(('resource_group', 'name'))
     obj.results = dict(changed=False, workspaces=[])
     client = MagicMock()
-    resource_id = '/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Synapse/workspaces/ws'
+    resource_id = '/subscriptions/sub/{0}/rg/providers/Microsoft.Synapse/workspaces/ws'.format(resource_group_in_id)
     # The model constructor ignores readonly attributes such as id, so they
     # are assigned after construction like the SDK deserializer does.
 
@@ -65,6 +65,12 @@ def test_synapse_workspace_info_list_subscription():
     result = obj.exec_module(resource_group=None, name=None)
     client.workspaces.list.assert_called_once_with()
     assert len(result['workspaces']) == 1
+    assert result['workspaces'][0]['resource_group'] == 'rg'
+
+
+def test_synapse_workspace_info_parses_resource_group_case_insensitively():
+    obj, client = module(resource_group_in_id='resourcegroups')
+    result = obj.exec_module(resource_group=None, name=None)
     assert result['workspaces'][0]['resource_group'] == 'rg'
 
 

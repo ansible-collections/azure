@@ -154,6 +154,15 @@ def test_reject_managed_resource_group_change():
     client.workspaces.begin_create_or_update.assert_not_called()
 
 
+def test_location_comparison_ignores_spaces_and_case():
+    existing = existing_workspace()
+    existing.location = 'East US'
+    obj, client = module(existing, tags={'env': 'test'})
+    result = obj.exec_module(**params(location='eastus'))
+    assert not result['changed']
+    client.workspaces.begin_create_or_update.assert_not_called()
+
+
 def test_delete_uses_lro_poller():
     obj, client = module(existing_workspace())
     assert obj.exec_module(**params(state='absent'))['changed']

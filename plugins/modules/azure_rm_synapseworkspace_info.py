@@ -55,6 +55,7 @@ workspaces:
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.mgmt.core.tools import parse_resource_id
 except ImportError:
     pass
 
@@ -101,18 +102,9 @@ class AzureRMSynapseWorkspaceInfo(AzureRMModuleBase):
 
     def _format(self, workspace):
         result = workspace.as_dict()
-        result['resource_group'] = self.resource_group or self._resource_group_from_id(result.get('id'))
+        result['resource_group'] = self.resource_group or parse_resource_id(result['id'])['resource_group']
         result.pop('sql_administrator_login_password', None)
         return result
-
-    @staticmethod
-    def _resource_group_from_id(resource_id):
-        if not resource_id:
-            return None
-        parts = resource_id.split('/')
-        if 'resourceGroups' in parts:
-            return parts[parts.index('resourceGroups') + 1]
-        return None
 
 
 def main():

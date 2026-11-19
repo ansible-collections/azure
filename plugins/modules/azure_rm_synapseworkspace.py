@@ -172,7 +172,8 @@ class AzureRMSynapseWorkspace(AzureRMModuleBase):
     def create_or_update_workspace(self, existing):
         tags_changed = False
         if existing is not None:
-            if self.location is not None and self.location.lower() != existing.location.lower():
+            if self.location is not None and \
+                    self.location.replace(' ', '').lower() != existing.location.replace(' ', '').lower():
                 self.fail('The location of Synapse workspace {0} is immutable'.format(self.name))
             storage = existing.default_data_lake_storage or models.DataLakeStorageAccountDetails()
             if self.storage_account_url is not None and self.storage_account_url != storage.account_url:
@@ -263,7 +264,7 @@ class AzureRMSynapseWorkspace(AzureRMModuleBase):
     def _comparable(self, workspace):
         storage = workspace.default_data_lake_storage or models.DataLakeStorageAccountDetails()
         return dict(
-            location=workspace.location.lower() if workspace.location else None,
+            location=workspace.location.replace(' ', '').lower() if workspace.location else None,
             tags=workspace.tags or {},
             account_url=storage.account_url,
             filesystem=storage.filesystem,
