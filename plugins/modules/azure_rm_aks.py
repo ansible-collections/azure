@@ -1048,9 +1048,20 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.exceptions import HttpResponseError
+    from azure.core.serialization import as_attribute_dict
 except ImportError:
     # This is handled in azure_rm_common
     pass
+
+
+def _clean(model_cls, data, keys=None):
+    '''
+    Instantiate model_cls(**data) skipping None values so server defaults are not overridden with nulls.
+    Pass keys for dicts read back from Azure: they can carry fields the SDK model does not know.
+    '''
+    if data is None:
+        return None
+    return model_cls(**dict((k, v) for k, v in data.items() if v is not None and (keys is None or k in keys)))
 
 
 def create_aks_dict(aks):
@@ -1069,7 +1080,7 @@ def create_aks_dict(aks):
         tags=aks.tags,
         disable_local_accounts=aks.disable_local_accounts,
         linux_profile=create_linux_profile_dict(aks.linux_profile),
-        identity=aks.identity.as_dict() if aks.identity else {},
+        identity=as_attribute_dict(aks.identity, exclude_readonly=False) if aks.identity else {},
         service_principal_profile=create_service_principal_profile_dict(
             aks.service_principal_profile),
         provisioning_state=aks.provisioning_state,
@@ -1086,9 +1097,10 @@ def create_aks_dict(aks):
         node_resource_group=aks.node_resource_group,
         auto_upgrade_profile=create_auto_upgrade_profile_dict(aks.auto_upgrade_profile),
         windows_profile=create_windows_profile_dict(aks.windows_profile),
-        pod_identity_profile=create_pod_identity_profile(aks.pod_identity_profile.as_dict()) if aks.pod_identity_profile else None,
-        security_profile=aks.security_profile.as_dict() if aks.security_profile else None,
-        storage_profile=aks.storage_profile.as_dict() if aks.storage_profile else None
+        pod_identity_profile=(create_pod_identity_profile(as_attribute_dict(aks.pod_identity_profile, exclude_readonly=False))
+                              if aks.pod_identity_profile else None),
+        security_profile=as_attribute_dict(aks.security_profile, exclude_readonly=False) if aks.security_profile else None,
+        storage_profile=as_attribute_dict(aks.storage_profile, exclude_readonly=False) if aks.storage_profile else None
     )
 
 
@@ -1117,16 +1129,17 @@ def create_network_profiles_dict(network):
         dns_service_ip=network.dns_service_ip,
         load_balancer_sku=network.load_balancer_sku,
         outbound_type=network.outbound_type,
-        load_balancer_profile=network.load_balancer_profile.as_dict() if network.load_balancer_profile else None
+        load_balancer_profile=(as_attribute_dict(network.load_balancer_profile, exclude_readonly=False)
+                               if network.load_balancer_profile else None)
     ) if network else dict()
 
 
 def create_aad_profiles_dict(aad):
-    return aad.as_dict() if aad else dict()
+    return as_attribute_dict(aad, exclude_readonly=False) if aad else dict()
 
 
 def create_api_server_access_profile_dict(api_server):
-    return api_server.as_dict() if api_server else dict()
+    return as_attribute_dict(api_server, exclude_readonly=False) if api_server else dict()
 
 
 def create_addon_dict(addon):
@@ -1217,7 +1230,7 @@ def create_windows_profile_dict(windowsprofile):
         return dict(
             admin_username=windowsprofile.admin_username,
             admin_password=windowsprofile.admin_password,
-            gmsa_profile=windowsprofile.gmsa_profile.as_dict() if windowsprofile.gmsa_profile else {},
+            gmsa_profile=as_attribute_dict(windowsprofile.gmsa_profile, exclude_readonly=False) if windowsprofile.gmsa_profile else {},
         )
     else:
         return None
@@ -1429,6 +1442,10 @@ windows_profile_spec = dict(
         )
     )
 )
+
+
+LOAD_BALANCER_PROFILE_KEYS = ('managed_outbound_i_ps', 'outbound_ip_prefixes', 'outbound_i_ps', 'allocated_outbound_ports',
+                              'idle_timeout_in_minutes', 'enable_multiple_standard_load_balancers', 'backend_pool_type')
 
 
 class dotdict(dict):
@@ -1851,7 +1868,6 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                                 os_disk_size_gb = profile_self.get('os_disk_size_gb') or profile_result['os_disk_size_gb']
                                 vnet_subnet_id = profile_self.get('vnet_subnet_id', profile_result['vnet_subnet_id'])
                                 count = profile_self['count']
-                                orchestrator_version = profile_self['orchestrator_version']
                                 vm_size = profile_self['vm_size']
                                 availability_zones = profile_self['availability_zones']
                                 enable_auto_scaling = profile_self['enable_auto_scaling']
@@ -2019,11 +2035,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
             windows_profile = None
 
         if self.pod_identity_profile:
-            pod_identity_profile = self.managedcluster_models.ManagedClusterPodIdentityProfile(
-                enabled=self.pod_identity_profile.get('enabled'),
-                allow_network_plugin_kubenet=self.pod_identity_profile.get('allow_network_plugin_kubenet'),
-                user_assigned_identities=self.pod_identity_profile.get('user_assigned_identities')
-            )
+            pod_identity_profile = self.create_pod_identity_profile_instance(self.pod_identity_profile)
         else:
             pod_identity_profile = None
 
@@ -2036,7 +2048,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
             auto_upgrade_profile = None
 
         if self.security_profile is not None:
-            security_profile = self.managedcluster_models.ManagedClusterSecurityProfile(**self.security_profile)
+            security_profile = self.create_security_profile_instance(self.security_profile)
         else:
             security_profile = None
 
@@ -2108,18 +2120,19 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
 
     def update_aks_tags(self):
         try:
-            poller = self.managedcluster_client.managed_clusters.begin_update_tags(self.resource_group, self.name, self.tags)
+            poller = self.managedcluster_client.managed_clusters.begin_update_tags(
+                self.resource_group, self.name, self.managedcluster_models.TagsObject(tags=self.tags))
             response = self.get_poller_result(poller)
             return response.tags
         except Exception as exc:
-            self.fail("Error attempting to update AKS tags: {0}".format(exc.message))
+            self.fail("Error attempting to update AKS tags: {0}".format(str(exc)))
 
     def create_update_agentpool(self, to_update_name_list):
         response_all = []
         for profile in self.agent_pool_profiles:
             if (profile['name'] in to_update_name_list):
                 self.log("Creating / Updating the AKS agentpool {0}".format(profile['name']))
-                parameters = self.managedcluster_models.AgentPool(
+                parameters = _clean(self.managedcluster_models.AgentPool, dict(
                     count=profile["count"],
                     vm_size=profile["vm_size"],
                     os_disk_size_gb=profile["os_disk_size_gb"],
@@ -2132,17 +2145,17 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                     orchestrator_version=profile["orchestrator_version"],
                     max_pods=profile["max_pods"],
                     enable_auto_scaling=profile["enable_auto_scaling"],
-                    agent_pool_type=profile["type"],
+                    os_type=profile.get("os_type"),
                     mode=profile["mode"],
                     tags=profile['tags'],
-                    security_profile=profile['security_profile']
-                )
+                    security_profile=_clean(self.managedcluster_models.AgentPoolSecurityProfile, profile['security_profile'])
+                ))
                 try:
                     poller = self.managedcluster_client.agent_pools.begin_create_or_update(self.resource_group, self.name, profile["name"], parameters)
                     response = self.get_poller_result(poller)
                     response_all.append(response)
                 except Exception as exc:
-                    self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
+                    self.fail("Error attempting to update AKS agentpool: {0}".format(str(exc)))
         return create_agent_pool_profiles_dict(response_all)
 
     def delete_agentpool(self, to_delete_name_list):
@@ -2152,7 +2165,7 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
                 poller = self.managedcluster_client.agent_pools.begin_delete(self.resource_group, self.name, name)
                 self.get_poller_result(poller)
             except Exception as exc:
-                self.fail("Error attempting to update AKS agentpool: {0}".format(exc.message))
+                self.fail("Error attempting to update AKS agentpool: {0}".format(str(exc)))
 
     def delete_aks(self):
         '''
@@ -2190,13 +2203,15 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
     def get_all_versions(self):
         try:
             result = dict()
-            response = self.containerservice_client.container_services.list_orchestrators(self.location, resource_type='managedClusters')
-            orchestrators = response.orchestrators
-            for item in orchestrators:
-                result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
+            response = self.managedcluster_client.managed_clusters.list_kubernetes_versions(self.location)
+            for minor in response.values_property or []:
+                if 'KubernetesOfficial' not in ((minor.capabilities and minor.capabilities.support_plan) or []):
+                    continue
+                for patch, patch_version in (minor.patch_versions or {}).items():
+                    result[patch] = list(patch_version.upgrades or [])
             return result
         except Exception as exc:
-            self.fail('Error when getting AKS supported kubernetes version list for location {0} - {1}'.format(self.location, exc.message or str(exc)))
+            self.fail('Error when getting AKS supported kubernetes version list for location {0} - {1}'.format(self.location, str(exc)))
 
     def get_aks_kubeconfig(self):
         '''
@@ -2217,7 +2232,11 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
         :param: agentpoolprofile: dict with the parameters to setup the ManagedClusterAgentPoolProfile
         :return: ManagedClusterAgentPoolProfile
         '''
-        return self.managedcluster_models.ManagedClusterAgentPoolProfile(**agentpoolprofile)
+        profile = dict((k, v) for k, v in agentpoolprofile.items() if k not in ('dns_prefix', 'ports', 'storage_profiles'))
+        if profile.get('availability_zones') is not None:
+            profile['availability_zones'] = [str(zone) for zone in profile['availability_zones']]
+        profile['security_profile'] = _clean(self.managedcluster_models.AgentPoolSecurityProfile, profile.get('security_profile'))
+        return _clean(self.managedcluster_models.ManagedClusterAgentPoolProfile, profile)
 
     def create_service_principal_profile_instance(self, spnprofile):
         '''
@@ -2250,7 +2269,8 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
         '''
         gmsa_profile = None
         if windowsprofile.get('gmsa_profile'):
-            gmsa_profile = self.managedcluster_models.WindowsGmsaProfile(**windowsprofile.get('gmsa_profile'))
+            gmsa_profile = _clean(self.managedcluster_models.WindowsGmsaProfile, windowsprofile.get('gmsa_profile'),
+                                  windows_profile_spec['gmsa_profile']['options'])
 
         return self.managedcluster_models.ManagedClusterWindowsProfile(
             admin_username=windowsprofile['admin_username'],
@@ -2259,16 +2279,86 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
         )
 
     def create_network_profile_instance(self, network):
-        return self.managedcluster_models.ContainerServiceNetworkProfile(**network) if network else None
+        if not network:
+            return None
+        models = self.managedcluster_models
+        data = dict(network)
+        lb = data.get('load_balancer_profile')
+        if lb:
+            lb = dict(lb)
+            lb['managed_outbound_i_ps'] = _clean(models.ManagedClusterLoadBalancerProfileManagedOutboundIPs,
+                                                 lb.get('managed_outbound_i_ps'), ('count', 'count_ipv6'))
+            prefixes = lb.get('outbound_ip_prefixes')
+            if prefixes is not None:
+                lb['outbound_ip_prefixes'] = models.ManagedClusterLoadBalancerProfileOutboundIPPrefixes(
+                    public_ip_prefixes=[_clean(models.ResourceReference, r, ('id',)) for r in prefixes.get('public_ip_prefixes') or []])
+            ips = lb.get('outbound_i_ps')
+            if ips is not None:
+                lb['outbound_i_ps'] = models.ManagedClusterLoadBalancerProfileOutboundIPs(
+                    public_i_ps=[_clean(models.ResourceReference, r, ('id',)) for r in ips.get('public_i_ps') or []])
+            data['load_balancer_profile'] = _clean(models.ManagedClusterLoadBalancerProfile, lb, LOAD_BALANCER_PROFILE_KEYS)
+        return _clean(models.ContainerServiceNetworkProfile, data)
 
     def create_api_server_access_profile_instance(self, server_access):
-        return self.managedcluster_models.ManagedClusterAPIServerAccessProfile(**server_access) if server_access else None
+        return _clean(self.managedcluster_models.ManagedClusterAPIServerAccessProfile, server_access) if server_access else None
 
     def create_aad_profile_instance(self, aad):
-        return self.managedcluster_models.ManagedClusterAADProfile(**aad) if aad else None
+        keys = ['admin_group_object_i_ds' if key == 'admin_group_object_ids' else key for key in aad_profile_spec]
+        return _clean(self.managedcluster_models.ManagedClusterAADProfile, aad, keys) if aad else None
 
     def create_cluster_storage_profile_instance(self, storage):
-        return self.managedcluster_models.ManagedClusterStorageProfile(**storage) if storage else None
+        if not storage:
+            return None
+        models = self.managedcluster_models
+        drivers = dict(disk_csi_driver=models.ManagedClusterStorageProfileDiskCSIDriver,
+                       file_csi_driver=models.ManagedClusterStorageProfileFileCSIDriver,
+                       snapshot_controller=models.ManagedClusterStorageProfileSnapshotController,
+                       blob_csi_driver=models.ManagedClusterStorageProfileBlobCSIDriver)
+        return _clean(models.ManagedClusterStorageProfile,
+                      dict((key, _clean(cls, dict(enabled=storage[key].get('enabled'))) if storage.get(key) else None)
+                           for key, cls in drivers.items()))
+
+    def create_security_profile_instance(self, security):
+        models = self.managedcluster_models
+        defender = security.get('defender')
+        if defender:
+            monitoring = defender.get('security_monitoring')
+            defender = models.ManagedClusterSecurityProfileDefender(
+                log_analytics_workspace_resource_id=defender.get('log_analytics_workspace_resource_id'),
+                security_monitoring=(models.ManagedClusterSecurityProfileDefenderSecurityMonitoring(enabled=monitoring.get('enabled'))
+                                     if monitoring else None))
+        kms = security.get('azure_key_vault_kms')
+        workload_identity = security.get('workload_identity')
+        image_cleaner = security.get('image_cleaner')
+        return _clean(models.ManagedClusterSecurityProfile, dict(
+            defender=defender,
+            azure_key_vault_kms=_clean(models.AzureKeyVaultKms, dict(
+                enabled=kms.get('enabled'), key_id=kms.get('key_id'),
+                key_vault_network_access=kms.get('key_vault_network_access'),
+                key_vault_resource_id=kms.get('key_vault_resource_id'))) if kms else None,
+            workload_identity=(models.ManagedClusterSecurityProfileWorkloadIdentity(enabled=workload_identity.get('enabled'))
+                               if workload_identity else None),
+            image_cleaner=_clean(models.ManagedClusterSecurityProfileImageCleaner, dict(
+                enabled=image_cleaner.get('enabled'), interval_hours=image_cleaner.get('interval_hours'))) if image_cleaner else None,
+        ))
+
+    def create_pod_identity_profile_instance(self, pod_identity):
+        models = self.managedcluster_models
+        identities = pod_identity.get('user_assigned_identities')
+        if identities is not None:
+            identities = [models.ManagedClusterPodIdentity(
+                name=item['name'],
+                namespace=item['namespace'],
+                binding_selector=item.get('binding_selector'),
+                identity=_clean(models.UserAssignedIdentity, dict(
+                    resource_id=(item.get('identity') or {}).get('resource_id'),
+                    client_id=(item.get('identity') or {}).get('client_id'),
+                    object_id=(item.get('identity') or {}).get('object_id'))),
+            ) for item in identities]
+        return _clean(models.ManagedClusterPodIdentityProfile, dict(
+            enabled=pod_identity.get('enabled'),
+            allow_network_plugin_kubenet=pod_identity.get('allow_network_plugin_kubenet'),
+            user_assigned_identities=identities))
 
     def create_addon_profile_instance(self, addon):
         result = dict()
@@ -2284,7 +2374,8 @@ class AzureRMManagedCluster(AzureRMModuleBaseExt):
 
                 for param_name, info in config_spec.items():
                     if param_name in config:
-                        addon_config[info['azure']] = config[param_name]
+                        value = config[param_name]
+                        addon_config[info['azure']] = None if value is None else str(value)
                 result[name] = self.managedcluster_models.ManagedClusterAddonProfile(
                     config=addon_config,
                     enabled=config['enabled']
