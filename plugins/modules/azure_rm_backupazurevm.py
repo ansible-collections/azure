@@ -47,6 +47,24 @@ options:
         required: false
         type: str
         version_added: '1.15.0'
+    include_disks:
+        description:
+            - List of data disk LUNs to include in the backup. Data disks not in the list are excluded.
+            - The OS disk is always backed up. Use an empty list to back up only the OS disk.
+            - Used only when I(state=create) or I(state=update).
+            - Mutually exclusive with I(exclude_disks).
+            - If neither I(include_disks) nor I(exclude_disks) is set, no disk exclusion settings are sent.
+        type: list
+        elements: int
+        version_added: '4.3.0'
+    exclude_disks:
+        description:
+            - List of data disk LUNs to exclude from the backup. All other disks are backed up.
+            - Used only when I(state=create) or I(state=update).
+            - Mutually exclusive with I(include_disks).
+        type: list
+        elements: int
+        version_added: '4.3.0'
     state:
         description:
             - Assert the state of the protection item.
@@ -80,6 +98,16 @@ EXAMPLES = \
     recovery_vault_name: 'testVault'
     resource_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/testVM'
     backup_policy_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
+    state: 'create'
+- name: Enabling protection for the Azure VM and excluding the data disks with LUN 2 and 3
+  azure_rm_backupazurevm:
+    resource_group: 'myResourceGroup'
+    recovery_vault_name: 'testVault'
+    resource_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/testVM'
+    backup_policy_id: '/subscriptions/<sub-id>/resourceGroups/my-rg/providers/microsoft.recoveryservices/vaults/testVault/backupPolicies/ProdPolicy'
+    exclude_disks:
+      - 2
+      - 3
     state: 'create'
 - name: Stop protection but retain existing data
   azure_rm_backupazurevm:
@@ -144,6 +172,14 @@ class BackupAzureVM(AzureRMModuleBaseExt):
             recovery_point_expiry_time=dict(
                 type='str'
             ),
+            include_disks=dict(
+                type='list',
+                elements='int'
+            ),
+            exclude_disks=dict(
+                type='list',
+                elements='int'
+            ),
             state=dict(
                 type='str',
                 default='create',
@@ -156,6 +192,8 @@ class BackupAzureVM(AzureRMModuleBaseExt):
         self.resource_id = None
         self.backup_policy_id = None
         self.recovery_point_expiry_time = None
+        self.include_disks = None
+        self.exclude_disks = None
         self.state = None
 
         self.results = dict(changed=False)
@@ -171,6 +209,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
         self.header_parameters['Content-Type'] = 'application/json; charset=utf-8'
 
         super(BackupAzureVM, self).__init__(derived_arg_spec=self.module_arg_spec,
+                                            mutually_exclusive=[['include_disks', 'exclude_disks']],
                                             supports_check_mode=True,
                                             supports_tags=True)
 
@@ -204,7 +243,7 @@ class BackupAzureVM(AzureRMModuleBaseExt):
 
     def get_body(self):
         if self.state == 'create' or self.state == 'update':
-            return {
+            body = {
                 'properties':
                     {
                         'protectedItemType': 'Microsoft.Compute/virtualMachines',
@@ -212,6 +251,15 @@ class BackupAzureVM(AzureRMModuleBaseExt):
                         'policyId': self.backup_policy_id
                     }
             }
+            if self.include_disks is not None or self.exclude_disks is not None:
+                is_inclusion_list = self.include_disks is not None
+                body['properties']['extendedProperties'] = {
+                    'diskExclusionProperties': {
+                        'diskLunList': self.include_disks if is_inclusion_list else self.exclude_disks,
+                        'isInclusionList': is_inclusion_list
+                    }
+                }
+            return body
         elif self.state == 'backup':
             body = {
                 "properties": {

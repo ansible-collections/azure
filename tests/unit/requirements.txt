@@ -6,3 +6,7 @@ azure-identity==1.21.0; python_version < '3.9'
 azure-identity==1.25.2; python_version >= '3.9'
 azure-mgmt-cosmosdb==10.0.0b3
 azure-mgmt-databricks==2.0.0
+azure-mgmt-synapse==2.0.0
+# azure-mgmt-synapse 2.0.0 imports six in its generated models but only
+# declares msrest, and msrest 0.7.1 dropped its own six dependency.
+six

@@ -27,6 +27,8 @@ action_groups:
     - azure.azcollection.azure_rm_afdruleset
     - azure.azcollection.azure_rm_afdruleset_info
     - azure.azcollection.azure_rm_aks
+    - azure.azcollection.azure_rm_aksfleet
+    - azure.azcollection.azure_rm_aksfleet_info
     - azure.azcollection.azure_rm_aks_info
     - azure.azcollection.azure_rm_aksagentpool
     - azure.azcollection.azure_rm_aksagentpool_info
@@ -220,6 +222,8 @@ action_groups:
     - azure.azcollection.azure_rm_lock_info
     - azure.azcollection.azure_rm_loganalyticsworkspace
     - azure.azcollection.azure_rm_loganalyticsworkspace_info
+    - azure.azcollection.azure_rm_managedapplication
+    - azure.azcollection.azure_rm_managedapplication_info
     - azure.azcollection.azure_rm_manageddisk
     - azure.azcollection.azure_rm_manageddisk_info
     - azure.azcollection.azure_rm_managementgroup
@@ -396,6 +400,8 @@ action_groups:
     - azure.azcollection.azure_rm_sqlmidbshorttermretentionpolicy_info
     - azure.azcollection.azure_rm_sqlserver
     - azure.azcollection.azure_rm_sqlserver_info
+    - azure.azcollection.azure_rm_synapseworkspace
+    - azure.azcollection.azure_rm_synapseworkspace_info
     - azure.azcollection.azure_rm_sshpublickey
     - azure.azcollection.azure_rm_sshpublickey_info
     - azure.azcollection.azure_rm_storageaccount
