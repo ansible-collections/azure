@@ -1688,6 +1688,8 @@ class AzureRMModuleBase(object):
             self._cosmosdb_client = self.get_mgmt_svc_client(CosmosDBManagementClient,
                                                              base_url=self._cloud_environment.endpoints.resource_manager)
         return self._cosmosdb_client
+
+    @property
     def managedapplication_client(self):
         self.log('Getting managed application client')
         if not self._managedapplication_client:
