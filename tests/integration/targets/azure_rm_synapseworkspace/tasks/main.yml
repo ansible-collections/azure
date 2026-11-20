@@ -5,7 +5,7 @@
 - name: Create a resource group for the Synapse workspace test
   azure.azcollection.azure_rm_resourcegroup:
     name: "{{ synapse_resource_group }}"
-    location: eastus
+    location: westus2
 
 - name: Exercise Synapse workspace modules
   block:
@@ -24,7 +24,7 @@
       azure.azcollection.azure_rm_storageaccount:
         resource_group: "{{ synapse_resource_group }}"
         name: "{{ synapse_storage_account }}"
-        location: eastus
+        location: westus2
         account_type: Standard_LRS
         kind: StorageV2
         is_hns_enabled: true
@@ -39,7 +39,7 @@
       azure.azcollection.azure_rm_synapseworkspace:
         resource_group: "{{ synapse_resource_group }}"
         name: "{{ synapse_workspace }}"
-        location: eastus
+        location: westus2
         storage_account_url: "https://{{ synapse_storage_account }}.dfs.core.windows.net"
         filesystem: "{{ synapse_filesystem }}"
         sql_admin_login: sqladmin
