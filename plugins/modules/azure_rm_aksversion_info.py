@@ -110,17 +110,15 @@ class AzureRMAKSVersion(AzureRMModuleBase):
         '''
         try:
             result = dict()
-            response = self.containerservice_client.container_services.list_orchestrators(self.location, resource_type='managedClusters')
-            orchestrators = response.orchestrators
-            for item in orchestrators:
-                if self.allow_preview is None:
-                    result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
-                elif self.allow_preview:
-                    if item.is_preview:
-                        result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
-                else:
-                    if not item.is_preview:
-                        result[item.orchestrator_version] = [x.orchestrator_version for x in item.upgrades] if item.upgrades else []
+            response = self.managedcluster_client.managed_clusters.list_kubernetes_versions(self.location)
+            for minor in response.values_property or []:
+                # LTS-only versions need an LTS-enabled cluster and were not listed by the old orchestrators API
+                if 'KubernetesOfficial' not in ((minor.capabilities and minor.capabilities.support_plan) or []):
+                    continue
+                if self.allow_preview is not None and bool(minor.is_preview) != self.allow_preview:
+                    continue
+                for patch, patch_version in (minor.patch_versions or {}).items():
+                    result[patch] = list(patch_version.upgrades or [])
             if version:
                 return result.get(version) or []
             else:
@@ -128,7 +126,7 @@ class AzureRMAKSVersion(AzureRMModuleBase):
                 keys.sort()
                 return keys
         except Exception as exc:
-            self.fail('Error when getting AKS supported kubernetes version list for location {0} - {1}'.format(self.location, exc.message or str(exc)))
+            self.fail('Error when getting AKS supported kubernetes version list for location {0} - {1}'.format(self.location, str(exc)))
 
 
 def main():
