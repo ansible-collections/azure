@@ -66,6 +66,7 @@ parameters:
       - "azure_rm_cosmosdbaccount"
       - "azure_rm_databricks"
       - "azure_rm_databrickscluster"
+      - "azure_rm_synapseworkspace"
       - "azure_rm_dataprotectionbackupinstancedisk"
       - "azure_rm_dataprotectionbackuppolicydisk"
       - "azure_rm_dataprotectionbackupvault"

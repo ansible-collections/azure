@@ -297,6 +297,7 @@ try:
     from azure.mgmt.cdn import CdnManagementClient
     from azure.mgmt.hybridcompute import HybridComputeManagementClient
     from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
+    from azure.mgmt.synapse import SynapseManagementClient
     from azure.mgmt.databricks import AzureDatabricksManagementClient
     import azure.mgmt.databricks.models as DatabricksModels
     from azure.mgmt.dataprotection import DataProtectionMgmtClient
@@ -469,6 +470,7 @@ class AzureRMModuleBase(object):
         self._databricks_client = None
         self._dataprotection_client = None
         self._managedapplication_client = None
+        self._synapse_client = None
 
         self.check_mode = self.module.check_mode
         self.api_profile = self.module.params.get('api_profile')
@@ -1689,6 +1691,14 @@ class AzureRMModuleBase(object):
     def managedapplication_models(self):
         self.log('Getting managed application models')
         return ManagedApplicationModels
+
+    @property
+    def synapse_client(self):
+        self.log('Getting synapse client...')
+        if not self._synapse_client:
+            self._synapse_client = self.get_mgmt_svc_client(SynapseManagementClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._synapse_client
 
 
 class AzureRMAuthException(Exception):

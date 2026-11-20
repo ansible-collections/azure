@@ -1,0 +1,202 @@
+- name: Set the test resource group name
+  ansible.builtin.set_fact:
+    synapse_resource_group: "{{ resource_group }}-synapseworkspace"
+
+- name: Create a resource group for the Synapse workspace test
+  azure.azcollection.azure_rm_resourcegroup:
+    name: "{{ synapse_resource_group }}"
+    location: westus2
+
+- name: Exercise Synapse workspace modules
+  block:
+    - name: Set the test resource names
+      ansible.builtin.set_fact:
+        synapse_test_id: "{{ resource_group | hash('md5') | truncate(12, true, '') }}"
+
+    - name: Set module test resource names
+      ansible.builtin.set_fact:
+        synapse_storage_account: "sa{{ synapse_test_id }}"
+        synapse_filesystem: "fs{{ synapse_test_id }}"
+        synapse_workspace: "sw{{ synapse_test_id }}"
+        synapse_sql_password: "Sql!{{ synapse_test_id }}"
+
+    - name: Create an ADLS Gen2 storage account
+      azure.azcollection.azure_rm_storageaccount:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_storage_account }}"
+        location: westus2
+        account_type: Standard_LRS
+        kind: StorageV2
+        is_hns_enabled: true
+
+    - name: Create the default data lake filesystem
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ synapse_resource_group }}"
+        account_name: "{{ synapse_storage_account }}"
+        container_name: "{{ synapse_filesystem }}"
+
+    - name: Create a Synapse workspace
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        location: westus2
+        storage_account_url: "https://{{ synapse_storage_account }}.dfs.core.windows.net"
+        filesystem: "{{ synapse_filesystem }}"
+        sql_admin_login: sqladmin
+        sql_admin_password: "{{ synapse_sql_password }}"
+        managed_resource_group_name: "{{ synapse_workspace }}-managed"
+        tags:
+          environment: test
+      register: synapse_created
+
+    - name: Assert the workspace was created with a managed identity
+      ansible.builtin.assert:
+        that:
+          - synapse_created is changed
+          - synapse_created.workspace.provisioning_state == 'Succeeded'
+          - synapse_created.workspace.identity.type == 'SystemAssigned'
+          - synapse_created.workspace.identity.principal_id is not none
+          - "'sql_administrator_login_password' not in synapse_created.workspace"
+
+    - name: Reconcile the workspace idempotently
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+      register: synapse_reconcile
+
+    - name: Assert the workspace reconciliation is idempotent
+      ansible.builtin.assert:
+        that:
+          - synapse_reconcile is not changed
+          - synapse_reconcile.workspace.identity.type == 'SystemAssigned'
+
+    - name: Update the workspace tags
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        tags:
+          environment: production
+      register: synapse_tagged
+
+    - name: Assert the workspace tags were updated
+      ansible.builtin.assert:
+        that:
+          - synapse_tagged is changed
+          - synapse_tagged.workspace.tags.environment == 'production'
+
+    - name: Remove the workspace tags
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        append_tags: false
+      register: synapse_untagged
+
+    - name: Assert the workspace tags were removed
+      ansible.builtin.assert:
+        that:
+          - synapse_untagged is changed
+          - not synapse_untagged.workspace.tags
+
+    - name: Attempt to change an immutable field
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        storage_account_url: https://immutabletest.dfs.core.windows.net
+      register: synapse_immutable
+      ignore_errors: true
+
+    - name: Assert the immutable field change is rejected
+      ansible.builtin.assert:
+        that:
+          - synapse_immutable is failed
+          - "'immutable' in synapse_immutable.msg"
+
+    - name: Read the workspace through its info module
+      azure.azcollection.azure_rm_synapseworkspace_info:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+      register: synapse_info
+
+    - name: Assert the workspace facts
+      ansible.builtin.assert:
+        that:
+          - synapse_info.workspaces | length == 1
+          - synapse_info.workspaces[0].name == synapse_workspace
+          - "'sql_administrator_login_password' not in synapse_info.workspaces[0]"
+
+    - name: List Synapse workspaces in the resource group
+      azure.azcollection.azure_rm_synapseworkspace_info:
+        resource_group: "{{ synapse_resource_group }}"
+      register: synapse_list
+
+    - name: Assert the test workspace is listed
+      ansible.builtin.assert:
+        that:
+          - synapse_workspace in (synapse_list.workspaces | map(attribute='name') | list)
+
+    - name: List Synapse workspaces in the subscription
+      azure.azcollection.azure_rm_synapseworkspace_info:
+      register: synapse_subscription_list
+
+    - name: Assert the test workspace is listed with its resource group
+      ansible.builtin.assert:
+        that:
+          - synapse_workspace in (synapse_subscription_list.workspaces | map(attribute='name') | list)
+          - synapse_resource_group in (synapse_subscription_list.workspaces
+                                        | selectattr('name', 'equalto', synapse_workspace)
+                                        | map(attribute='resource_group') | list)
+
+    - name: Predict deletion without deleting the workspace
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        state: absent
+      check_mode: true
+      register: synapse_delete_check
+
+    - name: Assert deletion check mode
+      ansible.builtin.assert:
+        that:
+          - synapse_delete_check is changed
+
+    - name: Delete the workspace
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        state: absent
+      register: synapse_deleted
+
+    - name: Assert the workspace was deleted
+      ansible.builtin.assert:
+        that:
+          - synapse_deleted is changed
+
+    - name: Repeat workspace deletion
+      azure.azcollection.azure_rm_synapseworkspace:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+        state: absent
+      register: synapse_deleted_again
+
+    - name: Assert workspace deletion idempotency
+      ansible.builtin.assert:
+        that:
+          - synapse_deleted_again is not changed
+
+    - name: Read the deleted workspace through its info module
+      azure.azcollection.azure_rm_synapseworkspace_info:
+        resource_group: "{{ synapse_resource_group }}"
+        name: "{{ synapse_workspace }}"
+      register: synapse_info_deleted
+
+    - name: Assert the deleted workspace is not returned
+      ansible.builtin.assert:
+        that:
+          - synapse_info_deleted.workspaces | length == 0
+
+  always:
+    - name: Force delete the resource group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ synapse_resource_group }}"
+        force_delete_nonempty: true
+        state: absent
