@@ -553,6 +553,15 @@
           - output.addon.monitoring.use_aad_auth == false
           - output.addon.monitoring.log_analytics_workspace_resource_id == aks_log_analytics_workspace_id
 
+    - name: Wait for the managed monitoring extension to finish installing
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ output.id }}/providers/Microsoft.KubernetesConfiguration/extensions/aks-managed-azure-monitor-logs"
+        api_version: "2023-05-01"
+      register: monitor_extension
+      until: monitor_extension.response | length > 0 and monitor_extension.response[0].properties.provisioningState == 'Succeeded'
+      retries: 30
+      delay: 20
+
     - name: Upgrade the AKS instance with key rotation
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
@@ -648,6 +657,15 @@
       ansible.builtin.assert:
         that:
           - output is not changed     
+
+    - name: Wait for the managed monitoring extension to finish installing
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ output.id }}/providers/Microsoft.KubernetesConfiguration/extensions/aks-managed-azure-monitor-logs"
+        api_version: "2023-05-01"
+      register: monitor_extension
+      until: monitor_extension.response | length > 0 and monitor_extension.response[0].properties.provisioningState == 'Succeeded'
+      retries: 30
+      delay: 20
 
     - name: Upgrade the AKS instance with agent pool profiles
       azure.azcollection.azure_rm_aks:
