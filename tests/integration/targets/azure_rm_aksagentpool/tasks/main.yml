@@ -40,6 +40,7 @@
         name: "min{{ rpfx }}"
         location: eastus
         resource_group: "{{ resource_group }}-akspool"
+        node_resource_group: "{{ resource_group }}-akspool-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
