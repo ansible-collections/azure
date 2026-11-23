@@ -27,6 +27,8 @@ action_groups:
     - azure.azcollection.azure_rm_afdruleset
     - azure.azcollection.azure_rm_afdruleset_info
     - azure.azcollection.azure_rm_aks
+    - azure.azcollection.azure_rm_aksfleet
+    - azure.azcollection.azure_rm_aksfleet_info
     - azure.azcollection.azure_rm_aks_info
     - azure.azcollection.azure_rm_aksagentpool
     - azure.azcollection.azure_rm_aksagentpool_info
@@ -36,6 +38,8 @@ action_groups:
     - azure.azcollection.azure_rm_aksversion_info
     - azure.azcollection.azure_rm_apimanagement
     - azure.azcollection.azure_rm_apimanagement_info
+    - azure.azcollection.azure_rm_apimanagementproduct
+    - azure.azcollection.azure_rm_apimanagementproduct_info
     - azure.azcollection.azure_rm_apimanagementservice
     - azure.azcollection.azure_rm_apimanagementservice_info
     - azure.azcollection.azure_rm_appconfiguration
@@ -114,12 +118,17 @@ action_groups:
     - azure.azcollection.azure_rm_containerregistrywebhook_info
     - azure.azcollection.azure_rm_cosmosdbaccount
     - azure.azcollection.azure_rm_cosmosdbaccount_info
+    - azure.azcollection.azure_rm_databrickscluster
+    - azure.azcollection.azure_rm_databrickscluster_info
     - azure.azcollection.azure_rm_databricksworkspace
     - azure.azcollection.azure_rm_databricksworkspace_info
+    - azure.azcollection.azure_rm_databricksnotebook
     - azure.azcollection.azure_rm_datafactory
     - azure.azcollection.azure_rm_datafactory_info
     - azure.azcollection.azure_rm_dataprotectionbackupinstancedisk
     - azure.azcollection.azure_rm_dataprotectionbackupinstancedisk_info
+    - azure.azcollection.azure_rm_dataprotectionbackuppolicydisk
+    - azure.azcollection.azure_rm_dataprotectionbackuppolicydisk_info
     - azure.azcollection.azure_rm_dataprotectionbackupvault
     - azure.azcollection.azure_rm_dataprotectionbackupvault_info
     - azure.azcollection.azure_rm_ddosprotectionplan
@@ -211,6 +220,8 @@ action_groups:
     - azure.azcollection.azure_rm_lock_info
     - azure.azcollection.azure_rm_loganalyticsworkspace
     - azure.azcollection.azure_rm_loganalyticsworkspace_info
+    - azure.azcollection.azure_rm_managedapplication
+    - azure.azcollection.azure_rm_managedapplication_info
     - azure.azcollection.azure_rm_manageddisk
     - azure.azcollection.azure_rm_manageddisk_info
     - azure.azcollection.azure_rm_managedredis
@@ -389,6 +400,8 @@ action_groups:
     - azure.azcollection.azure_rm_sqlmidbshorttermretentionpolicy_info
     - azure.azcollection.azure_rm_sqlserver
     - azure.azcollection.azure_rm_sqlserver_info
+    - azure.azcollection.azure_rm_synapseworkspace
+    - azure.azcollection.azure_rm_synapseworkspace_info
     - azure.azcollection.azure_rm_sshpublickey
     - azure.azcollection.azure_rm_sshpublickey_info
     - azure.azcollection.azure_rm_storageaccount

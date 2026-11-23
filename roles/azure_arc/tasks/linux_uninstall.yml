@@ -1,0 +1,22 @@
+---
+- name: Remove the azcmagent package (apt)
+  when: ansible_pkg_mgr == 'apt'
+  become: true
+  ansible.builtin.apt:
+    name: azcmagent
+    state: absent
+    purge: true
+
+- name: Remove the azcmagent package (dnf, yum, zypper)
+  when: ansible_pkg_mgr != 'apt'
+  become: true
+  ansible.builtin.package:
+    name: azcmagent
+    state: absent
+
+# Package removal keeps the agent state directory with certificates and logs
+- name: Remove leftover azcmagent state directory
+  become: true
+  ansible.builtin.file:
+    path: /var/opt/azcmagent
+    state: absent

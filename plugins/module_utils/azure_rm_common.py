@@ -147,6 +147,7 @@ AZURE_API_PROFILES = {
         'HybridComputeManagementClient': 'latest',
         'CognitiveServicesManagementClient': 'latest',
         'AzureDatabricksManagementClient': 'latest',
+        'ApplicationClient': '2019-07-01',
         'RedisEnterpriseManagementClient': 'latest',
     },
     '2019-03-01-hybrid': {
@@ -257,6 +258,7 @@ try:
     from azure.mgmt.monitor import MonitorManagementClient
     from azure.mgmt.web import WebSiteManagementClient
     from azure.mgmt.containerservice import ContainerServiceClient
+    from azure.mgmt.containerservicefleet import ContainerServiceFleetMgmtClient
     from azure.mgmt.marketplaceordering import MarketplaceOrderingAgreements
     from azure.mgmt.trafficmanager import TrafficManagerManagementClient
     from azure.storage.blob import BlobServiceClient
@@ -296,9 +298,12 @@ try:
     from azure.mgmt.cdn import CdnManagementClient
     from azure.mgmt.hybridcompute import HybridComputeManagementClient
     from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
+    from azure.mgmt.synapse import SynapseManagementClient
     from azure.mgmt.databricks import AzureDatabricksManagementClient
     import azure.mgmt.databricks.models as DatabricksModels
     from azure.mgmt.dataprotection import DataProtectionMgmtClient
+    from azure.mgmt.resource.managedapplications import ApplicationClient
+    import azure.mgmt.resource.managedapplications.models as ManagedApplicationModels
     from azure.mgmt.redisenterprise import RedisEnterpriseManagementClient
 
 except ImportError as exc:
@@ -433,6 +438,7 @@ class AzureRMModuleBase(object):
         self._containerregistrytoken_client = None
         self._containerinstance_client = None
         self._containerservice_client = None
+        self._containerservicefleet_client = None
         self._managedcluster_client = None
         self._containerapps_client = None
         self._traffic_manager_management_client = None
@@ -465,6 +471,8 @@ class AzureRMModuleBase(object):
         self._cognitive_services_management_client = None
         self._databricks_client = None
         self._dataprotection_client = None
+        self._managedapplication_client = None
+        self._synapse_client = None
         self._redisenterprise_client = None
 
         self.check_mode = self.module.check_mode
@@ -1294,6 +1302,15 @@ class AzureRMModuleBase(object):
         return self._containerservice_client
 
     @property
+    def containerservicefleet_client(self):
+        self.log('Getting container service fleet client')
+        if not self._containerservicefleet_client:
+            self._containerservicefleet_client = self.get_mgmt_svc_client(
+                ContainerServiceFleetMgmtClient,
+                base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._containerservicefleet_client
+
+    @property
     def managedcluster_models(self):
         self.log("Getting container service models")
         return ContainerServiceClient.models('2024-08-01')
@@ -1672,6 +1689,27 @@ class AzureRMModuleBase(object):
     def databricks_models(self):
         self.log('Getting databricks models')
         return DatabricksModels
+
+    @property
+    def managedapplication_client(self):
+        self.log('Getting managed application client')
+        if not self._managedapplication_client:
+            self._managedapplication_client = self.get_mgmt_svc_client(ApplicationClient,
+                                                                       base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._managedapplication_client
+
+    @property
+    def managedapplication_models(self):
+        self.log('Getting managed application models')
+        return ManagedApplicationModels
+
+    @property
+    def synapse_client(self):
+        self.log('Getting synapse client...')
+        if not self._synapse_client:
+            self._synapse_client = self.get_mgmt_svc_client(SynapseManagementClient,
+                                                            base_url=self._cloud_environment.endpoints.resource_manager)
+        return self._synapse_client
 
 
 class AzureRMAuthException(Exception):

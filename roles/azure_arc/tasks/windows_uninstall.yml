@@ -1,0 +1,15 @@
+---
+- name: Uninstall the Azure Connected Machine Agent
+  ansible.builtin.include_tasks: "windows_msi_uninstall.yml"
+
+# The MSI deliberately keeps the agent directory with logs and configuration.
+# This only runs after a successful uninstall above; a failed msiexec call
+# fails the play so the agent's files are not force-deleted from under its
+# still-registered services.
+- name: Remove leftover agent files
+  ansible.builtin.raw: >-
+    if (Test-Path "{{ ansible_env['ProgramFiles'] }}\AzureConnectedMachineAgent") {
+    Remove-Item -Recurse -Force "{{ ansible_env['ProgramFiles'] }}\AzureConnectedMachineAgent";
+    Write-Output removed } else { Write-Output clean }
+  register: azure_arc_windows_leftover_cleanup
+  changed_when: "'removed' in azure_arc_windows_leftover_cleanup.stdout"

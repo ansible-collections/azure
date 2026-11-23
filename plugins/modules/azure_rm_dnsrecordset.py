@@ -587,7 +587,9 @@ class AzureRMRecordSet(AzureRMModuleBase):
 
     def recordset_to_dict(self, recordset):
         result = recordset.as_dict()
-        result['type'] = result['type'].strip('Microsoft.Network/dnszones/')
+        # The type is e.g. 'Microsoft.Network/dnszones/MX'; keep only the record type.
+        # str.strip() would also remove those characters from the record type itself ('MX' -> 'X').
+        result['type'] = result['type'].rsplit('/', 1)[-1]
         return result
 
     def update_metadata(self, metadata):

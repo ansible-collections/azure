@@ -64,6 +64,7 @@ options:
     enable_partitioning:
         description:
             - A value that indicates whether the topic is to be partitioned across multiple message brokers.
+            - Can only be set when the topic is created. Changing it on an existing topic fails; delete and recreate the topic instead.
         type: bool
     max_message_size_in_kb:
         description:
@@ -77,6 +78,7 @@ options:
     requires_duplicate_detection:
         description:
             -  A value indicating if this topic requires duplicate detection.
+            - Can only be set when the topic is created. Changing it on an existing topic fails; delete and recreate the topic instead.
         type: bool
     duplicate_detection_time_in_seconds:
         description:
@@ -122,7 +124,8 @@ id:
 '''
 
 try:
-    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
+    from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common_ext import AzureRMModuleBaseExt
+    from azure.core.exceptions import ResourceNotFoundError
 except ImportError:
     # This is handled in azure_rm_common
     pass
@@ -139,6 +142,9 @@ duration_spec_map = dict(
 )
 
 
+create_only_attributes = ('enable_partitioning', 'requires_duplicate_detection')
+
+
 sas_policy_spec = dict(
     state=dict(type='str', default='present', choices=['present', 'absent']),
     name=dict(type='str', required=True),
@@ -147,7 +153,7 @@ sas_policy_spec = dict(
 )
 
 
-class AzureRMServiceBusTopic(AzureRMModuleBase):
+class AzureRMServiceBusTopic(AzureRMModuleBaseExt):
 
     def __init__(self):
 
@@ -209,10 +215,11 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
                 enable_partitioning=self.enable_partitioning,
                 max_size_in_megabytes=self.max_size_in_mb,
                 max_message_size_in_kilobytes=self.max_message_size_in_kb,
-                support_ordering=self.support_ordering
+                support_ordering=self.support_ordering,
+                requires_duplicate_detection=self.requires_duplicate_detection
             )
             if self.status:
-                params['status'] = self.servicebus_models.EntityStatus(str.capitalize(_snake_to_camel(self.status)))
+                params['status'] = self.servicebus_models.EntityStatus(_snake_to_camel(self.status, capitalize_first=True))
             for k, v in duration_spec_map.items():
                 seconds = getattr(self, v)
                 if seconds:
@@ -225,11 +232,19 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
                 result = instance
             else:
                 result = original
-                attribute_map = set(self.servicebus_models.SBTopic._attribute_map.keys()) - set(self.servicebus_models.SBTopic._validation.keys())
-                for attribute in attribute_map:
-                    value = getattr(instance, attribute)
-                    if value and value != getattr(original, attribute):
-                        changed = True
+                for attribute in create_only_attributes:
+                    requested = getattr(instance, attribute)
+                    current = bool(getattr(original, attribute))
+                    if requested is not None and requested != current:
+                        self.fail("{0} cannot be changed on existing topic {1} (current: {2}, requested: {3}). "
+                                  "Delete and recreate the topic to change it.".format(attribute, self.name, current, requested))
+                # full PUT: carry forward options the user did not set.
+                # Unset durations come back as TimeSpan.MaxValue, which overflows when sent back, leaving them out of update.
+                updatable = set(self.servicebus_models.SBTopic._attribute_map.keys()) - set(self.servicebus_models.SBTopic._validation.keys())
+                for attribute in updatable:
+                    if getattr(instance, attribute) is None and is_valid_timedelta(getattr(original, attribute)) is not None:
+                        setattr(instance, attribute, getattr(original, attribute))
+                changed = not self.default_compare({}, instance.as_dict(), original.as_dict(), '', dict(compare=[]))
             if changed and not self.check_mode:
                 result = self.create_or_update(instance)
             self.results = self.to_dict(result)
@@ -247,7 +262,7 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
             client = self._get_client()
             return client.create_or_update(self.resource_group, self.namespace, self.name, param)
         except Exception as exc:
-            self.fail('Error creating or updating topic {0} - {1}'.format(self.name, str(exc.inner_exception) or str(exc)))
+            self.fail('Error creating or updating topic {0} - {1}'.format(self.name, str(exc)))
 
     def delete(self):
         try:
@@ -264,15 +279,17 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
         try:
             client = self._get_client()
             return client.get(self.resource_group, self.namespace, self.name)
-        except Exception:
+        except ResourceNotFoundError:
             return None
+        except Exception as exc:
+            self.fail("Error getting topic {0} - {1}".format(self.name, str(exc)))
 
     def to_dict(self, instance):
         result = dict()
         attribute_map = self.servicebus_models.SBTopic._attribute_map
         for attribute in attribute_map.keys():
             value = getattr(instance, attribute)
-            if not value:
+            if value is None:
                 continue
             if attribute_map[attribute]['type'] == 'duration':
                 if is_valid_timedelta(value):
@@ -290,8 +307,9 @@ class AzureRMServiceBusTopic(AzureRMModuleBase):
                 result[attribute] = to_native(value)
             elif attribute == 'max_size_in_megabytes':
                 result['max_size_in_mb'] = value
-            elif attribute == 'max_message_size_in_kilobyte':
+            elif attribute == 'max_message_size_in_kilobytes':
                 result['max_message_size_in_kb'] = value
+                result[attribute] = value
             else:
                 result[attribute] = value
         return result
