@@ -20,6 +20,7 @@
         name: "win{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-win"
+        node_resource_group: "{{ resource_group }}-win-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -79,6 +80,7 @@
         name: "win{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-win"
+        node_resource_group: "{{ resource_group }}-win-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true

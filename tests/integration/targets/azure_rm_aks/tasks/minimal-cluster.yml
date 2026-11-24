@@ -20,6 +20,7 @@
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -73,6 +74,7 @@
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -112,6 +114,7 @@
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -168,6 +171,7 @@
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -208,6 +212,7 @@
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -263,6 +268,7 @@
         name: "minimal{{ rpfx }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -320,6 +326,7 @@
         name: "min{{ rpfx }}-sec"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-sec-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -362,6 +369,7 @@
         name: "min{{ rpfx }}-sec"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-sec-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true
@@ -404,6 +412,7 @@
         name: "min{{ rpfx }}-sec"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-min"
+        node_resource_group: "{{ resource_group }}-min-sec-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true

@@ -80,11 +80,10 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.exceptions import HttpResponseError
+    from azure.core.serialization import as_attribute_dict
 except Exception:
     # handled in azure_rm_common
     pass
-
-AZURE_OBJECT_CLASS = 'managedClusters'
 
 
 class AzureRMManagedClusterInfo(AzureRMModuleBase):
@@ -145,7 +144,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
             pass
 
         if item and self.has_tags(item.tags, self.tags):
-            result = [self.serialize_obj(item, AZURE_OBJECT_CLASS)]
+            result = [as_attribute_dict(item, exclude_readonly=False)]
             if self.show_kubeconfig:
                 result[0]['kube_config'] = self.get_aks_kubeconfig(self.resource_group, self.name)
 
@@ -164,7 +163,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
         results = []
         for item in response:
             if self.has_tags(item.tags, self.tags):
-                item_dict = self.serialize_obj(item, AZURE_OBJECT_CLASS)
+                item_dict = as_attribute_dict(item, exclude_readonly=False)
                 if self.show_kubeconfig:
                     item_dict['kube_config'] = self.get_aks_kubeconfig(self.resource_group, item.name)
                 results.append(item_dict)
@@ -184,7 +183,7 @@ class AzureRMManagedClusterInfo(AzureRMModuleBase):
         results = []
         for item in response:
             if self.has_tags(item.tags, self.tags):
-                item_dict = self.serialize_obj(item, AZURE_OBJECT_CLASS)
+                item_dict = as_attribute_dict(item, exclude_readonly=False)
                 if self.show_kubeconfig:
                     item_dict['kube_config'] = self.get_aks_kubeconfig(item.resource_group, item.name)
                 results.append(item_dict)

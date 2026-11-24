@@ -26,6 +26,7 @@
         name: "{{ cluster_name }}"
         location: "{{ location }}"
         resource_group: "{{ resource_group }}-aksfleet"
+        node_resource_group: "{{ resource_group }}-aksfleet-node"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
         dns_prefix: "aks{{ rpfx }}"
         enable_rbac: true

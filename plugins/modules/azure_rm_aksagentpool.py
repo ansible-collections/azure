@@ -939,8 +939,48 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.core.polling import LROPoller
+    from azure.core.serialization import as_attribute_dict
 except ImportError:
     pass
+
+
+def _clean(model_cls, data, keys=None):
+    '''
+    Instantiate model_cls(**data) skipping None values so server defaults are not overridden with nulls.
+    Pass keys for dicts read back from Azure: they can carry fields the SDK model does not know.
+    '''
+    if data is None:
+        return None
+    return model_cls(**dict((k, v) for k, v in data.items() if v is not None and (keys is None or k in keys)))
+
+
+def _build_agent_pool(models, body, spec):
+    data = dict(body)
+    if data.get('availability_zones') is not None:
+        data['availability_zones'] = [str(zone) for zone in data['availability_zones']]
+    data['upgrade_settings'] = _clean(models.AgentPoolUpgradeSettings, data.get('upgrade_settings'))
+    data['power_state'] = _clean(models.PowerState, data.get('power_state'))
+    data['kubelet_config'] = _clean(models.KubeletConfig, data.get('kubelet_config'), spec['kubelet_config']['options'])
+    linux_os_config = data.get('linux_os_config')
+    if linux_os_config is not None:
+        linux_os_config_spec = spec['linux_os_config']['options']
+        linux_os_config = dict(linux_os_config)
+        linux_os_config['sysctls'] = _clean(models.SysctlConfig, linux_os_config.get('sysctls'), linux_os_config_spec['sysctls']['options'])
+        data['linux_os_config'] = _clean(models.LinuxOSConfig, linux_os_config, linux_os_config_spec)
+    data['security_profile'] = _clean(models.AgentPoolSecurityProfile, data.get('security_profile'))
+    network_profile = data.get('network_profile')
+    if network_profile is not None:
+        network_profile_spec = spec['network_profile']['options']
+        network_profile = dict(network_profile)
+        if network_profile.get('allowed_host_ports') is not None:
+            network_profile['allowed_host_ports'] = [_clean(models.PortRange, p, network_profile_spec['allowed_host_ports']['options'])
+                                                     for p in network_profile['allowed_host_ports']]
+        if network_profile.get('node_public_ip_tags') is not None:
+            network_profile['node_public_ip_tags'] = [_clean(models.IPTag, t, network_profile_spec['node_public_ip_tags']['options'])
+                                                      for t in network_profile['node_public_ip_tags']]
+        data['network_profile'] = _clean(models.AgentPoolNetworkProfile, network_profile, network_profile_spec)
+    data['windows_profile'] = _clean(models.AgentPoolWindowsProfile, data.get('windows_profile'))
+    return _clean(models.AgentPool, data)
 
 
 class AzureRMAksAgentPool(AzureRMModuleBaseExt):
@@ -1327,6 +1367,7 @@ class AzureRMAksAgentPool(AzureRMModuleBaseExt):
 
     def create_or_update(self, parameters):
         try:
+            parameters = _build_agent_pool(self.managedcluster_models, parameters, self.module_arg_spec)
             response = self.managedcluster_client.agent_pools.begin_create_or_update(self.resource_group, self.cluster_name, self.name, parameters)
             if isinstance(response, LROPoller):
                 response = self.get_poller_result(response)
@@ -1406,7 +1447,7 @@ class AzureRMAksAgentPool(AzureRMModuleBaseExt):
             agent_pool_dict['availability_zones'] = None
 
         if agent_pool.kubelet_config is not None:
-            agent_pool_dict['kubelet_config'] = agent_pool.kubelet_config.as_dict()
+            agent_pool_dict['kubelet_config'] = as_attribute_dict(agent_pool.kubelet_config, exclude_readonly=False)
         else:
             agent_pool_dict['kubelet_config'] = None
 
@@ -1421,7 +1462,7 @@ class AzureRMAksAgentPool(AzureRMModuleBaseExt):
             agent_pool_dict['linux_os_config']['swap_file_size_mb'] = agent_pool.linux_os_config.swap_file_size_mb
             agent_pool_dict['linux_os_config']['sysctls'] = dict()
             if agent_pool.linux_os_config.sysctls is not None:
-                agent_pool_dict['linux_os_config']['sysctls'] = agent_pool.linux_os_config.sysctls.as_dict()
+                agent_pool_dict['linux_os_config']['sysctls'] = as_attribute_dict(agent_pool.linux_os_config.sysctls, exclude_readonly=False)
             else:
                 agent_pool_dict['linux_os_config']['sysctls'] = None
         else:
@@ -1440,7 +1481,7 @@ class AzureRMAksAgentPool(AzureRMModuleBaseExt):
             agent_pool_dict['security_profile'] = None
 
         if agent_pool.network_profile is not None:
-            agent_pool_dict['network_profile'] = agent_pool.network_profile.as_dict()
+            agent_pool_dict['network_profile'] = as_attribute_dict(agent_pool.network_profile, exclude_readonly=False)
         else:
             agent_pool_dict['network_profile'] = None
 

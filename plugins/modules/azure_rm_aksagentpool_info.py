@@ -384,6 +384,7 @@ from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common
 
 try:
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.core.serialization import as_attribute_dict
 except ImportError:
     pass
 
@@ -508,7 +509,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             agent_pool_dict['availability_zones'] = None
 
         if agent_pool.kubelet_config is not None:
-            agent_pool_dict['kubelet_config'] = agent_pool.kubelet_config.as_dict()
+            agent_pool_dict['kubelet_config'] = as_attribute_dict(agent_pool.kubelet_config, exclude_readonly=False)
         else:
             agent_pool_dict['kubelet_config'] = None
 
@@ -518,7 +519,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             agent_pool_dict['linux_os_config']['swap_file_size_mb'] = agent_pool.linux_os_config.swap_file_size_mb
             agent_pool_dict['linux_os_config']['sysctls'] = dict()
             if agent_pool.linux_os_config.sysctls is not None:
-                agent_pool_dict['linux_os_config']['sysctls'] = agent_pool.linux_os_config.sysctls.as_dict()
+                agent_pool_dict['linux_os_config']['sysctls'] = as_attribute_dict(agent_pool.linux_os_config.sysctls, exclude_readonly=False)
             else:
                 agent_pool_dict['linux_os_config']['sysctls'] = None
         else:
@@ -536,7 +537,7 @@ class AzureRMAgentPoolInfo(AzureRMModuleBase):
             agent_pool_dict['security_profile'] = None
 
         if agent_pool.network_profile is not None:
-            agent_pool_dict['network_profile'] = agent_pool.network_profile.as_dict()
+            agent_pool_dict['network_profile'] = as_attribute_dict(agent_pool.network_profile, exclude_readonly=False)
         else:
             agent_pool_dict['network_profile'] = None
 

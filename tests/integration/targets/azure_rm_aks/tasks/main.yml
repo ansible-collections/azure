@@ -13,7 +13,6 @@
     - name: Set varialbles
       ansible.builtin.set_fact:
         rpfx: "{{ resource_group | hash('md5') | truncate(8, True, '') }}"
-        noderpfx: "{{ resource_group | hash('md5') | truncate(4, True, '') }}"
         location: westus3
 
     - name: Create User Managed Identity
@@ -82,7 +81,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -123,7 +122,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -139,6 +138,7 @@
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
+        node_resource_group: "{{ resource_group }}-aks-node"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -171,6 +171,7 @@
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
         resource_group: "{{ resource_group }}-aks"
+        node_resource_group: "{{ resource_group }}-aks-node"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}"
         aad_profile:
@@ -238,7 +239,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -296,7 +297,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -329,7 +330,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -365,7 +366,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -400,7 +401,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -442,7 +443,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         addon:
           http_application_routing:
             enabled: false
@@ -486,7 +487,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         addon:
           http_application_routing:
             enabled: false
@@ -525,7 +526,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         addon:
           http_application_routing:
             enabled: false
@@ -552,6 +553,15 @@
           - output.addon.monitoring.use_aad_auth == false
           - output.addon.monitoring.log_analytics_workspace_resource_id == aks_log_analytics_workspace_id
 
+    - name: Wait for the managed monitoring extension to finish installing
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ output.id }}/providers/Microsoft.KubernetesConfiguration/extensions/aks-managed-azure-monitor-logs"
+        api_version: "2023-05-01"
+      register: monitor_extension
+      until: monitor_extension.response | length > 0 and monitor_extension.response[0].properties.provisioningState == 'Succeeded'
+      retries: 30
+      delay: 20
+
     - name: Upgrade the AKS instance with key rotation
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}"
@@ -574,7 +584,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         addon:
           http_application_routing:
             enabled: false
@@ -625,7 +635,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         addon:
           http_application_routing:
             enabled: false
@@ -647,6 +657,15 @@
       ansible.builtin.assert:
         that:
           - output is not changed     
+
+    - name: Wait for the managed monitoring extension to finish installing
+      azure.azcollection.azure_rm_resource_info:
+        url: "{{ output.id }}/providers/Microsoft.KubernetesConfiguration/extensions/aks-managed-azure-monitor-logs"
+        api_version: "2023-05-01"
+      register: monitor_extension
+      until: monitor_extension.response | length > 0 and monitor_extension.response[0].properties.provisioningState == 'Succeeded'
+      retries: 30
+      delay: 20
 
     - name: Upgrade the AKS instance with agent pool profiles
       azure.azcollection.azure_rm_aks:
@@ -674,7 +693,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -715,7 +734,7 @@
             max_pods: 42
             availability_zones:
               - 1
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -757,7 +776,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -804,7 +823,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: User
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -846,7 +865,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -893,7 +912,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -942,7 +961,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -993,7 +1012,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -1041,7 +1060,7 @@
             vm_size: "{{ azure_test_vm_size }}"
             type: VirtualMachineScaleSets
             mode: System
-        node_resource_group: "node{{ noderpfx }}"
+        node_resource_group: "{{ resource_group }}-aks-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -1088,7 +1107,7 @@
             scale_set_priority: Spot
             scale_set_eviction_policy: Delete
             spot_max_price: -1
-        node_resource_group: "node{{ noderpfx }}-spot"
+        node_resource_group: "{{ resource_group }}-aks-spot-node"
         enable_rbac: true
         network_profile:
           load_balancer_sku: standard
@@ -1104,6 +1123,7 @@
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}-spot"
         resource_group: "{{ resource_group }}-aks"
+        node_resource_group: "{{ resource_group }}-aks-spot-node"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}-spot"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
@@ -1137,6 +1157,7 @@
       azure.azcollection.azure_rm_aks:
         name: "aks{{ rpfx }}-spot"
         resource_group: "{{ resource_group }}-aks"
+        node_resource_group: "{{ resource_group }}-aks-spot-node"
         location: "{{ location }}"
         dns_prefix: "aks{{ rpfx }}-spot"
         kubernetes_version: "{{ versions.azure_aks_versions[0] }}"
