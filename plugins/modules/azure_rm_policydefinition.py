@@ -33,7 +33,7 @@ options:
         type: str
     mode:
         description:
-            - The policy definition mode, for example C(Default), C(All), C(Indexed), or a
+            - The policy definition mode, for example C(All) or C(Indexed), or a
               resource-provider mode such as C(Microsoft.Kubernetes.Data).
             - An omitted mode behaves as C(Indexed).
         type: str
@@ -114,8 +114,6 @@ policy_definition:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.resource.policy import models
-    from azure.mgmt.resource.policy import _serialization
-    from azure.mgmt.resource.policy.v2023_04_01 import models as _models
 except ImportError:
     pass
 
@@ -219,7 +217,8 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             description=self.description,
             mode=self.mode,
             metadata=self.metadata,
-            parameters=self._parameter_models(self.parameters),
+            parameters={name: models.ParameterDefinitionsValue.from_dict(value)
+                        for name, value in self.parameters.items()} if self.parameters else None,
         )
 
     def _comparable(self, definition):
@@ -232,38 +231,9 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             # The service behaves as if an omitted mode were Indexed.
             mode=definition.mode or 'Indexed',
             metadata=metadata,
-            parameters=self._parameter_definitions(definition.parameters),
+            parameters={name: value.as_dict()
+                        for name, value in (definition.parameters or {}).items()},
         )
-
-    @staticmethod
-    def _parameter_models(parameters):
-        """Convert the task's raw parameter definitions to SDK models.
-
-        The client rejects raw dicts where the API expects
-        ParameterDefinitionsValue objects, so the task's wire dicts are
-        deserialized into the models the payload requires.
-        """
-        if not parameters:
-            return None
-        deserializer = _serialization.Deserializer(
-            {name: cls for name, cls in _models.__dict__.items() if isinstance(cls, type)})
-        return {name: deserializer._deserialize('ParameterDefinitionsValue', value)
-                for name, value in parameters.items()}
-
-    @staticmethod
-    def _parameter_definitions(parameters):
-        """Normalize parameter definitions to their REST wire dicts.
-
-        Both the service response and the payload carry
-        ParameterDefinitionsValue objects, so both sides are compared in
-        the wire format -- the one the service round-trips.
-        """
-        if not parameters:
-            return {}
-        serializer = _serialization.Serializer(
-            {name: cls for name, cls in _models.__dict__.items() if isinstance(cls, type)})
-        return {name: serializer.body(value, 'ParameterDefinitionsValue')
-                for name, value in parameters.items()}
 
     def _format(self, definition):
         result = definition.as_dict()
