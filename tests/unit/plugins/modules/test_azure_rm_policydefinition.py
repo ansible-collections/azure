@@ -97,12 +97,11 @@ def test_definition_rule_change():
 
 
 def test_definition_mode_defaults_are_idempotent():
-    # The SDK constructor defaults mode to Indexed, but the service defaults
-    # an omitted mode to Default; the fixture models the service behavior.
+    # The service behaves as if an omitted mode were Indexed.
     definition = models.PolicyDefinition(
         policy_rule={'if': {'field': 'type', 'equals': 'Microsoft.Compute/virtualMachines'},
                      'then': {'effect': 'audit'}},
-        display_name='audit-vm-tags', mode='Default')
+        display_name='audit-vm-tags', mode='Indexed')
     obj, client = module(definition)
     assert not obj.exec_module(**params(mode=None, display_name='audit-vm-tags',
                                         description=None))['changed']
@@ -113,7 +112,7 @@ def test_definition_empty_metadata_is_idempotent():
     definition = models.PolicyDefinition(
         policy_rule={'if': {'field': 'type', 'equals': 'Microsoft.Compute/virtualMachines'},
                      'then': {'effect': 'audit'}},
-        display_name='audit-vm-tags', mode='Default', metadata={})
+        display_name='audit-vm-tags', mode='Indexed', metadata={})
     obj, client = module(definition)
     assert not obj.exec_module(**params(metadata={}, display_name='audit-vm-tags',
                                         description=None, mode=None))['changed']
@@ -124,13 +123,51 @@ def test_definition_service_metadata_is_ignored():
     definition = models.PolicyDefinition(
         policy_rule={'if': {'field': 'type', 'equals': 'Microsoft.Compute/virtualMachines'},
                      'then': {'effect': 'audit'}},
-        display_name='audit-vm-tags', mode='Default',
+        display_name='audit-vm-tags', mode='Indexed',
         metadata={'createdBy': 'user', 'createdOn': '2026-11-23T16:10:11Z',
                   'updatedBy': 'user', 'updatedOn': '2026-11-23T16:10:14Z'})
     obj, client = module(definition)
     assert not obj.exec_module(**params(metadata=None, display_name='audit-vm-tags',
                                         description=None, mode=None))['changed']
     client.policy_definitions.create_or_update.assert_not_called()
+
+
+def test_definition_service_parameter_objects_are_idempotent():
+    # The service deserializes parameters into ParameterDefinitionsValue
+    # objects while the task passes raw dicts.
+    definition = models.PolicyDefinition(
+        policy_rule={'if': {'field': "tags[parameters('tagName')]"},
+                     'then': {'effect': 'audit'}},
+        display_name='audit-vm-tags', mode='Indexed',
+        parameters={'tagName': models.ParameterDefinitionsValue(
+            type='String', metadata=models.ParameterDefinitionsValueMetadata(display_name='Tag name'))})
+    obj, client = module(definition)
+    assert not obj.exec_module(**params(
+        policy_rule={'if': {'field': "tags[parameters('tagName')]"}, 'then': {'effect': 'audit'}},
+        parameters={'tagName': {'type': 'String', 'metadata': {'displayName': 'Tag name'}}},
+        mode='Indexed', display_name='audit-vm-tags', description=None))['changed']
+    client.policy_definitions.create_or_update.assert_not_called()
+
+
+def test_definition_parameter_change():
+    obj, client = module(existing_definition())
+    result = obj.exec_module(**params(parameters={'tagName': {'type': 'String'}}))
+    assert result['changed']
+    body = client.policy_definitions.create_or_update.call_args.args[1]
+    assert body.parameters['tagName'].type == 'String'
+
+
+def test_payload_parameters_are_converted_to_models():
+    # The client rejects raw dicts where the API expects
+    # ParameterDefinitionsValue objects.
+    obj, client = module()
+    client.policy_definitions.create_or_update.return_value = existing_definition()
+    obj.exec_module(**params(parameters={'tagName': {'type': 'String',
+                                                     'metadata': {'displayName': 'Tag name'}}}))
+    body = client.policy_definitions.create_or_update.call_args.args[1]
+    assert isinstance(body.parameters['tagName'], models.ParameterDefinitionsValue)
+    assert body.parameters['tagName'].type == 'String'
+    assert body.parameters['tagName'].metadata.display_name == 'Tag name'
 
 
 def test_management_group_scope_uses_the_management_group_apis():

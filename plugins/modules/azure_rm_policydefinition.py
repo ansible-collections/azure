@@ -33,10 +33,10 @@ options:
         type: str
     mode:
         description:
-            - The policy definition mode.
-            - Defaults to C(Default) when omitted.
+            - The policy definition mode, for example C(Default), C(All), C(Indexed), or a
+              resource-provider mode such as C(Microsoft.Kubernetes.Data).
+            - An omitted mode behaves as C(Indexed).
         type: str
-        choices: [Default, All, Indexed, NotApplicable]
     metadata:
         description:
             - Additional metadata for the policy definition.
@@ -114,6 +114,8 @@ policy_definition:
 try:
     from azure.core.exceptions import ResourceNotFoundError
     from azure.mgmt.resource.policy import models
+    from azure.mgmt.resource.policy import _serialization
+    from azure.mgmt.resource.policy.v2023_04_01 import models as _models
 except ImportError:
     pass
 
@@ -131,7 +133,7 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             policy_rule=dict(type='dict'),
             display_name=dict(type='str'),
             description=dict(type='str'),
-            mode=dict(type='str', choices=['Default', 'All', 'Indexed', 'NotApplicable']),
+            mode=dict(type='str'),
             metadata=dict(type='dict'),
             parameters=dict(type='dict'),
             management_group=dict(type='str'),
@@ -217,7 +219,7 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             description=self.description,
             mode=self.mode,
             metadata=self.metadata,
-            parameters=self.parameters,
+            parameters=self._parameter_models(self.parameters),
         )
 
     def _comparable(self, definition):
@@ -227,11 +229,41 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             policy_rule=definition.policy_rule,
             display_name=definition.display_name,
             description=definition.description or None,
-            # The service defaults an omitted mode to Default.
-            mode=definition.mode or 'Default',
+            # The service behaves as if an omitted mode were Indexed.
+            mode=definition.mode or 'Indexed',
             metadata=metadata,
-            parameters=definition.parameters or {},
+            parameters=self._parameter_definitions(definition.parameters),
         )
+
+    @staticmethod
+    def _parameter_models(parameters):
+        """Convert the task's raw parameter definitions to SDK models.
+
+        The client rejects raw dicts where the API expects
+        ParameterDefinitionsValue objects, so the task's wire dicts are
+        deserialized into the models the payload requires.
+        """
+        if not parameters:
+            return None
+        deserializer = _serialization.Deserializer(
+            {name: cls for name, cls in _models.__dict__.items() if isinstance(cls, type)})
+        return {name: deserializer._deserialize('ParameterDefinitionsValue', value)
+                for name, value in parameters.items()}
+
+    @staticmethod
+    def _parameter_definitions(parameters):
+        """Normalize parameter definitions to their REST wire dicts.
+
+        Both the service response and the payload carry
+        ParameterDefinitionsValue objects, so both sides are compared in
+        the wire format -- the one the service round-trips.
+        """
+        if not parameters:
+            return {}
+        serializer = _serialization.Serializer(
+            {name: cls for name, cls in _models.__dict__.items() if isinstance(cls, type)})
+        return {name: serializer.body(value, 'ParameterDefinitionsValue')
+                for name, value in parameters.items()}
 
     def _format(self, definition):
         result = definition.as_dict()

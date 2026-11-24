@@ -1,6 +1,7 @@
 - name: Set the test policy definition name
   ansible.builtin.set_fact:
     policy_definition_name: "pd{{ resource_group | hash('md5') | truncate(14, true, '') }}"
+    parameterized_definition_name: "pdp{{ resource_group | hash('md5') | truncate(13, true, '') }}"
 
 - name: Exercise policy definition modules
   block:
@@ -129,6 +130,74 @@
         that:
           - policy_definition_missing.policy_definitions | length == 0
 
+    - name: Predict parameterized definition creation without creating it
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+      check_mode: true
+      register: parameterized_definition_check
+
+    - name: Assert parameterized definition creation check mode
+      ansible.builtin.assert:
+        that:
+          - parameterized_definition_check is changed
+
+    - name: Create a parameterized policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+      register: parameterized_definition_created
+
+    - name: Assert the parameterized definition was created
+      ansible.builtin.assert:
+        that:
+          - parameterized_definition_created is changed
+          - parameterized_definition_created.policy_definition.parameters.tagName.type == 'String'
+
+    - name: Re-run the parameterized definition task
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+      register: parameterized_definition_rerun
+
+    - name: Assert the parameterized definition re-run is idempotent
+      ansible.builtin.assert:
+        that:
+          - parameterized_definition_rerun is not changed
+
     - name: Predict deletion without deleting the definition
       azure.azcollection.azure_rm_policydefinition:
         name: "{{ policy_definition_name }}"
@@ -177,5 +246,11 @@
     - name: Delete the policy definition
       azure.azcollection.azure_rm_policydefinition:
         name: "{{ policy_definition_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete the parameterized policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
         state: absent
       ignore_errors: true
