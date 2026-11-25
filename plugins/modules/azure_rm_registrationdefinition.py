@@ -350,7 +350,6 @@ class AzureRMRegistrationDefinition(AzureRMModuleBaseExt):
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2022-10-01',
                                                     suppress_subscription_id=True)
 
         old_response = self.get_resource()
