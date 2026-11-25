@@ -69,7 +69,7 @@ def test_policy_definition_info_list():
 def test_policy_definition_info_get_at_management_group():
     obj, client = module()
     result = obj.exec_module(name='audit-vm-tags', management_group='landing-zones')
-    client.policy_definitions.get_at_management_group.assert_called_once_with('landing-zones', 'audit-vm-tags')
+    client.policy_definitions.get_at_management_group.assert_called_once_with(management_group_id='landing-zones', policy_definition_name='audit-vm-tags')
     client.policy_definitions.get.assert_not_called()
     assert len(result['policy_definitions']) == 1
 
@@ -77,6 +77,6 @@ def test_policy_definition_info_get_at_management_group():
 def test_policy_definition_info_list_by_management_group():
     obj, client = module()
     result = obj.exec_module(name=None, management_group='landing-zones')
-    client.policy_definitions.list_by_management_group.assert_called_once_with('landing-zones')
+    client.policy_definitions.list_by_management_group.assert_called_once_with(management_group_id='landing-zones')
     client.policy_definitions.list.assert_not_called()
     assert len(result['policy_definitions']) == 1

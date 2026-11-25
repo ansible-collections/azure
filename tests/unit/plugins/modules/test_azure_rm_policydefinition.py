@@ -175,10 +175,10 @@ def test_management_group_scope_uses_the_management_group_apis():
     client.policy_definitions.create_or_update_at_management_group.return_value = existing_definition()
     result = obj.exec_module(**params(management_group='landing-zones'))
     assert result['changed']
-    client.policy_definitions.get_at_management_group.assert_called_once_with('landing-zones', 'audit-vm-tags')
-    body = client.policy_definitions.create_or_update_at_management_group.call_args.args[2]
+    client.policy_definitions.get_at_management_group.assert_called_once_with(management_group_id='landing-zones', policy_definition_name='audit-vm-tags')
+    body = client.policy_definitions.create_or_update_at_management_group.call_args.kwargs['parameters']
     client.policy_definitions.create_or_update_at_management_group.assert_called_once_with(
-        'landing-zones', 'audit-vm-tags', body)
+        management_group_id='landing-zones', policy_definition_name='audit-vm-tags', parameters=body)
     client.policy_definitions.get.assert_not_called()
     client.policy_definitions.create_or_update.assert_not_called()
 
@@ -192,7 +192,7 @@ def test_delete_policy_definition():
 def test_delete_policy_definition_at_management_group_scope():
     obj, client = module(existing_definition())
     assert obj.exec_module(**params(state='absent', management_group='landing-zones'))['changed']
-    client.policy_definitions.delete_at_management_group.assert_called_once_with('landing-zones', 'audit-vm-tags')
+    client.policy_definitions.delete_at_management_group.assert_called_once_with(management_group_id='landing-zones', policy_definition_name='audit-vm-tags')
 
 
 def test_delete_check_mode():

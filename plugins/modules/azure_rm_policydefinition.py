@@ -178,10 +178,12 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             return self.results
 
         try:
-            definition = self.policy_client.policy_definitions.create_or_update(
-                self.name, desired) if self.management_group is None else \
-                self.policy_client.policy_definitions.create_or_update_at_management_group(
-                    self.management_group, self.name, desired)
+            if self.management_group is None:
+                definition = self.policy_client.policy_definitions.create_or_update(
+                    self.name, desired)
+            else:
+                definition = self.policy_client.policy_definitions.create_or_update_at_management_group(
+                    management_group_id=self.management_group, policy_definition_name=self.name, parameters=desired)
         except Exception as exc:
             self.fail('Error creating / updating policy definition {0}: {1}'.format(self.name, str(exc)))
 
@@ -193,7 +195,8 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
         try:
             if self.management_group is None:
                 return self.policy_client.policy_definitions.get(self.name)
-            return self.policy_client.policy_definitions.get_at_management_group(self.management_group, self.name)
+            return self.policy_client.policy_definitions.get_at_management_group(
+                management_group_id=self.management_group, policy_definition_name=self.name)
         except ResourceNotFoundError:
             return None
         except Exception as exc:
@@ -205,7 +208,8 @@ class AzureRMPolicyDefinition(AzureRMModuleBase):
             if self.management_group is None:
                 self.policy_client.policy_definitions.delete(self.name)
             else:
-                self.policy_client.policy_definitions.delete_at_management_group(self.management_group, self.name)
+                self.policy_client.policy_definitions.delete_at_management_group(
+                    management_group_id=self.management_group, policy_definition_name=self.name)
         except Exception as exc:
             self.fail('Error deleting policy definition {0}: {1}'.format(self.name, str(exc)))
 

@@ -83,7 +83,7 @@ class AzureRMPolicyDefinitionInfo(AzureRMModuleBase):
                     definitions = [self.policy_client.policy_definitions.get(self.name)]
                 else:
                     definitions = [self.policy_client.policy_definitions.get_at_management_group(
-                        self.management_group, self.name)]
+                        management_group_id=self.management_group, policy_definition_name=self.name)]
             except ResourceNotFoundError:
                 definitions = []
             except Exception as exc:
@@ -94,7 +94,7 @@ class AzureRMPolicyDefinitionInfo(AzureRMModuleBase):
                     definitions = list(self.policy_client.policy_definitions.list())
                 else:
                     definitions = list(self.policy_client.policy_definitions.list_by_management_group(
-                        self.management_group))
+                        management_group_id=self.management_group))
             except Exception as exc:
                 self.fail('Error listing policy definitions: {0}'.format(str(exc)))
         self.results['policy_definitions'] = [self._format(definition) for definition in definitions]
