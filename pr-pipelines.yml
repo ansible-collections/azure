@@ -143,6 +143,7 @@ parameters:
       - "azure_rm_privatelinkservice"
       - "azure_rm_privatednszonelink"
       - "azure_rm_policydefinition"
+      - "azure_rm_policyassignment"
       - "azure_rm_publicipaddress"
       - "azure_rm_publicipprefix"
       - "azure_rm_proximityplacementgroup"
