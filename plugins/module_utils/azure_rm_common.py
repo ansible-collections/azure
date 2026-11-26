@@ -280,6 +280,7 @@ try:
     from azure.mgmt.iothub import IotHubClient
     from azure.mgmt.iothub import models as IoTHubModels
     from azure.mgmt.resource.locks import ManagementLockClient
+    from azure.mgmt.resource.policy import PolicyClient
     from azure.mgmt.recoveryservices import RecoveryServicesClient
     from azure.mgmt.recoveryservicesbackup import RecoveryServicesBackupClient
     import azure.mgmt.recoveryservicesbackup.activestamp.models as RecoveryServicesBackupModels
@@ -457,6 +458,7 @@ class AzureRMModuleBase(object):
         self._automation_client = None
         self._IoThub_client = None
         self._lock_client = None
+        self._policy_client = None
         self._recovery_services_client = None
         self._recovery_services_legacy_client = None
         self._recovery_services_backup_client = None
@@ -1527,6 +1529,15 @@ class AzureRMModuleBase(object):
                                                          base_url=self._cloud_environment.endpoints.resource_manager,
                                                          api_version='2016-09-01')
         return self._lock_client
+
+    @property
+    def policy_client(self):
+        self.log('Getting policy client')
+        if not self._policy_client:
+            self._policy_client = self.get_mgmt_svc_client(PolicyClient,
+                                                           base_url=self._cloud_environment.endpoints.resource_manager,
+                                                           api_version=PolicyClient.DEFAULT_API_VERSION)
+        return self._policy_client
 
     @property
     def lock_models(self):

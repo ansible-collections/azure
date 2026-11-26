@@ -1,0 +1,256 @@
+- name: Set the test policy definition name
+  ansible.builtin.set_fact:
+    policy_definition_name: "pd{{ resource_group | hash('md5') | truncate(14, true, '') }}"
+    parameterized_definition_name: "pdp{{ resource_group | hash('md5') | truncate(13, true, '') }}"
+
+- name: Exercise policy definition modules
+  block:
+    - name: Predict creation without creating it
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        display_name: Audit VM tags
+        description: Audits virtual machines missing the required tags
+        mode: Indexed
+        policy_rule:
+          if:
+            allOf:
+              - field: type
+                equals: Microsoft.Compute/virtualMachines
+              - field: tags.costCenter
+                exists: false
+          then:
+            effect: audit
+      check_mode: true
+      register: policy_definition_check
+
+    - name: Assert creation check mode
+      ansible.builtin.assert:
+        that:
+          - policy_definition_check is changed
+
+    - name: Create a policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        display_name: Audit VM tags
+        description: Audits virtual machines missing the required tags
+        mode: Indexed
+        policy_rule:
+          if:
+            allOf:
+              - field: type
+                equals: Microsoft.Compute/virtualMachines
+              - field: tags.costCenter
+                exists: false
+          then:
+            effect: audit
+      register: policy_definition_created
+
+    - name: Assert the policy definition was created
+      ansible.builtin.assert:
+        that:
+          - policy_definition_created is changed
+          - policy_definition_created.policy_definition.policy_type == 'Custom'
+          - policy_definition_created.policy_definition.mode == 'Indexed'
+          - policy_definition_created.policy_definition.display_name == 'Audit VM tags'
+          - policy_definition_created.policy_definition.policy_rule.then.effect == 'audit'
+
+    - name: Reconcile the policy definition idempotently
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        display_name: Audit VM tags
+        description: Audits virtual machines missing the required tags
+        mode: Indexed
+        policy_rule:
+          if:
+            allOf:
+              - field: type
+                equals: Microsoft.Compute/virtualMachines
+              - field: tags.costCenter
+                exists: false
+          then:
+            effect: audit
+      register: policy_definition_reconcile
+
+    - name: Assert the policy definition reconciliation is idempotent
+      ansible.builtin.assert:
+        that:
+          - policy_definition_reconcile is not changed
+
+    - name: Update the policy definition rule
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        display_name: Audit VM tags
+        description: Audits virtual machines missing the required tags
+        mode: Indexed
+        policy_rule:
+          if:
+            allOf:
+              - field: type
+                equals: Microsoft.Compute/virtualMachines
+              - field: tags.costCenter
+                exists: false
+          then:
+            effect: deny
+      register: policy_definition_updated
+
+    - name: Assert the policy definition was updated
+      ansible.builtin.assert:
+        that:
+          - policy_definition_updated is changed
+          - policy_definition_updated.policy_definition.policy_rule.then.effect == 'deny'
+
+    - name: Read the policy definition through its info module
+      azure.azcollection.azure_rm_policydefinition_info:
+        name: "{{ policy_definition_name }}"
+      register: policy_definition_info
+
+    - name: Assert the policy definition facts
+      ansible.builtin.assert:
+        that:
+          - policy_definition_info.policy_definitions | length == 1
+          - policy_definition_info.policy_definitions[0].name == policy_definition_name
+          - policy_definition_info.policy_definitions[0].policy_rule.then.effect == 'deny'
+
+    - name: List policy definitions in the subscription
+      azure.azcollection.azure_rm_policydefinition_info:
+      register: policy_definition_list
+
+    - name: Assert the test definition is listed
+      ansible.builtin.assert:
+        that:
+          - policy_definition_name in (policy_definition_list.policy_definitions | map(attribute='name') | list)
+
+    - name: Read a missing policy definition through its info module
+      azure.azcollection.azure_rm_policydefinition_info:
+        name: "{{ policy_definition_name }}-missing"
+      register: policy_definition_missing
+
+    - name: Assert the missing definition is not returned
+      ansible.builtin.assert:
+        that:
+          - policy_definition_missing.policy_definitions | length == 0
+
+    - name: Predict parameterized definition creation without creating it
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+      check_mode: true
+      register: parameterized_definition_check
+
+    - name: Assert parameterized definition creation check mode
+      ansible.builtin.assert:
+        that:
+          - parameterized_definition_check is changed
+
+    - name: Create a parameterized policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+      register: parameterized_definition_created
+
+    - name: Assert the parameterized definition was created
+      ansible.builtin.assert:
+        that:
+          - parameterized_definition_created is changed
+          - parameterized_definition_created.policy_definition.parameters.tagName.type == 'String'
+
+    - name: Re-run the parameterized definition task
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+      register: parameterized_definition_rerun
+
+    - name: Assert the parameterized definition re-run is idempotent
+      ansible.builtin.assert:
+        that:
+          - parameterized_definition_rerun is not changed
+
+    - name: Predict deletion without deleting the definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        state: absent
+      check_mode: true
+      register: policy_definition_delete_check
+
+    - name: Assert deletion check mode
+      ansible.builtin.assert:
+        that:
+          - policy_definition_delete_check is changed
+
+    - name: Delete the policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        state: absent
+      register: policy_definition_deleted
+
+    - name: Assert the policy definition was deleted
+      ansible.builtin.assert:
+        that:
+          - policy_definition_deleted is changed
+
+    - name: Repeat policy definition deletion
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        state: absent
+      register: policy_definition_deleted_again
+
+    - name: Assert policy definition deletion idempotency
+      ansible.builtin.assert:
+        that:
+          - policy_definition_deleted_again is not changed
+
+    - name: Read the deleted policy definition through its info module
+      azure.azcollection.azure_rm_policydefinition_info:
+        name: "{{ policy_definition_name }}"
+      register: policy_definition_info_deleted
+
+    - name: Assert the deleted policy definition is not returned
+      ansible.builtin.assert:
+        that:
+          - policy_definition_info_deleted.policy_definitions | length == 0
+
+  always:
+    - name: Delete the policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete the parameterized policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ parameterized_definition_name }}"
+        state: absent
+      ignore_errors: true
