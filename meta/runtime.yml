@@ -302,6 +302,8 @@ action_groups:
     - azure.azcollection.azure_rm_openshiftmanagedcluster_info
     - azure.azcollection.azure_rm_openshiftmanagedclusterkubeconfig_info
     - azure.azcollection.azure_rm_openshiftmanagedclusterversion_info
+    - azure.azcollection.azure_rm_policydefinition
+    - azure.azcollection.azure_rm_policydefinition_info
     - azure.azcollection.azure_rm_postgresqlflexibleadministrator
     - azure.azcollection.azure_rm_postgresqlflexibleadministrator_info
     - azure.azcollection.azure_rm_postgresqlflexiblebackup
