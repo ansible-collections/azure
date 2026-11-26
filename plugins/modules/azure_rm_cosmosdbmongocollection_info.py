@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_cosmosdbmongocollection_info
-version_added: "4.3.0"
+version_added: "4.4.0"
 short_description: Get Cosmos DB MongoDB collection facts
 description:
     - Get one MongoDB collection or list collections in an existing Cosmos DB MongoDB database.

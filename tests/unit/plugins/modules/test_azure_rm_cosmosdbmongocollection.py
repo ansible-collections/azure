@@ -63,7 +63,15 @@ def test_creation_requires_shard_key():
 
 def test_index_update_and_shard_key_immutability():
     obj, client = module(existing_collection(), check_mode=True)
-    assert obj.exec_module(**params(indexes=[{'keys': ['tenant'], 'unique': False}]))['changed']
+    assert obj.exec_module(**params(indexes=[{'keys': ['_id'], 'unique': True},
+                                             {'keys': ['tenant'], 'unique': False}]))['changed']
+    client.begin_create_update_mongo_db_collection.assert_not_called()
+
+
+def test_indexes_without_the_id_index_are_rejected():
+    obj, client = module(existing_collection())
+    with pytest.raises(ValueError, match='always indexes _id'):
+        obj.exec_module(**params(indexes=[{'keys': ['tenant'], 'unique': False}]))
     client.begin_create_update_mongo_db_collection.assert_not_called()
 
 

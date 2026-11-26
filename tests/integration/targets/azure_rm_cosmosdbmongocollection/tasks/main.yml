@@ -224,11 +224,19 @@
       check_mode: true
       register: delete_check
 
+    - name: Read the collection after the check-mode deletion
+      azure.azcollection.azure_rm_cosmosdbmongocollection_info:
+        resource_group: "{{ mongo_rg }}"
+        account_name: "{{ mongo_account }}"
+        database_name: testdb
+        name: events
+      register: after_delete_check
+
     - name: Assert delete check mode leaves collection in place
       ansible.builtin.assert:
         that:
           - delete_check is changed
-          - after_update.response | length == 1
+          - after_delete_check.collections | length == 1
 
     - name: Delete MongoDB collection
       azure.azcollection.azure_rm_cosmosdbmongocollection:

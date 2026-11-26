@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = '''
 ---
 module: azure_rm_cosmosdbmongocollection
-version_added: "4.3.0"
+version_added: "4.4.0"
 short_description: Manage a Cosmos DB MongoDB collection
 description:
     - Create, update, or delete a MongoDB collection in an existing Cosmos DB database.
@@ -38,7 +38,9 @@ options:
             - Required when creating a collection; immutable after creation.
         type: dict
     indexes:
-        description: MongoDB indexes to set on the collection. Omit to preserve existing indexes.
+        description:
+            - MongoDB indexes to set on the collection. Omit to preserve existing indexes.
+            - Must include an entry with the C(_id) key; Cosmos DB for MongoDB always indexes C(_id).
         type: list
         elements: dict
         suboptions:
@@ -143,6 +145,14 @@ class AzureRMCosmosDBMongoCollection(AzureRMModuleBase):
     def exec_module(self, **kwargs):
         for key in list(self.module_arg_spec.keys()):
             setattr(self, key, kwargs[key])
+
+        # Cosmos DB for MongoDB always indexes _id; a task that sets indexes
+        # without an _id entry either fights the service on every run (the
+        # stored collection keeps its implicit _id index) or is rejected by
+        # the API after the read.
+        if self.state == 'present' and self.indexes is not None and \
+                not any(index.get('keys') == ['_id'] for index in self.indexes):
+            self.fail('indexes must include an entry with keys [_id]; Cosmos DB for MongoDB always indexes _id')
 
         self.client = self.cosmosdb_client.mongo_db_resources
 
