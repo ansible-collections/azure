@@ -1,4 +1,52 @@
 # Change Log
+## v4.3.0 (2026-11-26)
+
+### NEW MODULES
+  - azure_rm_apimanagementproduct: ([#2400](https://github.com/ansible-collections/azure/pull/2400))
+  - azure_rm_apimanagementproduct_info: ([#2400](https://github.com/ansible-collections/azure/pull/2400))
+  - azure_rm_dataprotectionbackuppolicydisk: ([#2409](https://github.com/ansible-collections/azure/pull/2409))
+  - azure_rm_dataprotectionbackuppolicydisk_info: ([#2409](https://github.com/ansible-collections/azure/pull/2409))
+  - azure_rm_databrickscluster: ([#2413](https://github.com/ansible-collections/azure/pull/2413))
+  - azure_rm_databrickscluster_info: ([#2413](https://github.com/ansible-collections/azure/pull/2413))
+  - azure_rm_databricksnotebook: ([#2413](https://github.com/ansible-collections/azure/pull/2413))
+  - azure_rm_aksfleet: ([#2405](https://github.com/ansible-collections/azure/pull/2405))
+  - azure_rm_aksfleet_info: ([#2405](https://github.com/ansible-collections/azure/pull/2405))
+  - azure_rm_managedapplication: ([#2414](https://github.com/ansible-collections/azure/pull/2414))
+  - azure_rm_managedapplication_info: ([#2414](https://github.com/ansible-collections/azure/pull/2414))
+  - azure_rm_synapseworkspace: ([#2419](https://github.com/ansible-collections/azure/pull/2419))
+  - azure_rm_synapseworkspace_info: ([#2419](https://github.com/ansible-collections/azure/pull/2419))
+  - azure_rm_cosmosdbsqlcontainer: ([#2412](https://github.com/ansible-collections/azure/pull/2412))
+  - azure_rm_cosmosdbsqlcontainer_info: ([#2412](https://github.com/ansible-collections/azure/pull/2412))
+  - azure_rm_managedredis: ([#2406](https://github.com/ansible-collections/azure/pull/2406))
+  - azure_rm_managedredis_info: ([#2406](https://github.com/ansible-collections/azure/pull/2406))
+  - azure_rm_policydefinition: ([#2422](https://github.com/ansible-collections/azure/pull/2422))
+  - azure_rm_policydefinition_info: ([#2422](https://github.com/ansible-collections/azure/pull/2422))
+
+### FEATURE ENHANCEMENT
+  - plugins/doc_fragments/azure.py: Document installing Azure CLI separately for CLI auth ([#2408](https://github.com/ansible-collections/azure/pull/2408))
+  - plugins/doc_fragments/azure_plugin.py: Document installing Azure CLI separately for CLI auth ([#2408](https://github.com/ansible-collections/azure/pull/2408))
+  - roles/azure_arc/: Agent version convergence and offboarding ([#2394](https://github.com/ansible-collections/azure/pull/2394))
+  - .github/workflows/rh_certification_checker.yml: Upgrade partner certification checker to `v6.0.0` ([#2415](https://github.com/ansible-collections/azure/pull/2415))
+  - requirements.txt:
+    - Add `azure-mgmt-containerservicefleet==4.0.0` dependency ([#2405](https://github.com/ansible-collections/azure/pull/2405))
+    - Add `azure-mgmt-redisenterprise==3.1.0` dependency ([#2406](https://github.com/ansible-collections/azure/pull/2406))
+    - Add `azure-mgmt-synapse==2.0.0` and `six` dependencies ([#2419](https://github.com/ansible-collections/azure/pull/2419))
+    - Move AKS modules to `azure-mgmt-containerservice==41.9.0` ([#2421](https://github.com/ansible-collections/azure/pull/2421))
+  - plugins/modules/azure_rm_backupazurevm.py: Add include_disks and exclude_disks ([#2416](https://github.com/ansible-collections/azure/pull/2416))
+  - plugins/modules/azure_rm_aks.py: Move AKS modules to `azure-mgmt-containerservice==41.9.0` ([#2421](https://github.com/ansible-collections/azure/pull/2421))
+  - plugins/modules/azure_rm_aks_info.py: Move AKS modules to `azure-mgmt-containerservice==41.9.0` ([#2421](https://github.com/ansible-collections/azure/pull/2421))
+  - plugins/modules/azure_rm_aksagentpool.py: Move AKS modules to `azure-mgmt-containerservice==41.9.0` ([#2421](https://github.com/ansible-collections/azure/pull/2421))
+  - plugins/modules/azure_rm_aksagentpool_info.py: Move AKS modules to `azure-mgmt-containerservice==41.9.0` ([#2421](https://github.com/ansible-collections/azure/pull/2421))
+  - plugins/modules/azure_rm_aksversion_info.py: Move AKS modules to `azure-mgmt-containerservice==41.9.0` ([#2421](https://github.com/ansible-collections/azure/pull/2421))
+
+### BUG FIXING
+  - plugins/modules/azure_rm_dnsrecordset.py: Fix MX and NS record type and return values ([#2404](https://github.com/ansible-collections/azure/pull/2404))
+  - plugins/modules/azure_rm_privatednsrecordset.py: Fix MX and NS record type and return values ([#2404](https://github.com/ansible-collections/azure/pull/2404))
+  - plugins/modules/azure_rm_servicebustopic.py: Send `requires_duplicate_detection` and fix Service Bus entity updates ([#2411](https://github.com/ansible-collections/azure/pull/2411))
+  - plugins/modules/azure_rm_servicebusqueue.py: Send `requires_duplicate_detection` and fix Service Bus entity updates ([#2411](https://github.com/ansible-collections/azure/pull/2411))
+  - plugins/modules/azure_rm_servicebustopicsubscription.py: Send `requires_duplicate_detection` and fix Service Bus entity updates ([#2411](https://github.com/ansible-collections/azure/pull/2411))
+
+
 ## v4.2.0 (2026-10-30)
 
 ### NEW MODULES
