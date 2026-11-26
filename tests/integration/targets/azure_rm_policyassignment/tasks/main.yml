@@ -1,0 +1,225 @@
+- name: Set the test resource names
+  ansible.builtin.set_fact:
+    policy_test_id: "{{ resource_group | hash('md5') | truncate(12, true, '') }}"
+    policy_definition_name: "pad{{ resource_group | hash('md5') | truncate(12, true, '') }}"
+    policy_assignment_name: "pa{{ resource_group | hash('md5') | truncate(13, true, '') }}"
+    policy_rg_assignment_name: "par{{ resource_group | hash('md5') | truncate(12, true, '') }}"
+
+- name: Exercise policy assignment modules
+  block:
+    - name: Create a parameterized policy definition to assign
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        display_name: Audit a tag parameter
+        parameters:
+          tagName:
+            type: String
+            metadata:
+              displayName: Tag name
+        policy_rule:
+          if:
+            field: "[parameters('tagName')]"
+            exists: false
+          then:
+            effect: audit
+
+    - name: Set the assigned definition id
+      ansible.builtin.set_fact:
+        policy_definition_id: "/subscriptions/{{ azure_subscription_id }}/providers/Microsoft.Authorization/policyDefinitions/{{ policy_definition_name }}"
+
+    - name: Predict assignment creation without creating it
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        policy_definition_id: "{{ policy_definition_id }}"
+        display_name: Audit a tag parameter
+        description: Audits resources missing the parameterized tag
+        parameters:
+          tagName:
+            value: tags.costCenter
+      check_mode: true
+      register: policy_assignment_check
+
+    - name: Assert assignment creation check mode
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_check is changed
+
+    - name: Create a policy assignment at the subscription scope
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        policy_definition_id: "{{ policy_definition_id }}"
+        display_name: Audit a tag parameter
+        description: Audits resources missing the parameterized tag
+        parameters:
+          tagName:
+            value: tags.costCenter
+      register: policy_assignment_created
+
+    - name: Assert the policy assignment was created
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_created is changed
+          - policy_assignment_created.policy_assignment.enforcement_mode == 'Default'
+          - policy_assignment_created.policy_assignment.parameters.tagName.value == "tags.costCenter"
+          - policy_assignment_created.policy_assignment.scope == '/subscriptions/' ~ azure_subscription_id
+
+    - name: Reconcile the policy assignment idempotently
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        policy_definition_id: "{{ policy_definition_id }}"
+        display_name: Audit a tag parameter
+        description: Audits resources missing the parameterized tag
+        parameters:
+          tagName:
+            value: tags.costCenter
+      register: policy_assignment_reconcile
+
+    - name: Assert the policy assignment reconciliation is idempotent
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_reconcile is not changed
+
+    - name: Update the policy assignment enforcement mode
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        policy_definition_id: "{{ policy_definition_id }}"
+        display_name: Audit a tag parameter
+        description: Audits resources missing the parameterized tag
+        enforcement_mode: DoNotEnforce
+        parameters:
+          tagName:
+            value: tags.costCenter
+      register: policy_assignment_updated
+
+    - name: Assert the policy assignment was updated
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_updated is changed
+          - policy_assignment_updated.policy_assignment.enforcement_mode == 'DoNotEnforce'
+
+    - name: Read the policy assignment through its info module
+      azure.azcollection.azure_rm_policyassignment_info:
+        name: "{{ policy_assignment_name }}"
+      register: policy_assignment_info
+
+    - name: Assert the policy assignment facts
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_info.policy_assignments | length == 1
+          - policy_assignment_info.policy_assignments[0].name == policy_assignment_name
+          - policy_assignment_info.policy_assignments[0].enforcement_mode == 'DoNotEnforce'
+          - policy_assignment_info.policy_assignments[0].parameters.tagName.value == "tags.costCenter"
+
+    - name: List policy assignments in the subscription
+      azure.azcollection.azure_rm_policyassignment_info:
+      register: policy_assignment_list
+
+    - name: Assert the test assignment is listed
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_name in (policy_assignment_list.policy_assignments | map(attribute='name') | list)
+
+    - name: Create a policy assignment at the resource group scope
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_rg_assignment_name }}"
+        resource_group: "{{ resource_group }}"
+        policy_definition_id: "{{ policy_definition_id }}"
+        parameters:
+          tagName:
+            value: tags.costCenter
+      register: policy_rg_assignment_created
+
+    - name: Assert the resource group assignment was created
+      ansible.builtin.assert:
+        that:
+          - policy_rg_assignment_created is changed
+          - policy_rg_assignment_created.policy_assignment.scope == '/subscriptions/' ~ azure_subscription_id ~ '/resourceGroups/' ~ resource_group
+
+    - name: Re-run the resource group assignment task
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_rg_assignment_name }}"
+        resource_group: "{{ resource_group }}"
+        policy_definition_id: "{{ policy_definition_id }}"
+        parameters:
+          tagName:
+            value: tags.costCenter
+      register: policy_rg_assignment_rerun
+
+    - name: Assert the resource group assignment re-run is idempotent
+      ansible.builtin.assert:
+        that:
+          - policy_rg_assignment_rerun is not changed
+
+    - name: List policy assignments at the resource group scope
+      azure.azcollection.azure_rm_policyassignment_info:
+        resource_group: "{{ resource_group }}"
+      register: policy_rg_assignment_list
+
+    - name: Assert the resource group assignment is listed
+      ansible.builtin.assert:
+        that:
+          - policy_rg_assignment_name in (policy_rg_assignment_list.policy_assignments | map(attribute='name') | list)
+
+    - name: Predict deletion without deleting the assignment
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        state: absent
+      check_mode: true
+      register: policy_assignment_delete_check
+
+    - name: Assert deletion check mode
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_delete_check is changed
+
+    - name: Delete the policy assignment
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        state: absent
+      register: policy_assignment_deleted
+
+    - name: Assert the policy assignment was deleted
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_deleted is changed
+
+    - name: Repeat policy assignment deletion
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        state: absent
+      register: policy_assignment_deleted_again
+
+    - name: Assert policy assignment deletion idempotency
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_deleted_again is not changed
+
+    - name: Read the deleted policy assignment through its info module
+      azure.azcollection.azure_rm_policyassignment_info:
+        name: "{{ policy_assignment_name }}"
+      register: policy_assignment_info_deleted
+
+    - name: Assert the deleted policy assignment is not returned
+      ansible.builtin.assert:
+        that:
+          - policy_assignment_info_deleted.policy_assignments | length == 0
+
+  always:
+    - name: Delete the subscription scope policy assignment
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_assignment_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete the resource group scope policy assignment
+      azure.azcollection.azure_rm_policyassignment:
+        name: "{{ policy_rg_assignment_name }}"
+        resource_group: "{{ resource_group }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete the policy definition
+      azure.azcollection.azure_rm_policydefinition:
+        name: "{{ policy_definition_name }}"
+        state: absent
+      ignore_errors: true
