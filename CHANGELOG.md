@@ -1,5 +1,5 @@
 # Change Log
-## v4.3.0 (2026-11-26)
+## v4.3.0 (2026-11-27)
 
 ### NEW MODULES
   - azure_rm_apimanagementproduct: ([#2400](https://github.com/ansible-collections/azure/pull/2400))
