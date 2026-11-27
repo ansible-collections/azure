@@ -1,0 +1,127 @@
+---
+# Runs the same galaxy-importer ansible-test container that Automation Hub uses on upload.
+# It tests the built collection tarball, so tests/ (and tests/config.yml) are excluded exactly as they are in the uploaded artifact.
+name: Automation Hub import check
+
+# Update when rh_certification_checker.yml bumps partner-certification-checker.
+# Source: certification-reusable.yml at that tag
+# https://github.com/ansible-collections/partner-certification-checker/blob/<tag>/.github/workflows/certification-reusable.yml
+env:
+  # Source: GALAXY_IMPORTER_VER
+  GALAXY_IMPORTER_VER: "0.4.39"
+  # Source: ansible-core-version input default
+  ANSIBLE_CORE_VER: "2.16.19"
+  # Source: origin-python-version input default
+  PYTHON_VER: "3.12"
+  # Source: "Install distlib" step
+  DISTLIB_SPEC: "distlib>=0.3.9"
+  # SHA-pinned `uses:` actions below can't use variables; update them by hand.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: ah-import-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  import:
+    name: Build & import with ansible-test sanity
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VER }}
+
+      - name: Install galaxy-importer
+        run: pip install "galaxy-importer==${GALAXY_IMPORTER_VER}" "ansible-core==${ANSIBLE_CORE_VER}" "${DISTLIB_SPEC}"
+
+      - name: Build the collection tarball
+        run: ansible-galaxy collection build --output-path "${RUNNER_TEMP}/dist"
+
+      - name: Configure galaxy-importer
+        run: |
+          cat > "${RUNNER_TEMP}/galaxy-importer.cfg" <<'EOF'
+          [galaxy-importer]
+          RUN_ANSIBLE_TEST = True
+          ANSIBLE_TEST_LOCAL_IMAGE = True
+          LOCAL_IMAGE_DOCKER = True
+          RUN_ANSIBLE_LINT = False
+          EOF
+          echo "GALAXY_IMPORTER_CONFIG=${RUNNER_TEMP}/galaxy-importer.cfg" >> "${GITHUB_ENV}"
+
+      - name: Run galaxy-importer
+        run: |
+          set -o pipefail
+          python -m galaxy_importer.main "${RUNNER_TEMP}"/dist/*.tar.gz --output-path "${RUNNER_TEMP}" 2>&1 | tee "${RUNNER_TEMP}/import.log"
+
+      # galaxy-importer runs ansible-test with --failure-ok and EDA linters
+      # with tox's ignore-exit prefix, so failures must be read from the log.
+      # EDA ruff/pylint rules come from the importer's bundled eda/tox.ini.
+      # As of 0.4.39: ruff --select ALL --ignore D100,D104,INP001,FA102,UP001,
+      # UP010,I001,FA100,PLR0913,E501; pylint --disable R0801,E0401,C0103,
+      # R0913,R0902,R0903.
+      - name: Check ansible-test sanity and EDA lint results
+        run: |
+          log="${RUNNER_TEMP}/import.log"
+          failed=0
+
+          if ! grep -q 'Running ansible-test sanity on ' "${log}" || ! grep -q 'ansible-test sanity complete\.' "${log}"; then
+            echo "::error::ansible-test sanity did not run to completion inside galaxy-importer."
+            exit 1
+          fi
+
+          sanity=$(sed -n '/Running ansible-test sanity on /,/ansible-test sanity complete\./p' "${log}")
+          sanity_errors=$(printf '%s\n' "${sanity}" | grep 'ERROR: ' || true)
+          if [ -n "${sanity_errors}" ]; then
+            failed=1
+            printf '%s\n' "${sanity_errors}" | sed -nE 's#.*ERROR: ([^: ]+):([0-9]+):([0-9]+): (.*)#\1 \2 \3 \4#p' |
+              while read -r file line col msg; do
+                [ "${line}" = 0 ] && line=1
+                [ "${col}" = 0 ] && col=1
+                echo "::error file=${file},line=${line},col=${col}::${msg}"
+              done
+            {
+              echo '### ansible-test sanity (Automation Hub) failed'
+              echo '```'
+              printf '%s\n' "${sanity_errors}"
+              echo '```'
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+          eda_failures=$(grep -E '^(ruff|pylint-event-source|pylint-event-filter): exit [1-9]' "${log}" || true)
+          if [ -n "${eda_failures}" ]; then
+            failed=1
+            echo "::error::EDA linting failed in galaxy-importer: ${eda_failures//$'\n'/; }"
+            {
+              echo '### EDA linting (Automation Hub) failed'
+              echo '```'
+              sed -n '/EDA plugin content found/,/EDA linting complete\./p' "${log}"
+              echo '```'
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+          if [ "${failed}" -eq 0 ]; then
+            echo '### Automation Hub import check passed' >> "${GITHUB_STEP_SUMMARY}"
+          fi
+          exit "${failed}"
+
+      - name: Upload galaxy-importer log
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: galaxy-importer-log
+          path: ${{ runner.temp }}/import.log
+          if-no-files-found: ignore
