@@ -43,7 +43,7 @@ AZURE_COMMON_ARGS = dict(
     password=dict(type='str', no_log=True),
     cloud_environment=dict(type='str', default='AzureCloud'),
     cert_validation_mode=dict(type='str', choices=['validate', 'ignore']),
-    api_profile=dict(type='str', default='latest'),
+    api_profile=dict(type='str', default='latest', removed_in_version='5.0.0', removed_from_collection='azure.azcollection'),
     adfs_authority_url=dict(type='str', default=None),
     log_mode=dict(type='str', no_log=True),
     log_path=dict(type='str', no_log=True),
@@ -77,140 +77,6 @@ AZURE_CREDENTIAL_ENV_MAPPING_FALLBACK = dict(
     tenant='AZURE_TENANT_ID',
 )
 
-
-class SDKProfile(object):  # pylint: disable=too-few-public-methods
-
-    def __init__(self, default_api_version, profile=None):
-        """Constructor.
-
-        :param str default_api_version: Default API version if not overridden by a profile. Nullable.
-        :param profile: A dict operation group name to API version.
-        :type profile: dict[str, str]
-        """
-        self.profile = profile if profile is not None else {}
-        self.profile[None] = default_api_version
-
-    @property
-    def default_api_version(self):
-        return self.profile[None]
-
-
-# FUTURE: this should come from the SDK or an external location.
-# For now, we have to copy from azure-cli
-AZURE_API_PROFILES = {
-    'latest': {
-        'AuthorizationManagementClient': '2020-04-01-preview',
-        'ContainerInstanceManagementClient': '2018-02-01-preview',
-        'ComputeManagementClient': dict(
-            default_api_version='2018-10-01',
-            resource_skus='2018-10-01',
-            disks='2018-06-01',
-            snapshots='2018-10-01',
-            virtual_machine_run_commands='2018-10-01'
-        ),
-        'ManagementGroupsClient': '2020-05-01',
-        'NetworkManagementClient': '2019-11-01',
-        'ResourceManagementClient': '2019-10-01',
-        'SearchManagementClient': '2020-08-01',
-        'StorageManagementClient': '2021-06-01',
-        'SubscriptionClient': '2019-11-01',
-        'WebSiteManagementClient': '2021-03-01',
-        'ManagementLockClient': '2016-09-01',
-        'DataLakeStoreAccountManagementClient': '2016-11-01',
-        'NotificationHubsManagementClient': '2016-03-01',
-        'EventHubManagementClient': '2021-11-01',
-        'GenericRestClient': 'latest',
-        'DnsManagementClient': '2018-05-01',
-        'PrivateDnsManagementClient': 'latest',
-        'ContainerServiceClient': '2022-02-01',
-        'SqlManagementClient': 'latest',
-        'ContainerRegistryManagementClient': '2021-09-01',
-        'MarketplaceOrderingAgreements': 'latest',
-        'TrafficManagerManagementClient': 'latest',
-        'MonitorManagementClient': '2016-03-01',
-        'LogAnalyticsManagementClient': 'latest',
-        'ServiceBusManagementClient': 'latest',
-        'AutomationClient': 'latest',
-        'IotHubClient': 'latest',
-        'RecoveryServicesClient': 'latest',
-        'RecoveryServicesBackupClient': 'latest',
-        'DataProtectionMgmtClient': 'latest',
-        'DataFactoryManagementClient': 'latest',
-        'KeyVaultManagementClient': '2026-02-01',
-        'HDInsightManagementClient': 'latest',
-        'DevTestLabsClient': 'latest',
-        'CosmosDBManagementClient': 'latest',
-        'CdnManagementClient': '2017-04-02',
-        'BatchManagementClient': 'latest',
-        'EventGridManagementClient': '2025-02-15',
-        'AppConfigurationManagementClient': '2024-05-01',
-        'HybridComputeManagementClient': 'latest',
-        'CognitiveServicesManagementClient': 'latest',
-        'AzureDatabricksManagementClient': 'latest',
-        'ApplicationClient': '2019-07-01',
-        'RedisEnterpriseManagementClient': 'latest',
-    },
-    '2019-03-01-hybrid': {
-        'StorageManagementClient': '2017-10-01',
-        'NetworkManagementClient': '2017-10-01',
-        'ComputeManagementClient': SDKProfile('2017-12-01', {
-            'resource_skus': '2017-09-01',
-            'disks': '2017-03-30',
-            'snapshots': '2017-03-30'
-        }),
-        'ManagementLinkClient': '2016-09-01',
-        'ManagementLockClient': '2016-09-01',
-        'PolicyClient': '2016-12-01',
-        'ResourceManagementClient': '2018-05-01',
-        'EventHubManagementClient': '2018-05-04',
-        'SubscriptionClient': '2016-06-01',
-        'DnsManagementClient': '2016-04-01',
-        'KeyVaultManagementClient': '2016-10-01',
-        'AuthorizationManagementClient': SDKProfile('2015-07-01', {
-            'classic_administrators': '2015-06-01',
-            'policy_assignments': '2016-12-01',
-            'policy_definitions': '2016-12-01'
-        }),
-        'KeyVaultClient': '2016-10-01',
-        'azure.multiapi.storage': '2017-11-09',
-        'azure.multiapi.cosmosdb': '2017-04-17'
-    },
-    '2018-03-01-hybrid': {
-        'StorageManagementClient': '2016-01-01',
-        'NetworkManagementClient': '2017-10-01',
-        'ComputeManagementClient': SDKProfile('2017-03-30'),
-        'ManagementLinkClient': '2016-09-01',
-        'ManagementLockClient': '2016-09-01',
-        'PolicyClient': '2016-12-01',
-        'ResourceManagementClient': '2018-02-01',
-        'SubscriptionClient': '2016-06-01',
-        'DnsManagementClient': '2016-04-01',
-        'KeyVaultManagementClient': '2016-10-01',
-        'AuthorizationManagementClient': SDKProfile('2015-07-01', {
-            'classic_administrators': '2015-06-01'
-        }),
-        'KeyVaultClient': '2016-10-01',
-        'azure.multiapi.storage': '2017-04-17',
-        'azure.multiapi.cosmosdb': '2017-04-17'
-    },
-    '2017-03-09-profile': {
-        'StorageManagementClient': '2016-01-01',
-        'NetworkManagementClient': '2015-06-15',
-        'ComputeManagementClient': SDKProfile('2016-03-30'),
-        'ManagementLinkClient': '2016-09-01',
-        'ManagementLockClient': '2015-01-01',
-        'PolicyClient': '2015-10-01-preview',
-        'ResourceManagementClient': '2016-02-01',
-        'SubscriptionClient': '2016-06-01',
-        'DnsManagementClient': '2016-04-01',
-        'KeyVaultManagementClient': '2016-10-01',
-        'AuthorizationManagementClient': SDKProfile('2015-07-01', {
-            'classic_administrators': '2015-06-01'
-        }),
-        'KeyVaultClient': '2016-10-01',
-        'azure.multiapi.storage': '2015-04-05'
-    }
-}
 
 AZURE_TAG_ARGS = dict(
     tags=dict(type='dict'),
@@ -480,7 +346,6 @@ class AzureRMModuleBase(object):
         self._redisenterprise_client = None
 
         self.check_mode = self.module.check_mode
-        self.api_profile = self.module.params.get('api_profile')
         self.facts_module = facts_module
         # self.debug = self.module.params.get('debug')
 
@@ -930,25 +795,6 @@ class AzureRMModuleBase(object):
     def _validation_ignore_callback(session, global_config, local_config, **kwargs):
         session.verify = False
 
-    def get_api_profile(self, client_type_name, api_profile_name):
-        profile_all_clients = AZURE_API_PROFILES.get(api_profile_name)
-
-        if not profile_all_clients:
-            raise KeyError("unknown Azure API profile: {0}".format(api_profile_name))
-
-        profile_raw = profile_all_clients.get(client_type_name, None)
-
-        if not profile_raw:
-            self.module.warn("Azure API profile {0} does not define an entry for {1}".format(api_profile_name, client_type_name))
-
-        if isinstance(profile_raw, dict):
-            if not profile_raw.get('default_api_version'):
-                raise KeyError("Azure API profile {0} does not define 'default_api_version'".format(api_profile_name))
-            return profile_raw
-
-        # wrap basic strings in a dict that just defines the default
-        return dict(default_api_version=profile_raw)
-
     # The graphrbac has deprecated, migrate to msgraph
     # def get_graphrbac_client(self, tenant_id):
     #    cred = self.azure_auth.azure_credentials
@@ -992,25 +838,8 @@ class AzureRMModuleBase(object):
             client_kwargs = dict(credential=self.azure_auth.azure_credential_track2,
                                  subscription_id=mgmt_subscription_id, base_url=base_url, credential_scopes=[base_url + ".default"])
 
-        api_profile_dict = {}
-
-        if self.api_profile:
-            api_profile_dict = self.get_api_profile(client_type.__name__, self.api_profile)
-
-        # unversioned clients won't accept profile; only send it if necessary
-        # clients without a version specified in the profile will use the default
-        if api_profile_dict and 'profile' in client_argspec.parameters:
-            client_kwargs['profile'] = api_profile_dict
-
-        # If the client doesn't accept api_version, it's unversioned.
-        # If it does, favor explicitly-specified api_version, fall back to api_profile
-        if 'api_version' in client_argspec.parameters:
-            profile_default_version = api_profile_dict.get('default_api_version', None)
-            if api_version or profile_default_version:
-                client_kwargs['api_version'] = api_version or profile_default_version
-                if 'profile' in client_kwargs:
-                    # remove profile; only pass API version if specified
-                    client_kwargs.pop('profile')
+        if api_version and 'api_version' in client_argspec.parameters:
+            client_kwargs['api_version'] = api_version
 
         client = client_type(**client_kwargs)
 
@@ -1092,8 +921,7 @@ class AzureRMModuleBase(object):
         self.log('Getting storage client...')
         if not self._storage_client:
             self._storage_client = self.get_mgmt_svc_client(StorageManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2025-08-01')
+                                                            base_url=self._cloud_environment.endpoints.resource_manager)
         return self._storage_client
 
     @property
@@ -1151,8 +979,7 @@ class AzureRMModuleBase(object):
         self.log('Getting network client')
         if not self._network_client:
             self._network_client = self.get_mgmt_svc_client(NetworkManagementClient,
-                                                            base_url=self._cloud_environment.endpoints.resource_manager,
-                                                            api_version='2024-01-01')
+                                                            base_url=self._cloud_environment.endpoints.resource_manager)
         return self._network_client
 
     @property
@@ -1331,8 +1158,7 @@ class AzureRMModuleBase(object):
         self.log('Getting PostgreSQL client')
         if not self._postgresql_flexible_client:
             self._postgresql_flexible_client = self.get_mgmt_svc_client(PostgreSQLFlexibleManagementClient,
-                                                                        base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                        api_version='2025-08-01')
+                                                                        base_url=self._cloud_environment.endpoints.resource_manager)
         return self._postgresql_flexible_client
 
     @property
@@ -1340,8 +1166,7 @@ class AzureRMModuleBase(object):
         self.log('Getting MySQL Flexible client')
         if not self._mysql_flexible_client:
             self._mysql_flexible_client = self.get_mgmt_svc_client(MySQLFlexibleManagementClient,
-                                                                   base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                   api_version='2024-08-01')
+                                                                   base_url=self._cloud_environment.endpoints.resource_manager)
         return self._mysql_flexible_client
 
     @property
@@ -1369,8 +1194,7 @@ class AzureRMModuleBase(object):
         self.log('Getting container instance mgmt client')
         if not self._containerinstance_client:
             self._containerinstance_client = self.get_mgmt_svc_client(ContainerInstanceManagementClient,
-                                                                      base_url=self._cloud_environment.endpoints.resource_manager,
-                                                                      api_version='2023-05-01')
+                                                                      base_url=self._cloud_environment.endpoints.resource_manager)
 
         return self._containerinstance_client
 
@@ -1526,8 +1350,7 @@ class AzureRMModuleBase(object):
         self.log('Getting lock client')
         if not self._lock_client:
             self._lock_client = self.get_mgmt_svc_client(ManagementLockClient,
-                                                         base_url=self._cloud_environment.endpoints.resource_manager,
-                                                         api_version='2016-09-01')
+                                                         base_url=self._cloud_environment.endpoints.resource_manager)
         return self._lock_client
 
     @property
@@ -1535,8 +1358,7 @@ class AzureRMModuleBase(object):
         self.log('Getting policy client')
         if not self._policy_client:
             self._policy_client = self.get_mgmt_svc_client(PolicyClient,
-                                                           base_url=self._cloud_environment.endpoints.resource_manager,
-                                                           api_version=PolicyClient.DEFAULT_API_VERSION)
+                                                           base_url=self._cloud_environment.endpoints.resource_manager)
         return self._policy_client
 
     @property
@@ -1597,8 +1419,7 @@ class AzureRMModuleBase(object):
         self.log('Getting search client...')
         if not self._search_client:
             self._search_client = self.get_mgmt_svc_client(SearchManagementClient,
-                                                           base_url=self._cloud_environment.endpoints.resource_manager,
-                                                           api_version='2024-06-01-preview')
+                                                           base_url=self._cloud_environment.endpoints.resource_manager)
         return self._search_client
 
     @property
@@ -1607,8 +1428,7 @@ class AzureRMModuleBase(object):
         if not self._notification_hub_client:
             self._notification_hub_client = self.get_mgmt_svc_client(
                 NotificationHubsManagementClient,
-                base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version='2023-09-01')
+                base_url=self._cloud_environment.endpoints.resource_manager)
         return self._notification_hub_client
 
     @property
@@ -1658,8 +1478,7 @@ class AzureRMModuleBase(object):
         self.log('Getting cdn client...')
         if not self._cdn_client:
             self._cdn_client = self.get_mgmt_svc_client(CdnManagementClient,
-                                                        base_url=self._cloud_environment.endpoints.resource_manager,
-                                                        api_version='2024-02-01')
+                                                        base_url=self._cloud_environment.endpoints.resource_manager)
         return self._cdn_client
 
     @property

@@ -126,7 +126,6 @@ except Exception:
 from ansible_collections.azure.azcollection.plugins.module_utils.azure_rm_common import AzureRMModuleBase
 
 RESOURCE_SKU_API_VERSION = '2021-07-01'
-HYBRID_RESOURCE_SKU_API_VERSION = '2017-09-01'
 
 
 class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
@@ -161,21 +160,16 @@ class AzureRMVirtualMachineSizeInfo(AzureRMModuleBase):
     def list_items_by_location(self):
         self.log('List items by location')
         try:
-            is_hybrid_profile = self.api_profile == '2019-03-01-hybrid'
             compute_client = self.get_mgmt_svc_client(
                 ComputeManagementClient,
                 base_url=self._cloud_environment.endpoints.resource_manager,
-                api_version=HYBRID_RESOURCE_SKU_API_VERSION if is_hybrid_profile else RESOURCE_SKU_API_VERSION
+                api_version=RESOURCE_SKU_API_VERSION
             )
-            if is_hybrid_profile:
-                items = compute_client.resource_skus.list()
-            else:
-                items = compute_client.resource_skus.list(filter="location eq '{0}'".format(self.location))
+            items = compute_client.resource_skus.list(filter="location eq '{0}'".format(self.location))
             return [
                 self.serialize_size(item)
                 for item in items
                 if item.resource_type == 'virtualMachines'
-                and (not is_hybrid_profile or _match_location(self.location, item.locations or []))
                 and _is_sku_available(item, self.location)
                 and (self.name is None or self.name == item.name)
             ]

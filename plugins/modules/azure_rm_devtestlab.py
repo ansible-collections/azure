@@ -156,8 +156,7 @@ class AzureRMDevTestLab(AzureRMModuleBase):
         response = None
 
         self.mgmt_client = self.get_mgmt_svc_client(DevTestLabsClient,
-                                                    base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2018-10-15')
+                                                    base_url=self._cloud_environment.endpoints.resource_manager)
 
         resource_group = self.get_resource_group(self.resource_group)
         if self.lab.get('location') is None:

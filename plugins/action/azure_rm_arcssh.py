@@ -63,6 +63,10 @@ class ActionModule(ActionBase):
             argument_spec=merged_arg_spec,
         )
 
+        if 'api_profile' in self._task.args:
+            display.deprecated("The 'api_profile' option has no effect and will be removed.",
+                               version='5.0.0', collection_name='azure.azcollection')
+
         auth_source = os.environ.get('ANSIBLE_AZURE_AUTH_SOURCE', None) or new_module_args.get('auth_source')
         auth_options = dict(
             auth_source=auth_source,

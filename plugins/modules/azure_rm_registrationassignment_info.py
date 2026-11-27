@@ -125,7 +125,6 @@ class AzureRMRegistrationAssignmentInfo(AzureRMModuleBase):
 
         self.mgmt_client = self.get_mgmt_svc_client(ManagedServicesClient,
                                                     base_url=self._cloud_environment.endpoints.resource_manager,
-                                                    api_version='2022-10-01',
                                                     suppress_subscription_id=True)
 
         if (self.scope is not None and self.registration_assignment_id is not None):

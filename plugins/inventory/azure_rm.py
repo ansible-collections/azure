@@ -334,6 +334,9 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         return results
 
     def _credential_setup(self):
+        if self.get_option('api_profile') not in (None, 'latest'):
+            self.display.deprecated("The 'api_profile' option has no effect and will be removed.",
+                                    version='5.0.0', collection_name='azure.azcollection')
         auth_source = environ.get('ANSIBLE_AZURE_AUTH_SOURCE', None) or self.get_option('auth_source')
         auth_options = dict(
             auth_source=auth_source,

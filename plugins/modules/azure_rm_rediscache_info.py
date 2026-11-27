@@ -265,8 +265,7 @@ class AzureRMRedisCacheInfo(AzureRMModuleBase):
 
         # get management client
         self._client = self.get_mgmt_svc_client(RedisManagementClient,
-                                                base_url=self._cloud_environment.endpoints.resource_manager,
-                                                api_version='2024-03-01')
+                                                base_url=self._cloud_environment.endpoints.resource_manager)
 
         if self.name:
             self.results['rediscaches'] = self.get_item()

@@ -120,8 +120,9 @@ options:
         version_added: '0.0.1'
     api_profile:
         description:
-        - Selects an API profile to use when communicating with Azure services. Default value of C(latest) is appropriate for public clouds;
-          future values will allow use with Azure Stack.
+        - (Deprecated) This option has no effect and will be removed in collection version 5.0.0.
+        - The API version used by each module is set by the module and the Azure SDK packages listed in C(requirements.txt).
+          Azure Stack Hub API profiles are not supported.
         type: str
         default: latest
         version_added: '0.0.1'
