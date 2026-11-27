@@ -1358,8 +1358,7 @@ class AzureRMModuleBase(object):
         self.log('Getting policy client')
         if not self._policy_client:
             self._policy_client = self.get_mgmt_svc_client(PolicyClient,
-                                                           base_url=self._cloud_environment.endpoints.resource_manager,
-                                                           api_version=PolicyClient.DEFAULT_API_VERSION)
+                                                           base_url=self._cloud_environment.endpoints.resource_manager)
         return self._policy_client
 
     @property
