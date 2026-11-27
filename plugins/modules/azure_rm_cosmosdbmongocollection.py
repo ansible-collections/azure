@@ -35,7 +35,7 @@ options:
     shard_key:
         description:
             - Mapping of shard-key field names to their shard-key kind.
-            - Required when creating a collection; immutable after creation.
+            - Omit to create an unsharded collection; immutable after creation.
         type: dict
     indexes:
         description:
@@ -53,7 +53,10 @@ options:
                 description: Whether the index enforces uniqueness.
                 type: bool
             expire_after_seconds:
-                description: TTL expiration for a TTL index.
+                description:
+                    - TTL expiration for a TTL index.
+                    - Only valid on an index whose keys are C([_ts]); Cosmos DB for MongoDB
+                      does not support TTL indexes over other fields.
                 type: int
     throughput:
         description: Dedicated manual throughput in request units per second.
@@ -232,8 +235,6 @@ class AzureRMCosmosDBMongoCollection(AzureRMModuleBase):
     def _body(self, existing):
         """Build the collection resource payload for the create / update call."""
         if existing is None:
-            if not self.shard_key:
-                self.fail('shard_key is required when creating a collection')
             resource = models.MongoDBCollectionResource(id=self.name, shard_key=self.shard_key)
         else:
             if self.shard_key is not None and self.shard_key != existing.resource.shard_key:

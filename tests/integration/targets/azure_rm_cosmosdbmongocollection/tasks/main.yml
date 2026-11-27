@@ -10,6 +10,7 @@
         mongo_rg: "{{ resource_group }}-cosmosmongo"
         mongo_account: "mg{{ resource_group | hash('md5') | truncate(16, true, '') }}"
         mongo_api_version: '2024-02-15-preview'
+        unsharded_collection: unsharded
 
     - name: Create MongoDB Cosmos DB account
       azure.azcollection.azure_rm_cosmosdbaccount:
@@ -237,6 +238,39 @@
         that:
           - delete_check is changed
           - after_delete_check.collections | length == 1
+
+    - name: Create an unsharded collection
+      azure.azcollection.azure_rm_cosmosdbmongocollection:
+        resource_group: "{{ mongo_rg }}"
+        account_name: "{{ mongo_account }}"
+        database_name: testdb
+        name: "{{ unsharded_collection }}"
+        indexes:
+          - keys: [_id]
+            unique: true
+      register: unsharded_create
+
+    - name: Assert the unsharded collection was created without a shard key
+      ansible.builtin.assert:
+        that:
+          - unsharded_create is changed
+          - unsharded_create.collection.resource.shard_key is not defined
+
+    - name: Re-run the unsharded collection task
+      azure.azcollection.azure_rm_cosmosdbmongocollection:
+        resource_group: "{{ mongo_rg }}"
+        account_name: "{{ mongo_account }}"
+        database_name: testdb
+        name: "{{ unsharded_collection }}"
+        indexes:
+          - keys: [_id]
+            unique: true
+      register: unsharded_rerun
+
+    - name: Assert the unsharded collection re-run is idempotent
+      ansible.builtin.assert:
+        that:
+          - unsharded_rerun is not changed
 
     - name: Delete MongoDB collection
       azure.azcollection.azure_rm_cosmosdbmongocollection:

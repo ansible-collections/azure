@@ -54,11 +54,13 @@ def test_create_mongo_collection_with_indexes_and_throughput():
     assert call['create_update_mongo_db_collection_parameters'].options.throughput == 400
 
 
-def test_creation_requires_shard_key():
+def test_create_unsharded_collection():
     obj, client = module()
-    with pytest.raises(ValueError, match='shard_key is required'):
-        obj.exec_module(**params())
-    client.begin_create_update_mongo_db_collection.assert_not_called()
+    client.begin_create_update_mongo_db_collection.return_value.result.return_value = existing_collection()
+    result = obj.exec_module(**params(shard_key=None))
+    assert result['changed']
+    call = client.begin_create_update_mongo_db_collection.call_args.kwargs
+    assert call['create_update_mongo_db_collection_parameters'].resource.shard_key is None
 
 
 def test_index_update_and_shard_key_immutability():
@@ -104,11 +106,11 @@ def test_ttl_and_plain_indexes_compare_safely():
         id='collection', shard_key={'tenant': 'Hash'}, indexes=[
             models.MongoIndex(key=models.MongoIndexKeys(keys=['_id']),
                               options=models.MongoIndexOptions(unique=True)),
-            models.MongoIndex(key=models.MongoIndexKeys(keys=['created']),
+            models.MongoIndex(key=models.MongoIndexKeys(keys=['_ts']),
                               options=models.MongoIndexOptions(expire_after_seconds=3600)),
         ]))
     obj, client = module(collection)
-    result = obj.exec_module(**params(indexes=[{'keys': ['created'], 'expire_after_seconds': 3600},
+    result = obj.exec_module(**params(indexes=[{'keys': ['_ts'], 'expire_after_seconds': 3600},
                                                {'keys': ['_id'], 'unique': True}]))
     assert not result['changed']
     client.begin_create_update_mongo_db_collection.assert_not_called()
