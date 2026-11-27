@@ -25,6 +25,7 @@ jobs:
           fi
 
   # ruff-check
+  # Rules mirror galaxy-importer's eda/tox.ini (Automation Hub import).
   # --target-version py310 matches the collection's minimum Python to avoid 3.11+-only fixes (e.g. UP041); bump when 3.10 is dropped.
   ruff-checks:
     name: Ruff Check for EDA plugins
