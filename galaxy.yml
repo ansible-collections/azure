@@ -70,7 +70,12 @@ build_ignore:
   - '.vscode'
   - 'ansible_collections'
   - 'ansible.cfg'
-  - 'tests'
   - "*cloud-config-azure.ini"
   - "*cloud-config-azure.yml"
   - '.ansible-lint'
+  - 'tests/integration'
+  - 'tests/integration_common_tasks'
+  - 'tests/output'
+  - 'tests/sanity'
+  - 'tests/unit'
+  - 'tests/utils'
