@@ -1,2 +1,0 @@
-# EDA plugins support Python 3.10; galaxy-importer's ruff has no target version.
-target-version = "py310"

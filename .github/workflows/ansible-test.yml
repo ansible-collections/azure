@@ -43,7 +43,7 @@ on:
   # testing against latest version of ansible-test for each ansible-core
   # version
   schedule:
-    - cron: '12 7 * * *'
+    - cron: "12 7 * * *"
 
 concurrency:
   group: >-
@@ -53,11 +53,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-###
-# Unit tests (OPTIONAL)
-#
-# https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
+  ###
+  # Unit tests (OPTIONAL)
+  #
+  # https://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
 
   units:
     runs-on: ubuntu-latest
@@ -71,14 +70,14 @@ jobs:
           # Add new versions announced in
           # https://github.com/ansible-collections/news-for-maintainers in a timely manner,
           # consider dropping testing against EOL versions and versions you don't support.
-        # - stable-2.15
-        # - stable-2.16
-        # - stable-2.17
+          # - stable-2.15
+          # - stable-2.16
+          # - stable-2.17
           - stable-2.18
           - stable-2.19
           - stable-2.20
           - stable-2.21
-        # - devel
+          # - devel
           - milestone
 
     steps:
@@ -104,13 +103,43 @@ jobs:
           # Disable Codecov
           coverage: never
 
-  check:  # This job does nothing and is only used for the branch protection
-          # or multi-stage CI jobs, like making sure that all tests pass before
-          # a publishing job is started.
+  ###
+  # Sanity tests
+  #
+  # https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+  # No target-python-version, so compile/import run on every Python version
+  # declared in tests/config.yml, not only the controller Python (Python 3.12) used by
+  # partner-certification-checker.
+
+  sanity:
+    runs-on: ubuntu-latest
+
+    name: Sanity (Ⓐ${{ matrix.ansible }})
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible:
+          - stable-2.21
+
+    steps:
+      - name: >-
+          Perform sanity testing against
+          Ansible version ${{ matrix.ansible }}
+        uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: ${{ matrix.ansible }}
+          testing-type: sanity
+          pull-request-change-detection: false
+          coverage: never
+
+  check: # This job does nothing and is only used for the branch protection
+    # or multi-stage CI jobs, like making sure that all tests pass before
+    # a publishing job is started.
     if: always()
 
     needs:
       - units
+      - sanity
 
     runs-on: ubuntu-latest
 
